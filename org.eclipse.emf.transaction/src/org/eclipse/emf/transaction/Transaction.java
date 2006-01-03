@@ -1,0 +1,216 @@
+/**
+ * <copyright>
+ *
+ * Copyright (c) 2005 IBM Corporation and others.
+ * All rights reserved.   This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   IBM - Initial API and implementation
+ *
+ * </copyright>
+ *
+ * $Id: Transaction.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ */
+package org.eclipse.emf.transaction;
+
+import java.util.Map;
+
+import org.eclipse.core.runtime.IStatus;
+
+
+/**
+ * Specification of a transaction in a {@link TXEditingDomain}.  All reading and
+ * writing of data in a <code>TXEditingDomain</code> is performed in the context
+ * of a transaction.
+ * <p>
+ * This interface is not intended to be implemented by clients.  It is used
+ * internally and by frameworks extending this API.  It is mostly of use to
+ * {@link ResourceSetListener}s to find out the state of a transaction in the
+ * event call-backs.
+ * </p>
+ *
+ * @author Christian W. Damus (cdamus)
+ * 
+ * @see TXEditingDomain
+ * @see TXCommandStack
+ * @see ResourceSetListener
+ */
+public interface Transaction {
+	/**
+	 * Queries the editing domain in which I am transacting.  Note that this
+	 * is available also before I start and after I close.
+	 * 
+	 * @return my editing domain
+	 */
+	TXEditingDomain getEditingDomain();
+	
+	/**
+	 * My parent transaction, if any.  The thread that owns an editing domain's
+	 * active transaction can create nested transactions simply by starting
+	 * new ones.  Nested transactions commit differently from top-level
+	 * transactions:  although they send
+	 * {@link ResourceSetListener#transactionAboutToCommit(ResourceSetChangeEvent) pre-commit}
+	 * events, they do not send post-commit events, nor are they validated.
+	 * Validation is performed only by the top-level transaction to validate
+	 * all changes made in its scope, and only the top-level transaction then
+	 * can send the post-commit event.  Nested transactions can roll back their
+	 * changes without affecting their parent transactions.
+	 * <p>
+	 * Transactions can nest as follows:
+	 * </p>
+	 * <ul>
+	 *   <li>read-only transactions can be nested in read-only or
+	 *       read/write transactions</li>
+	 *   <li>read/write transactions can only be nested in read/write
+	 *       transactions</li>
+	 * </ul>
+	 * @return
+	 */
+	Transaction getParent();
+
+	/**
+	 * Queries the thread that owns me.  Only this thread is allowed to read
+	 * or write (in the case of read/write transactions) the editing domain's
+	 * resource set while I am open.
+	 * 
+	 * @return my owning thread
+	 */
+	Thread getOwner();
+	
+	/**
+	 * Queries whether I am a read-only transaction.  Even my owning thread
+	 * is not permitted to make changes to the model if I am read-only.
+	 * 
+	 * @return <code>true</code> if I am read-only; <code>false</code>, otherwise
+	 */
+	boolean isReadOnly();
+	
+	/**
+	 * Obtains the special options with which I was created.  The options
+	 * (map keys) are defined by the {@link TXEditingDomain} interface.
+	 * 
+	 * @return an unmodifiable view of my options
+	 */
+	Map getOptions();
+
+	/**
+	 * Queries whether I am active.  I am active after I have started and
+	 * before I have closed (committed or rolled back).
+	 * 
+	 * @return whether I am active
+	 */
+	boolean isActive();
+	
+	/**
+	 * Temporarily yields access to another read-only transaction.  The
+	 * {@link TXEditingDomain} supports any number of pseudo-concurrent
+	 * read-only transactions.  Transactions that are expected to be
+	 * long-running should yield frequently, as a task running in a progress
+	 * monitor is expected to check for cancellation frequently.  However, there
+	 * is a higher cost (in time) associated with yielding, so it should not
+	 * be overdone.
+	 * <p>
+	 * Only read-only transactions may yield, and only the transaction that
+	 * is currently active in the editing domain may yield.  The yielding
+	 * transaction may be nested, but not within a read/write transaction
+	 * at any depth.
+	 * </p>
+	 * <p>
+	 * Upon yielding, some other read-only transaction that is attempting to
+	 * start or to return from a yield will take control of the editing domain.
+	 * Control is never yielded to a read/write transaction (not even to a
+	 * read-only transaction nested in a read/write) because this would
+	 * introduce dirty reads (transactions reading uncommitted changes).
+	 * If there are no other read-only transactions to receive the transfer of
+	 * control, then the call returns immediately.  Otherwise, control is
+	 * transferred in FIFO fashion to waiting transactions.
+	 * </p>
+	 */
+	void yield();
+	
+	/**
+	 * Attempts to commit the transaction.  The transaction may only commit if
+	 * it is the currently active transaction in the editing domain.  After the
+	 * transaction has committed, it is no longer active and cannot be started
+	 * again.
+	 * <p>
+	 * Commit proceeds in three phases:  pre-commit events and triggers,
+	 * validation, and the post-commit events.
+	 * </p>
+	 * <p>
+	 * Pre-commit notifications are sent to the editing domain's registered
+	 * {@link ResourceSetListener}s to inform them that the transaction is
+	 * committing.  If any listener throws a {@link RollbackException}, then
+	 * the transaction is rolled back and the exception is propagated to the
+	 * caller.  Any trigger commands returned by pre-commit listeners are
+	 * executed after all listeners are invoked, in a nested transaction.
+	 * This nested transaction, then, follows the commit protocol to send out
+	 * pre-commit notifications again.  This process continues until no more
+	 * trigger commands are executed or some listener causes rollback.
+	 * </p>
+	 * <p>
+	 * After all pre-commit processing completes, the transaction is validated.
+	 * Validation checks all of the notifications received from the model
+	 * during the transaction (including any nested transactions, esp. those
+	 * that executed triggers).  If the validation yields an error status (or
+	 * more severe), then the transaction is rolled back, throwing a
+	 * {@link RollbackException} with the validation status.
+	 * </p>
+	 * <p>
+	 * The final phase, if validation passes, is to send out the post-commit
+	 * event to the resource set listeners.  This event includes all of the
+	 * notifications received during the transaction, including triggers.
+	 * Note that, because these listeners can read the model, they may cause
+	 * further notifications (by resolving proxies, loading resources, etc.).
+	 * Listeners are invoked in a nested read-only transaction, so it will
+	 * also commit and send out a post-commit event if necessary with additional
+	 * notifications.
+	 * </p>
+	 * <p>
+	 * <b>Note</b> that even a {@link #isReadOnly() read-only} transaction can
+	 * roll back.  This should only occur, however, if it is corrupted by a
+	 * concurrent modification by another thread, which means that invalid data
+	 * could have been read.
+	 * </p>
+	 * 
+	 * @throws RollbackException if a listener or validation caused the
+	 *     transaction to roll back instead of committing successfully
+	 */
+	void commit() throws RollbackException;
+	
+	/**
+	 * Rolls back the transaction, undoing all of the pending model changes.
+	 * Once it has rolled back, the transaction is no longer active and cannot
+	 * be started again.  No events are sent when the transaction rolls back;
+	 * to listeners it appears that nothing ever happened.
+	 */
+	void rollback();
+
+	/**
+	 * Obtains the change description summarizing the changes made to the model
+	 * during the execution of the transaction.  The change description must
+	 * not be used until after the transaction has successfully committed.
+	 * If the transaction rolls back, then it has no change description.
+	 * 
+	 * @return the change description, or <code>null</code> if the transaction
+	 *     rolled back or is still {@link #isActive() active}
+	 */
+	TXChangeDescription getChangeDescription();
+	
+	/**
+	 * Obtains the status of the transaction.  This may provide warning or
+	 * or error messages from validation (after I have committed/rolled back) or
+	 * other sources, or it might be OK.
+	 * <p>
+	 * <b>Note</b> that while I am still active, my status is usually OK.
+	 * It may not be OK if I have been aborted, in which case I will
+	 * roll back on attempt to commit.
+	 * </p>
+	 * 
+	 * @return my status, most interesting after I have closed
+	 */
+	public IStatus getStatus();
+}

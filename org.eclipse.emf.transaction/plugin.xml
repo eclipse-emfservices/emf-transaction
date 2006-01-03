@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+   <extension-point id="editingDomains" name="%extPoint.editingDomains" schema="schema/editingDomains.exsd"/>
+   <extension-point id="listeners" name="%extPoint.listeners" schema="schema/listeners.exsd"/>
+
+</plugin>

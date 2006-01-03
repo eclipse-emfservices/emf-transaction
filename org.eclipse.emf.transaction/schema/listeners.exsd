@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.eclipse.emf.transaction">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.eclipse.emf.transaction" id="listeners" name="EMF Transaction Resource Set Listeners"/>
+      </appInfo>
+      <documentation>
+         This extension point declares listeners that are automatically attached to the editing domains that they target, when those editing domains are initialized by the editor domain registry.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <documentation>
+            Registers &lt;code&gt;ResourceSetListener&lt;/code&gt; with named editing domains.
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="listener" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="listener">
+      <annotation>
+         <appInfo>
+            <meta.element labelAttribute="class"/>
+         </appInfo>
+         <documentation>
+            Registers a &lt;code&gt;ResourceSetListener&lt;/code&gt; that is attached to the identified editing domain instance when it is added to or created by the editing domain registry.  When (and if) the editing domain is unregistered, the listener is removed from it.
+If no editing domains are referenced by a listener extension, then the listener is attached to all registered. &lt;code&gt;TXEditingDomain&lt;/code&gt; instances.  Unregistered editing domains are not affected.
+         </documentation>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="editingDomain" minOccurs="0" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="class" type="string">
+            <annotation>
+               <documentation>
+                  Identifies a class implementing the &lt;code&gt;ResourceSetListener&lt;/code&gt; interface.
+This class is instantiated (using the default constructor).
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.eclipse.emf.transaction.ResourceSetListener"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="editingDomain">
+      <annotation>
+         <documentation>
+            Identifies one or more editing domains to attach the listener to.
+         </documentation>
+      </annotation>
+      <complexType>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Unique identifier of the editing domain, registered via the &lt;code&gt;editingDomains&lt;/code&gt; extension point.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         [Enter the first release in which this extension point appears.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         [Enter extension point usage example here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiInfo"/>
+      </appInfo>
+      <documentation>
+         [Enter API information here.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         [Enter information about supplied implementation of this extension point.]
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         
+      </documentation>
+   </annotation>
+
+</schema>

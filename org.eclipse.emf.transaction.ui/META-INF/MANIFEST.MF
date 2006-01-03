@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: %Plugin.name
+Bundle-SymbolicName: org.eclipse.emf.transaction.ui
+Bundle-Version: 1.0.0
+Bundle-Vendor: %Plugin.providerName
+Bundle-Localization: plugin
+Require-Bundle: org.eclipse.emf.edit.ui,
+ org.eclipse.emf.transaction
+Eclipse-LazyStart: true
+Bundle-Activator: org.eclipse.emf.transaction.ui.internal.EMFTransactionUIPlugin$Implementation
+Export-Package: org.eclipse.emf.transaction.ui.internal,
+ org.eclipse.emf.transaction.ui.provider,
+ org.eclipse.emf.transaction.ui.view

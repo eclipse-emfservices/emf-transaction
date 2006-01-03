@@ -1,0 +1,230 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<!--
+
+/******************************************************************************
+ * Copyright (c) 2005 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *    IBM Corporation - initial API and implementation 
+ ****************************************************************************/
+
+-->
+</head>
+<body>
+
+Definition of the API for a transactional editing domain.
+
+<h2>Package Specification</h2>
+
+<H3>Creating an Editing Domain</H3>
+<p>
+The following snippet illustrates the creation of a transactional editing
+domain:
+</p>
+<PRE>
+TXEditingDomain domain = TXEditingDomain.Factory.INSTANCE.createEditingDomain();
+ResourceSet rset = domain.getResourceSet();
+
+// or, create our own resource set and initialize the domain with it
+rset = new MyResourceSetImpl();
+domain = TXEditingDomain.Factory.INSTANCE.createEditingDomain(rset);
+</PRE>
+<p>
+To share a named editing domain with other applications, the editing domain registry can be
+used to obtain domains by ID, creating them if necessary.  Editing domain IDs are configured
+on an extension point providing the factory implementation that the registry uses to initialize
+them:
+</p>
+<pre>
+&lt;!-- In the plugin.xml --&gt;
+&lt;extension point="org.eclipse.emf.transaction.editingDomains"&gt;
+    &lt;editingDomain
+        id="com.example.MyEditingDomain"
+        factory="com.example.MyEditingDomainFactory"/&gt;
+&lt;/extension&gt;
+
+// in code, access the registered editing domain by:
+
+TXEditingDomain myDomain = TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+    "com.example.MyEditingDomain");
+</pre>
+
+<H3>Reading a Resource Set</H3>
+<p>
+All work in an editing domain is done within the context of a transaction.
+This applies to both reading the model and writing it, as well as creating,
+loading, saving, and unloading resources.  To load and read a resource:
+</p>
+<pre>
+Runnable read = new RunnableWithResult.Impl() {
+        public void run() {
+            Resource res = rset.getResource(
+                URI.createFileURI("/tmp/my.xmi"),
+                true);
+
+            setResult(new Integer(res.getContents().size()));
+        }
+    };
+
+// execute the read operation as a read-only transaction
+int size = ((Integer) domain.runExclusive(read)).intValue();
+</pre>
+
+<H3>Modifying a Resource Set</H3>
+<p>
+Modifications to a resource require read-write transactions, implemented as
+commands:
+</p>
+<pre>
+Command cmd = new RecordingCommand("Create Library") {
+        protected void doExecute() {
+            Library library = LibraryFactory.eINSTANCE.createLibrary();
+
+            // these modifications require a write transaction in this editing domain
+            res.getContents().add(library);
+            library.setName("Main Branch");
+        }
+    };
+
+try {
+    ((TXCommandStack) domain.getCommandStack()).execute(cmd, null); // default options
+} catch (RollbackException rbe) {
+    ErrorDialog.openError(
+        getWorkbench().getShell(), "Transaction Rollback",
+        "Transaction rolled back due to validation errors.", rbe.getStatus());
+}
+</pre>
+
+<H3>Listening for Model Changes</H3>
+<p>
+Listeners can be added to the editing domain to find out about changes that occur (directly and
+indirectly) in the resource set and its contents.
+There are two call-backs supported by the editing domain: <code>transactionAboutToCommit</code>
+(pre-commit) calls notify the listener of what changes a command has
+performed before it completes (commits) them, and <code>resourceSetChanged</code>
+(post-commit) indicates what changes a command has committed after it has completed
+normally (or what changes occurred during reading the resource set).  
+</p>
+<pre>
+ResourceSetListener listener = new ResourceSetListenerImpl() {
+        protected void resourceSetChanged(ResourceSetChangeEvent event) {
+            // analyze the complete list of notifications that occurred during
+            //    execution of the command to figure out how the model has changed
+            analyzeChanges(event.getNotifications());
+        }
+    });
+    
+// attach the listener to the editing domain
+domain.addResourceSetListener(listener);
+</pre>
+<p>
+The resource set listener can make changes to the resource set, but these are chained
+onto the current command and are not executed until after all other notifications
+have been processed:
+</p>
+<pre>
+// notify only on additions to the contents of a resource
+NotificationFilter filter = NotificationFilter.createFeatureFilter(
+        EcorePackage.eINSTANCE.getEResource(),
+        Resource.RESOURCE__CONTENTS).and(
+    NotifierFilter.createEventTypeFilter(
+            Notification.ADD, Notification.ADD_MANY)
+));
+
+// create a new listener with this filter
+ResourceSetListener listener = new ResourceSetListenerImpl(filter) {
+        protected Command aboutToCompleteCommand(ResourceSetChangeEvent event) {
+            // create a command to follow-up the changes that we observed
+            Command cmd = analyzeChanges(event.getNotifications());
+            
+            // the command will be executed by the command stack
+            return cmd;
+        }
+    });
+    
+// attach the listener to the editing domain
+domain.addResourceSetListener(listener);
+</pre>
+<p>
+Notice two things about the previous example:  first, the listener's pre-commit
+call-back method returns a command for future execution.  The stack executes this
+command after completing the round of call-backs.
+It cannot simply "piggy-back" on the current command's transaction
+because it is closing.  Secondly, it declares a filter to restrict the
+notifications that it will receive.  The filter is a composite of two filters,
+stipulating that only ADD or ADD_MANY notifications are wanted, and these only
+from the contents lists of resources.  If when a command completes, no
+notifications match the filter, then this listener is not invoked at all.
+Otherwise, only the notifications that do match are provided to the listener.
+</p>
+<P>
+Listeners can also force rollback of the currently executing command
+if it must not be permitted to commit its changes. This is accomplished by throwing
+a <CODE>RollbackException</CODE>:
+</P>
+<pre>
+ResourceSetListener listener = new ResourceSetListenerImpl() {
+        protected Command transactionAboutToCommit(ResourceSetChangeEvent) throws RollbackException {
+            // validate the changes and force rollback if not acceptable
+            if (!analyzeChanges(getNotifications())) {
+                throw new RollbackException("Didn't like the changes.");
+            }
+            
+            return null;  // no need to perform further changes
+        }
+    });</pre>
+<P>
+<code>ResourceSetListener</code>s  can also be declared on
+an extension point, to be loaded on creation of an editing domain.  This approach has
+the advantage of automatically attaching the listener to an editing domain before the
+client has been activated.  The extension can specify one or more unique identifiers
+of editing domains to listen to;
+these are mapped to editing domain instances in the shared <code>TXEditingDomain.Registry</code>.
+The listener class implementing this extension should initialize itself with an
+appropriate filter.
+</P>
+<pre>
+&lt;extension point="org.eclipse.emf.transaction.listeners"&gt;
+    &lt;listener class="com.example.MyResourceSetListener"&gt;
+        &lt;editingDomain id="com.example.MyEditingDomain"/&gt;
+    &lt;/listener&gt;
+&lt;/extension&gt;    
+</pre>
+
+<H3>Undoing Model Changes</H3>
+<p>
+Transactions (commands) are undone via the command stack, as usual:
+</p>
+<pre>
+Command cmd = SomeCommand();
+
+try {
+    ((TXCommandStack) domain.getCommandStack()).execute(cmd, null); // default options
+} catch (RollbackException rbe) {
+    ErrorDialog.openError(
+        getWorkbench().getShell(), "Transaction Rollback",
+        "Transaction rolled back due to validation errors.", rbe.getStatus());
+}
+
+// undo the last executed transaction
+domain.getCommandStack().undo();
+
+// redo it
+domain.getCommandStack().redo();
+</pre>
+
+
+@see org.eclipse.emf.transaction.TXEditingDomain
+@see org.eclipse.emf.transaction.TXCommandStack
+@see org.eclipse.emf.transaction.RecordingCommand
+@see org.eclipse.emf.transaction.RunnableWithResult
+@see org.eclipse.emf.transaction.ResourceSetListener
+
+</body>
+</html>
