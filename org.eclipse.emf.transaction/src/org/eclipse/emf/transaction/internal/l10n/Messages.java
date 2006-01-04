@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Messages.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: Messages.java,v 1.2 2006/01/04 21:56:11 cdamus Exp $
  */
 package org.eclipse.emf.transaction.internal.l10n;
 
@@ -27,7 +27,7 @@ import org.eclipse.osgi.util.NLS;
 public class Messages
 	extends NLS {
 
-	private static final String BUNDLE_NAME = "org.eclipse.emf.transaction.impl.l10n.Messages"; //$NON-NLS-1$
+	private static final String BUNDLE_NAME = "org.eclipse.emf.transaction.internal.l10n.Messages"; //$NON-NLS-1$
 
 	public static String factoryInterface;
 	public static String factoryInitialization;
