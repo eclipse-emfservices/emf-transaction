@@ -67,11 +67,11 @@
 	<!-- ===================================================================== -->
 	<target name="postSetup">
 		<property name="getDeps.xml" location="${buildDirectory}/../org.eclipse.emft.common.releng/scripts/getDependencies.xml"/>
-		<echo message="Download, then unpack: EMFT OCL SDK, EMF Examples, EMF SDK + Eclipse SDK..."/>
+		<echo message="Download, then unpack: EMFT Validation SDK, EMF Examples, EMF SDK + Eclipse SDK..."/>
 		<ant target="getDependency" antfile="${getDeps.xml}">
-			<property name="url" value="${oclURL}"/>
-			<property name="file" value="${oclFile}"/>
-			<property name="isUnpackedFile" value="${buildDirectory}/plugins/org.eclipse.emf.ocl/plugin.xml"/>
+			<property name="url" value="${validationURL}"/>
+			<property name="file" value="${validationFile}"/>
+			<property name="isUnpackedFile" value="${buildDirectory}/plugins/org.eclipse.emf.validation/plugin.xml"/>
 		</ant>
 		<ant target="getDependency" antfile="${getDeps.xml}">
 			<property name="url" value="${emfURL}"/>

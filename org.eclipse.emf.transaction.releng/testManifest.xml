@@ -48,15 +48,7 @@
       <effectedFile id="SDK"></effectedFile>
       <effectedFile id="UML2RUN"></effectedFile>
    </logFile>
-   <logFile name="plugins/org.eclipse.emf.transaction.ocl_*/*.bin.log">
-      <effectedFile id="SDK"></effectedFile>
-      <effectedFile id="UML2RUN"></effectedFile>
-   </logFile>
    <logFile name="plugins/org.eclipse.emf.transaction.ui_*/*.bin.log">
-      <effectedFile id="SDK"></effectedFile>
-      <effectedFile id="UML2RUN"></effectedFile>
-   </logFile>
-   <logFile name="plugins/org.eclipse.emf.transaction.ui.ide_*/*.bin.log">
       <effectedFile id="SDK"></effectedFile>
       <effectedFile id="UML2RUN"></effectedFile>
    </logFile>

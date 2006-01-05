@@ -23,16 +23,11 @@
 		<!-- <echo message="install = ${install}"/> -->
 		<delete dir="${install}" /><mkdir dir="${install}" />
 			
-		<echo message="Download, then unpack: UML2 SDK, EMFT OCL SDK, EMF Examples, EMF SDK + Eclipse SDK..."/>
+		<echo message="Download, then unpack: EMFT Validation SDK, EMF Examples, EMF SDK + Eclipse SDK..."/>
 		<property name="getTestDependencies.xml" value="${basedir}/../../../org.eclipse.emft.common.releng/scripts/getTestDependencies.xml"/>
 		<ant target="getTestDependency" antfile="${getTestDependencies.xml}" dir="${basedir}/../../../org.eclipse.emft.common.releng">
-			<property name="url" value="${uml2URL}"/>
-			<property name="file" value="${uml2File}"/>
-			<property name="unpackDest" value="${install}"/>
-		</ant>
-		<ant target="getTestDependency" antfile="${getTestDependencies.xml}" dir="${basedir}/../../../org.eclipse.emft.common.releng">
-			<property name="url" value="${oclURL}"/>
-			<property name="file" value="${oclFile}"/>
+			<property name="url" value="${validationURL}"/>
+			<property name="file" value="${validationFile}"/>
 			<property name="unpackDest" value="${install}"/>
 		</ant>
 		<ant target="getTestDependency" antfile="${getTestDependencies.xml}" dir="${basedir}/../../../org.eclipse.emft.common.releng">

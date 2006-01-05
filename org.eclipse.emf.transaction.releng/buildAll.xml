@@ -159,14 +159,6 @@
 			<property name="component" value="builder/doc" />
 		</ant>
 
-		<!-- add .ocl feature + plugin from SDK to runtime -->
-	    <zip destfile="${buildDirectory}/${buildLabel}/emft-${subprojectName}-runtime-${buildAlias}.zip" update="true">
-			<zipfileset src="${buildDirectory}/${buildLabel}/emft-${subprojectName}-SDK-${buildAlias}.zip">
-				<include name="**/org.eclipse.emf.${subprojectName}.ocl*"/>
-				<include name="**/org.eclipse.emf.${subprojectName}.ocl*/*"/>
-			</zipfileset>
-	    </zip>
-		
 		<!-- md5 files generation -->
 
 		<exec executable="bash" dir="${buildDirectory}/${buildLabel}">
@@ -239,13 +231,9 @@
 			<replacefilter token="@emfURL@" value="${emfURL}" />
 			<replacefilter token="@emfBuildURL@" value="${emfBuildURL}" />
 
-			<replacefilter token="@oclFile@" value="${oclFile}" />
-			<replacefilter token="@oclURL@" value="${oclURL}" />
-			<replacefilter token="@oclBuildURL@" value="${oclBuildURL}" />
-
-			<replacefilter token="@uml2File@" value="${uml2File}" />
-			<replacefilter token="@uml2URL@" value="${uml2URL}" />
-			<replacefilter token="@uml2BuildURL@" value="${uml2BuildURL}" />
+			<replacefilter token="@validationFile@" value="${validationFile}" />
+			<replacefilter token="@validationURL@" value="${validationURL}" />
+			<replacefilter token="@validationBuildURL@" value="${validationBuildURL}" />
 		</replace>
 		<antcall target="doExtraReplacements" />
 

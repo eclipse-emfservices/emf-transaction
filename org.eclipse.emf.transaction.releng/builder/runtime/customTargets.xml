@@ -66,9 +66,9 @@
 <!-- ===================================================================== -->
 <target name="postSetup">
 	<ant target="getDependency" antfile="${buildDirectory}/../org.eclipse.emft.common.releng/scripts/getDependencies.xml">
-		<property name="url" value="${oclURL}"/>
-		<property name="file" value="${oclFile}"/>
-		<property name="isUnpackedFile" value="${buildDirectory}/plugins/org.eclipse.emf.ocl/plugin.xml"/>
+		<property name="url" value="${validationURL}"/>
+		<property name="file" value="${validationFile}"/>
+		<property name="isUnpackedFile" value="${buildDirectory}/plugins/org.eclipse.emf.validation/plugin.xml"/>
 	</ant>
 	<ant target="getDependency" antfile="${buildDirectory}/../org.eclipse.emft.common.releng/scripts/getDependencies.xml">
 		<property name="url" value="${emfURL}"/>

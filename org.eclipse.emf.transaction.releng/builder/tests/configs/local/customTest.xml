@@ -21,9 +21,9 @@
 			<property name="unpackDest" value="${testDir}"/>
 		</ant>
 		
-		<echo message="Copy UML2 SDK, EMFT OCL SDK, EMF Examples, EMF SDK + Eclipse SDK to ${executionDir}..."/>
+		<echo message="Copy EMFT Validation SDK, EMF Examples, EMF SDK + Eclipse SDK to ${executionDir}..."/>
 		<copy todir="${executionDir}">
-			<fileset dir="${downloadsDir}" includes="${uml2File},${oclFile},${emfExamplesFile},${emfFile},${eclipseFile}"/>
+			<fileset dir="${downloadsDir}" includes="${validationFile},${emfExamplesFile},${emfFile},${eclipseFile}"/>
 		</copy>
 		<property name="shell" value="relengbuildgtk.sh"/>
 	

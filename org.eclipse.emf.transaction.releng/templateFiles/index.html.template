@@ -37,12 +37,11 @@ To view the Overall Build Log for this Build click <a href="buildlog.txt">here</
 	</tr>
 	<tr><td>
 		<br/>
-		EMFT transaction requires Eclipse, EMF and EMFT OCL to run, and UML2 for its tests.
+		EMFT transaction requires Eclipse, EMF and EMFT Validation.
 		The Eclipse driver used in this build was <a href="@eclipseURL@">@eclipseFile@</a> - for details on this driver or to download it
 		for your platform, check out its <a href="@eclipseBuildURL@">build page</a>. <br/>
 		The EMF build was <a href="@emfURL@">@emfFile@</a> from this <a href="@emfBuildURL@">build page</a>. <br/> 
-		The OCL build was <a href="@oclURL@">@oclFile@</a> from this <a href="@oclBuildURL@">build page</a>. <br/>
-		The UML2 build was <a href="@uml2URL@">@uml2File@</a> from this <a href="@uml2BuildURL@">build page</a>.
+		The Validation build was <a href="@validationURL@">@validationFile@</a> from this <a href="@validationBuildURL@">build page</a>. <br/>
 	</td></tr>
 </table>
 
