@@ -14,7 +14,7 @@
  *
  * </copyright>
  *
- * $Id: feature.xml,v 1.1 2006/01/03 21:03:43 cdamus Exp $
+ * $Id: feature.xml,v 1.2 2006/01/05 14:54:52 cdamus Exp $
  */
 -->
 <feature
@@ -48,7 +48,17 @@
         match="compatible"/>
 
     <includes
-        id="org.eclipse.emf.transaction.examples"
+        id="org.eclipse.emf.workbench"
+        version="1.0.0"
+        match="compatible"/>
+
+    <includes
+        id="org.eclipse.emf.workbench.doc"
+        version="1.0.0"
+        match="compatible"/>
+
+    <includes
+        id="org.eclipse.emf.workbench.examples"
         version="1.0.0"
         match="compatible"/>
 </feature>
