@@ -159,6 +159,16 @@
 			<property name="component" value="builder/doc" />
 		</ant>
 
+		<!-- add .workbench and .ui features + plugins from SDK to runtime -->
+	    <zip destfile="${buildDirectory}/${buildLabel}/emft-${subprojectName}-runtime-${buildAlias}.zip" update="true">
+			<zipfileset src="${buildDirectory}/${buildLabel}/emft-${subprojectName}-SDK-${buildAlias}.zip">
+				<include name="**/org.eclipse.emf.${subprojectName}.ui*"/>
+				<include name="**/org.eclipse.emf.${subprojectName}.ui*/*"/>
+				<include name="**/org.eclipse.emf.workbench*"/>
+				<include name="**/org.eclipse.emf.workbench*/*"/>
+			</zipfileset>
+	    </zip>
+
 		<!-- md5 files generation -->
 
 		<exec executable="bash" dir="${buildDirectory}/${buildLabel}">
