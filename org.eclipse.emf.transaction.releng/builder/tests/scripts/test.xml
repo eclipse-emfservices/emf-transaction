@@ -67,6 +67,10 @@
 			<param name="testPlugin" value="${org.eclipse.emf.transaction.tests}" />
 			<param name="report" value="org.eclipse.emf.transaction.tests" />
 		</antcall>
+		<antcall target="runtests">
+			<param name="testPlugin" value="${org.eclipse.emf.workbench.tests}" />
+			<param name="report" value="org.eclipse.emf.workbench.tests" />
+		</antcall>
 	</target>
 
 	<target name="all">
