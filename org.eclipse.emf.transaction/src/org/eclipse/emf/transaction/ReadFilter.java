@@ -12,13 +12,13 @@
  *
  * </copyright>
  *
- * $Id: ReadFilter.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: ReadFilter.java,v 1.2 2006/01/06 15:14:27 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
 import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.transaction.impl.ResourceSetManager;
 
 /**
@@ -54,11 +54,14 @@ class ReadFilter extends NotificationFilter {
 		case Notification.ADD_MANY:
 		case Notification.REMOVE:
 		case Notification.REMOVE_MANY:
-			if (notification.getNotifier() instanceof Resource) {
+			Object notifier = notification.getNotifier();
+			
+			if (notifier instanceof Resource) {
 				return checkResource(notification);
 			}
 			
-			return (notification.getNotifier() instanceof ResourceSet);
+			return (!(notifier instanceof EObject)
+					|| isLoadingOrUnloading(((EObject) notifier).eResource()));
 		default:
 			return false;
 		}
@@ -78,12 +81,22 @@ class ReadFilter extends NotificationFilter {
 			// changes to the contents list are allowed during reading only while
 			//    loading or unloading the resource (because loading/unloading
 			//    is implemented by adding/removing root objects, respectively)
-			Resource res = (Resource) notification.getNotifier();
-			
-			return ResourceSetManager.getInstance().isLoading(res)
-				|| ResourceSetManager.getInstance().isUnloading(res);
+			return isLoadingOrUnloading((Resource) notification.getNotifier());
 		default:
 			return true;
 		}
+	}
+	
+	/**
+	 * Checks whether a resource is currently in the process of loading or
+	 * unloading.
+	 * 
+	 * @param res a resource
+	 * @return <code>true</code> if the resource is currently loading or
+	 *    unloading; <code>false</code>, otherwise (fully loaded or unloaded)
+	 */
+	private boolean isLoadingOrUnloading(Resource res) {
+		return ResourceSetManager.getInstance().isLoading(res)
+			|| ResourceSetManager.getInstance().isUnloading(res);
 	}
 }
