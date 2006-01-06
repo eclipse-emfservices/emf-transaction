@@ -164,8 +164,20 @@
 			<zipfileset src="${buildDirectory}/${buildLabel}/emft-${subprojectName}-SDK-${buildAlias}.zip">
 				<include name="**/org.eclipse.emf.${subprojectName}.ui*"/>
 				<include name="**/org.eclipse.emf.${subprojectName}.ui*/*"/>
-				<include name="**/org.eclipse.emf.workbench*"/>
-				<include name="**/org.eclipse.emf.workbench*/*"/>
+				<include name="**/org.eclipse.emf.workbench"/>
+				<include name="**/org.eclipse.emf.workbench/*"/>
+				<include name="**/org.eclipse.emf.workbench.ui"/>
+				<include name="**/org.eclipse.emf.workbench.ui/*"/>
+				<include name="**/org.eclipse.emf.workbench-feature"/>
+				<include name="**/org.eclipse.emf.workbench-feature/*"/>
+			</zipfileset>
+	    </zip>
+
+		<!-- add .workbench and .ui features + plugins from SDK to runtime -->
+	    <zip destfile="${buildDirectory}/${buildLabel}/emft-${subprojectName}-examples-${buildAlias}.zip" update="true">
+			<zipfileset src="${buildDirectory}/${buildLabel}/emft-${subprojectName}-SDK-${buildAlias}.zip">
+				<include name="**/org.eclipse.emf.workbench.examples*"/>
+				<include name="**/org.eclipse.emf.workbench.examples*/*"/>
 			</zipfileset>
 	    </zip>
 
