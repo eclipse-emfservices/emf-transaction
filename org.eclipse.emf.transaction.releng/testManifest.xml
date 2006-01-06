@@ -50,22 +50,33 @@
 	
    <logFile name="plugins/org.eclipse.emf.transaction_*/*.bin.log">
       <effectedFile id="SDK"></effectedFile>
-      <effectedFile id="UML2RUN"></effectedFile>
+      <effectedFile id="projRUN"></effectedFile>
    </logFile>
    <logFile name="plugins/org.eclipse.emf.transaction.ui_*/*.bin.log">
       <effectedFile id="SDK"></effectedFile>
-      <effectedFile id="UML2RUN"></effectedFile>
+      <effectedFile id="projRUN"></effectedFile>
+   </logFile>
+   <logFile name="plugins/org.eclipse.emf.workbench_*/*.bin.log">
+      <effectedFile id="SDK"></effectedFile>
+      <effectedFile id="projRUN"></effectedFile>
+   </logFile>
+   <logFile name="plugins/org.eclipse.emf.workbench.ui_*/*.bin.log">
+      <effectedFile id="SDK"></effectedFile>
+      <effectedFile id="projRUN"></effectedFile>
    </logFile>
    <logFile name="plugins/org.eclipse.emf.transaction.examples_*/*.bin.log">
       <effectedFile id="EX"></effectedFile>
    </logFile>
-   <logFile name="plugins/org.eclipse.emf.transaction.examples.adapter_*/*.bin.log">
+   <logFile name="plugins/org.eclipse.emf.workbench.examples_*/*.bin.log">
       <effectedFile id="EX"></effectedFile>
    </logFile>
-   <logFile name="plugins/org.eclipse.emf.transaction.examples.ocl_*/*.bin.log">
+   <logFile name="plugins/org.eclipse.emf.workbench.examples.library.editor_*/*.bin.log">
       <effectedFile id="EX"></effectedFile>
    </logFile>
    <logFile name="plugins/org.eclipse.emf.transaction.tests_*/*.bin.log">
+      <effectedFile id="T"></effectedFile>
+   </logFile>
+   <logFile name="plugins/org.eclipse.emf.workbench.tests_*/*.bin.log">
       <effectedFile id="T"></effectedFile>
    </logFile>
 
