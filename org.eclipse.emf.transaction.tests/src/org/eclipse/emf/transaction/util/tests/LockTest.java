@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: LockTest.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: LockTest.java,v 1.2 2006/01/06 03:42:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util.tests;
 
@@ -164,6 +164,12 @@ public class LockTest extends TestCase {
 	 * as the UI thread continues to process sync runnables.
 	 */
 	public void test_uiSafeWaitForAcquire() {
+		if (!PlatformUI.isWorkbenchRunning()) {
+			// can only execute this test case in a workbench
+			AbstractTest.trace("*** Test skipped because not running in a workbench ***"); //$NON-NLS-1$
+			return;
+		}
+		
 		final int longInterval = PlatformUI.getWorkbench().getProgressService()
 				.getLongOperationTime();
 		
