@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadFilter.java,v 1.2 2006/01/06 15:14:27 cdamus Exp $
+ * $Id: ReadFilter.java,v 1.3 2006/01/06 16:16:22 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -63,7 +63,9 @@ class ReadFilter extends NotificationFilter {
 			return (!(notifier instanceof EObject)
 					|| isLoadingOrUnloading(((EObject) notifier).eResource()));
 		default:
-			return false;
+			// any other event type is not one that is supported by EMF, so
+			//    we will not prevent it
+			return true;
 		}
 	}
 
