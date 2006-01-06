@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXEditingDomainImpl.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: TXEditingDomainImpl.java,v 1.2 2006/01/06 21:02:56 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -124,8 +124,21 @@ public class TXEditingDomainImpl
 	 */
 	private void initialize() {
 		((InternalTXCommandStack) commandStack).setEditingDomain(this);
-		recorder = new TXChangeRecorder(this, resourceSet);
+		recorder = createChangeRecorder(resourceSet);
 		validator = TXValidator.NULL;
+	}
+	
+	/**
+	 * May be overridden by subclasses to create a custom change recorder
+	 * implementation.  Just creates a change recorder on the specified resource
+	 * set and returns it.
+	 * 
+	 * @param rset a resource set in which to record changes
+	 * 
+	 * @return the new change recorder
+	 */
+	protected TXChangeRecorder createChangeRecorder(ResourceSet rset) {
+		return new TXChangeRecorder(this, rset);
 	}
 
 	// Documentation copied from the inherited specification
@@ -661,6 +674,7 @@ public class TXEditingDomainImpl
 		
 		activeTransaction = null;
 		
+		recorder.dispose();
 		recorder = null;
 		validator = null;
 		
