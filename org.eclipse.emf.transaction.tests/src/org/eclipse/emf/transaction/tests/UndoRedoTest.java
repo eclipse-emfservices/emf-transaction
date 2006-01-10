@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: UndoRedoTest.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: UndoRedoTest.java,v 1.2 2006/01/10 14:48:56 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -29,7 +29,6 @@ import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.TXChangeDescription;
-import org.eclipse.emf.transaction.TXCommandStack;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultBookTrigger;
@@ -198,7 +197,7 @@ public class UndoRedoTest extends AbstractTest {
 		
 		assertTrue(change.canApply());
 		
-		startWriting(TXCommandStack.OPTION_NO_UNDO);
+		startWriting(Transaction.OPTION_NO_UNDO);
 		
 		change.applyAndReverse();
 		
@@ -219,7 +218,7 @@ public class UndoRedoTest extends AbstractTest {
 		
 		assertTrue(change.canApply());
 		
-		startWriting(TXCommandStack.OPTION_NO_UNDO);
+		startWriting(Transaction.OPTION_NO_UNDO);
 		
 		change.applyAndReverse();
 		

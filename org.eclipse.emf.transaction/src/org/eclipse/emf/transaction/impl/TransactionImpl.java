@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.2 2006/01/10 14:48:53 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -26,7 +26,6 @@ import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.change.ChangeDescription;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.TXChangeDescription;
-import org.eclipse.emf.transaction.TXCommandStack;
 import org.eclipse.emf.transaction.TXEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
@@ -460,7 +459,7 @@ public class TransactionImpl
 			Tracing.trace("*** Validating " + TXEditingDomainImpl.getDebugID(this) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-		return getInternalDomain().getValidator().validate();
+		return getInternalDomain().getValidator().validate(this);
 	}
 	
 	public String toString() {
@@ -480,8 +479,8 @@ public class TransactionImpl
 	 */
 	protected static boolean isUndoEnabled(Transaction tx) {
 		return !(tx.isReadOnly()
-				|| hasOption(tx, TXCommandStack.OPTION_NO_UNDO)
-				|| hasOption(tx, TXCommandStack.OPTION_UNPROTECTED));
+				|| hasOption(tx, OPTION_NO_UNDO)
+				|| hasOption(tx, OPTION_UNPROTECTED));
 	}
 	
 	/**
@@ -495,8 +494,8 @@ public class TransactionImpl
 	 */
 	protected static boolean isValidationEnabled(Transaction tx) {
 		return !(tx.isReadOnly()
-				|| hasOption(tx, TXCommandStack.OPTION_NO_VALIDATION)
-				|| hasOption(tx, TXCommandStack.OPTION_UNPROTECTED));
+				|| hasOption(tx, OPTION_NO_VALIDATION)
+				|| hasOption(tx, OPTION_UNPROTECTED));
 	}
 	
 	/**
@@ -510,8 +509,8 @@ public class TransactionImpl
 	 */
 	protected static boolean isTriggerEnabled(Transaction tx) {
 		return !(tx.isReadOnly()
-				|| hasOption(tx, TXCommandStack.OPTION_NO_TRIGGERS)
-				|| hasOption(tx, TXCommandStack.OPTION_UNPROTECTED));
+				|| hasOption(tx, OPTION_NO_TRIGGERS)
+				|| hasOption(tx, OPTION_UNPROTECTED));
 	}
 	
 	/**
@@ -523,7 +522,7 @@ public class TransactionImpl
 	 *     events; <code>false</code>, otherwise
 	 */
 	protected static boolean isNotificationEnabled(Transaction tx) {
-		return !hasOption(tx, TXCommandStack.OPTION_NO_NOTIFICATIONS);
+		return !hasOption(tx, OPTION_NO_NOTIFICATIONS);
 	}
 	
 	/**
@@ -537,7 +536,7 @@ public class TransactionImpl
 	 */
 	protected static boolean isUnprotected(Transaction tx) {
 		return !tx.isReadOnly()
-				&& hasOption(tx, TXCommandStack.OPTION_UNPROTECTED);
+				&& hasOption(tx, OPTION_UNPROTECTED);
 	}
 	
 	/**

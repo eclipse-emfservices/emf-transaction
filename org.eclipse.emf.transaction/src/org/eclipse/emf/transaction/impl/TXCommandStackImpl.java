@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXCommandStackImpl.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: TXCommandStackImpl.java,v 1.2 2006/01/10 14:48:53 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -25,7 +25,6 @@ import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.transaction.ExceptionHandler;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TXCommandStack;
 import org.eclipse.emf.transaction.TXEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
@@ -61,9 +60,9 @@ public class TXCommandStackImpl
 	
 	static {
 		UNDO_REDO_OPTIONS = new java.util.HashMap();
-		UNDO_REDO_OPTIONS.put(TXCommandStack.OPTION_NO_TRIGGERS, Boolean.TRUE);
-		UNDO_REDO_OPTIONS.put(TXCommandStack.OPTION_NO_UNDO, Boolean.TRUE);
-		UNDO_REDO_OPTIONS.put(TXCommandStack.OPTION_NO_VALIDATION, Boolean.TRUE);
+		UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
+		UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_UNDO, Boolean.TRUE);
+		UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
 	}
 	
 	/**

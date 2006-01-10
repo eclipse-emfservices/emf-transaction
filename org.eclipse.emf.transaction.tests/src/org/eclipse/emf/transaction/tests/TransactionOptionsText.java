@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionOptionsText.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: TransactionOptionsText.java,v 1.2 2006/01/10 14:48:56 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -25,7 +25,6 @@ import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.RecordingCommand;
-import org.eclipse.emf.transaction.TXCommandStack;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
 
@@ -53,7 +52,7 @@ public class TransactionOptionsText extends AbstractTest {
 		TestListener listener = new TestListener();
 		domain.addResourceSetListener(listener);
 		
-		startWriting(TXCommandStack.OPTION_NO_NOTIFICATIONS);
+		startWriting(Transaction.OPTION_NO_NOTIFICATIONS);
 		
 		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 		assertNotNull(book);
@@ -78,7 +77,7 @@ public class TransactionOptionsText extends AbstractTest {
 		TestListener listener = new TestListener();
 		domain.addResourceSetListener(listener);
 		
-		startWriting(TXCommandStack.OPTION_NO_TRIGGERS);
+		startWriting(Transaction.OPTION_NO_TRIGGERS);
 		
 		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 		assertNotNull(book);
@@ -103,7 +102,7 @@ public class TransactionOptionsText extends AbstractTest {
 		try {
 			ValidationRollbackTest.validationEnabled = true;
 			
-			startWriting(TXCommandStack.OPTION_NO_VALIDATION);
+			startWriting(Transaction.OPTION_NO_VALIDATION);
 			
 			final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 			assertNotNull(book);
@@ -129,7 +128,7 @@ public class TransactionOptionsText extends AbstractTest {
 	 * not recording undo information.
 	 */
 	public void test_noUndo() {
-		startWriting(TXCommandStack.OPTION_NO_UNDO);
+		startWriting(Transaction.OPTION_NO_UNDO);
 		
 		final Transaction tx = getActiveTransaction();
 		
@@ -167,7 +166,7 @@ public class TransactionOptionsText extends AbstractTest {
 			}};
 
 		try {
-			getCommandStack().execute(cmd, makeOptions(TXCommandStack.OPTION_NO_UNDO));
+			getCommandStack().execute(cmd, makeOptions(Transaction.OPTION_NO_UNDO));
 		} catch (Exception e) {
 			fail(e);
 		}
@@ -193,7 +192,7 @@ public class TransactionOptionsText extends AbstractTest {
 		commit();
 
 		try {
-			getCommandStack().execute(cmd, makeOptions(TXCommandStack.OPTION_NO_UNDO));
+			getCommandStack().execute(cmd, makeOptions(Transaction.OPTION_NO_UNDO));
 		} catch (Exception e) {
 			fail(e);
 		}
@@ -219,7 +218,7 @@ public class TransactionOptionsText extends AbstractTest {
 		assertNotNull(newAuthor);
 		
 		// start an unprotected write transaction
-		startWriting(TXCommandStack.OPTION_UNPROTECTED);
+		startWriting(Transaction.OPTION_UNPROTECTED);
 		
 		// make changes
 		book.setTitle(newTitle);
