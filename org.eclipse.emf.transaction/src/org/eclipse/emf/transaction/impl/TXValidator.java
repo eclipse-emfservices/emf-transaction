@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXValidator.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: TXValidator.java,v 1.2 2006/01/10 14:47:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -42,7 +42,7 @@ public interface TXValidator {
 	 */
 	TXValidator NULL = new TXValidator() {
 		// Documentation copied from the inherited specification
-		public IStatus validate() {
+		public IStatus validate(Transaction tx) {
 			return Status.OK_STATUS;
 		}
 
@@ -57,7 +57,7 @@ public interface TXValidator {
 		}
 
 		// Documentation copied from the inherited specification
-		public List getNotifications() {
+		public List getNotifications(Transaction tx) {
 			return Collections.EMPTY_LIST;
 		}
 
@@ -88,6 +88,8 @@ public interface TXValidator {
 	/**
 	 * Performs the validation step of a commit.
 	 * 
+	 * @param tx the transaction to validate
+	 * 
 	 * @return the status of validation.  If the severity is error or worse,
 	 *     then the transaction <em>must</em> roll back, and this status
 	 *     included in the exception
@@ -95,16 +97,18 @@ public interface TXValidator {
 	 * @see Transaction#commit()
 	 * @see RollbackException
 	 */
-	IStatus validate();
+	IStatus validate(Transaction tx);
 	
 	/**
 	 * Obtains the notifications received, in order, during the execution of
 	 * the (possibly nested) transaction(s) that I am validating.
 	 * 
-	 * @return my notifications, or <code>null</code> if no transaction has
-	 *     started yet
+	 * @param tx the transaction to be validated
+	 * 
+	 * @return the transaction's notifications, or <code>null</code> if the
+	 *     transaction has started yet
 	 */
-	List getNotifications();
+	List getNotifications(Transaction tx);
 	
 	/**
 	 * Disposes me by clearing my state and cleaning up any resources that I

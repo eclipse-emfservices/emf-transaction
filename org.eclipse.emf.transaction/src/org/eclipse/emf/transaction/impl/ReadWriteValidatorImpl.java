@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteValidatorImpl.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: ReadWriteValidatorImpl.java,v 1.2 2006/01/10 14:47:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -55,7 +55,6 @@ import org.eclipse.emf.validation.service.ModelValidationService;
  */
 public class ReadWriteValidatorImpl implements TXValidator {
 	private TransactionTree tree = null;
-	private List notifications = null;
 	
 	/**
 	 * Initializes me.
@@ -77,8 +76,6 @@ public class ReadWriteValidatorImpl implements TXValidator {
 		} else {
 			parent.addChild(transaction);
 		}
-		
-		notifications = null;  // clear cache (if any)
 	}
 	
 	/**
@@ -91,17 +88,21 @@ public class ReadWriteValidatorImpl implements TXValidator {
 		if (parent != null) {
 			parent.removeChild(transaction);
 		}
-		
-		notifications = null;  // clear cache (if any)
 	}
 	
 	// Documentation copied from the inherited method specification
-	public synchronized List getNotifications() {
-		if ((notifications == null) && (tree != null)) {
-			notifications = tree.collectNotifications();
+	public synchronized List getNotifications(Transaction tx) {
+		List result = null;
+		
+		if (tree != null) {
+			TransactionTree nested = tree.find(tx);
+			
+			if (nested != null) {
+				result = nested.collectNotifications();
+			}
 		}
 		
-		return notifications;
+		return result;
 	}
 	
 	/**
@@ -124,14 +125,14 @@ public class ReadWriteValidatorImpl implements TXValidator {
 	
 	
 	// Documentation copied from the inherited method specification
-	public IStatus validate() {
+	public IStatus validate(Transaction tx) {
 		IStatus result;
 		
 		try {
 			IValidator validator = ModelValidationService.getInstance().newValidator(
 				EvaluationMode.LIVE);
 			
-			result = validator.validate(getNotifications());
+			result = validator.validate(getNotifications(tx));
 		} catch (Exception e) {
 			Tracing.catching(ReadWriteValidatorImpl.class, "validate", e); //$NON-NLS-1$
 			result = new Status(
@@ -148,7 +149,6 @@ public class ReadWriteValidatorImpl implements TXValidator {
 	// Documentation copied from the inherited method specification
 	public void dispose() {
 		tree = null;
-		notifications = null;
 	}
 
 	/**

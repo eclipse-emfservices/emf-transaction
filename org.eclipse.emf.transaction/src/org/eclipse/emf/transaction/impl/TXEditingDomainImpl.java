@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXEditingDomainImpl.java,v 1.2 2006/01/06 21:02:56 cdamus Exp $
+ * $Id: TXEditingDomainImpl.java,v 1.3 2006/01/10 14:47:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -390,19 +390,57 @@ public class TXEditingDomainImpl
 				throw exc;
 			}
 			
-			activeTransaction = (InternalTransaction) tx.getParent();
+			InternalTransaction parent = (InternalTransaction) tx.getParent();
 			
-			if (activeTransaction == null) {
-				// deactivation of a root transaction generates post-commit event
-				postcommit(tx);
-				
-				// and also clears the validator
-				validator.dispose();
-				validator = TXValidator.NULL;
+			try {
+				if (parent == null) {
+					// deactivation of a root transaction generates post-commit event
+					postcommit(tx);
+					
+					// and also clears the validator
+					validator.dispose();
+					validator = TXValidator.NULL;
+				} else if (isTopmostUnprotected(tx)) {
+					// when deactivating a top-level unprotected write, we also
+					//   do the postcommit procedure before we continue reading
+					//   (if we were reading) because the unprotected write
+					//   really should behave like a root transaction
+					postcommit(tx);
+					
+					// tx wouldn't be validated, anyway, so we may as well remove it
+					//     now.  We don't want to send the same events again when
+					//     the read transaction commits
+					validator.remove(tx);
+				}
+			} finally {
+				// the parent becomes the currently active transaction now
+				activeTransaction = parent;
 			}
 			
 			release(tx);
 		}
+	}
+	
+	/**
+	 * Queries whether the specified transaction is an unprotected write whose
+	 * ancestors (if any) are all read-only transactions.
+	 * 
+	 * @param tx a transaction
+	 * 
+	 * @return <code>true</code> if the specified transaction is an
+	 *     unprotected write and all nesting transactions are read-only;
+	 *     <code>false</code>, otherwise
+	 */
+	protected boolean isTopmostUnprotected(Transaction tx) {
+		boolean result = TransactionImpl.isUnprotected(tx);
+		tx = tx.getParent();
+		
+		while (result && (tx != null)) {
+			result = tx.isReadOnly();
+			tx = tx.getParent();
+		}
+		
+		return result;
 	}
 	
 	/**
@@ -555,7 +593,8 @@ public class TXEditingDomainImpl
 			Tracing.trace(">>> Postcommitting " + getDebugID(tx) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-		if (validator.getNotifications().isEmpty()
+		final List notifications = validator.getNotifications(tx);
+		if ((notifications == null) || notifications.isEmpty()
 				|| !TransactionImpl.isNotificationEnabled(tx)) {
 			return;
 		}
@@ -564,7 +603,6 @@ public class TXEditingDomainImpl
 		//     so that any further notifications gathered from the read
 		//     transaction that we are about to initiate do not include those
 		//     that we are sending around now
-		final List notifications = validator.getNotifications();
 		validator.dispose();
 		
 		final ResourceSetListener[] listeners;
