@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: Lock.java,v 1.2 2006/01/11 23:00:19 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -215,16 +215,25 @@ public class Lock {
 		Queue.Wait node = null;
 		
 		synchronized (this) {
-			// check whether I am easily available
-			if (current == owner) {
-				// trivially re-acquire the lock, increasing the depth
-				depth++;
-				result = true;
-			} else if ((owner == null) && (!exclusive || notYielded())) {
-				// first to try to get the lock
-				depth = 1;
-				owner = current;
-				result = true;
+			// note that I can already appear to own the lock if I am the UI thread
+			//    re-entering lock acquisition while processing the runnable queue
+			//    while waiting to get the lock, and the job that is acquiring it
+			//    for me has already transfered it to me
+			if (!exclusive || notYielded()) {
+				// check whether I am easily available
+				if ((current == owner)) {
+					// trivially re-acquire the lock, increasing the depth
+					depth++;
+					result = true;
+				} else if (owner == null) {
+					// first to try to get the lock
+					depth = 1;
+					owner = current;
+					result = true;
+				} else {
+					// add myself to the queue of waiting threads
+					node = waiting.put(timeout, exclusive);
+				}
 			} else {
 				// add myself to the queue of waiting threads
 				node = waiting.put(timeout, exclusive);
@@ -297,8 +306,12 @@ public class Lock {
 		
 		final Thread current = Thread.currentThread();
 		
-		if (jobmgr.currentJob() != null) {
-			// running as a job?  No UI feedback needed
+		final Job currentJob = jobmgr.currentJob();
+		if ((currentJob != null) && (currentJob.getRule() != null)) {
+			// running as a job on a scheduling rule?  No UI feedback needed.
+			//    Note that when the UI is showing the Blocked dialog, it is
+			//    running as an implicit job on a null rule (on Windows only,
+			//    not on Linux or Mac)
 			acquire(exclusive);
 		} else {
 			// should always check whether a thread is already interrupted before
