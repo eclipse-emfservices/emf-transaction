@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.2 2006/01/11 23:00:19 cdamus Exp $
+ * $Id: Lock.java,v 1.3 2006/01/12 00:09:30 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -234,6 +234,11 @@ public class Lock {
 					// add myself to the queue of waiting threads
 					node = waiting.put(timeout, exclusive);
 				}
+			} else if (current == owner) {
+				IllegalArgumentException exc = new IllegalArgumentException(
+						"Cannot upgrade a non-exclusive lock to an exclusive lock"); //$NON-NLS-1$
+				Tracing.throwing(Lock.class, "acquire", exc); //$NON-NLS-1$
+				throw exc;
 			} else {
 				// add myself to the queue of waiting threads
 				node = waiting.put(timeout, exclusive);
