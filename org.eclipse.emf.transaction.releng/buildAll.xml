@@ -255,7 +255,7 @@
 			<replacefilter token="@validationDropFile@" value="${validationDropFile}" />
 			<replacefilter token="@validationBuildURL@" value="${validationBuildURL}" />
 
-			<replacefilter token="@subprojectName" value="${subprojectName}" />
+			<replacefilter token="@subprojectName@" value="${subprojectName}" />
 
 			<!-- add download from mirror links -->
 			<replacefilter token="@eclipseDownloadURL@" value="${eclipseDownloadURL}" />
