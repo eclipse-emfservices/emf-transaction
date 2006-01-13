@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.3 2006/01/12 00:09:30 cdamus Exp $
+ * $Id: Lock.java,v 1.4 2006/01/13 21:50:43 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -215,10 +215,6 @@ public class Lock {
 		Queue.Wait node = null;
 		
 		synchronized (this) {
-			// note that I can already appear to own the lock if I am the UI thread
-			//    re-entering lock acquisition while processing the runnable queue
-			//    while waiting to get the lock, and the job that is acquiring it
-			//    for me has already transfered it to me
 			if (!exclusive || notYielded()) {
 				// check whether I am easily available
 				if ((current == owner)) {
@@ -234,11 +230,16 @@ public class Lock {
 					// add myself to the queue of waiting threads
 					node = waiting.put(timeout, exclusive);
 				}
-			} else if (current == owner) {
-				IllegalArgumentException exc = new IllegalArgumentException(
-						"Cannot upgrade a non-exclusive lock to an exclusive lock"); //$NON-NLS-1$
-				Tracing.throwing(Lock.class, "acquire", exc); //$NON-NLS-1$
-				throw exc;
+			} else if (owner == current) {
+				// I can already appear to own the lock if I am the
+				//    UI thread re-entering lock acquisition in processing the
+				//    event queue while waiting to get the lock, and some job
+				//    that is acquiring it for me higher on the stack has
+				//    already transfered it to me.  In this case, I must
+				//    interrupt the attempt to upgrade the read lock to a
+				//    write lock.  If we don't interrupthere, then we will
+				//    deadlock
+				throw new InterruptedException(Messages.upgradeReadLock);
 			} else {
 				// add myself to the queue of waiting threads
 				node = waiting.put(timeout, exclusive);
@@ -315,8 +316,7 @@ public class Lock {
 		if ((currentJob != null) && (currentJob.getRule() != null)) {
 			// running as a job on a scheduling rule?  No UI feedback needed.
 			//    Note that when the UI is showing the Blocked dialog, it is
-			//    running as an implicit job on a null rule (on Windows only,
-			//    not on Linux or Mac)
+			//    doing so via a delayed UI job without a scheduling rule
 			acquire(exclusive);
 		} else {
 			// should always check whether a thread is already interrupted before
@@ -332,7 +332,7 @@ public class Lock {
 			}
 			
 			// try acquiring it just in case we can avoid scheduling a job
-			acquired = acquire(1L, exclusive);
+			acquired = acquire(250L, exclusive);
 
 			if (acquired) {
 				assert getOwner() == current;
@@ -389,7 +389,7 @@ public class Lock {
 								}
 								
 								// try again quickly
-								acquired = acquire(1L, exclusive);
+								acquired = acquire(250L, exclusive);
 							} else {
 								acquired = getOwner() == current;
 								
@@ -591,7 +591,7 @@ public class Lock {
 			// attempt to acquire the lock.  Time out so that we may check
 			//    regularly for user cancellation
 			try {
-				while (!acquire(500L, exclusive)) {
+				while (!acquire(250L, exclusive)) {
 					synchronized (Lock.this) {
 						// the UI thread can re-enter the uiSafeAcquire() method
 						//    and schedule additional AcquireJobs because it

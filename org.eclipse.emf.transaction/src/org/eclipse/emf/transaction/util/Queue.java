@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Queue.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: Queue.java,v 1.2 2006/01/13 21:50:43 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -112,6 +112,11 @@ final class Queue {
 			
 			if (exclusive) {
 				exclusiveCount++;
+			}
+		} else {
+			// must keep the count of exclusive waits in sync
+			if (exclusive != result.isExclusive()) {
+				exclusiveCount += exclusive? 1 : -1;
 			}
 		}
 		

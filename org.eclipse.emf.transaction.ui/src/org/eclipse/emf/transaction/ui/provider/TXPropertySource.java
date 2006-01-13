@@ -1,7 +1,7 @@
 /**
  * <copyright> 
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXPropertySource.java,v 1.1 2006/01/03 20:44:14 cdamus Exp $
+ * $Id: TXPropertySource.java,v 1.2 2006/01/13 21:50:17 cdamus Exp $
  */
 package org.eclipse.emf.transaction.ui.provider;
 
@@ -20,6 +20,8 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.transaction.RunnableWithResult;
 import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIPlugin;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIStatusCodes;
 import org.eclipse.emf.transaction.ui.internal.Tracing;
@@ -140,10 +142,13 @@ public class TXPropertySource
 	 * Delegates the my wrapped property source in the appropriate transaction.
 	 */
 	public void resetPropertyValue(final Object id) {
-		// don't need a read transaction because this will delegate to a command
-		//    that performs a write
 		if (propertySource2 != null) {
-			propertySource2.resetPropertyValue(id);
+			// are we in a read-only context?  if so, balk because we cannot upgrade
+			//    read transaction to write when executing a command
+			Transaction tx = ((InternalTXEditingDomain) domain).getActiveTransaction();
+			if ((tx == null) || !tx.isReadOnly()) {
+				propertySource2.resetPropertyValue(id);
+			}
 		}
 	}
 
@@ -153,8 +158,11 @@ public class TXPropertySource
 	 * read/write transaction).
 	 */
 	public void setPropertyValue(final Object id, final Object value) {
-		// don't need a read transaction because this will delegate to a command
-		//    that performs a write
-		propertySource.setPropertyValue(id, value);
+		// are we in a read-only context?  if so, balk because we cannot upgrade
+		//    read transaction to write when executing a command
+		Transaction tx = ((InternalTXEditingDomain) domain).getActiveTransaction();
+		if ((tx == null) || !tx.isReadOnly()) {
+			propertySource.setPropertyValue(id, value);
+		}
 	}
 }
