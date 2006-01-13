@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <link rel="stylesheet" href="http://www.eclipse.org/default_style.css" type="text/css">
-<title>EMFT - Download</title>
+<title>EMFT - @subprojectName@ - Download</title>
 </head>
 <body>
 &nbsp;
@@ -37,11 +37,35 @@ To view the Overall Build Log for this Build click <a href="buildlog.txt">here</
 	</tr>
 	<tr><td>
 		<br/>
-		EMFT transaction requires Eclipse, EMF and EMFT Validation.
-		The Eclipse driver used in this build was <a href="@eclipseURL@">@eclipseFile@</a> - for details on this driver or to download it
-		for your platform, check out its <a href="@eclipseBuildURL@">build page</a>. <br/>
-		The EMF build was <a href="@emfURL@">@emfFile@</a> from this <a href="@emfBuildURL@">build page</a>. <br/> 
-		The Validation build was <a href="@validationURL@">@validationFile@</a> from this <a href="@validationBuildURL@">build page</a>. <br/>
+		The EMFT @subprojectName@ subproject requires Eclipse, EMF and EMFT Validation.
+		For details on these dependencies, or to download them for your platform, 
+		use the links below to access your nearest mirror.<br/>
+		<table>
+			<tr>
+				<td><b>Project Home</b></td>
+				<td><b>Driver</b></td>
+				<td><b>Build URL</b></td>
+				<td><b>Downloads URL</b></td>
+			</tr>
+			<tr>
+				<td><a href="http://eclipse.org/eclipse">Eclipse</a></td>
+				<td>@eclipseFile@</td>
+				<td><a href="@eclipseDownloadURL@@eclipseDropFile@">Build URL</a></td>
+				<td><a href="@eclipseDownloadURL@@eclipseBuildURL@">Downloads URL</a></td>
+			</tr>
+			<tr>
+				<td><a href="http://eclipse.org/emf">EMF</a></td>
+				<td>@emfFile@</td>
+				<td><a href="@eclipseDownloadURL@@emfDropFile@">Build URL</a></td>
+				<td><a href="@eclipseDownloadURL@@emfBuildURL@">Downloads URL</a></td>
+			</tr>
+			<tr>
+				<td><a href="http://eclipse.org/emft/?proj=validation">EMFT Validation</a></td>
+				<td>@validationFile@</td>
+				<td><a href="@eclipseDownloadURL@@validationDropFile@">Build URL</a></td>
+				<td><a href="@eclipseDownloadURL@@validationBuildURL@">Downloads URL</a></td>
+			</tr>
+		</table>
 	</td></tr>
 </table>
 
