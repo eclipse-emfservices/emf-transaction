@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AllTests.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: AllTests.java,v 1.2 2006/01/18 19:03:57 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -48,7 +48,7 @@ public class AllTests
 		suite.addTest(ValidationRollbackTest.suite());
 		suite.addTest(ResourceSetListenersTest.suite());
 		suite.addTest(NotificationFilterTest.suite());
-		suite.addTest(TransactionOptionsText.suite());
+		suite.addTest(TransactionOptionsTest.suite());
 		suite.addTest(UndoRedoTest.suite());
 		suite.addTest(EditingDomainRegistryTest.suite());
 		suite.addTest(AbstractMultithreadTest.suite());

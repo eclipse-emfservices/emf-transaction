@@ -12,19 +12,23 @@
  *
  * </copyright>
  *
- * $Id: TransactionOptionsText.java,v 1.2 2006/01/10 14:48:56 cdamus Exp $
+ * $Id: TransactionOptionsTest.java,v 1.1 2006/01/18 19:03:57 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
+
+import java.util.Collection;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
 
@@ -34,14 +38,14 @@ import org.eclipse.emf.transaction.tests.fixtures.TestListener;
  *
  * @author Christian W. Damus (cdamus)
  */
-public class TransactionOptionsText extends AbstractTest {
+public class TransactionOptionsTest extends AbstractTest {
 
-	public TransactionOptionsText(String name) {
+	public TransactionOptionsTest(String name) {
 		super(name);
 	}
 
 	public static Test suite() {
-		return new TestSuite(TransactionOptionsText.class, "Transaction Options Tests"); //$NON-NLS-1$
+		return new TestSuite(TransactionOptionsTest.class, "Transaction Options Tests"); //$NON-NLS-1$
 	}
 
 	/**
@@ -239,6 +243,107 @@ public class TransactionOptionsText extends AbstractTest {
 		// one notification from the book title, one from the book author,
 		//    and one from the author books
 		assertEquals(3, listener.postcommit.getNotifications().size());
+	}
+	
+	/**
+	 * Tests that notifications from nested silent transactions are correctly
+	 * omitted from the post-commit event.
+	 */
+	public void test_nested_noNotifications_124334() {
+		TestListener listener = new TestListener();
+		domain.addResourceSetListener(listener);
+		
+		startWriting();
+		
+		// nested silent transaction
+		startWriting(Transaction.OPTION_NO_NOTIFICATIONS);
+		
+		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		assertNotNull(book);
+		
+		final String newTitle = "New Title"; //$NON-NLS-1$
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		assertNotNull(newAuthor);
+		
+		book.setTitle(newTitle);
+		newAuthor.getBooks().add(book);
+		
+		commit();
+		
+		commit();
+		
+		assertNull(listener.postcommit);
+	}
+	
+	/**
+	 * Tests that notifications from nested unvalidated transactions are included
+	 * in the post-commit event (i.e., unvalidated does not imply silent).
+	 */
+	public void test_nested_unvalidatedPostCommit_124334() {
+		TestListener listener = new TestListener();
+		domain.addResourceSetListener(listener);
+		
+		startWriting();
+		
+		// nested silent transaction
+		startWriting(Transaction.OPTION_NO_VALIDATION);
+		
+		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		assertNotNull(book);
+		
+		final String newTitle = null;
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		assertNotNull(newAuthor);
+		
+		book.setTitle(newTitle);
+		newAuthor.getBooks().add(book);
+		
+		commit();
+		
+		// succeeds because there is no validation of the null book title
+		commit();
+		
+		assertNotNull(listener.postcommit);
+	}
+	
+	/**
+	 * Tests that nested unvalidated transactions are not validated, but their
+	 * outer transactions are.
+	 */
+	public void test_nested_unvalidated_124334() {
+		startWriting();
+		
+		Transaction tx = getActiveTransaction();
+		
+		// nested silent transaction
+		startWriting(Transaction.OPTION_NO_VALIDATION);
+		
+		final Book book1 = (Book) find("root/Root Book"); //$NON-NLS-1$
+		assertNotNull(book1);
+		
+		final Book book2 = (Book) find("root/level1/Level1 Book"); //$NON-NLS-1$
+		assertNotNull(book2);
+		
+		final String newTitle = null;
+		
+		book1.setTitle(newTitle);
+		
+		commit();
+		
+		book2.setTitle(newTitle);
+		
+		try {
+			tx.commit();
+			
+			fail("Should have rolled back because of outer transaction validation"); //$NON-NLS-1$
+		} catch (RollbackException e) {
+			// expected exception
+			Collection errors = findValidationStatuses(
+					e.getStatus(), IStatus.ERROR);
+			
+			// the inner transaction's error was not detected
+			assertEquals(1, errors.size());
+		}
 	}
 	
 	//

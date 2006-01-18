@@ -12,22 +12,25 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.2 2006/01/18 19:03:57 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -46,6 +49,7 @@ import org.eclipse.emf.transaction.TXEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
+import org.eclipse.emf.validation.model.IConstraintStatus;
 import org.osgi.framework.Bundle;
 
 /**
@@ -139,10 +143,15 @@ public class AbstractTest
 		
 		while (!transactionStack.isEmpty()) {
 			// unwind the current transaction stack
-			try {
-				rollback();
-			} catch (Exception e) {
-				// do nothing
+			if (getActiveTransaction().isActive()) {
+				try {
+					rollback();
+				} catch (Exception e) {
+					// do nothing
+				}
+			} else {
+				// just pop the closed transaction
+				transactionStack.remove(transactionStack.size() - 1);
 			}
 		}
 		
@@ -527,5 +536,34 @@ public class AbstractTest
 	 */
 	protected Map makeOptions(String option) {
 		return Collections.singletonMap(option, Boolean.TRUE);
+	}
+	
+	/**
+	 * Gets the validation statuses having the specified severity within
+	 * the specified status object.
+	 * 
+	 * @param status a status (often a multi-status)
+	 * @param severity the severity of status to look for
+	 * 
+	 * @return the matching statuses, or an empty collection if none found
+	 */
+	protected Collection findValidationStatuses(IStatus status, int severity) {
+		Set result;
+		
+		if (status.isMultiStatus()) {
+			result = new java.util.HashSet();
+			IStatus[] children = status.getChildren();
+			
+			for (int i = 0; i < children.length; i++) {
+				result.addAll(findValidationStatuses(children[i], severity));
+			}
+		} else if ((status instanceof IConstraintStatus)
+				&& (status.getSeverity() == severity)) {
+			result = Collections.singleton(status);
+		} else {
+			result = Collections.EMPTY_SET;
+		}
+		
+		return result;
 	}
 }

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXEditingDomainImpl.java,v 1.4 2006/01/10 15:55:57 cdamus Exp $
+ * $Id: TXEditingDomainImpl.java,v 1.5 2006/01/18 19:03:56 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -555,9 +555,8 @@ public class TXEditingDomainImpl
 			Tracing.trace(">>> Postcommitting " + getDebugID(tx) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-		final List notifications = validator.getNotifications(tx);
-		if ((notifications == null) || notifications.isEmpty()
-				|| !TransactionImpl.isNotificationEnabled(tx)) {
+		final List notifications = validator.getNotificationsForPostcommit(tx);
+		if ((notifications == null) || notifications.isEmpty()) {
 			return;
 		}
 		

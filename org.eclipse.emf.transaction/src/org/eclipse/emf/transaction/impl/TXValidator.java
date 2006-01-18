@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXValidator.java,v 1.2 2006/01/10 14:47:42 cdamus Exp $
+ * $Id: TXValidator.java,v 1.3 2006/01/18 19:03:56 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -57,7 +57,12 @@ public interface TXValidator {
 		}
 
 		// Documentation copied from the inherited specification
-		public List getNotifications(Transaction tx) {
+		public List getNotificationsForValidation(Transaction tx) {
+			return Collections.EMPTY_LIST;
+		}
+
+		// Documentation copied from the inherited specification
+		public List getNotificationsForPostcommit(Transaction tx) {
 			return Collections.EMPTY_LIST;
 		}
 
@@ -106,9 +111,21 @@ public interface TXValidator {
 	 * @param tx the transaction to be validated
 	 * 
 	 * @return the transaction's notifications, or <code>null</code> if the
-	 *     transaction has started yet
+	 *     transaction has not started yet
 	 */
-	List getNotifications(Transaction tx);
+	List getNotificationsForValidation(Transaction tx);
+	
+	/**
+	 * Obtains the notifications that I need to broadcast in a post-commit
+	 * resource-change event for the specified transaction.  Note that this
+	 * does not include notifications from "silent" transactions.
+	 * 
+	 * @param tx the transaction to be validated
+	 * 
+	 * @return those of the transaction's notifications that are eligible to
+	 *     be broadcast, or <code>null</code> if the transaction has not started
+	 */
+	List getNotificationsForPostcommit(Transaction tx);
 	
 	/**
 	 * Disposes me by clearing my state and cleaning up any resources that I

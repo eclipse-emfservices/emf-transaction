@@ -12,10 +12,11 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteValidatorImpl.java,v 1.2 2006/01/10 14:47:42 cdamus Exp $
+ * $Id: ReadWriteValidatorImpl.java,v 1.3 2006/01/18 19:03:56 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -91,14 +92,29 @@ public class ReadWriteValidatorImpl implements TXValidator {
 	}
 	
 	// Documentation copied from the inherited method specification
-	public synchronized List getNotifications(Transaction tx) {
+	public synchronized List getNotificationsForValidation(Transaction tx) {
 		List result = null;
 		
 		if (tree != null) {
 			TransactionTree nested = tree.find(tx);
 			
 			if (nested != null) {
-				result = nested.collectNotifications();
+				result = nested.collectNotifications(true);
+			}
+		}
+		
+		return result;
+	}
+	
+	// Documentation copied from the inherited method specification
+	public synchronized List getNotificationsForPostcommit(Transaction tx) {
+		List result = null;
+		
+		if (tree != null) {
+			TransactionTree nested = tree.find(tx);
+			
+			if (nested != null) {
+				result = nested.collectNotifications(false);
 			}
 		}
 		
@@ -132,7 +148,7 @@ public class ReadWriteValidatorImpl implements TXValidator {
 			IValidator validator = ModelValidationService.getInstance().newValidator(
 				EvaluationMode.LIVE);
 			
-			result = validator.validate(getNotifications(tx));
+			result = validator.validate(getNotificationsForValidation(tx));
 		} catch (Exception e) {
 			Tracing.catching(ReadWriteValidatorImpl.class, "validate", e); //$NON-NLS-1$
 			result = new Status(
@@ -265,12 +281,22 @@ public class ReadWriteValidatorImpl implements TXValidator {
 		 * Collects all of the notifications from me and my children, in the
 		 * correct time-linear order.
 		 * 
+		 * @param validation <code>true</code> if we are collecting notifications
+		 *     for validation; <code>false</code> if we are collect notifications
+		 *     for the post-commit event
+		 * 
 		 * @return my notifications (which might be an empty list)
 		 */
-		List collectNotifications() {
-			List result = new java.util.ArrayList();
+		List collectNotifications(boolean validation) {
+			List result;
 			
-			collectNotifications(result);
+			if (validation? TransactionImpl.isValidationEnabled(transaction)
+					: TransactionImpl.isNotificationEnabled(transaction)) {
+				result = new java.util.ArrayList();
+				collectNotifications(result, validation);
+			} else {
+				result = Collections.EMPTY_LIST;
+			}
 			
 			return result;
 		}
@@ -279,30 +305,36 @@ public class ReadWriteValidatorImpl implements TXValidator {
 		 * Recursive implementation of the {@link #collectNotifications()} method.
 		 * 
 		 * @param notifications the accumulator list
+		 * @param validation <code>true</code> if we are collecting notifications
+		 *     for validation; <code>false</code> if we are collect notifications
+		 *     for the post-commit event
 		 * 
 		 * @see #collectNotifications()
 		 */
-		private void collectNotifications(List notifications) {
-			int lastIndex = 0;
-			List parentNotifications = transaction.getNotifications();
-			
-			for (Iterator iter = children.iterator(); iter.hasNext();) {
-				TransactionTree next = (TransactionTree) iter.next();
+		private void collectNotifications(List notifications, boolean validation) {
+			if (validation? TransactionImpl.isValidationEnabled(transaction)
+					: TransactionImpl.isNotificationEnabled(transaction)) {
+				int lastIndex = 0;
+				List parentNotifications = transaction.getNotifications();
 				
-				// append the parent transaction's notifications from the last position
-				//    to this child's position
+				for (Iterator iter = children.iterator(); iter.hasNext();) {
+					TransactionTree next = (TransactionTree) iter.next();
+					
+					// append the parent transaction's notifications from the
+					//    last position to this child's position
+					notifications.addAll(parentNotifications.subList(
+							lastIndex,
+							next.parentNotificationCount));
+					lastIndex = next.parentNotificationCount;
+					
+					next.collectNotifications(notifications, validation);
+				}
+				
+				// append the remaining notifications following the last child
 				notifications.addAll(parentNotifications.subList(
 						lastIndex,
-						next.parentNotificationCount));
-				lastIndex = next.parentNotificationCount;
-				
-				next.collectNotifications(notifications);
+						parentNotifications.size()));
 			}
-			
-			// append the remaining notifications following the last child
-			notifications.addAll(parentNotifications.subList(
-					lastIndex,
-					parentNotifications.size()));
 		}
 	}
 }
