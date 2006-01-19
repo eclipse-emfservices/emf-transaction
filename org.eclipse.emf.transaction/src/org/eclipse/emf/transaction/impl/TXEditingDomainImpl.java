@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXEditingDomainImpl.java,v 1.5 2006/01/18 19:03:56 cdamus Exp $
+ * $Id: TXEditingDomainImpl.java,v 1.6 2006/01/19 22:40:58 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -346,6 +346,32 @@ public class TXEditingDomainImpl
 		return validator;
 	}
 	
+	/**
+	 * Obtains a copy of my pre-commit listener list as an array, for safe
+	 * iteration that allows concurrent updates to the original list.
+	 * 
+	 * @return my pre-commit listeners (as of the time of calling this method)
+	 */
+	protected final ResourceSetListener[] getPrecommitListeners() {
+		synchronized (precommitListeners) {
+			return (ResourceSetListener[]) precommitListeners.toArray(
+				new ResourceSetListener[precommitListeners.size()]);
+		}
+	}
+	
+	/**
+	 * Obtains a copy of my post-commit listener list as an array, for safe
+	 * iteration that allows concurrent updates to the original list.
+	 * 
+	 * @return my post-commit listeners (as of the time of calling this method)
+	 */
+	protected final ResourceSetListener[] getPostcommitListeners() {
+		synchronized (postcommitListeners) {
+			return (ResourceSetListener[]) postcommitListeners.toArray(
+				new ResourceSetListener[postcommitListeners.size()]);
+		}
+	}
+	
 	// Documentation copied from the inherited specification
 	public InternalTransaction getActiveTransaction() {
 		return activeTransaction;
@@ -459,12 +485,7 @@ public class TXEditingDomainImpl
 			return;
 		}
 		
-		final ResourceSetListener[] listeners;
-		
-		synchronized (precommitListeners) {
-			listeners = (ResourceSetListener[]) precommitListeners.toArray(
-				new ResourceSetListener[precommitListeners.size()]);
-		}
+		final ResourceSetListener[] listeners = getPrecommitListeners();
 		
 		// we process only this transaction's own changes in the pre-commit
 		final List notifications = tx.getNotifications();
@@ -564,12 +585,7 @@ public class TXEditingDomainImpl
 		//    below will replace it with a new validator
 		validator.dispose();
 		
-		final ResourceSetListener[] listeners;
-		
-		synchronized (postcommitListeners) {
-			listeners = (ResourceSetListener[]) postcommitListeners.toArray(
-				new ResourceSetListener[postcommitListeners.size()]);
-		}
+		final ResourceSetListener[] listeners = getPostcommitListeners();
 		
 		try {
 			runExclusive(new Runnable() {
@@ -613,12 +629,7 @@ public class TXEditingDomainImpl
 	
 	// Documentation copied from the inherited specification
 	public void broadcastUnbatched(Notification notification) {
-		final ResourceSetListener[] listeners;
-		
-		synchronized (postcommitListeners) {
-			listeners = (ResourceSetListener[]) postcommitListeners.toArray(
-				new ResourceSetListener[postcommitListeners.size()]);
-		}
+		final ResourceSetListener[] listeners = getPostcommitListeners();
 		
 		// TODO: Optimize with a reusable list and reusable event object
 		final List notifications = Collections.singletonList(notification);
