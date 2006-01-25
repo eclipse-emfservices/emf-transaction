@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListenerImpl.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: ResourceSetListenerImpl.java,v 1.2 2006/01/25 17:07:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -69,6 +69,13 @@ public class ResourceSetListenerImpl
 	 */
 	public void resourceSetChanged(ResourceSetChangeEvent event) {
 		// do nothing
+	}
+	
+	/**
+	 * By default, assume that we want individual transaction pre-commit.
+	 */
+	public boolean isAggregatePrecommitListener() {
+		return false;
 	}
 	
 	/**

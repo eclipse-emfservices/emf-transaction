@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXValidator.java,v 1.3 2006/01/18 19:03:56 cdamus Exp $
+ * $Id: TXValidator.java,v 1.4 2006/01/25 17:07:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -58,6 +58,11 @@ public interface TXValidator {
 
 		// Documentation copied from the inherited specification
 		public List getNotificationsForValidation(Transaction tx) {
+			return Collections.EMPTY_LIST;
+		}
+
+		// Documentation copied from the inherited specification
+		public List getNotificationsForPrecommit(Transaction tx) {
 			return Collections.EMPTY_LIST;
 		}
 
@@ -116,11 +121,23 @@ public interface TXValidator {
 	List getNotificationsForValidation(Transaction tx);
 	
 	/**
+	 * Obtains the notifications that I need to broadcast in a pre-commit
+	 * resource-change event for the specified transaction.  Note that this
+	 * does not include notifications from "no-triggers" transactions.
+	 * 
+	 * @param tx the transaction to be broadcast
+	 * 
+	 * @return those of the transaction's notifications that are eligible to
+	 *     be broadcast, or <code>null</code> if the transaction has not started
+	 */
+	List getNotificationsForPrecommit(Transaction tx);
+	
+	/**
 	 * Obtains the notifications that I need to broadcast in a post-commit
 	 * resource-change event for the specified transaction.  Note that this
 	 * does not include notifications from "silent" transactions.
 	 * 
-	 * @param tx the transaction to be validated
+	 * @param tx the transaction to be broadcast
 	 * 
 	 * @return those of the transaction's notifications that are eligible to
 	 *     be broadcast, or <code>null</code> if the transaction has not started

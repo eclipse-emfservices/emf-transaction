@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXEditingDomainImpl.java,v 1.6 2006/01/19 22:40:58 cdamus Exp $
+ * $Id: TXEditingDomainImpl.java,v 1.7 2006/01/25 17:07:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -70,6 +70,7 @@ public class TXEditingDomainImpl
 	private final Lock writeLock = new Lock();
 	
 	private final List precommitListeners = new java.util.ArrayList();
+	private final List aggregatePrecommitListeners = new java.util.ArrayList();
 	private final List postcommitListeners = new java.util.ArrayList();
 	
 	/**
@@ -182,15 +183,24 @@ public class TXEditingDomainImpl
 		}
 		
 		synchronized (precommitListeners) {
-			synchronized (postcommitListeners) {
-				// add the listener to the appropriate list only if it expects
-				//    to receive the event type and is not already in the list
-				
-				if (!l.isPostcommitOnly() && !precommitListeners.contains(l)) {
-					precommitListeners.add(l);
-				}
-				if (!l.isPrecommitOnly() && !postcommitListeners.contains(l)) {
-					postcommitListeners.add(l);
+			synchronized (aggregatePrecommitListeners) {
+				synchronized (postcommitListeners) {
+					// add the listener to the appropriate list only if it expects
+					//    to receive the event type and is not already in the list
+					
+					if (!l.isPostcommitOnly()) {
+						if (!l.isAggregatePrecommitListener()
+								&& !precommitListeners.contains(l)) {
+							precommitListeners.add(l);
+						} else if (l.isAggregatePrecommitListener()
+								&& !aggregatePrecommitListeners.contains(l)) {
+							aggregatePrecommitListeners.add(l);
+						}
+					}
+					
+					if (!l.isPrecommitOnly() && !postcommitListeners.contains(l)) {
+						postcommitListeners.add(l);
+					}
 				}
 			}
 		}
@@ -199,9 +209,12 @@ public class TXEditingDomainImpl
 	// Documentation copied from the inherited specification
 	public void removeResourceSetListener(ResourceSetListener l) {
 		synchronized (precommitListeners) {
-			synchronized (postcommitListeners) {
-				precommitListeners.remove(l);
-				postcommitListeners.remove(l);
+			synchronized (aggregatePrecommitListeners) {
+				synchronized (postcommitListeners) {
+					precommitListeners.remove(l);
+					aggregatePrecommitListeners.remove(l);
+					postcommitListeners.remove(l);
+				}
 			}
 		}
 	}
@@ -360,6 +373,20 @@ public class TXEditingDomainImpl
 	}
 	
 	/**
+	 * Obtains a copy of my aggregate pre-commit listener list as an array, for
+	 * safe iteration that allows concurrent updates to the original list.
+	 * 
+	 * @return my aggregate pre-commit listeners (as of the time of calling
+	 *      this method)
+	 */
+	protected final ResourceSetListener[] getAggregatePrecommitListeners() {
+		synchronized (aggregatePrecommitListeners) {
+			return (ResourceSetListener[]) aggregatePrecommitListeners.toArray(
+				new ResourceSetListener[aggregatePrecommitListeners.size()]);
+		}
+	}
+	
+	/**
 	 * Obtains a copy of my post-commit listener list as an array, for safe
 	 * iteration that allows concurrent updates to the original list.
 	 * 
@@ -476,91 +503,125 @@ public class TXEditingDomainImpl
 	
 	// Documentation copied from the inherited specification
 	public void precommit(final InternalTransaction tx) throws RollbackException {
+		class PrecommitRunnable implements Runnable {
+			private final List notifications;
+			private final ResourceSetListener[] listeners;
+			private final List triggers = new java.util.ArrayList();
+			private RollbackException rollback;
+			
+			PrecommitRunnable(ResourceSetListener[] listeners, List notifications) {
+				this.listeners = listeners;
+				this.notifications = notifications;
+			}
+			
+			void runExclusive() throws InterruptedException {
+				if ((listeners.length > 0) && !notifications.isEmpty()) {
+					TXEditingDomainImpl.this.runExclusive(this);
+				}
+			}
+			
+			RollbackException getRollback() {
+				return rollback;
+			}
+			
+			List getTriggers() {
+				return triggers;
+			}
+			
+			public void run() {
+				for (int i = 0; i < listeners.length; i++) {
+					try {
+						List filtered = FilterManager.getInstance().select(
+								notifications,
+								listeners[i].getFilter());
+						
+						if (!filtered.isEmpty()) {
+							Command cmd = listeners[i].transactionAboutToCommit(
+									new ResourceSetChangeEvent(
+											TXEditingDomainImpl.this,
+											tx,
+											filtered));
+							
+							if (cmd != null) {
+								triggers.add(cmd);
+							}
+						}
+					} catch (RollbackException e) {
+						rollback = e;
+						Tracing.catching(TXEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
+						break;
+					} catch (Exception e) {
+						Tracing.catching(TXEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
+						IStatus status = new Status(
+							IStatus.ERROR,
+							EMFTransactionPlugin.getPluginId(),
+							EMFTransactionStatusCodes.PRECOMMIT_FAILED,
+							Messages.precommitFailed,
+							e);
+						EMFTransactionPlugin.INSTANCE.log(status);
+						
+						// must roll back because we could not execute triggers
+						rollback = new RollbackException(status);
+						break;
+					}
+				}
+			}}
+		
 		if (Tracing.shouldTrace(EMFTransactionDebugOptions.TRANSACTIONS)) {
 			Tracing.trace(">>> Precommitting " + getDebugID(tx) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-		if (tx.getNotifications().isEmpty()) {
-			// nobody to notify
-			return;
-		}
-		
-		final ResourceSetListener[] listeners = getPrecommitListeners();
-		
 		// we process only this transaction's own changes in the pre-commit
-		final List notifications = tx.getNotifications();
-		final List triggers = new java.util.ArrayList();
+		PrecommitRunnable runnable = new PrecommitRunnable(
+			getPrecommitListeners(),
+			tx.getNotifications());
 		
-		try {
-			final RollbackException[] rbe = new RollbackException[1];
-			
-			runExclusive(new Runnable() {
-				public void run() {
-					for (int i = 0; i < listeners.length; i++) {
-						try {
-							List filtered = FilterManager.getInstance().select(
-									notifications,
-									listeners[i].getFilter());
-							
-							if (!filtered.isEmpty()) {
-								Command cmd = listeners[i].transactionAboutToCommit(
-										new ResourceSetChangeEvent(
-												TXEditingDomainImpl.this,
-												tx,
-												filtered));
-								
-								if (cmd != null) {
-									triggers.add(cmd);
-								}
-							}
-						} catch (RollbackException e) {
-							rbe[0] = e;
-							Tracing.catching(TXEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
-							break;
-						} catch (Exception e) {
-							Tracing.catching(TXEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
-							IStatus status = new Status(
-								IStatus.ERROR,
-								EMFTransactionPlugin.getPluginId(),
-								EMFTransactionStatusCodes.PRECOMMIT_FAILED,
-								Messages.precommitFailed,
-								e);
-							EMFTransactionPlugin.INSTANCE.log(status);
-							
-							// must roll back because we could not execute triggers
-							rbe[0] = new RollbackException(status);
-							break;
-						}
-					}
-				}});
-			
-			if (rbe[0] != null) {
-				Tracing.throwing(TXEditingDomainImpl.class, "precommit", rbe[0]); //$NON-NLS-1$
-				throw rbe[0];
+		// we will repeat the execution of aggregate listeners until there
+		//    are no more notifications to send to them
+		while (runnable != null) {
+			try {
+				runnable.runExclusive();
+				
+				if (runnable.getRollback() != null) {
+					Tracing.throwing(TXEditingDomainImpl.class,
+						"precommit", runnable.getRollback()); //$NON-NLS-1$
+					throw runnable.getRollback();
+				}
+				
+				final Command command;
+				if (tx instanceof EMFCommandTransaction) {
+					command = ((EMFCommandTransaction) tx).getCommand();
+				} else {
+					command = null;
+				}
+				
+				getTXCommandStack().executeTriggers(
+					command, runnable.getTriggers(), tx.getOptions());
+				
+				List notifications = validator.getNotificationsForPrecommit(tx);
+				
+				if ((notifications == null) || notifications.isEmpty()) {
+					runnable = null;
+				} else {
+					runnable = new PrecommitRunnable(
+						getAggregatePrecommitListeners(),
+						notifications);
+				}
+			} catch (InterruptedException e) {
+				Tracing.catching(TXEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
+				IStatus status = new Status(
+					IStatus.ERROR,
+					EMFTransactionPlugin.getPluginId(),
+					EMFTransactionStatusCodes.PRECOMMIT_INTERRUPTED,
+					Messages.precommitInterrupted,
+					e);
+				EMFTransactionPlugin.INSTANCE.log(status);
+				
+				// must roll back because we could not execute triggers
+				RollbackException exc = new RollbackException(status);
+				Tracing.throwing(TXEditingDomainImpl.class, "precommit", exc); //$NON-NLS-1$
+				throw exc;
 			}
-			
-			final Command command;
-			if (tx instanceof EMFCommandTransaction) {
-				command = ((EMFCommandTransaction) tx).getCommand();
-			} else {
-				command = null;
-			}
-			
-			getTXCommandStack().executeTriggers(command, triggers, tx.getOptions());
-		} catch (InterruptedException e) {
-			Tracing.catching(TXEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
-			IStatus status = new Status(
-				IStatus.ERROR,
-				EMFTransactionPlugin.getPluginId(),
-				EMFTransactionStatusCodes.PRECOMMIT_INTERRUPTED,
-				Messages.precommitInterrupted,
-				e);
-			EMFTransactionPlugin.INSTANCE.log(status);
-			
-			// must roll back because we could not execute triggers
-			RollbackException exc = new RollbackException(status);
-			Tracing.throwing(TXEditingDomainImpl.class, "precommit", exc); //$NON-NLS-1$
-			throw exc;
 		}
 	}
 	

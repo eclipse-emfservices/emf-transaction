@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXChangeDescription.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: TXChangeDescription.java,v 1.2 2006/01/25 17:07:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -52,4 +52,12 @@ public interface TXChangeDescription extends ChangeDescription {
 	 *    <code>false</code> otherwise (i.e., they are not invertible) 
 	 */
 	boolean canApply();
+	
+	/**
+	 * Queries whether I have no changes.
+	 * 
+	 * @return <code>true</code> if I have no changes (applying me would have
+	 *     no effect on anything); <code>false</code>, otherwise
+	 */
+	boolean isEmpty();
 }

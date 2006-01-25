@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.2 2006/01/10 14:48:53 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.3 2006/01/25 17:07:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -23,7 +23,6 @@ import java.util.Map;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.notify.Notification;
-import org.eclipse.emf.ecore.change.ChangeDescription;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.TXChangeDescription;
 import org.eclipse.emf.transaction.TXEditingDomain;
@@ -55,7 +54,7 @@ public class TransactionImpl
 	private boolean active;
 	private boolean closing; // prevents re-entrant commit/rollback
 	private boolean rollingBack;
-	protected final CompositeChangeDescription change = new CompositeChangeDescription();
+	protected final CompositeChangeDescription change;
 	protected final List notifications = new java.util.ArrayList();
 	
 	private boolean aborted;
@@ -93,6 +92,8 @@ public class TransactionImpl
 		synchronized (TransactionImpl.class) {
 			this.id = nextId++;
 		}
+		
+		change = isUndoEnabled(this)? new CompositeChangeDescription() : null;
 	}
 
 	
@@ -324,11 +325,16 @@ public class TransactionImpl
 				getInternalDomain().getValidator().remove(this);
 				
 				stopRecording();
-				change.apply();
+				
+				if (isUndoEnabled(this)) {
+					change.apply();
+				}
 			}
 			
-			// forget the description.  The changes are reverted
-			change.clear();
+			if (isUndoEnabled(this)) {
+				// forget the description.  The changes are reverted
+				change.clear();
+			}
 		} finally {
 			rollingBack = false;
 			close();
@@ -342,7 +348,7 @@ public class TransactionImpl
 
 	// Documentation copied from the inherited specification
 	public TXChangeDescription getChangeDescription() {
-		return (change.isEmpty() || isActive()) ? null : change;
+		return (isActive() && !closing) ? null : change;
 	}
 
 	/**
@@ -413,7 +419,7 @@ public class TransactionImpl
 	/**
 	 * Closes me.  This is the last step in committing or rolling back,
 	 * deactivating me in my editing domain.  Also, if I have a parent
-	 * transaction, I {@link InternalTransaction#resume(ChangeDescription) resume}
+	 * transaction, I {@link InternalTransaction#resume(TXChangeDescription) resume}
 	 * it.
 	 * <p>
 	 * If a subclass overrides this method, it <em>must</em> ensure that this

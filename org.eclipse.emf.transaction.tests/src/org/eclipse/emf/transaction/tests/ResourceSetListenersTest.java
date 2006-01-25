@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListenersTest.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: ResourceSetListenersTest.java,v 1.2 2006/01/25 17:07:40 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -33,6 +33,7 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
+import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultBookTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultNameTrigger;
@@ -727,6 +728,167 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertSame(newRes[0], notification.getNewValue());
 		} finally {
 			domain.removeResourceSetListener(testListener);
+		}
+	}
+
+	/**
+	 * Tests that aggregated pre-commit listeners are notified only when the
+	 * root-level read/write transaction commits, with all of the notifications
+	 * from the transaction and any nested transactions.
+	 */
+	public void test_precommit_aggregated_121508() {
+		try {
+			class AggregatedListener extends TestListener {
+				int count = 0;
+				
+				public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+					throws RollbackException {
+					
+					count++;
+					
+					return super.transactionAboutToCommit(event);
+				}
+				
+				public void reset() {
+					super.reset();
+					
+					count = 0;
+				}
+				
+				public boolean isAggregatePrecommitListener() {
+					return true;
+				}
+			}
+			
+			AggregatedListener localListener = new AggregatedListener();
+			domain.addResourceSetListener(localListener);
+			
+			startReading();
+			
+			final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+			assertNotNull(book);
+			
+			commit();
+			
+			String newTitle1 = "New Title1"; //$NON-NLS-1$
+			String newTitle2 = "New Title2"; //$NON-NLS-1$
+			
+			startWriting();
+			
+			book.setTitle(newTitle1);
+			
+			// nested
+			startWriting();
+			
+			book.setTitle(newTitle2);
+			
+			commit();
+			
+			commit();
+			
+			assertNotNull(localListener.precommit);
+			assertNotNull(localListener.precommit.getTransaction());
+			assertEquals(1, localListener.count);
+			
+			List notifications = localListener.precommit.getNotifications();
+			assertNotNull(notifications);
+			assertEquals(2, notifications.size());
+			
+			// notifications came in the right order
+			Notification notification = (Notification) notifications.get(0);
+			assertSame(book, notification.getNotifier());
+			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
+			assertSame(newTitle1, notification.getNewValue());
+			
+			notification = (Notification) notifications.get(1);
+			assertSame(book, notification.getNotifier());
+			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
+			assertSame(newTitle2, notification.getNewValue());
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+
+	/**
+	 * Tests that changes made by aggregated pre-commit listeners are fed back
+	 * into those listeners again.
+	 */
+	public void test_precommit_aggregatedCascade_121508() {
+		try {
+			final String newTitle1 = "New Title1"; //$NON-NLS-1$
+			final String newTitle2 = "New Title2"; //$NON-NLS-1$
+			
+			class AggregatedListener extends TestListener {
+				int count = 0;
+				
+				public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+					throws RollbackException {
+					
+					count++;
+					
+					super.transactionAboutToCommit(event);
+					
+					if (count < 2) {
+						List notifications = event.getNotifications();
+						assertNotNull(notifications);
+						assertEquals(1, notifications.size());
+						
+						Notification notification = (Notification) notifications.get(0);
+						assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
+						assertSame(newTitle1, notification.getNewValue());
+						
+						Book book = (Book) notification.getNotifier();
+						
+						return new SetCommand(
+							domain, book,
+							EXTLibraryPackage.eINSTANCE.getBook_Title(),
+							newTitle2);
+					}
+					
+					return null;
+				}
+				
+				public void reset() {
+					super.reset();
+					
+					count = 0;
+				}
+				
+				public boolean isAggregatePrecommitListener() {
+					return true;
+				}
+			}
+			
+			AggregatedListener localListener = new AggregatedListener();
+			domain.addResourceSetListener(localListener);
+			
+			startReading();
+			
+			final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+			assertNotNull(book);
+			
+			commit();
+			
+			startWriting();
+			
+			book.setTitle(newTitle1);
+			
+			commit();
+			
+			assertNotNull(localListener.precommit);
+			assertNotNull(localListener.precommit.getTransaction());
+			assertEquals(2, localListener.count);
+			
+			List notifications = localListener.precommit.getNotifications();
+			assertNotNull(notifications);
+			assertEquals(1, notifications.size());
+			
+			Notification notification = (Notification) notifications.get(0);
+			assertSame(book, notification.getNotifier());
+			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
+			assertSame(newTitle2, notification.getNewValue());
+		} catch (Exception e) {
+			fail(e);
 		}
 	}
 	

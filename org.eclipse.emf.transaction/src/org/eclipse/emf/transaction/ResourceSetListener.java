@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListener.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: ResourceSetListener.java,v 1.2 2006/01/25 17:07:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -120,6 +120,17 @@ public interface ResourceSetListener extends EventListener {
 	 *    the resource set
 	 */
 	void resourceSetChanged(ResourceSetChangeEvent event);
+
+	/**
+	 * Queries whether I should be invoked only for pre-commit of the root
+	 * transaction, with all of the notifications from that transaction and any
+	 * nested transactions.  Otherwise, I will be invoked for each transaction
+	 * individually and only with its own notifications.
+	 * 
+	 * @return <code>true</code> if I should be invoked only for pre-commit of
+	 *     the root transaction; <code>false</code>, otherwise
+	 */
+	boolean isAggregatePrecommitListener();
 	
 	/**
 	 * Queries whether I am interested only in the pre-commit

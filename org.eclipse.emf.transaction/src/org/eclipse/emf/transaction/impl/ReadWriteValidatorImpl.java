@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteValidatorImpl.java,v 1.3 2006/01/18 19:03:56 cdamus Exp $
+ * $Id: ReadWriteValidatorImpl.java,v 1.4 2006/01/25 17:07:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -55,7 +55,15 @@ import org.eclipse.emf.validation.service.ModelValidationService;
  * @see ReadOnlyValidatorImpl
  */
 public class ReadWriteValidatorImpl implements TXValidator {
+	/** Code indicating that we are collecting notifications for validation. */
+	static final int VALIDATION = 1;
+	/** Code indicating that we are collecting notifications for pre-commit. */
+	static final int PRECOMMIT = 2;
+	/** Code indicating that we are collecting notifications for post-commit. */
+	static final int POSTCOMMIT = 3;
+	
 	private TransactionTree tree = null;
+	private TransactionTree transactionToPrecommit = null;
 	
 	/**
 	 * Initializes me.
@@ -70,12 +78,19 @@ public class ReadWriteValidatorImpl implements TXValidator {
 	 */
 	public void add(InternalTransaction transaction) {
 		TransactionTree parent = findTree(transaction.getParent());
+		TransactionTree newTree;
 		
 		if (parent == null) {
 			// got the root transaction
 			tree = new TransactionTree(transaction);
+			newTree = tree;
 		} else {
-			parent.addChild(transaction);
+			newTree = parent.addChild(transaction);
+		}
+		
+		// next phase of aggregated precommit must start with this transaction
+		if ((transactionToPrecommit == null) && !transaction.isReadOnly()) {
+			transactionToPrecommit = newTree;
 		}
 	}
 	
@@ -99,8 +114,25 @@ public class ReadWriteValidatorImpl implements TXValidator {
 			TransactionTree nested = tree.find(tx);
 			
 			if (nested != null) {
-				result = nested.collectNotifications(true);
+				result = nested.collectNotifications(VALIDATION);
 			}
+		}
+		
+		return result;
+	}
+	
+	// Documentation copied from the inherited method specification
+	public synchronized List getNotificationsForPrecommit(Transaction tx) {
+		List result = null;
+		
+		if ((transactionToPrecommit != null)
+				&& (tx == transactionToPrecommit.getTransaction())) {
+			
+			result = transactionToPrecommit.collectNotifications(PRECOMMIT);
+			
+			// the next transaction that is created (for executing triggers)
+			//     will be the next one that we collect these notifications for
+			transactionToPrecommit = null;
 		}
 		
 		return result;
@@ -114,7 +146,7 @@ public class ReadWriteValidatorImpl implements TXValidator {
 			TransactionTree nested = tree.find(tx);
 			
 			if (nested != null) {
-				result = nested.collectNotifications(false);
+				result = nested.collectNotifications(POSTCOMMIT);
 			}
 		}
 		
@@ -217,8 +249,12 @@ public class ReadWriteValidatorImpl implements TXValidator {
 		 * 
 		 * @param child the child transaction to add
 		 */
-		void addChild(InternalTransaction child) {
-			children.add(new TransactionTree(child));
+		TransactionTree addChild(InternalTransaction child) {
+			TransactionTree result = new TransactionTree(child);
+			
+			children.add(result);
+			
+			return result;
 		}
 		
 		/**
@@ -281,21 +317,53 @@ public class ReadWriteValidatorImpl implements TXValidator {
 		 * Collects all of the notifications from me and my children, in the
 		 * correct time-linear order.
 		 * 
-		 * @param validation <code>true</code> if we are collecting notifications
-		 *     for validation; <code>false</code> if we are collect notifications
-		 *     for the post-commit event
+		 * @param purpose an integer code indicating what kind of notifications
+		 *     to collect (for what purpose we are collecting them)
 		 * 
 		 * @return my notifications (which might be an empty list)
+		 * 
+		 * @see ReadWriteValidatorImpl#VALIDATION
+		 * @see ReadWriteValidatorImpl#PRECOMMIT
+		 * @see ReadWriteValidatorImpl#POSTCOMMIT
 		 */
-		List collectNotifications(boolean validation) {
+		List collectNotifications(int purpose) {
 			List result;
 			
-			if (validation? TransactionImpl.isValidationEnabled(transaction)
-					: TransactionImpl.isNotificationEnabled(transaction)) {
+			if (canCollectNotificationsFor(purpose)) {
 				result = new java.util.ArrayList();
-				collectNotifications(result, validation);
+				collectNotifications(result, purpose);
 			} else {
 				result = Collections.EMPTY_LIST;
+			}
+			
+			return result;
+		}
+		
+		/**
+		 * Queries whether my transaction supports collecting notifications
+		 * for the specified purpose.
+		 * 
+		 * @param purpose an integer code indicating what kind of notifications
+		 *     to collect (for what purpose we are collecting them)
+		 *     
+		 * @return <code>true</code> if my transaction is enabled for this
+		 *     purpose; <code>false</code>, otherwise
+		 */
+		private boolean canCollectNotificationsFor(int purpose) {
+			boolean result;
+			
+			switch (purpose) {
+			case ReadWriteValidatorImpl.VALIDATION:
+				result = TransactionImpl.isValidationEnabled(transaction);
+				break;
+			case ReadWriteValidatorImpl.PRECOMMIT:
+				result = TransactionImpl.isTriggerEnabled(transaction);
+				break;
+			case ReadWriteValidatorImpl.POSTCOMMIT:
+				result = TransactionImpl.isNotificationEnabled(transaction);
+				break;
+			default:
+				result = false;
 			}
 			
 			return result;
@@ -305,15 +373,13 @@ public class ReadWriteValidatorImpl implements TXValidator {
 		 * Recursive implementation of the {@link #collectNotifications()} method.
 		 * 
 		 * @param notifications the accumulator list
-		 * @param validation <code>true</code> if we are collecting notifications
-		 *     for validation; <code>false</code> if we are collect notifications
-		 *     for the post-commit event
+		 * @param purpose an integer code indicating what kind of notifications
+		 *     to collect (for what purpose we are collecting them)
 		 * 
 		 * @see #collectNotifications()
 		 */
-		private void collectNotifications(List notifications, boolean validation) {
-			if (validation? TransactionImpl.isValidationEnabled(transaction)
-					: TransactionImpl.isNotificationEnabled(transaction)) {
+		private void collectNotifications(List notifications, int purpose) {
+			if (canCollectNotificationsFor(purpose)) {
 				int lastIndex = 0;
 				List parentNotifications = transaction.getNotifications();
 				
@@ -327,7 +393,7 @@ public class ReadWriteValidatorImpl implements TXValidator {
 							next.parentNotificationCount));
 					lastIndex = next.parentNotificationCount;
 					
-					next.collectNotifications(notifications, validation);
+					next.collectNotifications(notifications, purpose);
 				}
 				
 				// append the remaining notifications following the last child

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeChangeDescription.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: CompositeChangeDescription.java,v 1.2 2006/01/25 17:07:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -21,6 +21,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import org.eclipse.emf.common.util.BasicEList;
+import org.eclipse.emf.common.util.BasicEMap;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.EMap;
 import org.eclipse.emf.ecore.change.ChangeDescription;
@@ -99,27 +101,68 @@ public class CompositeChangeDescription
 	}
 	
 	/**
-	 * Adds a change description to me
+	 * Adds a change description to me.
 	 * 
 	 * @param change a new change description to add
 	 */
 	public void add(ChangeDescription change) {
-		changes.add(change);
+		if (!isEmpty(change)) {
+			// automatically flatten composites
+			if (change instanceof CompositeChangeDescription) {
+				CompositeChangeDescription other = ((CompositeChangeDescription) change);
+				
+				for (Iterator iter = other.changes.iterator(); iter.hasNext();) {
+					add((ChangeDescription) iter.next());
+				}
+			} else {
+				changes.add(change);
+				
+				if (objectChanges != null) {
+					// already computed object changes.  Keep them up-to-date
+					objectChanges.addAll(change.getObjectChanges());
+				}
+				
+				if (objectsToAttach != null) {
+					// already computed objects to attach.  Keep them up-to-date
+					objectsToAttach.addAll(change.getObjectsToAttach());
+				}
+				
+				if (objectsToDetach != null) {
+					// already computed objects to detach.  Keep them up-to-date
+					objectsToDetach.addAll(change.getObjectsToDetach());
+				}
+				
+				if (resourceChanges != null) {
+					// already computed resource changes.  Keep them up-to-date
+					resourceChanges.addAll(change.getResourceChanges());
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Queries whether a change description has no changes.
+	 * 
+	 * @param changeDescription a change description (maybe <code>null</code>)
+	 * 
+	 * @return <code>true</code> if the specified change is <code>null</code>
+	 *     or contains no changes; <code>false</code>, otherwise
+	 */
+	private boolean isEmpty(ChangeDescription changeDescription) {
+		boolean result = changeDescription == null;
 		
-		if (objectChanges != null) {
-			// already computed object changes.  Keep them up-to-date
-			objectChanges.addAll(change.getObjectChanges());
+		if (!result) {
+			if (changeDescription instanceof TXChangeDescription) {
+				result = ((TXChangeDescription) changeDescription).isEmpty();
+			} else {
+				result = changeDescription.getObjectChanges().isEmpty()
+					&& changeDescription.getObjectsToAttach().isEmpty()
+					&& changeDescription.getObjectsToDetach().isEmpty()
+					&& changeDescription.getResourceChanges().isEmpty();
+			}
 		}
 		
-		if (objectsToAttach != null) {
-			// already computed objects to attach.  Keep them up-to-date
-			objectsToAttach.addAll(change.getObjectsToAttach());
-		}
-		
-		if (resourceChanges != null) {
-			// already computed resource changes.  Keep them up-to-date
-			resourceChanges.addAll(change.getResourceChanges());
-		}
+		return result;
 	}
 
 	/**
@@ -128,8 +171,7 @@ public class CompositeChangeDescription
 	 */
 	public EMap getObjectChanges() {
 		if (objectChanges == null) {
-			// initialize via super method
-			objectChanges = super.getObjectChanges();
+			objectChanges = new BasicEMap();
 			
 			for (Iterator iter = changes.iterator(); iter.hasNext();) {
 				objectChanges.addAll(((ChangeDescription) iter.next()).getObjectChanges());
@@ -144,8 +186,15 @@ public class CompositeChangeDescription
 	 * descriptions.
 	 */
 	public EList getObjectsToDetach() {
-		// superclass implementation is derived from resource and object changes
-		return super.getObjectsToDetach();
+		if (objectsToDetach == null) {
+			objectsToDetach = new BasicEList();
+			
+			for (Iterator iter = changes.iterator(); iter.hasNext();) {
+				objectsToDetach.addAll(((ChangeDescription) iter.next()).getObjectsToDetach());
+			}
+		}
+		
+		return objectsToDetach;
 	}
 
 	/**
@@ -154,8 +203,7 @@ public class CompositeChangeDescription
 	 */
 	public EList getObjectsToAttach() {
 		if (objectsToAttach == null) {
-			// initialize via super method
-			objectsToAttach = super.getObjectsToAttach();
+			objectsToAttach = new BasicEList();
 			
 			for (Iterator iter = changes.iterator(); iter.hasNext();) {
 				objectsToAttach.addAll(((ChangeDescription) iter.next()).getObjectsToAttach());
@@ -171,8 +219,7 @@ public class CompositeChangeDescription
 	 */
 	public EList getResourceChanges() {
 		if (resourceChanges == null) {
-			// initialize via super method
-			resourceChanges = super.getResourceChanges();
+			resourceChanges = new BasicEList();
 			
 			for (Iterator iter = changes.iterator(); iter.hasNext();) {
 				resourceChanges.addAll(((ChangeDescription) iter.next()).getResourceChanges());
@@ -180,5 +227,14 @@ public class CompositeChangeDescription
 		}
 		
 		return resourceChanges;
+	}
+	
+	public String toString() {
+		StringBuffer result = new StringBuffer("CompositeChangeDescription["); //$NON-NLS-1$
+		result.append(getObjectChanges().size()).append(", "); //$NON-NLS-1$
+		result.append(getObjectsToAttach().size()).append(", "); //$NON-NLS-1$
+		result.append(getObjectsToDetach().size()).append(", "); //$NON-NLS-1$
+		result.append(getResourceChanges().size()).append(']');
+		return result.toString();
 	}
 }
