@@ -12,15 +12,20 @@
  *
  * </copyright>
  *
- * $Id: TXChangeRecorder.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: TXChangeRecorder.java,v 1.2 2006/01/26 20:44:46 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.common.notify.Notifier;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.change.ChangeDescription;
 import org.eclipse.emf.ecore.change.util.ChangeRecorder;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -82,10 +87,52 @@ public class TXChangeRecorder
 	}
 	
 	/**
+	 * Extends the inherited implementation to clear the reference to the
+	 * change description returned.
+	 */
+	public ChangeDescription endRecording() {
+		ChangeDescription result = super.endRecording();
+		
+		changeDescription = null;
+		
+		return result;
+	}
+
+	/**
+	 * Overrides the superclass method to
+	 * <ul>
+	 *   <li>ignore the "originalTargetObjects" since we never resume recording
+	 *       a paused change description</li>
+	 *   <li>ignore the "targetObjects" because we will never find, upon
+	 *       upon consolidating changes, that any target object is unexpectedly
+	 *       orphaned (as we always listen to everything in the resource set,
+	 *       so will always get the appropriate removal notifications).  Also,
+	 *       because we manage an entire resource set on behalf of an editing
+	 *       domain, disposal by removing ourselves from the adapters lists of
+	 *       our targets is not an issue because we cannot cause a memory leak
+	 *       outside of the scope of the editing domain and its resource set</li>
+	 * </ul>
+	 */
+	public void setTarget(Notifier target) {
+		// TODO: Account for containment proxies
+		Collection contents = (target instanceof EObject)? ((EObject) target).eContents()
+			: (target instanceof ResourceSet)? ((ResourceSet) target).getResources()
+				: (target instanceof Resource)? ((Resource) target).getContents()
+					: null;
+
+		if (contents != null) {
+			for (Iterator i = contents.iterator(); i.hasNext();) {
+				Notifier notifier = (Notifier) i.next();
+				addAdapter(notifier);
+			}
+		}
+	}
+	
+	/**
 	 * Detects whether the change indicated by the specified notification
-	 * violates the transaction protocol and/or how it changes the load state
-	 * of a resource (if it all), in addition to recording the change (if I
-	 * am currently recording) and passing it along to the domain's current
+	 * violates the transaction protocol and/or how it changes the load state of
+	 * a resource (if it all), in addition to recording the change (if I am
+	 * currently recording) and passing it along to the domain's current
 	 * transaction (if any).
 	 */
 	public void notifyChanged(Notification notification) {
