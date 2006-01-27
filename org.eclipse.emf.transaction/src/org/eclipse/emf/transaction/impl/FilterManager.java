@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: FilterManager.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: FilterManager.java,v 1.2 2006/01/27 14:05:24 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -65,18 +65,24 @@ public final class FilterManager {
 	 * @see #selectUnbatched(List, NotificationFilter)
 	 */
 	public List select(List notifications, NotificationFilter filter) {
-		List result = new java.util.ArrayList();
+		List result;
 		
-		if (filter == null) {
-			// the default filter
-			filter = NotificationFilter.NOT_TOUCH;
-		}
-		
-		for (Iterator iter = notifications.iterator(); iter.hasNext();) {
-			Notification next = (Notification) iter.next();
+		if (filter == NotificationFilter.ANY) {
+			result = notifications;
+		} else {
+			result = new java.util.ArrayList();
 			
-			if (filter.matches(next)) {
-				result.add(next);
+			if (filter == null) {
+				// the default filter
+				filter = NotificationFilter.NOT_TOUCH;
+			}
+			
+			for (Iterator iter = notifications.iterator(); iter.hasNext();) {
+				Notification next = (Notification) iter.next();
+				
+				if (filter.matches(next)) {
+					result.add(next);
+				}
 			}
 		}
 		
