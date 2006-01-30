@@ -14,7 +14,7 @@
  *
  * </copyright>
  *
- * $Id: feature.xml,v 1.1 2006/01/03 22:10:52 cdamus Exp $
+ * $Id: feature.xml,v 1.2 2006/01/30 16:36:45 cdamus Exp $
  */
 -->
 <feature
@@ -50,7 +50,7 @@ http://www.eclipse.org/legal/epl-v10.html
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.junit"/>
       <import plugin="org.eclipse.emf.transaction"/>
-      <import plugin="org.eclipse.emf.workbench"/>
+      <import plugin="org.eclipse.emf.workspace"/>
       <import plugin="org.eclipse.emf.examples.library"/>
    </requires>
 
@@ -75,7 +75,7 @@ http://www.eclipse.org/legal/epl-v10.html
          unpack="false"/>
 
    <plugin
-         id="org.eclipse.emf.workbench.tests"
+         id="org.eclipse.emf.workspace.tests"
          download-size="0"
          install-size="0"
          version="1.0.0"

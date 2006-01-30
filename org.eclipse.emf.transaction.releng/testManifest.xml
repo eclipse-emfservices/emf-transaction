@@ -32,7 +32,7 @@
 	</zipTypes>
 
 	<logFiles>
-		<logFile name="org.eclipse.emf.workbench.tests_linux.gtk.xml">
+		<logFile name="org.eclipse.emf.workspace.tests_linux.gtk.xml">
 			<effectedFile id="SDK"></effectedFile>
 			<effectedFile id="projRUN"></effectedFile>
 		</logFile>
@@ -56,27 +56,27 @@
       <effectedFile id="SDK"></effectedFile>
       <effectedFile id="projRUN"></effectedFile>
    </logFile>
-   <logFile name="plugins/org.eclipse.emf.workbench_*/*.bin.log">
+   <logFile name="plugins/org.eclipse.emf.workspace_*/*.bin.log">
       <effectedFile id="SDK"></effectedFile>
       <effectedFile id="projRUN"></effectedFile>
    </logFile>
-   <logFile name="plugins/org.eclipse.emf.workbench.ui_*/*.bin.log">
+   <logFile name="plugins/org.eclipse.emf.workspace.ui_*/*.bin.log">
       <effectedFile id="SDK"></effectedFile>
       <effectedFile id="projRUN"></effectedFile>
    </logFile>
    <logFile name="plugins/org.eclipse.emf.transaction.examples_*/*.bin.log">
       <effectedFile id="EX"></effectedFile>
    </logFile>
-   <logFile name="plugins/org.eclipse.emf.workbench.examples_*/*.bin.log">
+   <logFile name="plugins/org.eclipse.emf.workspace.examples_*/*.bin.log">
       <effectedFile id="EX"></effectedFile>
    </logFile>
-   <logFile name="plugins/org.eclipse.emf.workbench.examples.library.editor_*/*.bin.log">
+   <logFile name="plugins/org.eclipse.emf.workspace.examples.library.editor_*/*.bin.log">
       <effectedFile id="EX"></effectedFile>
    </logFile>
    <logFile name="plugins/org.eclipse.emf.transaction.tests_*/*.bin.log">
       <effectedFile id="T"></effectedFile>
    </logFile>
-   <logFile name="plugins/org.eclipse.emf.workbench.tests_*/*.bin.log">
+   <logFile name="plugins/org.eclipse.emf.workspace.tests_*/*.bin.log">
       <effectedFile id="T"></effectedFile>
    </logFile>
 

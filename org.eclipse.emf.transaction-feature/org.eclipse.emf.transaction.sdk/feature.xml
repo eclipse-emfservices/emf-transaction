@@ -14,7 +14,7 @@
  *
  * </copyright>
  *
- * $Id: feature.xml,v 1.4 2006/01/11 15:33:35 cdamus Exp $
+ * $Id: feature.xml,v 1.5 2006/01/30 16:36:42 cdamus Exp $
  */
 -->
 <feature
@@ -50,14 +50,14 @@
         version="1.0.0"/>
 
     <includes
-        id="org.eclipse.emf.workbench"
+        id="org.eclipse.emf.workspace"
         version="1.0.0"/>
 
     <includes
-        id="org.eclipse.emf.workbench.doc"
+        id="org.eclipse.emf.workspace.doc"
         version="1.0.0"/>
 
     <includes
-        id="org.eclipse.emf.workbench.examples"
+        id="org.eclipse.emf.workspace.examples"
         version="1.0.0"/>
 </feature>

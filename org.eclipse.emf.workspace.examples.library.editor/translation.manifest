@@ -1,2 +1,2 @@
 plugin.properties
-src\org\eclipse\emf\transation\internal\l10n\Messages.properties
+src\org\eclipse\emf\workspace\examples\extlibrary\internal\l10n\Messages.properties
