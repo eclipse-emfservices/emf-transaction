@@ -1,0 +1,4 @@
+# Debugging options for the org.eclipse.emf.workspace.tests plug-in
+
+# Turn on general debugging for the org.eclipse.emf.workspace.tests plug-in
+org.eclipse.emf.workspace.tests/debug=true

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--xtools2_universal_type_manager-->
+<?RSA version="7.0"?>
+<rmplib:Library xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:rmplib="http:///org/eclipse/emf/examples/library/extlibrary.ecore/1.0.0" xmi:id="_Jn_FAO1OEdmNZLgVDnynlw" name="root">
+  <stock xmi:type="rmplib:Book" xmi:id="_o-3oUO1OEdmNZLgVDnynlw" title="Root Book"/>
+  <branches xmi:id="_SJhBMO1OEdmNZLgVDnynlw" name="level1">
+    <stock xmi:type="rmplib:Book" xmi:id="_x8ayIO1OEdmNZLgVDnynlw" title="Level1 Book"/>
+    <branches xmi:id="_XEXxoO1OEdmNZLgVDnynlw" name="level2">
+      <stock xmi:type="rmplib:Book" xmi:id="_-fvIwe1OEdmNZLgVDnynlw" title="Level2 Book"/>
+      <branches xmi:id="_a5MuIO1OEdmNZLgVDnynlw" name="level3">
+        <stock xmi:type="rmplib:Book" xmi:id="_AnopYe1PEdmNZLgVDnynlw" title="Level3 Book"/>
+        <branches xmi:id="_cXX8UO1OEdmNZLgVDnynlw" name="level4">
+          <stock xmi:type="rmplib:Book" xmi:id="_Cxxlse1PEdmNZLgVDnynlw" title="Level4 Book"/>
+          <writers xmi:id="_CxxlsO1PEdmNZLgVDnynlw" firstName="Level4" lastName="Writer"/>
+        </branches>
+        <writers xmi:id="_AnopYO1PEdmNZLgVDnynlw" firstName="Level3" lastName="Writer"/>
+      </branches>
+      <writers xmi:id="_-fvIwO1OEdmNZLgVDnynlw" firstName="Level2" lastName="Writer"/>
+    </branches>
+    <writers xmi:id="_zomnIO1OEdmNZLgVDnynlw" firstName="Level1" lastName="Writer"/>
+  </branches>
+  <branches xmi:id="_Vev3oO1OEdmNZLgVDnynlw" name="level1-1">
+    <stock xmi:type="rmplib:Book" xmi:id="_3rbjYO1OEdmNZLgVDnynlw" title="Level1-1 Book"/>
+    <branches xmi:id="_YZApUO1OEdmNZLgVDnynlw" name="level2-1">
+      <stock xmi:type="rmplib:Book" xmi:id="_6s2F8e1OEdmNZLgVDnynlw" title="Level2-1 Book"/>
+      <writers xmi:id="_6s2F8O1OEdmNZLgVDnynlw" firstName="Level2-1" lastName="Writer"/>
+    </branches>
+    <writers xmi:id="_3rSZcO1OEdmNZLgVDnynlw" firstName="Level1-1" lastName="Writer"/>
+  </branches>
+  <writers xmi:id="_sVcikO1OEdmNZLgVDnynlw" firstName="Root" lastName="Writer"/>
+</rmplib:Library>

@@ -1,0 +1,3 @@
+plugin.properties
+about.properties
+src\org\eclipse\emf\workbench\internal\l10n\Messages.properties

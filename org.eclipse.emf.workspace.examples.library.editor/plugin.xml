@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+
+<!--
+ <copyright>
+ </copyright>
+
+ $Id: plugin.xml,v 1.1 2006/01/30 16:30:09 cdamus Exp $
+-->
+
+<plugin>
+
+
+  <extension point = "org.eclipse.ui.editors">
+    <editor
+        id = "org.eclipse.emf.workspace.examples.extlibrary.presentation.EXTLibraryEditorID"
+        name = "%_UI_EXTLibraryEditor_label"
+        icon = "icons/full/obj16/EXTLibraryModelFile.gif"
+        extensions = "extlibrary"
+        class = "org.eclipse.emf.workspace.examples.extlibrary.presentation.EXTLibraryEditor" 
+        contributorClass="org.eclipse.emf.workspace.examples.extlibrary.presentation.EXTLibraryActionBarContributor" >
+    </editor>
+  </extension>
+  <extension
+        point="org.eclipse.emf.transaction.editingDomains">
+     <editingDomain
+           factory="org.eclipse.emf.workspace.examples.extlibrary.domain.EXTLibraryEditingDomainFactory"
+           id="org.eclipse.emf.workspace.examples.LibraryEditingDomain"/>
+  </extension>
+  <extension
+        point="org.eclipse.emf.transaction.listeners">
+     <listener class="org.eclipse.emf.workspace.examples.extlibrary.presentation.ResourceLoadedListener">
+        <editingDomain id="org.eclipse.emf.workspace.examples.LibraryEditingDomain"/>
+     </listener>
+  </extension>    
+</plugin>

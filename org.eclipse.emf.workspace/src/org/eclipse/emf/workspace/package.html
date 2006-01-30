@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+<!--
+
+/******************************************************************************
+ * Copyright (c) 2005 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *    IBM Corporation - initial API and implementation 
+ ****************************************************************************/
+
+-->
+</head>
+<body>
+
+Definition of the API for a transactional editing domain integrated with the
+Eclipse Workbench's operation history.
+
+<h2>Package Specification</h2>
+
+<H3>Creating an Editing Domain</H3>
+<p>
+The following snippet illustrates the creation of a workbench editing
+domain:
+</p>
+<PRE>
+// can use any operation history instance
+IOperationHistory myHistory = OperationHistoryFactory.getOperationHistory();
+
+TXEditingDomain domain = WorkbenchEditingDomainFactory.INSTANCE.createEditingDomain(myHistory);
+ResourceSet rset = domain.getResourceSet();
+
+// could also just let the editing domain get the default history from the history factory
+TXEditingDomain domain = WorkbenchEditingDomainFactory.INSTANCE.createEditingDomain();
+</PRE>
+<p>
+The same editing domain registry and extension point used for sharing
+<code>TXEditingDomain</code>s can also be used to share workbench editing
+domains.  Just register an editing domain ID and a factory implementation on the
+<code>org.eclipse.emf.transaction.editingDomains</code> extension point and
+use the {@link org.eclipse.emf.transaction.TXEditingDomain.Registry} to access
+your domain.
+</p>
+
+<H3>Executing Operations</H3>
+<p>
+The normal procedure for modifying resources in a workbench editing domain is
+to use undoable operations:
+</p>
+<PRE>
+IUndoableOperation operation = new AbstractEMFOperation(
+            domain, "Create Library") {
+        protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+                throws ExecutionException {
+            Resource res = rset.getResource(
+                URI.createFileURI("/tmp/my.xmi"),
+                true);
+
+            Library library = LibraryFactory.eINSTANCE.createLibrary();
+            
+            // these modifications require a write transaction in this
+            //    editing domain.  The operation provides this transaction
+            res.getContents().add(library);
+            library.setName("Main Branch");
+        }
+    };
+
+try {
+    myHistory.execute(operation, new NullProgressMonitor(), null);
+} catch (ExecutionException ee) {
+    getLog().log(ee);
+}
+</PRE>
+<P>
+Of course, it is just as easy to re-use existing EMF <CODE>Command</CODE>s:
+</P>
+<PRE>
+IUndoableOperation operation = new EMFCommandOperation(
+    domain, new CreateLibraryCommand());
+
+try {
+    myHistory.execute(operation, new NullProgressMonitor(), null);
+} catch (ExecutionException ee) {
+    getLog().log(ee);
+}
+
+// alternatively, the command stack of our editing domain will automatically
+//    wrap the command in an operation and execute it on the operation history
+domain.getCommandStack().execute(new CreateLibraryCommand());
+</PRE>
+<p>
+In either case, undoing and redoing operations is as simple as the operation history API
+makes it:
+</p>
+<PRE>
+// undo
+try {
+    myHistory.undo(myEditorContext, new NullProgressMonitor(), null);
+} catch (ExecutionException ee) {
+    getLog().log(ee);
+}
+
+// redo
+try {
+    myHistory.redo(myEditorContext, new NullProgressMonitor(), null);
+} catch (ExecutionException ee) {
+    getLog().log(ee);
+}
+</PRE>
+
+@see WorkbenchEditingDomainFactory
+@see AbstractEMFOperation
+@see CompositeEMFOperation
+
+</body>
+</html>
