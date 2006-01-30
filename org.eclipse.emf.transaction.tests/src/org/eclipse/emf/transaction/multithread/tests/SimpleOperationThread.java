@@ -12,12 +12,12 @@
  *
  * </copyright>
  *
- * $Id: SimpleOperationThread.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: SimpleOperationThread.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import org.eclipse.emf.transaction.TXCommandStack;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 /**
  * Thread representing a simple model operation.
@@ -45,7 +45,7 @@ class SimpleOperationThread
 	// Wait Object.
 	Object waitObject = null;
 
-	private final TXEditingDomain domain;
+	private final TransactionalEditingDomain domain;
 	
 	/**
 	 * Constructor
@@ -55,7 +55,7 @@ class SimpleOperationThread
 	 * @param notifyObject
 	 *            Object to notify
 	 */
-	public SimpleOperationThread(TXEditingDomain domain, Object waitObject, Object notifyObject) {
+	public SimpleOperationThread(TransactionalEditingDomain domain, Object waitObject, Object notifyObject) {
 		this.domain = domain;
 		this.notifyObject = notifyObject;
 		this.waitObject = waitObject;
@@ -102,11 +102,11 @@ class SimpleOperationThread
 		t.printStackTrace();
 	}
 	
-	protected final TXEditingDomain getDomain() {
+	protected final TransactionalEditingDomain getDomain() {
 		return domain;
 	}
 	
-	protected final TXCommandStack getCommandStack() {
-		return (TXCommandStack) domain.getCommandStack();
+	protected final TransactionalCommandStack getCommandStack() {
+		return (TransactionalCommandStack) domain.getCommandStack();
 	}
 }

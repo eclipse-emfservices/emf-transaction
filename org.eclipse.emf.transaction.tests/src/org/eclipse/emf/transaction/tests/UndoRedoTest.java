@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: UndoRedoTest.java,v 1.2 2006/01/10 14:48:56 cdamus Exp $
+ * $Id: UndoRedoTest.java,v 1.3 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -28,7 +28,7 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.RecordingCommand;
-import org.eclipse.emf.transaction.TXChangeDescription;
+import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultBookTrigger;
@@ -187,7 +187,7 @@ public class UndoRedoTest extends AbstractTest {
 		URI uri = unloadTestResource();
 		
 		Transaction tx = commit();
-		TXChangeDescription change = tx.getChangeDescription();
+		TransactionChangeDescription change = tx.getChangeDescription();
 		
 		// check that the unload happened correctly
 		assertTrue(book.eIsProxy());
@@ -251,7 +251,7 @@ public class UndoRedoTest extends AbstractTest {
 		testResource = domain.getResourceSet().getResource(uri, true);
 		
 		Transaction tx = commit();
-		TXChangeDescription change = tx.getChangeDescription();
+		TransactionChangeDescription change = tx.getChangeDescription();
 		
 		startReading();
 		

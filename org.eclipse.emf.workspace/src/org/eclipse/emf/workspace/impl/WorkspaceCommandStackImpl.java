@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackImpl.java,v 1.1 2006/01/30 16:18:19 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.1 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -40,15 +40,15 @@ import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.impl.EMFCommandTransaction;
-import org.eclipse.emf.transaction.impl.InternalTXCommandStack;
-import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalCommandStack;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.util.TriggerCommand;
 import org.eclipse.emf.workspace.EMFCommandOperation;
-import org.eclipse.emf.workspace.IWorkbenchCommandStack;
+import org.eclipse.emf.workspace.IWorkspaceCommandStack;
 import org.eclipse.emf.workspace.ResourceUndoContext;
-import org.eclipse.emf.workspace.WorkbenchEditingDomainFactory;
-import org.eclipse.emf.workspace.internal.EMFWorkbenchPlugin;
-import org.eclipse.emf.workspace.internal.EMFWorkbenchStatusCodes;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
+import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
+import org.eclipse.emf.workspace.internal.EMFWorkspaceStatusCodes;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
@@ -57,16 +57,16 @@ import org.eclipse.emf.workspace.internal.l10n.Messages;
  * execution of commands to an {@link IOperationHistory}.
  * <p>
  * This is the command stack implementation used by editing domains created by
- * the {@link WorkbenchEditingDomainFactory}.
+ * the {@link WorkspaceEditingDomainFactory}.
  * </p>
  * 
  * @author Christian W. Damus (cdamus)
  */
-public class WorkbenchCommandStackImpl
+public class WorkspaceCommandStackImpl
 		extends BasicCommandStack
-		implements IWorkbenchCommandStack, InternalTXCommandStack {
+		implements IWorkspaceCommandStack, InternalTransactionalCommandStack {
 	
-	private InternalTXEditingDomain domain;
+	private InternalTransactionalEditingDomain domain;
 	private final IOperationHistory history;
 	private DomainListener domainListener;
 	
@@ -83,7 +83,7 @@ public class WorkbenchCommandStackImpl
 	 * 
 	 * @param history my operation history
 	 */
-	public WorkbenchCommandStackImpl(IOperationHistory history) {
+	public WorkspaceCommandStackImpl(IOperationHistory history) {
 		super();
 		
 		this.history = history;
@@ -91,12 +91,12 @@ public class WorkbenchCommandStackImpl
 	}
 
 	// Documentation copied from the method specification
-	public InternalTXEditingDomain getDomain() {
+	public InternalTransactionalEditingDomain getDomain() {
 		return domain;
 	}
 
 	// Documentation copied from the method specification
-	public void setEditingDomain(InternalTXEditingDomain domain) {
+	public void setEditingDomain(InternalTransactionalEditingDomain domain) {
 		if (this.domain != null) {
 			this.domain.removeResourceSetListener(domainListener);
 			history.removeOperationHistoryListener(domainListener);
@@ -135,25 +135,25 @@ public class WorkbenchCommandStackImpl
 				// the transaction must have rolled back if the status was
 				//    error or worse
 				RollbackException exc = new RollbackException(status);
-				Tracing.throwing(WorkbenchCommandStackImpl.class,
+				Tracing.throwing(WorkspaceCommandStackImpl.class,
 						"execute", exc); //$NON-NLS-1$
 				throw exc;
 			}
 			
 			notifyListeners();
 		} catch (ExecutionException e) {
-			Tracing.catching(WorkbenchCommandStackImpl.class, "execute", e); //$NON-NLS-1$
+			Tracing.catching(WorkspaceCommandStackImpl.class, "execute", e); //$NON-NLS-1$
 			command.dispose();
 			
 			if (e.getCause() instanceof RollbackException) {
 				// throw the rollback
 				RollbackException exc = (RollbackException) e.getCause();
-				Tracing.throwing(WorkbenchCommandStackImpl.class, "execute", exc); //$NON-NLS-1$
+				Tracing.throwing(WorkspaceCommandStackImpl.class, "execute", exc); //$NON-NLS-1$
 				throw exc;
 			} else if (e.getCause() instanceof RuntimeException) {
 				// throw the programming error
 				RuntimeException exc = (RuntimeException) e.getCause();
-				Tracing.throwing(WorkbenchCommandStackImpl.class, "execute", exc); //$NON-NLS-1$
+				Tracing.throwing(WorkspaceCommandStackImpl.class, "execute", exc); //$NON-NLS-1$
 				throw exc;
 			} else {
 				// log the problem.  We can't rethrow whatever it was
@@ -167,12 +167,12 @@ public class WorkbenchCommandStackImpl
 		try {
 			execute(command, null);
 		} catch (InterruptedException e) {
-			Tracing.catching(WorkbenchCommandStackImpl.class, "execute", e); //$NON-NLS-1$
+			Tracing.catching(WorkspaceCommandStackImpl.class, "execute", e); //$NON-NLS-1$
 			// just log it.  Note that the transaction is already rolled back,
 			//    so handleError() will not find an active transaction
 			handleError(e);
 		} catch (RollbackException e) {
-			Tracing.catching(WorkbenchCommandStackImpl.class, "execute", e); //$NON-NLS-1$
+			Tracing.catching(WorkspaceCommandStackImpl.class, "execute", e); //$NON-NLS-1$
 			// just log it.  Note that the transaction is already rolled back,
 			//    so handleError() will not find an active transaction
 			handleError(e);
@@ -198,10 +198,10 @@ public class WorkbenchCommandStackImpl
 			try {
 				exceptionHandler.handleException(exception);
 			} catch (Exception e) {
-				EMFWorkbenchPlugin.INSTANCE.log(new Status(
+				EMFWorkspacePlugin.INSTANCE.log(new Status(
 						IStatus.WARNING,
-						EMFWorkbenchPlugin.getPluginId(),
-						EMFWorkbenchStatusCodes.EXCEPTION_HANDLER_FAILED,
+						EMFWorkspacePlugin.getPluginId(),
+						EMFWorkspaceStatusCodes.EXCEPTION_HANDLER_FAILED,
 						Messages.exceptionHandlerFailed,
 						e));
 			}
@@ -227,7 +227,7 @@ public class WorkbenchCommandStackImpl
 					new NullProgressMonitor(),
 					null);
 		} catch (ExecutionException e) {
-			Tracing.catching(WorkbenchCommandStackImpl.class, "undo", e); //$NON-NLS-1$
+			Tracing.catching(WorkspaceCommandStackImpl.class, "undo", e); //$NON-NLS-1$
 			
 			// can't throw anything from this method
 			handleError(e);
@@ -251,7 +251,7 @@ public class WorkbenchCommandStackImpl
 					new NullProgressMonitor(),
 					null);
 		} catch (ExecutionException e) {
-			Tracing.catching(WorkbenchCommandStackImpl.class, "redo", e); //$NON-NLS-1$
+			Tracing.catching(WorkspaceCommandStackImpl.class, "redo", e); //$NON-NLS-1$
 			
 			// can't throw anything from this method
 			handleError(e);

@@ -12,11 +12,11 @@
  *
  * </copyright>
  *
- * $Id: NestedReadInWriteThread.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: NestedReadInWriteThread.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 
 /**
@@ -33,14 +33,14 @@ class NestedReadInWriteThread
 	 * @param waitObject
 	 * @param notifyObject
 	 */
-	public NestedReadInWriteThread(TXEditingDomain domain, Object waitObject, Object notifyObject) {
+	public NestedReadInWriteThread(TransactionalEditingDomain domain, Object waitObject, Object notifyObject) {
 		super(domain, waitObject, notifyObject);
 	}
 
 	/**
 	 * Default Constructor
 	 */
-	public NestedReadInWriteThread(TXEditingDomain domain) {
+	public NestedReadInWriteThread(TransactionalEditingDomain domain) {
 		this(domain, null, null);
 	}
 

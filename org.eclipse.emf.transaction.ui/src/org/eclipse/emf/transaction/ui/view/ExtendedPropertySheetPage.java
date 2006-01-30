@@ -12,14 +12,14 @@
  *
  * </copyright>
  *
- * $Id: ExtendedPropertySheetPage.java,v 1.1 2006/01/03 20:44:14 cdamus Exp $
+ * $Id: ExtendedPropertySheetPage.java,v 1.2 2006/01/30 19:47:45 cdamus Exp $
  */
 package org.eclipse.emf.transaction.ui.view;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIPlugin;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIStatusCodes;
 import org.eclipse.emf.transaction.ui.internal.Tracing;
@@ -51,8 +51,8 @@ public class ExtendedPropertySheetPage
 	 * 
 	 * @return my editing domain
 	 */
-	protected TXEditingDomain getTXEditingDomain() {
-		return (TXEditingDomain) editingDomain;
+	protected TransactionalEditingDomain getTransactionalEditingDomain() {
+		return (TransactionalEditingDomain) editingDomain;
 	}
 	
 	/**
@@ -60,7 +60,7 @@ public class ExtendedPropertySheetPage
 	 * if an editing domain is available.
 	 */
 	public void refresh() {
-		TXEditingDomain domain = getTXEditingDomain();
+		TransactionalEditingDomain domain = getTransactionalEditingDomain();
 		
 		if (domain == null) {
 			super.refresh();
@@ -91,7 +91,7 @@ public class ExtendedPropertySheetPage
 	 * if an editing domain is available.
 	 */
 	public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
-		TXEditingDomain domain = getTXEditingDomain();
+		TransactionalEditingDomain domain = getTransactionalEditingDomain();
 		
 		if (domain == null) {
 			super.selectionChanged(part, selection);

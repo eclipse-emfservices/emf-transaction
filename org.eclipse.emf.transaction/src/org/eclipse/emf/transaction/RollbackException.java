@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: RollbackException.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: RollbackException.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -33,7 +33,7 @@ import org.eclipse.core.runtime.IStatus;
  * @author Christian W. Damus (cdamus)
  * 
  * @see Transaction#commit()
- * @see TXCommandStack#execute(org.eclipse.emf.common.command.Command, java.util.Map)
+ * @see TransactionalCommandStack#execute(org.eclipse.emf.common.command.Command, java.util.Map)
  * @see ResourceSetListener#transactionAboutToCommit(ResourceSetChangeEvent)
  * @see ExceptionHandler
  */

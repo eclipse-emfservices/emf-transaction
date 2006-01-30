@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceUndoContext.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: ResourceUndoContext.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -28,7 +28,7 @@ import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
 /**
@@ -49,7 +49,7 @@ import org.eclipse.emf.workspace.internal.l10n.Messages;
 public final class ResourceUndoContext
 	implements IUndoContext {
 
-	private final TXEditingDomain editingDomain;
+	private final TransactionalEditingDomain editingDomain;
 	
 	private final Resource resource;
 
@@ -60,7 +60,7 @@ public final class ResourceUndoContext
 	 * @param domain the editing domain
 	 * @param resource the resource that I represent
 	 */
-	public ResourceUndoContext(TXEditingDomain domain, Resource resource) {
+	public ResourceUndoContext(TransactionalEditingDomain domain, Resource resource) {
 		this.editingDomain = domain;
 		this.resource = resource;
 	}
@@ -99,7 +99,7 @@ public final class ResourceUndoContext
 	 * 
 	 * @return my editing domain
 	 */
-	public final TXEditingDomain getEditingDomain() {
+	public final TransactionalEditingDomain getEditingDomain() {
 		return editingDomain;
 	}
 

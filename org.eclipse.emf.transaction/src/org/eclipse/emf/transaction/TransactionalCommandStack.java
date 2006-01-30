@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXCommandStack.java,v 1.2 2006/01/10 14:48:53 cdamus Exp $
+ * $Id: TransactionalCommandStack.java,v 1.1 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -27,7 +27,7 @@ import org.eclipse.emf.common.command.CommandStack;
  *
  * @author Christian W. Damus (cdamus)
  */
-public interface TXCommandStack
+public interface TransactionalCommandStack
 	extends CommandStack {
 	
 	/**

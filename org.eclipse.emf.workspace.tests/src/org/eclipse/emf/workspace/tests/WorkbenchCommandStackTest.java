@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -23,7 +23,7 @@ import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.workspace.EMFCommandOperation;
-import org.eclipse.emf.workspace.IWorkbenchCommandStack;
+import org.eclipse.emf.workspace.IWorkspaceCommandStack;
 import org.eclipse.emf.workspace.ResourceUndoContext;
 import org.eclipse.emf.workspace.tests.fixtures.NullCommand;
 
@@ -159,7 +159,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 	protected void doSetUp() throws Exception {
 		super.doSetUp();
 		
-		defaultContext = ((IWorkbenchCommandStack) getCommandStack()).getDefaultUndoContext();
+		defaultContext = ((IWorkspaceCommandStack) getCommandStack()).getDefaultUndoContext();
 	}
 	
 	protected void doTearDown() throws Exception {

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXChangeDescription.java,v 1.2 2006/01/25 17:07:42 cdamus Exp $
+ * $Id: TransactionChangeDescription.java,v 1.1 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -25,7 +25,7 @@ import org.eclipse.emf.ecore.change.ChangeDescription;
  * <p>
  * When a transaction rolls back, the assumption is that all changes that it
  * performed can be undone, even any non-EMF changes that are captured in its
- * <code>TXChangeDescription</code>.  This assumption is necessary because
+ * <code>TransactionChangeDescription</code>.  This assumption is necessary because
  * the semantics of rollback guarantee that rollback cannot fail:  rollback
  * <em>must</em> restore the system to the state it was in before the
  * transaction started.  Thus, any change description (possibly nested in a
@@ -42,7 +42,7 @@ import org.eclipse.emf.ecore.change.ChangeDescription;
  *
  * @author Christian W. Damus (cdamus)
  */
-public interface TXChangeDescription extends ChangeDescription {
+public interface TransactionChangeDescription extends ChangeDescription {
 	/**
 	 * Queries whether I can {@link ChangeDescription#apply() apply} my changes.
 	 * If I can, then it is assumed that I could

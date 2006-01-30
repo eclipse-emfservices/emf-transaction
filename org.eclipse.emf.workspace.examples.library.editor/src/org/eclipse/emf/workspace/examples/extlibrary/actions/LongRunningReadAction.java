@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: LongRunningReadAction.java,v 1.1 2006/01/30 16:30:09 cdamus Exp $
+ * $Id: LongRunningReadAction.java,v 1.2 2006/01/30 19:47:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.actions;
 
@@ -22,7 +22,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.edit.domain.IEditingDomainProvider;
 import org.eclipse.emf.transaction.RunnableWithResult;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.workspace.examples.extlibrary.console.ConsoleUtil;
 import org.eclipse.emf.workspace.examples.extlibrary.internal.l10n.Messages;
 import org.eclipse.jface.action.Action;
@@ -44,7 +44,7 @@ import org.eclipse.ui.IWorkbenchPart;
 public class LongRunningReadAction extends Action {
 	private static final String CONSOLE = Messages.readConsole_title;
 	
-	private TXEditingDomain domain;
+	private TransactionalEditingDomain domain;
 	
 	public LongRunningReadAction() {
 		super(Messages.readJob_title);
@@ -61,7 +61,7 @@ public class LongRunningReadAction extends Action {
 	
 	public void setActiveWorkbenchPart(IWorkbenchPart workbenchPart) {
 		if (workbenchPart instanceof IEditingDomainProvider) {
-			domain = (TXEditingDomain) ((IEditingDomainProvider) workbenchPart)
+			domain = (TransactionalEditingDomain) ((IEditingDomainProvider) workbenchPart)
 					.getEditingDomain();
 		}
 		
@@ -76,10 +76,10 @@ public class LongRunningReadAction extends Action {
 	private static class ReadJob extends Job {
 		private static int nextId = 0;
 		
-		private final TXEditingDomain domain;
+		private final TransactionalEditingDomain domain;
 		private final int id;
 		
-		ReadJob(String label, TXEditingDomain domain) {
+		ReadJob(String label, TransactionalEditingDomain domain) {
 			super(label);
 			this.domain = domain;
 			

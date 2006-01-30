@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: IWorkbenchCommandStack.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: IWorkspaceCommandStack.java,v 1.1 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -20,7 +20,7 @@ import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.command.CommandStack;
-import org.eclipse.emf.transaction.TXCommandStack;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
 
 
 /**
@@ -49,7 +49,7 @@ import org.eclipse.emf.transaction.TXCommandStack;
  * 
  * @see #getDefaultUndoContext()
  */
-public interface IWorkbenchCommandStack extends TXCommandStack {
+public interface IWorkspaceCommandStack extends TransactionalCommandStack {
 	/**
 	 * Obtains the operation history to which I delegate command execution.
 	 * 
@@ -67,7 +67,7 @@ public interface IWorkbenchCommandStack extends TXCommandStack {
 	 *  
 	 * @return the default undo context for undo/redo/flush invocations
 	 * 
-	 * @see TXCommandStack#execute(Command, java.util.Map)
+	 * @see TransactionalCommandStack#execute(Command, java.util.Map)
 	 * @see CommandStack#undo()
 	 * @see CommandStack#redo()
 	 * @see CommandStack#flush()

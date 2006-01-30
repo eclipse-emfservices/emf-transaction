@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeChangeDescriptionTest.java,v 1.2 2006/01/25 17:07:40 cdamus Exp $
+ * $Id: CompositeChangeDescriptionTest.java,v 1.3 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util.tests;
 
@@ -30,7 +30,7 @@ import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.Library;
-import org.eclipse.emf.transaction.TXChangeDescription;
+import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.tests.AbstractTest;
 import org.eclipse.emf.transaction.util.CompositeChangeDescription;
 
@@ -262,7 +262,7 @@ public class CompositeChangeDescriptionTest extends AbstractTest {
 		rset.getResources().add(testResource);
 		commit();
 		
-		// brute-force remove the TXChangeAdapter
+		// brute-force remove the TransactionChangeRecorder
 		for (Iterator iter = testResource.getAllContents(); iter.hasNext();) {
 			((Notifier) iter.next()).eAdapters().clear();  
 		}
@@ -289,7 +289,7 @@ public class CompositeChangeDescriptionTest extends AbstractTest {
 	 */
 	private static class NonApplicableChange
 			extends ChangeDescriptionImpl
-			implements TXChangeDescription {
+			implements TransactionChangeDescription {
 		
 		public boolean canApply() {
 			return false;

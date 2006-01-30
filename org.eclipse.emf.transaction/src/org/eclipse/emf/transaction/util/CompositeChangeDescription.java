@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeChangeDescription.java,v 1.2 2006/01/25 17:07:42 cdamus Exp $
+ * $Id: CompositeChangeDescription.java,v 1.3 2006/01/30 19:47:55 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -27,7 +27,7 @@ import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.EMap;
 import org.eclipse.emf.ecore.change.ChangeDescription;
 import org.eclipse.emf.ecore.change.impl.ChangeDescriptionImpl;
-import org.eclipse.emf.transaction.TXChangeDescription;
+import org.eclipse.emf.transaction.TransactionChangeDescription;
 
 /**
  * A composition of zero or more change descriptions representing the
@@ -41,7 +41,7 @@ import org.eclipse.emf.transaction.TXChangeDescription;
  */
 public class CompositeChangeDescription
 	extends ChangeDescriptionImpl
-	implements TXChangeDescription {
+	implements TransactionChangeDescription {
 
 	private final List changes = new java.util.ArrayList();
 	
@@ -71,8 +71,8 @@ public class CompositeChangeDescription
 		for (Iterator iter = changes.iterator(); result && iter.hasNext();) {
 			Object next = iter.next();
 			
-			if (next instanceof TXChangeDescription) {
-				result = ((TXChangeDescription) next).canApply();
+			if (next instanceof TransactionChangeDescription) {
+				result = ((TransactionChangeDescription) next).canApply();
 			}
 		}
 		
@@ -152,8 +152,8 @@ public class CompositeChangeDescription
 		boolean result = changeDescription == null;
 		
 		if (!result) {
-			if (changeDescription instanceof TXChangeDescription) {
-				result = ((TXChangeDescription) changeDescription).isEmpty();
+			if (changeDescription instanceof TransactionChangeDescription) {
+				result = ((TransactionChangeDescription) changeDescription).isEmpty();
 			} else {
 				result = changeDescription.getObjectChanges().isEmpty()
 					&& changeDescription.getObjectsToAttach().isEmpty()

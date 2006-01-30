@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXCommandStackImpl.java,v 1.2 2006/01/10 14:48:53 cdamus Exp $
+ * $Id: TransactionalCommandStackImpl.java,v 1.1 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -25,7 +25,7 @@ import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.transaction.ExceptionHandler;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
@@ -38,9 +38,9 @@ import org.eclipse.emf.transaction.util.TriggerCommand;
  *
  * @author Christian W. Damus (cdamus)
  */
-public class TXCommandStackImpl
+public class TransactionalCommandStackImpl
 	extends BasicCommandStack
-	implements InternalTXCommandStack {
+	implements InternalTransactionalCommandStack {
 
 	/**
 	 * The transaction options that should be used when undoing/redoing changes
@@ -53,7 +53,7 @@ public class TXCommandStackImpl
 	 */
 	public static final Map UNDO_REDO_OPTIONS;
 	
-	private InternalTXEditingDomain domain;
+	private InternalTransactionalEditingDomain domain;
 	private TriggerCommand triggerCommand;
 	
 	private ExceptionHandler exceptionHandler;
@@ -68,17 +68,17 @@ public class TXCommandStackImpl
 	/**
 	 * Initializes me.
 	 */
-	public TXCommandStackImpl() {
+	public TransactionalCommandStackImpl() {
 		super();
 	}
 
 	// Documentation copied from the inherited specification
-	public InternalTXEditingDomain getDomain() {
+	public InternalTransactionalEditingDomain getDomain() {
 		return domain;
 	}
 	
 	// Documentation copied from the inherited specification
-	public void setEditingDomain(InternalTXEditingDomain domain) {
+	public void setEditingDomain(InternalTransactionalEditingDomain domain) {
 		this.domain = domain;
 	}
 	
@@ -136,7 +136,7 @@ public class TXCommandStackImpl
 			try {
 				exceptionHandler.handleException(exception);
 			} catch (Exception e) {
-				Tracing.catching(TXCommandStackImpl.class, "handleError", e); //$NON-NLS-1$
+				Tracing.catching(TransactionalCommandStackImpl.class, "handleError", e); //$NON-NLS-1$
 				EMFTransactionPlugin.INSTANCE.log(new Status(
 						IStatus.WARNING,
 						EMFTransactionPlugin.getPluginId(),
@@ -151,7 +151,7 @@ public class TXCommandStackImpl
 	
 	/**
 	 * Redefines the inherited method by forwarding to the
-	 * {@link TXEditingDomain#execute(Command, Map)} method.  Any checked
+	 * {@link TransactionalEditingDomain#execute(Command, Map)} method.  Any checked
 	 * exception thrown by that method is handled by
 	 * {@link #handleError(Exception)} but is not propagated.
 	 */
@@ -161,12 +161,12 @@ public class TXCommandStackImpl
 		} catch (InterruptedException e) {
 			// just log it.  Note that the transaction is already rolled back,
 			//    so handleError() will not find an active transaction
-			Tracing.catching(TXCommandStackImpl.class, "execute", e); //$NON-NLS-1$
+			Tracing.catching(TransactionalCommandStackImpl.class, "execute", e); //$NON-NLS-1$
 			handleError(e);
 		} catch (RollbackException e) {
 			// just log it.  Note that the transaction is already rolled back,
 			//    so handleError() will not find an active transaction
-			Tracing.catching(TXCommandStackImpl.class, "execute", e); //$NON-NLS-1$
+			Tracing.catching(TransactionalCommandStackImpl.class, "execute", e); //$NON-NLS-1$
 			handleError(e);
 		}
 	}
@@ -186,7 +186,7 @@ public class TXCommandStackImpl
 				tx.commit();
 			} catch (Exception e) {
 				// just log it and roll back if necessary
-				Tracing.catching(TXCommandStackImpl.class, "undo", e); //$NON-NLS-1$
+				Tracing.catching(TransactionalCommandStackImpl.class, "undo", e); //$NON-NLS-1$
 				handleError(e);
 			}
 		}
@@ -207,7 +207,7 @@ public class TXCommandStackImpl
 				tx.commit();
 			} catch (Exception e) {
 				// just log it and roll back if necessary
-				Tracing.catching(TXCommandStackImpl.class, "redo", e); //$NON-NLS-1$
+				Tracing.catching(TransactionalCommandStackImpl.class, "redo", e); //$NON-NLS-1$
 				handleError(e);
 			}
 		}

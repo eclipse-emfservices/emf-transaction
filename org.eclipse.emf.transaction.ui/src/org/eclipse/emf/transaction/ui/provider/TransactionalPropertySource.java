@@ -12,16 +12,16 @@
  *
  * </copyright>
  *
- * $Id: TXPropertySource.java,v 1.2 2006/01/13 21:50:17 cdamus Exp $
+ * $Id: TransactionalPropertySource.java,v 1.1 2006/01/30 19:47:45 cdamus Exp $
  */
 package org.eclipse.emf.transaction.ui.provider;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.transaction.RunnableWithResult;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIPlugin;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIStatusCodes;
 import org.eclipse.emf.transaction.ui.internal.Tracing;
@@ -38,10 +38,10 @@ import org.eclipse.ui.views.properties.IPropertySource2;
  * 
  * @author Christian W. Damus (cdamus)
  */
-public class TXPropertySource
+public class TransactionalPropertySource
 	implements IPropertySource2 {
 
-	private final TXEditingDomain domain;
+	private final TransactionalEditingDomain domain;
 	
 	private final IPropertySource propertySource;
 	private final IPropertySource2 propertySource2;
@@ -53,7 +53,7 @@ public class TXPropertySource
 	 * @param domain my editing domain
 	 * @param propertySource my delegate
 	 */
-	public TXPropertySource(TXEditingDomain domain, IPropertySource propertySource) {
+	public TransactionalPropertySource(TransactionalEditingDomain domain, IPropertySource propertySource) {
 		this.domain = domain;
 		
 		this.propertySource = propertySource;
@@ -74,7 +74,7 @@ public class TXPropertySource
 		try {
 			return domain.runExclusive(run);
 		} catch (InterruptedException e) {
-			Tracing.catching(TXPropertySource.class, "run", e); //$NON-NLS-1$
+			Tracing.catching(TransactionalPropertySource.class, "run", e); //$NON-NLS-1$
 			
 			// propagate interrupt status because we are not throwing
 			Thread.currentThread().interrupt();
@@ -145,7 +145,7 @@ public class TXPropertySource
 		if (propertySource2 != null) {
 			// are we in a read-only context?  if so, balk because we cannot upgrade
 			//    read transaction to write when executing a command
-			Transaction tx = ((InternalTXEditingDomain) domain).getActiveTransaction();
+			Transaction tx = ((InternalTransactionalEditingDomain) domain).getActiveTransaction();
 			if ((tx == null) || !tx.isReadOnly()) {
 				propertySource2.resetPropertyValue(id);
 			}
@@ -160,7 +160,7 @@ public class TXPropertySource
 	public void setPropertyValue(final Object id, final Object value) {
 		// are we in a read-only context?  if so, balk because we cannot upgrade
 		//    read transaction to write when executing a command
-		Transaction tx = ((InternalTXEditingDomain) domain).getActiveTransaction();
+		Transaction tx = ((InternalTransactionalEditingDomain) domain).getActiveTransaction();
 		if ((tx == null) || !tx.isReadOnly()) {
 			propertySource.setPropertyValue(id, value);
 		}

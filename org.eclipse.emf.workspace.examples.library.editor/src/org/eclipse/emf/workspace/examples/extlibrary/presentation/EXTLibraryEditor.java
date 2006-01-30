@@ -2,7 +2,7 @@
  * <copyright>
  * </copyright>
  *
- * $Id: EXTLibraryEditor.java,v 1.1 2006/01/30 16:30:09 cdamus Exp $
+ * $Id: EXTLibraryEditor.java,v 1.2 2006/01/30 19:47:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
 
@@ -51,12 +51,12 @@ import org.eclipse.emf.edit.ui.dnd.LocalTransfer;
 import org.eclipse.emf.edit.ui.dnd.ViewerDragAdapter;
 import org.eclipse.emf.examples.extlibrary.provider.EXTLibraryItemProviderAdapterFactory;
 import org.eclipse.emf.transaction.ResourceSetListener;
-import org.eclipse.emf.transaction.TXEditingDomain;
-import org.eclipse.emf.transaction.ui.provider.TXAdapterFactoryContentProvider;
-import org.eclipse.emf.transaction.ui.provider.TXAdapterFactoryLabelProvider;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.ui.provider.TransactionalAdapterFactoryContentProvider;
+import org.eclipse.emf.transaction.ui.provider.TransactionalAdapterFactoryLabelProvider;
 import org.eclipse.emf.transaction.ui.view.ExtendedPropertySheetPage;
 import org.eclipse.emf.workspace.EMFCommandOperation;
-import org.eclipse.emf.workspace.IWorkbenchCommandStack;
+import org.eclipse.emf.workspace.IWorkspaceCommandStack;
 import org.eclipse.emf.workspace.ResourceUndoContext;
 import org.eclipse.emf.workspace.util.WorkspaceSynchronizer;
 import org.eclipse.jface.action.IMenuListener;
@@ -110,7 +110,7 @@ import org.eclipse.ui.views.properties.PropertySheetPage;
  * ways:
  * <ul>
  *   <li>all instances operate in a single, shared
- *       {@link TXEditingDomain transactional editing domain}</li>
+ *       {@link TransactionalEditingDomain transactional editing domain}</li>
  *   <li>a {@link ResourceSetListener} is statically registered on this editing
  *       domain that automatically creates editors for any resource loaded (e.g.,
  *       by proxy resolution)</li>
@@ -121,7 +121,7 @@ import org.eclipse.ui.views.properties.PropertySheetPage;
  *       operation history</li>
  *   <li>refreshing of the tree content and property sheet is performed within
  *       read-only transactions on the editing domain, using the
- *       {@link TXEditingDomain#runExclusive(Runnable)} API</li>
+ *       {@link TransactionalEditingDomain#runExclusive(Runnable)} API</li>
  *   <li>only the 'selection' tree view is provided (it is not a multi-page editor)</li>
  *   <li>synchronization of the workspace resource with the loaded EMF resource
  *       uses the {@link WorkspaceSynchronizer} utility API</li>
@@ -297,7 +297,7 @@ public class EXTLibraryEditor
 					
 					// remove the default undo context so that we can have
 					//     independent undo/redo of independent resource changes
-					operation.removeContext(((IWorkbenchCommandStack)
+					operation.removeContext(((IWorkspaceCommandStack)
 							getEditingDomain().getCommandStack()).getDefaultUndoContext());
 					
 					// add our undo context to populate our undo menu
@@ -508,7 +508,7 @@ public class EXTLibraryEditor
 
 		// Get the registered workbench editing domain.
 		//
-		editingDomain = (AdapterFactoryEditingDomain) TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		editingDomain = (AdapterFactoryEditingDomain) TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.workspace.examples.LibraryEditingDomain"); //$NON-NLS-1$
 		undoContext = new ObjectUndoContext(
 				this,
@@ -573,9 +573,9 @@ public class EXTLibraryEditor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public class ReverseAdapterFactoryContentProvider extends TXAdapterFactoryContentProvider {
+	public class ReverseAdapterFactoryContentProvider extends TransactionalAdapterFactoryContentProvider {
 		public ReverseAdapterFactoryContentProvider(AdapterFactory adapterFactory) {
-			super((TXEditingDomain) getEditingDomain(), adapterFactory);
+			super((TransactionalEditingDomain) getEditingDomain(), adapterFactory);
 		}
 
 		public Object [] getElements(Object object) {
@@ -718,9 +718,9 @@ public class EXTLibraryEditor
 		Tree tree = new Tree(parent, SWT.MULTI);
 		selectionViewer = new TreeViewer(tree);
 
-		selectionViewer.setContentProvider(new TXAdapterFactoryContentProvider((TXEditingDomain) getEditingDomain(), adapterFactory));
+		selectionViewer.setContentProvider(new TransactionalAdapterFactoryContentProvider((TransactionalEditingDomain) getEditingDomain(), adapterFactory));
 
-		selectionViewer.setLabelProvider(new TXAdapterFactoryLabelProvider((TXEditingDomain) getEditingDomain(), adapterFactory));
+		selectionViewer.setLabelProvider(new TransactionalAdapterFactoryLabelProvider((TransactionalEditingDomain) getEditingDomain(), adapterFactory));
 		
 		// unlike other EMF editors, I edit only a single resource, not a resource set
 		selectionViewer.setInput(getResource());
@@ -774,11 +774,11 @@ public class EXTLibraryEditor
 					// Set up the tree viewer.
 					//
 					contentOutlineViewer.setContentProvider(
-						new TXAdapterFactoryContentProvider(
-							(TXEditingDomain) getEditingDomain(), adapterFactory));
+						new TransactionalAdapterFactoryContentProvider(
+							(TransactionalEditingDomain) getEditingDomain(), adapterFactory));
 					contentOutlineViewer.setLabelProvider(
-						new TXAdapterFactoryLabelProvider(
-							(TXEditingDomain) getEditingDomain(), adapterFactory));
+						new TransactionalAdapterFactoryLabelProvider(
+							(TransactionalEditingDomain) getEditingDomain(), adapterFactory));
 					
 					// unlike other EMF editors, I edit only a single resource, not a resource set
 					contentOutlineViewer.setInput(getResource());
@@ -844,7 +844,7 @@ public class EXTLibraryEditor
 						getActionBarContributor().shareGlobalActions(this, actionBars);
 					}
 				};
-			propertySheetPage.setPropertySourceProvider(new TXAdapterFactoryContentProvider((TXEditingDomain) getEditingDomain(), adapterFactory));
+			propertySheetPage.setPropertySourceProvider(new TransactionalAdapterFactoryContentProvider((TransactionalEditingDomain) getEditingDomain(), adapterFactory));
 		}
 
 		return propertySheetPage;
@@ -904,7 +904,7 @@ public class EXTLibraryEditor
 				//
 				public void execute(IProgressMonitor monitor) {
 					try {
-						((TXEditingDomain) getEditingDomain()).runExclusive(new Runnable() {
+						((TransactionalEditingDomain) getEditingDomain()).runExclusive(new Runnable() {
 							public void run() {
 								try {
 									// Save the resource to the file system.
@@ -979,7 +979,7 @@ public class EXTLibraryEditor
 		//    not affect the abstract state of the model, so we only need exclusive
 		//    (read) access
 		try {
-			((TXEditingDomain) getEditingDomain()).runExclusive(new Runnable() {
+			((TransactionalEditingDomain) getEditingDomain()).runExclusive(new Runnable() {
 				public void run() {
 					getResource().setURI(uri);
 					setInputWithNotify(editorInput);
@@ -1012,7 +1012,7 @@ public class EXTLibraryEditor
 				final String uriAttribute = marker.getAttribute(EValidator.URI_ATTRIBUTE, null);
 				if (uriAttribute != null) {
 					try {
-						((TXEditingDomain) getEditingDomain()).runExclusive(new Runnable() {
+						((TransactionalEditingDomain) getEditingDomain()).runExclusive(new Runnable() {
 							public void run() {
 								URI uri = URI.createURI(uriAttribute);
 								EObject eObject = editingDomain.getResourceSet().getEObject(uri, true);
@@ -1046,7 +1046,7 @@ public class EXTLibraryEditor
 		site.getPage().addPartListener(partListener);
 		
 		workspaceSynchronizer = new WorkspaceSynchronizer(
-				(TXEditingDomain) editingDomain,
+				(TransactionalEditingDomain) editingDomain,
 				createSynchronizationDelegate());
 	}
 
@@ -1198,7 +1198,7 @@ public class EXTLibraryEditor
 	}
 
 	private IOperationHistory getOperationHistory() {
-		return ((IWorkbenchCommandStack) editingDomain.getCommandStack()).getOperationHistory();
+		return ((IWorkspaceCommandStack) editingDomain.getCommandStack()).getOperationHistory();
 	}
 	
 	/**

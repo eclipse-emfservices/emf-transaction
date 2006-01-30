@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetChangeEvent.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: ResourceSetChangeEvent.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -45,7 +45,7 @@ public class ResourceSetChangeEvent
 	 * 
 	 * @param source my source (must not be <code>null</code>)
 	 */
-	public ResourceSetChangeEvent(TXEditingDomain source) {
+	public ResourceSetChangeEvent(TransactionalEditingDomain source) {
 		this(source, null, null);
 	}
 	
@@ -57,7 +57,7 @@ public class ResourceSetChangeEvent
 	 * @param notifications a list of events (as {@link Notification}s), in the
 	 *     order in which they occurred
 	 */
-	public ResourceSetChangeEvent(TXEditingDomain source, Transaction transaction, List notifications) {
+	public ResourceSetChangeEvent(TransactionalEditingDomain source, Transaction transaction, List notifications) {
 		super(source);
 		
 		this.transaction = transaction;
@@ -69,8 +69,8 @@ public class ResourceSetChangeEvent
 	 * 
 	 * @return the editing domain
 	 */
-	public TXEditingDomain getEditingDomain() {
-		return (TXEditingDomain) source;
+	public TransactionalEditingDomain getEditingDomain() {
+		return (TransactionalEditingDomain) source;
 	}
 	
 	/**

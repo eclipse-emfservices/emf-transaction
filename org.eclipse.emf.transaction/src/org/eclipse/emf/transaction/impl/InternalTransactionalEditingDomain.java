@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: InternalTXEditingDomain.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: InternalTransactionalEditingDomain.java,v 1.1 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -22,18 +22,18 @@ import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TXCommandStack;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
 
 /**
  * Internal interface that must be provided by any implementation of the public
- * {@link TXEditingDomain} API, in order to function correctly in the transactional
+ * {@link TransactionalEditingDomain} API, in order to function correctly in the transactional
  * editing domain framework.
  *
  * @author Christian W. Damus (cdamus)
  */
-public interface InternalTXEditingDomain extends TXEditingDomain {
+public interface InternalTransactionalEditingDomain extends TransactionalEditingDomain {
 	/**
 	 * Creates and starts a new transaction.  The current thread is blocked
 	 * until I grant it exclusive access to my resource set.
@@ -41,7 +41,7 @@ public interface InternalTXEditingDomain extends TXEditingDomain {
 	 * @param readOnly <code>true</code> if the transaction is intended only
 	 *     to read the resource set; <code>false</code> if it will modify it
 	 * @param options the options to apply to the transaction (as specified by
-	 *     the {@link TXCommandStack} interface
+	 *     the {@link TransactionalCommandStack} interface
 	 *     
 	 * @return the newly started transaction
 	 * 
@@ -74,7 +74,7 @@ public interface InternalTXEditingDomain extends TXEditingDomain {
 	 * Note that only the thread that owns a transaction may activate it.  Also,
 	 * a nested read-write transaction cannot be activated if its parent
 	 * transaction is read-only, unless the read-write transaction has the
-	 * {@link TXCommandStack#OPTION_UNPROTECTED 'unprotected' option}.
+	 * {@link TransactionalCommandStack#OPTION_UNPROTECTED 'unprotected' option}.
 	 * </p>
 	 * 
 	 * @param tx the transaction to activate
@@ -87,7 +87,7 @@ public interface InternalTXEditingDomain extends TXEditingDomain {
 	 *     inappropriate context
 	 * 
 	 * @see {@link #getActiveTransaction() }
-	 * @see TXEditingDomain#yield()
+	 * @see TransactionalEditingDomain#yield()
 	 * @see #startTransaction(boolean, Map)
 	 * @see #deactivate(InternalTransaction)
 	 */
@@ -98,7 +98,7 @@ public interface InternalTXEditingDomain extends TXEditingDomain {
 	 * This method must be called at the beginning of the
 	 * {@link Transaction#commit() commit} of a read/write transaction (not a
 	 * read-only transaction), unless it has the
-	 * {@link TXCommandStack#OPTION_NO_TRIGGERS 'no triggers' option}.
+	 * {@link TransactionalCommandStack#OPTION_NO_TRIGGERS 'no triggers' option}.
 	 * 
 	 * @param tx the transaction that is being committed
 	 * 
@@ -153,17 +153,17 @@ public interface InternalTXEditingDomain extends TXEditingDomain {
 	 * 
 	 * @return my change recorder
 	 */
-	TXChangeRecorder getChangeRecorder();
+	TransactionChangeRecorder getChangeRecorder();
 	
 	/**
 	 * Gets the validator that transactions should use to validate themselves
 	 * upon committing.  A transaction must ask the validator to validate after
 	 * performing the pre-commit phase (if needed), unless it has the
-	 * {@link TXCommandStack#OPTION_NO_VALIDATION 'no validation' option}.
+	 * {@link TransactionalCommandStack#OPTION_NO_VALIDATION 'no validation' option}.
 	 * 
 	 * @return my transaction validator
 	 */
-	TXValidator getValidator();
+	TransactionValidator getValidator();
 	
 	/**
 	 * Broadcasts the specified notification to listeners as a singleton list,

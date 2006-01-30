@@ -12,11 +12,11 @@
  *
  * </copyright>
  *
- * $Id: WriteThread.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: WriteThread.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 
 
@@ -31,14 +31,14 @@ class WriteThread extends SimpleOperationThread {
 	 * @param waitObject
 	 * @param notifyObject
 	 */
-	public WriteThread(TXEditingDomain domain, Object waitObject, Object notifyObject) {
+	public WriteThread(TransactionalEditingDomain domain, Object waitObject, Object notifyObject) {
 		super(domain, waitObject, notifyObject);
 	}
 	
 	/**
 	 * Constructor 
 	 */
-	public WriteThread(TXEditingDomain domain) {
+	public WriteThread(TransactionalEditingDomain domain) {
 		this(domain, null, null);
 	}
 

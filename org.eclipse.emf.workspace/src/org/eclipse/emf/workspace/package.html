@@ -32,18 +32,18 @@ domain:
 // can use any operation history instance
 IOperationHistory myHistory = OperationHistoryFactory.getOperationHistory();
 
-TXEditingDomain domain = WorkbenchEditingDomainFactory.INSTANCE.createEditingDomain(myHistory);
+TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain(myHistory);
 ResourceSet rset = domain.getResourceSet();
 
 // could also just let the editing domain get the default history from the history factory
-TXEditingDomain domain = WorkbenchEditingDomainFactory.INSTANCE.createEditingDomain();
+TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 </PRE>
 <p>
 The same editing domain registry and extension point used for sharing
-<code>TXEditingDomain</code>s can also be used to share workbench editing
+<code>TransactionalEditingDomain</code>s can also be used to share workbench editing
 domains.  Just register an editing domain ID and a factory implementation on the
 <code>org.eclipse.emf.transaction.editingDomains</code> extension point and
-use the {@link org.eclipse.emf.transaction.TXEditingDomain.Registry} to access
+use the {@link org.eclipse.emf.transaction.TransactionalEditingDomain.Registry} to access
 your domain.
 </p>
 
@@ -113,7 +113,7 @@ try {
 }
 </PRE>
 
-@see WorkbenchEditingDomainFactory
+@see WorkspaceEditingDomainFactory
 @see AbstractEMFOperation
 @see CompositeEMFOperation
 

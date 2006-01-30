@@ -12,11 +12,11 @@
  *
  * </copyright>
  *
- * $Id: ReadThread.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: ReadThread.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 
 /**
@@ -30,14 +30,14 @@ class ReadThread extends SimpleOperationThread {
 	 * @param waitObject
 	 * @param notifyObject
 	 */
-	public ReadThread(TXEditingDomain domain, Object waitObject, Object notifyObject) {
+	public ReadThread(TransactionalEditingDomain domain, Object waitObject, Object notifyObject) {
 		super(domain, waitObject, notifyObject);
 	}
 	
 	/**
 	 * Default constructor 
 	 */
-	public ReadThread(TXEditingDomain domain) {
+	public ReadThread(TransactionalEditingDomain domain) {
 		this(domain, null, null);
 	}
 	

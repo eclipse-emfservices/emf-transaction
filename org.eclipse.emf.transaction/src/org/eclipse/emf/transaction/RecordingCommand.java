@@ -12,12 +12,12 @@
  *
  * </copyright>
  *
- * $Id: RecordingCommand.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: RecordingCommand.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
 import org.eclipse.emf.common.command.AbstractCommand;
-import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 
 /**
  * A partial {@link org.eclipse.emf.common.command.Command} implementation that
@@ -36,16 +36,16 @@ import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
  * @author Christian W. Damus (cdamus)
  */
 public abstract class RecordingCommand extends AbstractCommand {
-	private final TXEditingDomain domain;
+	private final TransactionalEditingDomain domain;
 	private Transaction transaction;
-	private TXChangeDescription change;
+	private TransactionChangeDescription change;
 	
 	/**
 	 * Initializes me with the editing domain in which I am to be executed.
 	 * 
 	 * @param domain my domain
 	 */
-	public RecordingCommand(TXEditingDomain domain) {
+	public RecordingCommand(TransactionalEditingDomain domain) {
 		super();
 		
 		this.domain = domain;
@@ -57,7 +57,7 @@ public abstract class RecordingCommand extends AbstractCommand {
 	 * @param domain my domain
 	 * @param label my user-friendly label
 	 */
-	public RecordingCommand(TXEditingDomain domain, String label) {
+	public RecordingCommand(TransactionalEditingDomain domain, String label) {
 		super(label);
 		
 		this.domain = domain;
@@ -71,7 +71,7 @@ public abstract class RecordingCommand extends AbstractCommand {
 	 * @param label my label
 	 * @param description my long description
 	 */
-	public RecordingCommand(TXEditingDomain domain, String label, String description) {
+	public RecordingCommand(TransactionalEditingDomain domain, String label, String description) {
 		super(label, description);
 		
 		this.domain = domain;
@@ -97,7 +97,7 @@ public abstract class RecordingCommand extends AbstractCommand {
 		//    exception occurs, we don't want to be undoable
 		doExecute();
 		
-		transaction = ((InternalTXEditingDomain) domain).getActiveTransaction();
+		transaction = ((InternalTransactionalEditingDomain) domain).getActiveTransaction();
 	}
 
 	/**

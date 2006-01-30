@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EditingDomainRegistryTest.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: EditingDomainRegistryTest.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -25,7 +25,7 @@ import junit.framework.TestSuite;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
 
@@ -55,20 +55,20 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	public void test_dynamicAddRemove() {
 		assertNull(domain.getID());
 		
-		TXEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN2, domain);
+		TransactionalEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN2, domain);
 		
 		// registry set the ID
 		assertEquals(TEST_DOMAIN2, domain.getID());
 		
-		assertSame(domain, TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		assertSame(domain, TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				TEST_DOMAIN2));
 		
 		// remove the domain
-		assertSame(domain, TXEditingDomain.Registry.INSTANCE.remove(
+		assertSame(domain, TransactionalEditingDomain.Registry.INSTANCE.remove(
 				TEST_DOMAIN2));
 		
 		// no longer present
-		assertNull(TXEditingDomain.Registry.INSTANCE.getEditingDomain(TEST_DOMAIN2));
+		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(TEST_DOMAIN2));
 		
 		// still have our ID
 		assertEquals(TEST_DOMAIN2, domain.getID());
@@ -81,7 +81,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		// check initial conditions for this test
 		assertEquals(0, TestEditingDomain.instanceCount);
 		
-		TXEditingDomain registered = TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		TransactionalEditingDomain registered = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				TEST_DOMAIN1);
 		
 		assertTrue(registered instanceof TestEditingDomain); // our factory was used
@@ -90,7 +90,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		
 		// cannot remove statically registered domains
 		try {
-			TXEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN1);
+			TransactionalEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN1);
 			fail("Should have thrown IllegalArgumentException"); //$NON-NLS-1$
 		} catch (IllegalArgumentException e) {
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -99,7 +99,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		// check that it is not recreated by another get call
 		assertSame(
 				registered,
-				TXEditingDomain.Registry.INSTANCE.getEditingDomain(TEST_DOMAIN1));
+				TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(TEST_DOMAIN1));
 		assertEquals(1, TestEditingDomain.instanceCount);    // no new instance
 	}
 	
@@ -107,83 +107,83 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	 * Tests the replacement of a domain under an ID with another.
 	 */
 	public void test_replaceDomain() {
-		TXEditingDomain domain1 = TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		TransactionalEditingDomain domain1 = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.transaction.tests.foo"); //$NON-NLS-1$
 		assertNull(domain1);
 		
 		domain1 = new TestEditingDomain.FactoryImpl().createEditingDomain();
 		assertNotNull(domain1);
-		TXEditingDomain.Registry.INSTANCE.add(
+		TransactionalEditingDomain.Registry.INSTANCE.add(
 				"org.eclipse.emf.transaction.tests.foo", //$NON-NLS-1$
 				domain1);
 		
 		// check that we successfully registered domain1
 		assertSame(
 				domain1,
-				TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+				TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 						"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
 		
 		// create another domain and register it under the same ID
-		TXEditingDomain domain2 = new TestEditingDomain.FactoryImpl().createEditingDomain();
-		TXEditingDomain.Registry.INSTANCE.add(
+		TransactionalEditingDomain domain2 = new TestEditingDomain.FactoryImpl().createEditingDomain();
+		TransactionalEditingDomain.Registry.INSTANCE.add(
 				"org.eclipse.emf.transaction.tests.foo", //$NON-NLS-1$
 				domain2);
 		
 		// check that we successfully replaced domain1
 		assertSame(
 				domain2,
-				TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+				TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 						"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
 		
-		TXEditingDomain.Registry.INSTANCE.remove("org.eclipse.emf.transaction.tests.foo"); //$NON-NLS-1$
+		TransactionalEditingDomain.Registry.INSTANCE.remove("org.eclipse.emf.transaction.tests.foo"); //$NON-NLS-1$
 	}
 	
 	/**
 	 * Tests the automatic re-registration of a domain when its ID is changed.
 	 */
 	public void test_changeDomainId() {
-		TXEditingDomain domain1 = new TestEditingDomain.FactoryImpl().createEditingDomain();
+		TransactionalEditingDomain domain1 = new TestEditingDomain.FactoryImpl().createEditingDomain();
 		assertNotNull(domain1);
 		domain1.setID("org.eclipse.emf.transaction.tests.foo"); //$NON-NLS-1$
 		
 		// not yet registered
-		assertNull(TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
-		assertNull(TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.transaction.tests.bar")); //$NON-NLS-1$
 		
 		// register it
-		TXEditingDomain.Registry.INSTANCE.add(
+		TransactionalEditingDomain.Registry.INSTANCE.add(
 				"org.eclipse.emf.transaction.tests.foo", //$NON-NLS-1$
 				domain1);
-		assertNotNull(TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		assertNotNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
-		assertNull(TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.transaction.tests.bar")); //$NON-NLS-1$
 		
 		// change the ID
 		domain1.setID("org.eclipse.emf.transaction.tests.bar"); //$NON-NLS-1$
 		
 		// automatically re-registered
-		assertNull(TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
-		assertNotNull(TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		assertNotNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.transaction.tests.bar")); //$NON-NLS-1$
 		
 		// remove
-		TXEditingDomain.Registry.INSTANCE.remove(domain1.getID());
-		assertNull(TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		TransactionalEditingDomain.Registry.INSTANCE.remove(domain1.getID());
+		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
-		assertNull(TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.transaction.tests.bar")); //$NON-NLS-1$
 		
 		// change the ID back
 		domain1.setID("org.eclipse.emf.transaction.tests.foo"); //$NON-NLS-1$
 		
 		// didn't re-register itself this time
-		assertNull(TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.transaction.tests.bar")); //$NON-NLS-1$
-		assertNull(TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
 	}
 	
@@ -191,19 +191,19 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	 * Tests the attachment and detachment of registered listeners to editing domains.
 	 */
 	public void test_listenerRegistration_singleDomain_multipleListeners() {
-		TXEditingDomain domain3 = TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		TransactionalEditingDomain domain3 = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				TEST_DOMAIN3);
 		assertNull(domain3);
 		
 		domain3 = new TestEditingDomain.FactoryImpl().createEditingDomain();
 		assertNotNull(domain3);
-		TXEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN3, domain3);
+		TransactionalEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN3, domain3);
 		
 		// look for our two test listeners that are registered on the TestDomain3
 		assertNotNull(TestListener1.getInstance());
 		assertNotNull(TestListener2.getInstance());
 		
-		final TXEditingDomain finalDomain3 = domain3;
+		final TransactionalEditingDomain finalDomain3 = domain3;
 		try {
 			domain3.runExclusive(new Runnable() {
 				public void run() {
@@ -230,7 +230,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		assertEquals(1, notifications.size());
 		assertSame(notification, notifications.get(0)); // same notification as other
 		
-		TXEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN3);
+		TransactionalEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN3);
 		
 		Runtime.getRuntime().gc();  // try to collect garbage
 		try {
@@ -250,26 +250,26 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	 * Tests the attachment and detachment of registered listeners to editing domains.
 	 */
 	public void test_listenerRegistration_multiDomains_singleListener() {
-		TXEditingDomain domain3 = TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		TransactionalEditingDomain domain3 = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				TEST_DOMAIN3);
 		assertNull(domain3);
 		
 		domain3 = new TestEditingDomain.FactoryImpl().createEditingDomain();
 		assertNotNull(domain3);
-		TXEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN3, domain3);
+		TransactionalEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN3, domain3);
 		
-		TXEditingDomain domain4 = TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		TransactionalEditingDomain domain4 = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				TEST_DOMAIN4);
 		assertNull(domain4);
 		
 		domain4 = new TestEditingDomain.FactoryImpl().createEditingDomain();
 		assertNotNull(domain4);
-		TXEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN4, domain4);
+		TransactionalEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN4, domain4);
 		
 		// look for our test listener that is registered on both domains
 		assertNotNull(TestListener2.getInstance());
 		
-		final TXEditingDomain finalDomain3 = domain3;
+		final TransactionalEditingDomain finalDomain3 = domain3;
 		try {
 			domain3.runExclusive(new Runnable() {
 				public void run() {
@@ -292,7 +292,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 
 		TestListener2.getInstance().reset();  // clear the listener for next step
 		
-		final TXEditingDomain finalDomain4 = domain4;
+		final TransactionalEditingDomain finalDomain4 = domain4;
 		try {
 			domain4.runExclusive(new Runnable() {
 				public void run() {
@@ -313,8 +313,8 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		assertEquals(ResourceSet.RESOURCE_SET__RESOURCES, notification.getFeatureID(null));
 		assertEquals(Notification.ADD, notification.getEventType());
 		
-		TXEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN3);
-		TXEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN4);
+		TransactionalEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN3);
+		TransactionalEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN4);
 		
 		Runtime.getRuntime().gc();  // try to collect garbage
 		try {
@@ -333,26 +333,26 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	 * Tests the attachment and detachment of registered listeners to editing domains.
 	 */
 	public void test_listenerRegistration_universalListener() {
-		TXEditingDomain domain3 = TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		TransactionalEditingDomain domain3 = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				TEST_DOMAIN3);
 		assertNull(domain3);
 		
 		domain3 = new TestEditingDomain.FactoryImpl().createEditingDomain();
 		assertNotNull(domain3);
-		TXEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN3, domain3);
+		TransactionalEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN3, domain3);
 		
-		TXEditingDomain domain4 = TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+		TransactionalEditingDomain domain4 = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				TEST_DOMAIN4);
 		assertNull(domain4);
 		
 		domain4 = new TestEditingDomain.FactoryImpl().createEditingDomain();
 		assertNotNull(domain4);
-		TXEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN4, domain4);
+		TransactionalEditingDomain.Registry.INSTANCE.add(TEST_DOMAIN4, domain4);
 		
 		// look for our test listener that is registered on both domains
 		assertNotNull(TestListener3.getInstance());
 		
-		final TXEditingDomain finalDomain3 = domain3;
+		final TransactionalEditingDomain finalDomain3 = domain3;
 		try {
 			domain3.runExclusive(new Runnable() {
 				public void run() {
@@ -375,7 +375,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 
 		TestListener3.getInstance().reset();  // clear the listener for next step
 		
-		final TXEditingDomain finalDomain4 = domain4;
+		final TransactionalEditingDomain finalDomain4 = domain4;
 		try {
 			domain4.runExclusive(new Runnable() {
 				public void run() {
@@ -396,8 +396,8 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		assertEquals(ResourceSet.RESOURCE_SET__RESOURCES, notification.getFeatureID(null));
 		assertEquals(Notification.ADD, notification.getEventType());
 		
-		TXEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN3);
-		TXEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN4);
+		TransactionalEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN3);
+		TransactionalEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN4);
 		
 		// can't test for clean removal because it is also on TestDomain1 (being
 		//   a universal listener) and TestDomain1 cannot be removed.  It's not

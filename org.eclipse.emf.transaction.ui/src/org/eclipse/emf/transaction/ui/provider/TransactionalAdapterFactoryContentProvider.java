@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXAdapterFactoryContentProvider.java,v 1.1 2006/01/03 20:44:14 cdamus Exp $
+ * $Id: TransactionalAdapterFactoryContentProvider.java,v 1.1 2006/01/30 19:47:45 cdamus Exp $
  */
 package org.eclipse.emf.transaction.ui.provider;
 
@@ -22,7 +22,7 @@ import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.edit.provider.IItemPropertySource;
 import org.eclipse.emf.transaction.RunnableWithResult;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIPlugin;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIStatusCodes;
 import org.eclipse.emf.transaction.ui.internal.Tracing;
@@ -39,10 +39,10 @@ import org.eclipse.ui.views.properties.IPropertySource;
  * 
  * @author Christian W. Damus (cdamus)
  */
-public class TXAdapterFactoryContentProvider
+public class TransactionalAdapterFactoryContentProvider
 	extends org.eclipse.emf.edit.ui.provider.AdapterFactoryContentProvider {
 
-	private final TXEditingDomain domain;
+	private final TransactionalEditingDomain domain;
 	
 	/**
 	 * Initializes me with the editing domain in which I create read
@@ -51,7 +51,7 @@ public class TXAdapterFactoryContentProvider
 	 * @param domain my editing domain
 	 * @param adapterFactory the adapter factory
 	 */
-	public TXAdapterFactoryContentProvider(TXEditingDomain domain, AdapterFactory adapterFactory) {
+	public TransactionalAdapterFactoryContentProvider(TransactionalEditingDomain domain, AdapterFactory adapterFactory) {
 		super(adapterFactory);
 		
 		this.domain = domain;
@@ -69,7 +69,7 @@ public class TXAdapterFactoryContentProvider
 		try {
 			return domain.runExclusive(run);
 		} catch (InterruptedException e) {
-			Tracing.catching(TXAdapterFactoryContentProvider.class, "run", e); //$NON-NLS-1$
+			Tracing.catching(TransactionalAdapterFactoryContentProvider.class, "run", e); //$NON-NLS-1$
 			
 			// propagate interrupt status because we are not throwing
 			Thread.currentThread().interrupt();
@@ -92,7 +92,7 @@ public class TXAdapterFactoryContentProvider
 	protected IPropertySource createPropertySource(final Object object, final IItemPropertySource itemPropertySource) {
 		return wrap((IPropertySource) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryContentProvider.super.createPropertySource(object, itemPropertySource));
+				setResult(TransactionalAdapterFactoryContentProvider.super.createPropertySource(object, itemPropertySource));
 			}}));
 	}
 
@@ -102,7 +102,7 @@ public class TXAdapterFactoryContentProvider
 	public Object[] getChildren(final Object object) {
 		return (Object[]) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryContentProvider.super.getChildren(object));
+				setResult(TransactionalAdapterFactoryContentProvider.super.getChildren(object));
 			}});
 	}
 
@@ -112,7 +112,7 @@ public class TXAdapterFactoryContentProvider
 	public Object[] getElements(final Object object) {
 		return (Object[]) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryContentProvider.super.getElements(object));
+				setResult(TransactionalAdapterFactoryContentProvider.super.getElements(object));
 			}});
 	}
 
@@ -122,7 +122,7 @@ public class TXAdapterFactoryContentProvider
 	public Object getParent(final Object object) {
 		return run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryContentProvider.super.getParent(object));
+				setResult(TransactionalAdapterFactoryContentProvider.super.getParent(object));
 			}});
 	}
 
@@ -133,7 +133,7 @@ public class TXAdapterFactoryContentProvider
 	public IPropertySource getPropertySource(final Object object) {
 		return wrap((IPropertySource) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryContentProvider.super.getPropertySource(object));
+				setResult(TransactionalAdapterFactoryContentProvider.super.getPropertySource(object));
 			}}));
 	}
 
@@ -143,7 +143,7 @@ public class TXAdapterFactoryContentProvider
 	public boolean hasChildren(final Object object) {
 		Boolean result = (Boolean) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryContentProvider.super.hasChildren(object)
+				setResult(TransactionalAdapterFactoryContentProvider.super.hasChildren(object)
 						? Boolean.TRUE : Boolean.FALSE);
 			}});
 		
@@ -156,7 +156,7 @@ public class TXAdapterFactoryContentProvider
 	public void inputChanged(final Viewer vwr, final Object oldInput, final Object newInput) { 
 		run(new RunnableWithResult.Impl() {
 			public void run() {
-				TXAdapterFactoryContentProvider.super.inputChanged(vwr, oldInput, newInput);
+				TransactionalAdapterFactoryContentProvider.super.inputChanged(vwr, oldInput, newInput);
 			}});
 	}
 
@@ -169,6 +169,6 @@ public class TXAdapterFactoryContentProvider
 	 *     transactions
 	 */
 	protected IPropertySource wrap(IPropertySource propertySource) {
-		return (propertySource == null) ? null : new TXPropertySource(domain, propertySource);
+		return (propertySource == null) ? null : new TransactionalPropertySource(domain, propertySource);
 	}
 }

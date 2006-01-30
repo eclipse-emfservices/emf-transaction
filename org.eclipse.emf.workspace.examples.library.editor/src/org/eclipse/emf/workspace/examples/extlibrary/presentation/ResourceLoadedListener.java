@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceLoadedListener.java,v 1.1 2006/01/30 16:30:09 cdamus Exp $
+ * $Id: ResourceLoadedListener.java,v 1.2 2006/01/30 19:47:47 cdamus Exp $
  */
 
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
@@ -25,7 +25,7 @@ import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.transaction.DemultiplexingListener;
 import org.eclipse.emf.transaction.NotificationFilter;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.workspace.util.WorkspaceSynchronizer;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
@@ -87,7 +87,7 @@ public class ResourceLoadedListener extends DemultiplexingListener {
 		ignoredResources.remove(res);
 	}
 
-	protected void handleNotification(TXEditingDomain domain, Notification notification) {
+	protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
 		if (ignoredResources.contains(notification.getNotifier())) {
 			// skip any resource that we are supposed to ignore
 			return;

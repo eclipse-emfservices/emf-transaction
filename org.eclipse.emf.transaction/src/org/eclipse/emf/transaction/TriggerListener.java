@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TriggerListener.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: TriggerListener.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -83,7 +83,7 @@ public abstract class TriggerListener extends ResourceSetListenerImpl {
 	 * @return the command, or <code>null</code> if none is required for this
 	 *     particular notification
 	 */
-	protected abstract Command trigger(TXEditingDomain domain, Notification notification);
+	protected abstract Command trigger(TransactionalEditingDomain domain, Notification notification);
 
 	/**
 	 * I want only ppre-commit events, not post-commit events.

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Transaction.java,v 1.2 2006/01/10 14:48:53 cdamus Exp $
+ * $Id: Transaction.java,v 1.3 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -22,8 +22,8 @@ import org.eclipse.core.runtime.IStatus;
 
 
 /**
- * Specification of a transaction in a {@link TXEditingDomain}.  All reading and
- * writing of data in a <code>TXEditingDomain</code> is performed in the context
+ * Specification of a transaction in a {@link TransactionalEditingDomain}.  All reading and
+ * writing of data in a <code>TransactionalEditingDomain</code> is performed in the context
  * of a transaction.
  * <p>
  * This interface is not intended to be implemented by clients.  It is used
@@ -34,8 +34,8 @@ import org.eclipse.core.runtime.IStatus;
  *
  * @author Christian W. Damus (cdamus)
  * 
- * @see TXEditingDomain
- * @see TXCommandStack
+ * @see TransactionalEditingDomain
+ * @see TransactionalCommandStack
  * @see ResourceSetListener
  */
 public interface Transaction {
@@ -96,7 +96,7 @@ public interface Transaction {
 	 * 
 	 * @return my editing domain
 	 */
-	TXEditingDomain getEditingDomain();
+	TransactionalEditingDomain getEditingDomain();
 	
 	/**
 	 * My parent transaction, if any.  The thread that owns an editing domain's
@@ -141,7 +141,7 @@ public interface Transaction {
 	
 	/**
 	 * Obtains the special options with which I was created.  The options
-	 * (map keys) are defined by the {@link TXEditingDomain} interface.
+	 * (map keys) are defined by the {@link TransactionalEditingDomain} interface.
 	 * 
 	 * @return an unmodifiable view of my options
 	 */
@@ -157,7 +157,7 @@ public interface Transaction {
 	
 	/**
 	 * Temporarily yields access to another read-only transaction.  The
-	 * {@link TXEditingDomain} supports any number of pseudo-concurrent
+	 * {@link TransactionalEditingDomain} supports any number of pseudo-concurrent
 	 * read-only transactions.  Transactions that are expected to be
 	 * long-running should yield frequently, as a task running in a progress
 	 * monitor is expected to check for cancellation frequently.  However, there
@@ -249,7 +249,7 @@ public interface Transaction {
 	 * @return the change description, or <code>null</code> if the transaction
 	 *     rolled back or is still {@link #isActive() active}
 	 */
-	TXChangeDescription getChangeDescription();
+	TransactionChangeDescription getChangeDescription();
 	
 	/**
 	 * Obtains the status of the transaction.  This may provide warning or

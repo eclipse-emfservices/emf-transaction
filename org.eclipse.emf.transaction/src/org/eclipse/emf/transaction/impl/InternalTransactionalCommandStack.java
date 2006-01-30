@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: InternalTXCommandStack.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: InternalTransactionalCommandStack.java,v 1.1 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -22,16 +22,16 @@ import java.util.Map;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TXCommandStack;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
 
 /**
  * An internal interface that must be provided by any implementation of the public
- * {@link TXCommandStack} interface, in order to function correctly in the
+ * {@link TransactionalCommandStack} interface, in order to function correctly in the
  * transactional editing domain framework.
  *
  * @author Christian W. Damus (cdamus)
  */
-public interface InternalTXCommandStack extends TXCommandStack {
+public interface InternalTransactionalCommandStack extends TransactionalCommandStack {
 	/**
 	 * Obtains the editing domain in which I create transactions.
 	 * 
@@ -39,7 +39,7 @@ public interface InternalTXCommandStack extends TXCommandStack {
 	 * 
 	 * @see #createTransaction(Command, Map)
 	 */
-	InternalTXEditingDomain getDomain();
+	InternalTransactionalEditingDomain getDomain();
 	
 	/**
 	 * Assigns the editing domain in which I create transactions.
@@ -48,7 +48,7 @@ public interface InternalTXCommandStack extends TXCommandStack {
 	 * 
 	 * @see #createTransaction(Command, Map)
 	 */
-	void setEditingDomain(InternalTXEditingDomain domain);
+	void setEditingDomain(InternalTransactionalEditingDomain domain);
 	
 	/**
 	 * Creates a read/write transaction in my editing domain for the purpose

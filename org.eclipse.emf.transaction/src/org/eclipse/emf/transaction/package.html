@@ -28,12 +28,12 @@ The following snippet illustrates the creation of a transactional editing
 domain:
 </p>
 <PRE>
-TXEditingDomain domain = TXEditingDomain.Factory.INSTANCE.createEditingDomain();
+TransactionalEditingDomain domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
 ResourceSet rset = domain.getResourceSet();
 
 // or, create our own resource set and initialize the domain with it
 rset = new MyResourceSetImpl();
-domain = TXEditingDomain.Factory.INSTANCE.createEditingDomain(rset);
+domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain(rset);
 </PRE>
 <p>
 To share a named editing domain with other applications, the editing domain registry can be
@@ -51,7 +51,7 @@ them:
 
 // in code, access the registered editing domain by:
 
-TXEditingDomain myDomain = TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+TransactionalEditingDomain myDomain = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
     "com.example.MyEditingDomain");
 </pre>
 
@@ -93,7 +93,7 @@ Command cmd = new RecordingCommand("Create Library") {
     };
 
 try {
-    ((TXCommandStack) domain.getCommandStack()).execute(cmd, null); // default options
+    ((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null); // default options
 } catch (RollbackException rbe) {
     ErrorDialog.openError(
         getWorkbench().getShell(), "Transaction Rollback",
@@ -185,7 +185,8 @@ an extension point, to be loaded on creation of an editing domain.  This approac
 the advantage of automatically attaching the listener to an editing domain before the
 client has been activated.  The extension can specify one or more unique identifiers
 of editing domains to listen to;
-these are mapped to editing domain instances in the shared <code>TXEditingDomain.Registry</code>.
+these are mapped to editing domain instances in the shared
+<code>TransactionalEditingDomain.Registry</code>.
 The listener class implementing this extension should initialize itself with an
 appropriate filter.
 </P>
@@ -205,7 +206,7 @@ Transactions (commands) are undone via the command stack, as usual:
 Command cmd = SomeCommand();
 
 try {
-    ((TXCommandStack) domain.getCommandStack()).execute(cmd, null); // default options
+    ((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null); // default options
 } catch (RollbackException rbe) {
     ErrorDialog.openError(
         getWorkbench().getShell(), "Transaction Rollback",
@@ -220,8 +221,8 @@ domain.getCommandStack().redo();
 </pre>
 
 
-@see org.eclipse.emf.transaction.TXEditingDomain
-@see org.eclipse.emf.transaction.TXCommandStack
+@see org.eclipse.emf.transaction.TransactionalEditingDomain
+@see org.eclipse.emf.transaction.TransactionalCommandStack
 @see org.eclipse.emf.transaction.RecordingCommand
 @see org.eclipse.emf.transaction.RunnableWithResult
 @see org.eclipse.emf.transaction.ResourceSetListener

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ValidationRollbackTest.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: ValidationRollbackTest.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -25,7 +25,7 @@ import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 
 
@@ -51,7 +51,7 @@ public class ValidationRollbackTest extends AbstractTest {
 	 */
 	public void test_rollback() {
 		try {
-			Transaction xa = ((InternalTXEditingDomain) domain).startTransaction(false, null);
+			Transaction xa = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 			
 			final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 			assertNotNull(book);
@@ -87,7 +87,7 @@ public class ValidationRollbackTest extends AbstractTest {
 	 */
 	public void test_rollback_nested() {
 		try {
-			Transaction xa = ((InternalTXEditingDomain) domain).startTransaction(false, null);
+			Transaction xa = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 			
 			final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 			assertNotNull(book);
@@ -104,7 +104,7 @@ public class ValidationRollbackTest extends AbstractTest {
 			final Writer oldAuthor = book.getAuthor();
 			
 			// start an inner read/write transaction
-			Transaction inner = ((InternalTXEditingDomain) domain).startTransaction(false, null);
+			Transaction inner = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 			
 			String newTitle = "New Title"; //$NON-NLS-1$
 			Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
@@ -143,7 +143,7 @@ public class ValidationRollbackTest extends AbstractTest {
 	 */
 	public void test_rollback_outer() {
 		try {
-			Transaction xa = ((InternalTXEditingDomain) domain).startTransaction(false, null);
+			Transaction xa = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 			
 			final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 			assertNotNull(book);
@@ -153,7 +153,7 @@ public class ValidationRollbackTest extends AbstractTest {
 			final Writer oldAuthor = book.getAuthor();
 			
 			// start an inner read/write transaction
-			Transaction inner = ((InternalTXEditingDomain) domain).startTransaction(false, null);
+			Transaction inner = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 			
 			String newTitle = "New Title"; //$NON-NLS-1$
 			Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
@@ -189,7 +189,7 @@ public class ValidationRollbackTest extends AbstractTest {
 		IStatus status = null;
 		
 		try {
-			xa = ((InternalTXEditingDomain) domain).startTransaction(false, null);
+			xa = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 			
 			final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 			assertNotNull(book);
@@ -218,12 +218,12 @@ public class ValidationRollbackTest extends AbstractTest {
 	 */
 	public void test_validation_nestedCommitted() {
 		try {
-			Transaction xa = ((InternalTXEditingDomain) domain).startTransaction(false, null);
+			Transaction xa = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 			
 			final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 			assertNotNull(book);
 			
-			Transaction inner = ((InternalTXEditingDomain) domain).startTransaction(false, null);
+			Transaction inner = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 			
 			book.setTitle(null);  // books must have titles
 			
@@ -249,7 +249,7 @@ public class ValidationRollbackTest extends AbstractTest {
 	 */
 	public void test_validation_nestedRolledBack() {
 		try {
-			Transaction xa = ((InternalTXEditingDomain) domain).startTransaction(false, null);
+			Transaction xa = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 			
 			final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 			assertNotNull(book);
@@ -257,7 +257,7 @@ public class ValidationRollbackTest extends AbstractTest {
 			final String newTitle = "New Title";  //$NON-NLS-1$
 			book.setTitle(newTitle);
 			
-			Transaction inner = ((InternalTXEditingDomain) domain).startTransaction(false, null);
+			Transaction inner = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 			
 			book.setTitle(null);  // books must have titles
 			
@@ -284,7 +284,7 @@ public class ValidationRollbackTest extends AbstractTest {
 		IStatus status = Status.CANCEL_STATUS;
 		
 		try {
-			xa = ((InternalTXEditingDomain) domain).startTransaction(false, null);
+			xa = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 			
 			((InternalTransaction) xa).abort(status);
 			

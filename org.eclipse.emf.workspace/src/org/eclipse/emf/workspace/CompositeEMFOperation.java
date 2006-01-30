@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeEMFOperation.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: CompositeEMFOperation.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -35,12 +35,12 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.workspace.impl.NonEMFTransaction;
-import org.eclipse.emf.workspace.internal.EMFWorkbenchPlugin;
-import org.eclipse.emf.workspace.internal.EMFWorkbenchStatusCodes;
+import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
+import org.eclipse.emf.workspace.internal.EMFWorkspaceStatusCodes;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 import org.eclipse.osgi.util.NLS;
@@ -87,7 +87,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * @param domain my editing domain
 	 * @param label my user-readable label
 	 */
-	public CompositeEMFOperation(TXEditingDomain domain, String label) {
+	public CompositeEMFOperation(TransactionalEditingDomain domain, String label) {
 		this(domain, label, null, null);
 	}
 	
@@ -99,7 +99,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * @param options for the transaction in which I execute myself, or
 	 *     <code>null</code> for the default options
 	 */
-	public CompositeEMFOperation(TXEditingDomain domain, String label, Map options) {
+	public CompositeEMFOperation(TransactionalEditingDomain domain, String label, Map options) {
 		this(domain, label, null, options);
 	}
 	
@@ -110,7 +110,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * @param label my user-readable label
 	 * @param children a list of operations to compose
 	 */
-	public CompositeEMFOperation(TXEditingDomain domain, String label, List children) {
+	public CompositeEMFOperation(TransactionalEditingDomain domain, String label, List children) {
 		this(domain, label, children, null);
 	}
 	
@@ -124,7 +124,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * @param options for the transaction in which I execute myself, or
 	 *     <code>null</code> for the default options
 	 */
-	public CompositeEMFOperation(TXEditingDomain domain, String label, List children, Map options) {
+	public CompositeEMFOperation(TransactionalEditingDomain domain, String label, List children, Map options) {
 		super(domain, label, options);
 		
 		if (children != null) {
@@ -158,7 +158,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 					//   any changes already committed by child transactions
 					((InternalTransaction) getTransaction()).abort(new Status(
 						IStatus.CANCEL,
-						EMFWorkbenchPlugin.getPluginId(),
+						EMFWorkspacePlugin.getPluginId(),
 						1,
 						Messages.executeInterrupted,
 						null));
@@ -324,7 +324,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 					// monitor was canceled
 					result.add(new Status(
 						IStatus.CANCEL,
-						EMFWorkbenchPlugin.getPluginId(),
+						EMFWorkspacePlugin.getPluginId(),
 						1,
 						Messages.undoInterrupted,
 						null));
@@ -335,10 +335,10 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 					IUndoableOperation next = (IUndoableOperation) iter.next();
 					if (!next.canRedo()) {
 						// oops!  Can't continue unwinding.  Oh, well
-						EMFWorkbenchPlugin.INSTANCE.log(new Status(
+						EMFWorkspacePlugin.INSTANCE.log(new Status(
 							IStatus.ERROR,
-							EMFWorkbenchPlugin.getPluginId(),
-							EMFWorkbenchStatusCodes.UNDO_RECOVERY_FAILED,
+							EMFWorkspacePlugin.getPluginId(),
+							EMFWorkspaceStatusCodes.UNDO_RECOVERY_FAILED,
 							NLS.bind(Messages.undoRecoveryFailed, Messages.cannotRedo),
 							null));
 						break;
@@ -349,10 +349,10 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 					} catch (ExecutionException inner) {
 						Tracing.catching(CompositeEMFOperation.class, "doUndo", inner); //$NON-NLS-1$
 						
-						EMFWorkbenchPlugin.INSTANCE.log(new Status(
+						EMFWorkspacePlugin.INSTANCE.log(new Status(
 							IStatus.ERROR,
-							EMFWorkbenchPlugin.getPluginId(),
-							EMFWorkbenchStatusCodes.UNDO_RECOVERY_FAILED,
+							EMFWorkspacePlugin.getPluginId(),
+							EMFWorkspaceStatusCodes.UNDO_RECOVERY_FAILED,
 							NLS.bind(Messages.undoRecoveryFailed, inner.getLocalizedMessage()),
 							inner));
 						break;
@@ -430,7 +430,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 					// monitor was canceled
 					result.add(new Status(
 						IStatus.CANCEL,
-						EMFWorkbenchPlugin.getPluginId(),
+						EMFWorkspacePlugin.getPluginId(),
 						1,
 						Messages.redoInterrupted,
 						null));
@@ -441,10 +441,10 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 					IUndoableOperation prev = (IUndoableOperation) iter.previous();
 					if (!prev.canUndo()) {
 						// oops!  Can't continue unwinding.  Oh, well
-						EMFWorkbenchPlugin.INSTANCE.log(new Status(
+						EMFWorkspacePlugin.INSTANCE.log(new Status(
 							IStatus.ERROR,
-							EMFWorkbenchPlugin.getPluginId(),
-							EMFWorkbenchStatusCodes.REDO_RECOVERY_FAILED,
+							EMFWorkspacePlugin.getPluginId(),
+							EMFWorkspaceStatusCodes.REDO_RECOVERY_FAILED,
 							NLS.bind(Messages.redoRecoveryFailed, Messages.cannotUndo),
 							null));
 						break;
@@ -453,10 +453,10 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 					try {
 						prev.undo(new NullProgressMonitor(), info);
 					} catch (ExecutionException inner) {
-						EMFWorkbenchPlugin.INSTANCE.log(new Status(
+						EMFWorkspacePlugin.INSTANCE.log(new Status(
 							IStatus.ERROR,
-							EMFWorkbenchPlugin.getPluginId(),
-							EMFWorkbenchStatusCodes.REDO_RECOVERY_FAILED,
+							EMFWorkspacePlugin.getPluginId(),
+							EMFWorkspaceStatusCodes.REDO_RECOVERY_FAILED,
 							NLS.bind(Messages.redoRecoveryFailed, inner.getLocalizedMessage()),
 							inner));
 						break;

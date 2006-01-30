@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXChangeRecorder.java,v 1.2 2006/01/26 20:44:46 cdamus Exp $
+ * $Id: TransactionChangeRecorder.java,v 1.1 2006/01/30 19:47:55 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -36,20 +36,20 @@ import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.internal.l10n.Messages;
 
 /**
- * The change recorder for a {@link org.eclipse.emf.transaction.TXEditingDomain},
+ * The change recorder for a {@link org.eclipse.emf.transaction.TransactionalEditingDomain},
  * used by transactions to record rollback information and to detect changes that
  * violate the transaction protocol.  It also forwards notifications to the
  * domain's currently active transaction.
  *
  * @author Christian W. Damus (cdamus)
  * 
- * @see InternalTXEditingDomain#getChangeRecorder()
- * @see TXValidator
+ * @see InternalTransactionalEditingDomain#getChangeRecorder()
+ * @see TransactionValidator
  * @see InternalTransaction#add(Notification)
  */
-public class TXChangeRecorder
+public class TransactionChangeRecorder
 	extends ChangeRecorder {
-	private final InternalTXEditingDomain domain;
+	private final InternalTransactionalEditingDomain domain;
 	
 	/**
 	 * Initializes me with the editing domain that I assist and the resource
@@ -59,7 +59,7 @@ public class TXChangeRecorder
 	 * @param domain my editing domain
 	 * @param rset my resource set
 	 */
-	public TXChangeRecorder(InternalTXEditingDomain domain, ResourceSet rset) {
+	public TransactionChangeRecorder(InternalTransactionalEditingDomain domain, ResourceSet rset) {
 		super(rset);
 		this.domain = domain;
 		
@@ -75,7 +75,7 @@ public class TXChangeRecorder
 	 * 
 	 * @return my editing domain
 	 */
-	public final InternalTXEditingDomain getEditingDomain() {
+	public final InternalTransactionalEditingDomain getEditingDomain() {
 		return domain;
 	}
 	
@@ -251,7 +251,7 @@ public class TXChangeRecorder
 			IllegalStateException ise = new IllegalStateException(
 				Messages.noWriteTx);
 			
-			Tracing.throwing(TXChangeRecorder.class, "assertWriting", ise); //$NON-NLS-1$
+			Tracing.throwing(TransactionChangeRecorder.class, "assertWriting", ise); //$NON-NLS-1$
 			
 			throw ise;
 		}

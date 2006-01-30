@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: BasicTransactionTest.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: BasicTransactionTest.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -36,9 +36,9 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.RunnableWithResult;
-import org.eclipse.emf.transaction.TXCommandStack;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
 
@@ -200,7 +200,7 @@ public class BasicTransactionTest extends AbstractTest {
 				
 				try {
 					synchronized (monitor) {
-						xa = ((InternalTXEditingDomain) domain).startTransaction(true, null);
+						xa = ((InternalTransactionalEditingDomain) domain).startTransaction(true, null);
 						
 						// wake up the main thread
 						monitor.notifyAll();
@@ -274,7 +274,7 @@ public class BasicTransactionTest extends AbstractTest {
 				book,
 				EXTLibraryPackage.eINSTANCE.getBook_Title(),
 				"New Title"); //$NON-NLS-1$
-			((TXCommandStack) domain.getCommandStack()).execute(cmd, null);
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
 			
 			startReading();
 			

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFWorkbenchDebugOptions.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: EMFWorkspaceDebugOptions.java,v 1.1 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace.internal;
 
@@ -22,16 +22,16 @@ package org.eclipse.emf.workspace.internal;
  * 
  * @author Christian W. Damus (cdamus)
  */
-public class EMFWorkbenchDebugOptions {
+public class EMFWorkspaceDebugOptions {
 	/**
 	 * This class should not be instantiated because it has only static
 	 * features.
 	 */
-	private EMFWorkbenchDebugOptions() {
+	private EMFWorkspaceDebugOptions() {
 		super();
 	}
 
-	public static final String DEBUG = EMFWorkbenchPlugin.getPluginId() + "/debug"; //$NON-NLS-1$
+	public static final String DEBUG = EMFWorkspacePlugin.getPluginId() + "/debug"; //$NON-NLS-1$
 
 	public static final String EXCEPTIONS_CATCHING = DEBUG + "/exceptions/catching"; //$NON-NLS-1$
 	public static final String EXCEPTIONS_THROWING = DEBUG + "/exceptions/throwing"; //$NON-NLS-1$

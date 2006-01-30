@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -29,12 +29,12 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TXChangeDescription;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionChangeDescription;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
-import org.eclipse.emf.transaction.impl.TXCommandStackImpl;
+import org.eclipse.emf.transaction.impl.TransactionalCommandStackImpl;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
@@ -61,11 +61,11 @@ import org.eclipse.emf.workspace.internal.l10n.Messages;
  * @see CompositeEMFOperation
  */
 public abstract class AbstractEMFOperation extends AbstractOperation {
-	private final InternalTXEditingDomain domain;
+	private final InternalTransactionalEditingDomain domain;
 	private final Map txOptions;
 	
 	private Transaction transaction;
-	private TXChangeDescription change;
+	private TransactionChangeDescription change;
 	
 	/**
 	 * Initializes me with the editing domain in which I am making model changes
@@ -74,7 +74,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * @param domain my editing domain
 	 * @param label my user-readable label
 	 */
-	public AbstractEMFOperation(TXEditingDomain domain, String label) {
+	public AbstractEMFOperation(TransactionalEditingDomain domain, String label) {
 		this(domain, label, null);
 	}
 
@@ -86,10 +86,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * @param options for the transaction in which I execute myself, or
 	 *     <code>null</code> for the default options
 	 */
-	public AbstractEMFOperation(TXEditingDomain domain, String label, Map options) {
+	public AbstractEMFOperation(TransactionalEditingDomain domain, String label, Map options) {
 		super(label);
 		
-		this.domain = (InternalTXEditingDomain) domain;
+		this.domain = (InternalTransactionalEditingDomain) domain;
 		this.txOptions = (options == null) ? Collections.EMPTY_MAP : options;
 	}
 
@@ -186,7 +186,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * @return my change description, if I executed successfully;
 	 *     <code>null</code>, otherwise
 	 */
-	protected final TXChangeDescription getChange() {
+	protected final TransactionChangeDescription getChange() {
 		return change;
 	}
 
@@ -209,7 +209,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		IStatus result = null;
 		
 		try {
-			tx = createTransaction(TXCommandStackImpl.UNDO_REDO_OPTIONS);
+			tx = createTransaction(TransactionalCommandStackImpl.UNDO_REDO_OPTIONS);
 			
 			result = doUndo(monitor, info);
 			
@@ -256,7 +256,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		IStatus result = null;
 		
 		try {
-			tx = createTransaction(TXCommandStackImpl.UNDO_REDO_OPTIONS);
+			tx = createTransaction(TransactionalCommandStackImpl.UNDO_REDO_OPTIONS);
 			
 			result = doRedo(monitor, info);
 			
@@ -289,7 +289,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * 
 	 * @return my editing domain
 	 */
-	public final TXEditingDomain getEditingDomain() {
+	public final TransactionalEditingDomain getEditingDomain() {
 		return domain;
 	}
 

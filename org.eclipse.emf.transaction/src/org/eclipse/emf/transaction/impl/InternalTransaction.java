@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: InternalTransaction.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: InternalTransaction.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -21,7 +21,7 @@ import java.util.List;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TXChangeDescription;
+import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.Transaction;
 
 /**
@@ -52,7 +52,7 @@ public interface InternalTransaction
 	
 	/**
 	 * Starts me.  Usually, this will delegate to the editing domain
-	 * to {@link InternalTXEditingDomain#activate(InternalTransaction) activate}
+	 * to {@link InternalTransactionalEditingDomain#activate(InternalTransaction) activate}
 	 * me.
 	 * <p>
 	 * <b>Note</b> that this call should block the current thread until the
@@ -113,7 +113,7 @@ public interface InternalTransaction
 	 *     <code>null</code> if it rolled back (in which case, I do not add
 	 *     anything to my changes)
 	 */
-	void resume(TXChangeDescription nestedChanges);
+	void resume(TransactionChangeDescription nestedChanges);
 	
 	/**
 	 * Sets the status of the transaction.

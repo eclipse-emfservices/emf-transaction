@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: LibraryDefaultBookTrigger.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: LibraryDefaultBookTrigger.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
@@ -24,7 +24,7 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.transaction.NotificationFilter;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.TriggerListener;
 
 /**
@@ -40,7 +40,7 @@ public class LibraryDefaultBookTrigger extends TriggerListener {
 									Notification.ADD)));
 	}
 	
-	protected Command trigger(TXEditingDomain domain, Notification notification) {
+	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 		Command result = null;
 		
 		Library newLibrary = (Library) notification.getNewValue();

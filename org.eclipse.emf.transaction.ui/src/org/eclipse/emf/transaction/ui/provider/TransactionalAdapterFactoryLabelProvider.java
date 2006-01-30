@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXAdapterFactoryLabelProvider.java,v 1.1 2006/01/03 20:44:14 cdamus Exp $
+ * $Id: TransactionalAdapterFactoryLabelProvider.java,v 1.1 2006/01/30 19:47:45 cdamus Exp $
  */
 package org.eclipse.emf.transaction.ui.provider;
 
@@ -20,7 +20,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.transaction.RunnableWithResult;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIPlugin;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIStatusCodes;
 import org.eclipse.emf.transaction.ui.internal.Tracing;
@@ -33,10 +33,10 @@ import org.eclipse.swt.graphics.Image;
  * 
  * @author Christian W. Damus (cdamus)
  */
-public class TXAdapterFactoryLabelProvider
+public class TransactionalAdapterFactoryLabelProvider
 	extends org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider {
 
-	private final TXEditingDomain domain;
+	private final TransactionalEditingDomain domain;
 	
 	/**
 	 * Initializes me with the editing domain in which I create read
@@ -45,7 +45,7 @@ public class TXAdapterFactoryLabelProvider
 	 * @param domain my editing domain
 	 * @param adapterFactory the adapter factory
 	 */
-	public TXAdapterFactoryLabelProvider(TXEditingDomain domain, AdapterFactory adapterFactory) {
+	public TransactionalAdapterFactoryLabelProvider(TransactionalEditingDomain domain, AdapterFactory adapterFactory) {
 		super(adapterFactory);
 		
 		this.domain = domain;
@@ -63,7 +63,7 @@ public class TXAdapterFactoryLabelProvider
 		try {
 			return domain.runExclusive(run);
 		} catch (InterruptedException e) {
-			Tracing.catching(TXAdapterFactoryLabelProvider.class, "run", e); //$NON-NLS-1$
+			Tracing.catching(TransactionalAdapterFactoryLabelProvider.class, "run", e); //$NON-NLS-1$
 			
 			// propagate interrupt status because we are not throwing
 			Thread.currentThread().interrupt();
@@ -85,7 +85,7 @@ public class TXAdapterFactoryLabelProvider
 	public Image getColumnImage(final Object object, final int columnIndex) {
 		return (Image) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryLabelProvider.super.getColumnImage(object, columnIndex));
+				setResult(TransactionalAdapterFactoryLabelProvider.super.getColumnImage(object, columnIndex));
 			}});
 	}
 
@@ -95,7 +95,7 @@ public class TXAdapterFactoryLabelProvider
 	public String getColumnText(final Object object, final int columnIndex) {
 		return (String) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryLabelProvider.super.getColumnText(object, columnIndex));
+				setResult(TransactionalAdapterFactoryLabelProvider.super.getColumnText(object, columnIndex));
 			}});
 	}
 
@@ -105,7 +105,7 @@ public class TXAdapterFactoryLabelProvider
 	protected Image getDefaultImage(final Object object) {
 		return (Image) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryLabelProvider.super.getDefaultImage(object));
+				setResult(TransactionalAdapterFactoryLabelProvider.super.getDefaultImage(object));
 			}});
 	}
 
@@ -115,7 +115,7 @@ public class TXAdapterFactoryLabelProvider
 	public Image getImage(final Object object) {
 		return (Image) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryLabelProvider.super.getImage(object));
+				setResult(TransactionalAdapterFactoryLabelProvider.super.getImage(object));
 			}});
 	}
 
@@ -125,7 +125,7 @@ public class TXAdapterFactoryLabelProvider
 	protected Image getImageFromObject(final Object object) {
 		return (Image) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryLabelProvider.super.getImageFromObject(object));
+				setResult(TransactionalAdapterFactoryLabelProvider.super.getImageFromObject(object));
 			}});
 	}
 
@@ -135,7 +135,7 @@ public class TXAdapterFactoryLabelProvider
 	public String getText(final Object object) {
 		return (String) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryLabelProvider.super.getText(object));
+				setResult(TransactionalAdapterFactoryLabelProvider.super.getText(object));
 			}});
 	}
 
@@ -145,7 +145,7 @@ public class TXAdapterFactoryLabelProvider
 	public boolean isLabelProperty(final Object object, final String id) {
 		Boolean result = (Boolean) run(new RunnableWithResult.Impl() {
 			public void run() {
-				setResult(TXAdapterFactoryLabelProvider.super.isLabelProperty(object, id)
+				setResult(TransactionalAdapterFactoryLabelProvider.super.isLabelProperty(object, id)
 						? Boolean.TRUE : Boolean.FALSE);
 			}});
 		

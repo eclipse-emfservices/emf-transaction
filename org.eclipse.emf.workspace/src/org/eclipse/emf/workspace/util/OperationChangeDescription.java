@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: OperationChangeDescription.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: OperationChangeDescription.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -27,9 +27,9 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.ecore.change.ChangeDescription;
 import org.eclipse.emf.ecore.change.impl.ChangeDescriptionImpl;
-import org.eclipse.emf.transaction.TXChangeDescription;
-import org.eclipse.emf.workspace.internal.EMFWorkbenchPlugin;
-import org.eclipse.emf.workspace.internal.EMFWorkbenchStatusCodes;
+import org.eclipse.emf.transaction.TransactionChangeDescription;
+import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
+import org.eclipse.emf.workspace.internal.EMFWorkspaceStatusCodes;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 import org.eclipse.osgi.util.NLS;
 
@@ -45,7 +45,7 @@ import org.eclipse.osgi.util.NLS;
  */
 public class OperationChangeDescription
 		extends ChangeDescriptionImpl
-		implements TXChangeDescription {
+		implements TransactionChangeDescription {
 	private boolean isRedone = true;
 	private IUndoableOperation operation;
 	private Reference info;
@@ -86,10 +86,10 @@ public class OperationChangeDescription
 		try {
 			operation.undo(new NullProgressMonitor(), (IAdaptable) info.get());
 		} catch (ExecutionException e) {
-			EMFWorkbenchPlugin.INSTANCE.log(new Status(
+			EMFWorkspacePlugin.INSTANCE.log(new Status(
 				IStatus.ERROR,
-				EMFWorkbenchPlugin.getPluginId(),
-				EMFWorkbenchStatusCodes.ROLLBACK_FAILED,
+				EMFWorkspacePlugin.getPluginId(),
+				EMFWorkspaceStatusCodes.ROLLBACK_FAILED,
 				NLS.bind(Messages.rollbackFailed, operation.getLabel()),
 				e));
 		} finally {
@@ -111,10 +111,10 @@ public class OperationChangeDescription
 				isRedone = true;
 			}
 		} catch (ExecutionException e) {
-			EMFWorkbenchPlugin.INSTANCE.log(new Status(
+			EMFWorkspacePlugin.INSTANCE.log(new Status(
 				IStatus.ERROR,
-				EMFWorkbenchPlugin.getPluginId(),
-				EMFWorkbenchStatusCodes.ROLLBACK_FAILED,
+				EMFWorkspacePlugin.getPluginId(),
+				EMFWorkspaceStatusCodes.ROLLBACK_FAILED,
 				NLS.bind(Messages.rollbackFailed, operation.getLabel()),
 				e));
 		}

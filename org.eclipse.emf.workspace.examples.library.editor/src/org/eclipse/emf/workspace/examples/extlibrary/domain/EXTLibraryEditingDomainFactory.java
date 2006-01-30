@@ -12,14 +12,14 @@
  *
  * </copyright>
  *
- * $Id: EXTLibraryEditingDomainFactory.java,v 1.1 2006/01/30 16:30:09 cdamus Exp $
+ * $Id: EXTLibraryEditingDomainFactory.java,v 1.2 2006/01/30 19:47:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.domain;
 
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.transaction.TXCommandStack;
-import org.eclipse.emf.transaction.TXEditingDomain;
-import org.eclipse.emf.workspace.WorkbenchEditingDomainFactory;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 
 /**
  * An editing domain factory registered on the extension point to create our
@@ -27,27 +27,27 @@ import org.eclipse.emf.workspace.WorkbenchEditingDomainFactory;
  *
  * @author Christian W. Damus (cdamus)
  */
-public class EXTLibraryEditingDomainFactory implements TXEditingDomain.Factory {
+public class EXTLibraryEditingDomainFactory implements TransactionalEditingDomain.Factory {
 
-	public TXEditingDomain createEditingDomain() {
+	public TransactionalEditingDomain createEditingDomain() {
 		// create an editing domain with a default resource set implementation
 		//    and delegating command execution to the default (workbench)
 		//    operation history
-		TXEditingDomain result = WorkbenchEditingDomainFactory.INSTANCE.createEditingDomain();
+		TransactionalEditingDomain result = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 		
 		// add an exception handler to the editing domain's command stack
-		((TXCommandStack) result.getCommandStack()).setExceptionHandler(
+		((TransactionalCommandStack) result.getCommandStack()).setExceptionHandler(
 				new CommandStackExceptionHandler());
 		
 		return result;
 	}
 
-	public TXEditingDomain createEditingDomain(ResourceSet rset) {
+	public TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
 		// not used when initializing editing domain from extension point
 		return null;
 	}
 
-	public TXEditingDomain getEditingDomain(ResourceSet rset) {
+	public TransactionalEditingDomain getEditingDomain(ResourceSet rset) {
 		// not used when initializing editing domain from extension point
 		return null;
 	}

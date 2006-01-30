@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceUndoContextTest.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: ResourceUndoContextTest.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -37,9 +37,9 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Person;
 import org.eclipse.emf.examples.extlibrary.Writer;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.workspace.ResourceUndoContext;
-import org.eclipse.emf.workspace.WorkbenchEditingDomainFactory;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 
 /**
  * Tests the {@link ResourceUndoContext} class.
@@ -193,8 +193,8 @@ public class ResourceUndoContextTest extends TestCase {
 	protected void setUp()
 		throws Exception {
 		
-		TXEditingDomain domain =
-			WorkbenchEditingDomainFactory.INSTANCE.createEditingDomain(
+		TransactionalEditingDomain domain =
+			WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain(
 				new DefaultOperationHistory());
 		
 		res1 = new ResourceImpl();

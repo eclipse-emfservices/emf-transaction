@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFCommandOperation.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: EMFCommandOperation.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -41,10 +41,10 @@ import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.provider.IItemPropertyDescriptor;
 import org.eclipse.emf.edit.provider.IItemPropertySource;
 import org.eclipse.emf.transaction.RecordingCommand;
-import org.eclipse.emf.transaction.TXCommandStack;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTXCommandStack;
+import org.eclipse.emf.transaction.impl.InternalTransactionalCommandStack;
 import org.eclipse.emf.workspace.impl.EMFOperationTransaction;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 import org.eclipse.osgi.util.NLS;
@@ -53,7 +53,7 @@ import org.eclipse.osgi.util.NLS;
  * An operation that wraps an EMF {@link Command} to execute it in a read/write
  * transaction on an {@link IOperationHistory}.  This class may be created
  * explicitly by a client of the operation history, or it may be used implicitly
- * by executing a command on the {@link TXCommandStack}.
+ * by executing a command on the {@link TransactionalCommandStack}.
  *
  * @author Christian W. Damus (cdamus)
  */
@@ -69,7 +69,7 @@ public class EMFCommandOperation
 	 * @param domain my domain
 	 * @param command my command
 	 */
-	public EMFCommandOperation(TXEditingDomain domain, Command command) {
+	public EMFCommandOperation(TransactionalEditingDomain domain, Command command) {
 		this(domain, command, null);
 	}
 	
@@ -81,7 +81,7 @@ public class EMFCommandOperation
 	 * @param command my command
 	 * @param transaction options, or <code>null</code> for the defaults
 	 */
-	public EMFCommandOperation(TXEditingDomain domain, Command command, Map options) {
+	public EMFCommandOperation(TransactionalEditingDomain domain, Command command, Map options) {
 		super(domain, command.getLabel(), options);
 		
 		this.command = command;
@@ -174,8 +174,8 @@ public class EMFCommandOperation
 	 * @see EMFOperationTransaction
 	 */
 	Transaction createTransaction(Map options) throws InterruptedException {
-		InternalTXCommandStack stack =
-			(InternalTXCommandStack) getEditingDomain().getCommandStack();
+		InternalTransactionalCommandStack stack =
+			(InternalTransactionalCommandStack) getEditingDomain().getCommandStack();
 		
 		EMFOperationTransaction result =
 			(EMFOperationTransaction) stack.createTransaction(command, options);

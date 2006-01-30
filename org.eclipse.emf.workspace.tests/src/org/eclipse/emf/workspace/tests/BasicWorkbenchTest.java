@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: BasicWorkbenchTest.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: BasicWorkbenchTest.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -33,16 +33,16 @@ import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
-import org.eclipse.emf.transaction.TXCommandStack;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.workspace.tests.fixtures.TestListener;
 
 
 /**
  * Basic tests of the workbench editing domain, including compatibility with the
- * base {@link TXEditingDomain} API and basic operation history integration.
+ * base {@link TransactionalEditingDomain} API and basic operation history integration.
  *
  * @author Christian W. Damus (cdamus)
  */
@@ -201,7 +201,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 				
 				try {
 					synchronized (monitor) {
-						xa = ((InternalTXEditingDomain) domain).startTransaction(true, null);
+						xa = ((InternalTransactionalEditingDomain) domain).startTransaction(true, null);
 						
 						// wake up the main thread
 						monitor.notifyAll();
@@ -264,7 +264,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 				book,
 				EXTLibraryPackage.eINSTANCE.getBook_Title(),
 				"New Title"); //$NON-NLS-1$
-			((TXCommandStack) domain.getCommandStack()).execute(cmd, null);
+			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
 			
 			startReading();
 			

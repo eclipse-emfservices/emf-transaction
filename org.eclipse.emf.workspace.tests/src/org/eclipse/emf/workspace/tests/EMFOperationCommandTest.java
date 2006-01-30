@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFOperationCommandTest.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: EMFOperationCommandTest.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -30,7 +30,7 @@ import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.workspace.EMFOperationCommand;
 import org.eclipse.emf.workspace.tests.fixtures.ContextAdder;
@@ -160,7 +160,7 @@ public class EMFOperationCommandTest extends AbstractTest {
 		
 		domain.addResourceSetListener(new TriggerListener() {
 		
-			protected Command trigger(TXEditingDomain domain, Notification notification) {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				Command result = null;
 				
 				if ((notification.getNotifier() == book)
@@ -251,7 +251,7 @@ public class EMFOperationCommandTest extends AbstractTest {
 		
 		domain.addResourceSetListener(new TriggerListener() {
 		
-			protected Command trigger(TXEditingDomain domain, Notification notification) {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				Command result = null;
 				
 				if ((notification.getNotifier() == book)
@@ -320,7 +320,7 @@ public class EMFOperationCommandTest extends AbstractTest {
 		
 		domain.addResourceSetListener(new TriggerListener() {
 		
-			protected Command trigger(TXEditingDomain domain, Notification notification) {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				Command result = null;
 				
 				if ((notification.getNotifier() == book)

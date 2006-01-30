@@ -12,22 +12,22 @@
  *
  * </copyright>
  *
- * $Id: TestEditingDomain.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: TestEditingDomain.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests.fixtures;
 
 import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
-import org.eclipse.emf.transaction.TXEditingDomain;
-import org.eclipse.emf.transaction.impl.TXEditingDomainImpl;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
 
 /**
  * Editing domain implementation used to test the registry.
  *
  * @author Christian W. Damus (cdamus)
  */
-public class TestEditingDomain extends TXEditingDomainImpl {
+public class TestEditingDomain extends TransactionalEditingDomainImpl {
 	public static int instanceCount = 0;
 	
 	public TestEditingDomain(AdapterFactory adapterFactory, ResourceSet resourceSet) {
@@ -40,10 +40,10 @@ public class TestEditingDomain extends TXEditingDomainImpl {
 		instanceCount++;
 	}
 
-	public static class FactoryImpl extends TXEditingDomainImpl.FactoryImpl {
+	public static class FactoryImpl extends TransactionalEditingDomainImpl.FactoryImpl {
 
-		public TXEditingDomain createEditingDomain() {
-			TXEditingDomain result = new TestEditingDomain(
+		public TransactionalEditingDomain createEditingDomain() {
+			TransactionalEditingDomain result = new TestEditingDomain(
 					new ComposedAdapterFactory(
 						ComposedAdapterFactory.Descriptor.Registry.INSTANCE));
 			
@@ -52,12 +52,12 @@ public class TestEditingDomain extends TXEditingDomainImpl {
 			return result;
 		}
 
-		public TXEditingDomain createEditingDomain(ResourceSet rset) {
+		public TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
 			// not used by the extension point
 			return null;
 		}
 
-		public TXEditingDomain getEditingDomain(ResourceSet rset) {
+		public TransactionalEditingDomain getEditingDomain(ResourceSet rset) {
 			// not used by the extension point
 			return null;
 		}

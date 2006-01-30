@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXValidator.java,v 1.4 2006/01/25 17:07:42 cdamus Exp $
+ * $Id: TransactionValidator.java,v 1.1 2006/01/30 19:47:55 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -34,13 +34,13 @@ import org.eclipse.emf.transaction.Transaction;
  * @see ReadWriteValidatorImpl
  * @see Transaction#commit()
  */
-public interface TXValidator {
+public interface TransactionValidator {
 	/**
 	 * A "null" instance that is suitable for use when there is no active
 	 * transaction. It does not provide any notifications, nor does it validate
 	 * anything.
 	 */
-	TXValidator NULL = new TXValidator() {
+	TransactionValidator NULL = new TransactionValidator() {
 		// Documentation copied from the inherited specification
 		public IStatus validate(Transaction tx) {
 			return Status.OK_STATUS;

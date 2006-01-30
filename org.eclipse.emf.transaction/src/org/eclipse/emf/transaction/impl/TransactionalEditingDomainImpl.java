@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TXEditingDomainImpl.java,v 1.7 2006/01/25 17:07:42 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.1 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -39,8 +39,8 @@ import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.RunnableWithResult;
-import org.eclipse.emf.transaction.TXCommandStack;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
@@ -55,16 +55,16 @@ import org.eclipse.osgi.util.NLS;
  *
  * @author Christian W. Damus (cdamus)
  */
-public class TXEditingDomainImpl
+public class TransactionalEditingDomainImpl
 	extends AdapterFactoryEditingDomain
-	implements InternalTXEditingDomain {
+	implements InternalTransactionalEditingDomain {
 
 	private String id;
 	
-	private TXChangeRecorder recorder;
+	private TransactionChangeRecorder recorder;
 	
 	private volatile InternalTransaction activeTransaction;
-	private TXValidator validator;
+	private TransactionValidator validator;
 	
 	private final Lock transactionLock = new Lock();
 	private final Lock writeLock = new Lock();
@@ -80,7 +80,7 @@ public class TXEditingDomainImpl
 	 * @param stack my command stack
 	 * @param resourceSet my resource set
 	 */
-	public TXEditingDomainImpl(AdapterFactory adapterFactory, TXCommandStack stack, ResourceSet resourceSet) {
+	public TransactionalEditingDomainImpl(AdapterFactory adapterFactory, TransactionalCommandStack stack, ResourceSet resourceSet) {
 		super(adapterFactory, stack, resourceSet);
 		
 		initialize();
@@ -93,7 +93,7 @@ public class TXEditingDomainImpl
 	 * @param adapterFactory my adapter factory
 	 * @param stack my command stack
 	 */
-	public TXEditingDomainImpl(AdapterFactory adapterFactory, TXCommandStack stack) {
+	public TransactionalEditingDomainImpl(AdapterFactory adapterFactory, TransactionalCommandStack stack) {
 		super(adapterFactory, stack);
 		
 		initialize();
@@ -106,8 +106,8 @@ public class TXEditingDomainImpl
 	 * @param adapterFactory my adapter factory
 	 * @param resourceSet my resource set
 	 */
-	public TXEditingDomainImpl(AdapterFactory adapterFactory, ResourceSet resourceSet) {
-		this(adapterFactory, new TXCommandStackImpl(), resourceSet);
+	public TransactionalEditingDomainImpl(AdapterFactory adapterFactory, ResourceSet resourceSet) {
+		this(adapterFactory, new TransactionalCommandStackImpl(), resourceSet);
 	}
 
 	/**
@@ -116,17 +116,17 @@ public class TXEditingDomainImpl
 	 * 
 	 * @param adapterFactory my adapter factory
 	 */
-	public TXEditingDomainImpl(AdapterFactory adapterFactory) {
-		this(adapterFactory, new TXCommandStackImpl());
+	public TransactionalEditingDomainImpl(AdapterFactory adapterFactory) {
+		this(adapterFactory, new TransactionalCommandStackImpl());
 	}
 	
 	/**
 	 * Initializes my state.
 	 */
 	private void initialize() {
-		((InternalTXCommandStack) commandStack).setEditingDomain(this);
+		((InternalTransactionalCommandStack) commandStack).setEditingDomain(this);
 		recorder = createChangeRecorder(resourceSet);
-		validator = TXValidator.NULL;
+		validator = TransactionValidator.NULL;
 	}
 	
 	/**
@@ -138,8 +138,8 @@ public class TXEditingDomainImpl
 	 * 
 	 * @return the new change recorder
 	 */
-	protected TXChangeRecorder createChangeRecorder(ResourceSet rset) {
-		return new TXChangeRecorder(this, rset);
+	protected TransactionChangeRecorder createChangeRecorder(ResourceSet rset) {
+		return new TransactionChangeRecorder(this, rset);
 	}
 
 	// Documentation copied from the inherited specification
@@ -154,11 +154,11 @@ public class TXEditingDomainImpl
 		if ((id != this.id) && (this.id != null)) {
 			// we are changing our ID, so we will have to reregister if we
 			//    were registered under the old ID
-			reregister = (TXEditingDomain.Registry.INSTANCE.remove(this.id) == this);
+			reregister = (TransactionalEditingDomain.Registry.INSTANCE.remove(this.id) == this);
 		}
 		
 		if (reregister && (id != null)) {
-			TXEditingDomain.Registry.INSTANCE.add(id, this);
+			TransactionalEditingDomain.Registry.INSTANCE.add(id, this);
 		}
 		
 		this.id = id;
@@ -171,7 +171,7 @@ public class TXEditingDomainImpl
 	 * 
 	 * @return a debugging ID
 	 */
-	protected static String getDebugID(TXEditingDomain domain) {
+	protected static String getDebugID(TransactionalEditingDomain domain) {
 		return (domain.getID() == null)? "<anonymous>" : domain.getID(); //$NON-NLS-1$
 	}
 
@@ -224,8 +224,8 @@ public class TXEditingDomainImpl
 	 * 
 	 * @return the internal view of my command stack
 	 */
-	protected InternalTXCommandStack getTXCommandStack() {
-		return (InternalTXCommandStack) getCommandStack();
+	protected InternalTransactionalCommandStack getTransactionalCommandStack() {
+		return (InternalTransactionalCommandStack) getCommandStack();
 	}
 
 	// Documentation copied from the inherited specification
@@ -249,7 +249,7 @@ public class TXEditingDomainImpl
 						rwr.setStatus(Status.OK_STATUS);
 					}
 				} catch (RollbackException e) {
-					Tracing.catching(TXEditingDomainImpl.class, "runExclusive", e); //$NON-NLS-1$
+					Tracing.catching(TransactionalEditingDomainImpl.class, "runExclusive", e); //$NON-NLS-1$
 					EMFTransactionPlugin.INSTANCE.log(new MultiStatus(
 						EMFTransactionPlugin.getPluginId(),
 						EMFTransactionStatusCodes.READ_ROLLED_BACK,
@@ -273,7 +273,7 @@ public class TXEditingDomainImpl
 		
 		if (transactionLock.getOwner() != current) {
 			IllegalStateException exc = new IllegalStateException("Only the active transaction may yield"); //$NON-NLS-1$
-			Tracing.throwing(TXEditingDomainImpl.class, "yield", exc); //$NON-NLS-1$
+			Tracing.throwing(TransactionalEditingDomainImpl.class, "yield", exc); //$NON-NLS-1$
 			throw exc;
 		}
 		
@@ -288,10 +288,10 @@ public class TXEditingDomainImpl
 			}
 			
 			InternalTransaction transactionToRestore = activeTransaction;
-			TXValidator validatorToRestore = validator;
+			TransactionValidator validatorToRestore = validator;
 			
 			activeTransaction = null;
-			validator = TXValidator.NULL;
+			validator = TransactionValidator.NULL;
 			
 			int depth = transactionLock.getDepth();
 			
@@ -310,7 +310,7 @@ public class TXEditingDomainImpl
 					} catch (InterruptedException e) {
 						// must ignore this because we cannot afford to be
 						//     interrupted:  we *must* restore the locks
-						Tracing.catching(TXEditingDomainImpl.class, "yield", e); //$NON-NLS-1$
+						Tracing.catching(TransactionalEditingDomainImpl.class, "yield", e); //$NON-NLS-1$
 					}
 				}
 			}
@@ -350,12 +350,12 @@ public class TXEditingDomainImpl
 	}
 	
 	// Documentation copied from the inherited specification
-	public TXChangeRecorder getChangeRecorder() {
+	public TransactionChangeRecorder getChangeRecorder() {
 		return recorder;
 	}
 	
 	// Documentation copied from the inherited specification
-	public TXValidator getValidator() {
+	public TransactionValidator getValidator() {
 		return validator;
 	}
 	
@@ -439,7 +439,7 @@ public class TXEditingDomainImpl
 		synchronized (transactionLock) {
 			if (activeTransaction != tx) {
 				IllegalArgumentException exc = new IllegalArgumentException("Can only deactivate the active transaction"); //$NON-NLS-1$
-				Tracing.throwing(TXEditingDomainImpl.class, "deactivate", exc); //$NON-NLS-1$
+				Tracing.throwing(TransactionalEditingDomainImpl.class, "deactivate", exc); //$NON-NLS-1$
 				throw exc;
 			}
 			
@@ -451,7 +451,7 @@ public class TXEditingDomainImpl
 				
 				// and also clears the validator
 				validator.dispose();
-				validator = TXValidator.NULL;
+				validator = TransactionValidator.NULL;
 			}
 			
 			release(tx);
@@ -516,7 +516,7 @@ public class TXEditingDomainImpl
 			
 			void runExclusive() throws InterruptedException {
 				if ((listeners.length > 0) && !notifications.isEmpty()) {
-					TXEditingDomainImpl.this.runExclusive(this);
+					TransactionalEditingDomainImpl.this.runExclusive(this);
 				}
 			}
 			
@@ -538,7 +538,7 @@ public class TXEditingDomainImpl
 						if (!filtered.isEmpty()) {
 							Command cmd = listeners[i].transactionAboutToCommit(
 									new ResourceSetChangeEvent(
-											TXEditingDomainImpl.this,
+											TransactionalEditingDomainImpl.this,
 											tx,
 											filtered));
 							
@@ -548,10 +548,10 @@ public class TXEditingDomainImpl
 						}
 					} catch (RollbackException e) {
 						rollback = e;
-						Tracing.catching(TXEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
+						Tracing.catching(TransactionalEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
 						break;
 					} catch (Exception e) {
-						Tracing.catching(TXEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
+						Tracing.catching(TransactionalEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
 						IStatus status = new Status(
 							IStatus.ERROR,
 							EMFTransactionPlugin.getPluginId(),
@@ -583,7 +583,7 @@ public class TXEditingDomainImpl
 				runnable.runExclusive();
 				
 				if (runnable.getRollback() != null) {
-					Tracing.throwing(TXEditingDomainImpl.class,
+					Tracing.throwing(TransactionalEditingDomainImpl.class,
 						"precommit", runnable.getRollback()); //$NON-NLS-1$
 					throw runnable.getRollback();
 				}
@@ -595,7 +595,7 @@ public class TXEditingDomainImpl
 					command = null;
 				}
 				
-				getTXCommandStack().executeTriggers(
+				getTransactionalCommandStack().executeTriggers(
 					command, runnable.getTriggers(), tx.getOptions());
 				
 				List notifications = validator.getNotificationsForPrecommit(tx);
@@ -608,7 +608,7 @@ public class TXEditingDomainImpl
 						notifications);
 				}
 			} catch (InterruptedException e) {
-				Tracing.catching(TXEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
+				Tracing.catching(TransactionalEditingDomainImpl.class, "precommit", e); //$NON-NLS-1$
 				IStatus status = new Status(
 					IStatus.ERROR,
 					EMFTransactionPlugin.getPluginId(),
@@ -619,7 +619,7 @@ public class TXEditingDomainImpl
 				
 				// must roll back because we could not execute triggers
 				RollbackException exc = new RollbackException(status);
-				Tracing.throwing(TXEditingDomainImpl.class, "precommit", exc); //$NON-NLS-1$
+				Tracing.throwing(TransactionalEditingDomainImpl.class, "precommit", exc); //$NON-NLS-1$
 				throw exc;
 			}
 		}
@@ -660,12 +660,12 @@ public class TXEditingDomainImpl
 							if (!filtered.isEmpty()) {
 								listeners[i].resourceSetChanged(
 										new ResourceSetChangeEvent(
-												TXEditingDomainImpl.this,
+												TransactionalEditingDomainImpl.this,
 												tx,
 												filtered));
 							}
 						} catch (Exception e) {
-							Tracing.catching(TXEditingDomainImpl.class, "postcommit", e); //$NON-NLS-1$
+							Tracing.catching(TransactionalEditingDomainImpl.class, "postcommit", e); //$NON-NLS-1$
 							IStatus status = new Status(
 								IStatus.ERROR,
 								EMFTransactionPlugin.getPluginId(),
@@ -677,7 +677,7 @@ public class TXEditingDomainImpl
 					}
 				}});
 		} catch (InterruptedException e) {
-			Tracing.catching(TXEditingDomainImpl.class, "postcommit", e); //$NON-NLS-1$
+			Tracing.catching(TransactionalEditingDomainImpl.class, "postcommit", e); //$NON-NLS-1$
 			IStatus status = new Status(
 				IStatus.ERROR,
 				EMFTransactionPlugin.getPluginId(),
@@ -707,12 +707,12 @@ public class TXEditingDomainImpl
 							if (!filtered.isEmpty()) {
 								listeners[i].resourceSetChanged(
 										new ResourceSetChangeEvent(
-												TXEditingDomainImpl.this,
+												TransactionalEditingDomainImpl.this,
 												null,
 												filtered));
 							}
 						} catch (Exception e) {
-							Tracing.catching(TXEditingDomainImpl.class, "broadcastUnbatched", e); //$NON-NLS-1$
+							Tracing.catching(TransactionalEditingDomainImpl.class, "broadcastUnbatched", e); //$NON-NLS-1$
 							IStatus status = new Status(
 								IStatus.ERROR,
 								EMFTransactionPlugin.getPluginId(),
@@ -724,7 +724,7 @@ public class TXEditingDomainImpl
 					}
 				}});
 		} catch (InterruptedException e) {
-			Tracing.catching(TXEditingDomainImpl.class, "broadcastUnbatched", e); //$NON-NLS-1$
+			Tracing.catching(TransactionalEditingDomainImpl.class, "broadcastUnbatched", e); //$NON-NLS-1$
 			IStatus status = new Status(
 				IStatus.ERROR,
 				EMFTransactionPlugin.getPluginId(),
@@ -747,29 +747,29 @@ public class TXEditingDomainImpl
 		recorder = null;
 		validator = null;
 		
-		getTXCommandStack().dispose();
+		getTransactionalCommandStack().dispose();
 		commandStack = null;
 	}
 	
 	/**
 	 * Default implementation of a transaction editing domain factory.  This
-	 * class creates {@link TXEditingDomainImpl}s and provides the mapping of
+	 * class creates {@link TransactionalEditingDomainImpl}s and provides the mapping of
 	 * resource sets to editing domain instances.
 	 * <p>
 	 * Clients that implement their own factory can plug in to the mapping
 	 * of resource sets to editing domains using the static instance's
-	 * {@link #mapResourceSet(TXEditingDomain)} and
-	 * {@link #unmapResourceSet(TXEditingDomain)} methods by casting the
-	 * {@link TXEditingDomain.Factory#INSTANCE} to the
-	 * <code>TXEditingDomainImpl.FactoryImpl</code> type.
+	 * {@link #mapResourceSet(TransactionalEditingDomain)} and
+	 * {@link #unmapResourceSet(TransactionalEditingDomain)} methods by casting the
+	 * {@link TransactionalEditingDomain.Factory#INSTANCE} to the
+	 * <code>TransactionalEditingDomainImpl.FactoryImpl</code> type.
 	 * </p>
 	 *
 	 * @author Christian W. Damus (cdamus)
 	 */
-	public static class FactoryImpl implements TXEditingDomain.Factory {
+	public static class FactoryImpl implements TransactionalEditingDomain.Factory {
 		// Documentation copied from the inherited specification
-		public synchronized TXEditingDomain createEditingDomain() {
-			TXEditingDomain result = new TXEditingDomainImpl(
+		public synchronized TransactionalEditingDomain createEditingDomain() {
+			TransactionalEditingDomain result = new TransactionalEditingDomainImpl(
 				new ComposedAdapterFactory(
 					ComposedAdapterFactory.Descriptor.Registry.INSTANCE));
 			
@@ -779,8 +779,8 @@ public class TXEditingDomainImpl
 		}
 
 		// Documentation copied from the inherited specification
-		public synchronized TXEditingDomain createEditingDomain(ResourceSet rset) {
-			TXEditingDomain result = new TXEditingDomainImpl(
+		public synchronized TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
+			TransactionalEditingDomain result = new TransactionalEditingDomainImpl(
 				new ComposedAdapterFactory(
 					ComposedAdapterFactory.Descriptor.Registry.INSTANCE),
 				rset);
@@ -791,8 +791,8 @@ public class TXEditingDomainImpl
 		}
 
 		// Documentation copied from the inherited specification
-		public TXEditingDomain getEditingDomain(ResourceSet rset) {
-			TXEditingDomain result = null;
+		public TransactionalEditingDomain getEditingDomain(ResourceSet rset) {
+			TransactionalEditingDomain result = null;
 			
 			ResourceSetDomainLink link = (ResourceSetDomainLink) EcoreUtil.getAdapter(
 					rset.eAdapters(),
@@ -811,7 +811,7 @@ public class TXEditingDomainImpl
 		 * 
 		 * @param domain the editing domain to add to the resource set mapping
 		 */
-		public synchronized void mapResourceSet(TXEditingDomain domain) {
+		public synchronized void mapResourceSet(TransactionalEditingDomain domain) {
 			domain.getResourceSet().eAdapters().add(
 					new ResourceSetDomainLink(domain));
 		}
@@ -822,11 +822,11 @@ public class TXEditingDomainImpl
 		 * 
 		 * @param domain the editing domain to remove from the resource set mapping
 		 */
-		public synchronized void unmapResourceSet(TXEditingDomain domain) {
+		public synchronized void unmapResourceSet(TransactionalEditingDomain domain) {
 			for (Iterator iter = domain.getResourceSet().eAdapters().iterator(); iter.hasNext();) {
 				Adapter next = (Adapter) iter.next();
 				
-				if (next.isAdapterForType(TXEditingDomain.class)) {
+				if (next.isAdapterForType(TransactionalEditingDomain.class)) {
 					iter.remove();
 					
 					// continue processing because maybe there are multiple
@@ -844,7 +844,7 @@ public class TXEditingDomainImpl
 		private static class ResourceSetDomainLink extends AdapterImpl {
 			private final Reference domain;
 			
-			ResourceSetDomainLink(TXEditingDomain domain) {
+			ResourceSetDomainLink(TransactionalEditingDomain domain) {
 				this.domain = new WeakReference(domain);
 			}
 			
@@ -852,8 +852,8 @@ public class TXEditingDomainImpl
 				return type == ResourceSetDomainLink.class;
 			}
 			
-			final TXEditingDomain getDomain() {
-				TXEditingDomain result = (TXEditingDomain) domain.get();
+			final TransactionalEditingDomain getDomain() {
+				TransactionalEditingDomain result = (TransactionalEditingDomain) domain.get();
 				
 				if (result == null) {
 					// no longer need the adapter
@@ -873,12 +873,12 @@ public class TXEditingDomainImpl
 	 * 
 	 * @author Christian W. Damus (cdamus)
 	 */
-	public final static class RegistryImpl implements TXEditingDomain.Registry {
+	public final static class RegistryImpl implements TransactionalEditingDomain.Registry {
 		private final Map domains = new java.util.HashMap();
 		
 		// Documentation copied from the inherited specification
-		public synchronized TXEditingDomain getEditingDomain(String id) {
-			TXEditingDomain result = (TXEditingDomain) domains.get(id);
+		public synchronized TransactionalEditingDomain getEditingDomain(String id) {
+			TransactionalEditingDomain result = (TransactionalEditingDomain) domains.get(id);
 			
 			if (result == null) {
 				result = EditingDomainManager.getInstance().createEditingDomain(id);
@@ -892,7 +892,7 @@ public class TXEditingDomainImpl
 		}
 
 		// Documentation copied from the inherited specification
-		public synchronized void add(String id, TXEditingDomain domain) {
+		public synchronized void add(String id, TransactionalEditingDomain domain) {
 			// remove previously registered domain, if any (which applies the
 			//    static registration constraint)
 			remove(id);
@@ -908,7 +908,7 @@ public class TXEditingDomainImpl
 		 * @param id the editing domain ID
 		 * @param domain the domain to register
 		 */
-		void addImpl(String id, TXEditingDomain domain) {
+		void addImpl(String id, TransactionalEditingDomain domain) {
 			if (!id.equals(domain.getID())) {
 				domain.setID(id); // ensure that the domain's id is set
 			}
@@ -919,7 +919,7 @@ public class TXEditingDomainImpl
 		}
 
 		// Documentation copied from the inherited specification
-		public synchronized TXEditingDomain remove(String id) {
+		public synchronized TransactionalEditingDomain remove(String id) {
 			if (EditingDomainManager.getInstance().isStaticallyRegistered(id)) {
 				IllegalArgumentException exc = new IllegalArgumentException(
 					NLS.bind(Messages.removeStaticDomain, id));
@@ -927,7 +927,7 @@ public class TXEditingDomainImpl
 				throw exc;
 			}
 			
-			TXEditingDomain result = (TXEditingDomain) domains.remove(id);
+			TransactionalEditingDomain result = (TransactionalEditingDomain) domains.remove(id);
 			
 			if (result != null) {
 				EditingDomainManager.getInstance().deconfigureListeners(id, result);

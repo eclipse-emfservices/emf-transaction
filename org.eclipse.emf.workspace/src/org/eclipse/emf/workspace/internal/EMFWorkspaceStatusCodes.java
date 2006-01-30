@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFWorkbenchStatusCodes.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: EMFWorkspaceStatusCodes.java,v 1.1 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace.internal;
 
@@ -22,7 +22,7 @@ package org.eclipse.emf.workspace.internal;
  * 
  * @author Christian W. Damus (cdamus)
  */
-public class EMFWorkbenchStatusCodes {
+public class EMFWorkspaceStatusCodes {
 
 	public static final int EXECUTE_INTERRUPTED = 20;
 	public static final int EXECUTE_ROLLED_BACK = 21;
@@ -38,7 +38,7 @@ public class EMFWorkbenchStatusCodes {
 	public static final int EXCEPTION_HANDLER_FAILED = 50;
 	
 	/** Not instantiable. */
-	private EMFWorkbenchStatusCodes() {
+	private EMFWorkspaceStatusCodes() {
 		super();
 	}
 }

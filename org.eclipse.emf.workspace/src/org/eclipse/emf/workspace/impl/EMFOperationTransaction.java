@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFOperationTransaction.java,v 1.1 2006/01/30 16:18:19 cdamus Exp $
+ * $Id: EMFOperationTransaction.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -20,7 +20,7 @@ import java.util.Map;
 
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.transaction.impl.EMFCommandTransaction;
-import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.workspace.EMFCommandOperation;
 
 /**
@@ -41,7 +41,7 @@ public class EMFOperationTransaction extends EMFCommandTransaction {
 	 * @param domain my editing domain
 	 * @param options my options
 	 */
-	public EMFOperationTransaction(Command command, InternalTXEditingDomain domain, Map options) {
+	public EMFOperationTransaction(Command command, InternalTransactionalEditingDomain domain, Map options) {
 		super(command, domain, options);
 	}
 

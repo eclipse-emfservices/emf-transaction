@@ -12,13 +12,13 @@
  *
  * </copyright>
  *
- * $Id: NestedWriteThread.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: NestedWriteThread.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 
 /**
@@ -35,14 +35,14 @@ class NestedWriteThread
 	 * @param waitObject
 	 * @param notifyObject
 	 */
-	public NestedWriteThread(TXEditingDomain domain, Object waitObject, Object notifyObject) {
+	public NestedWriteThread(TransactionalEditingDomain domain, Object waitObject, Object notifyObject) {
 		super(domain, waitObject, notifyObject);
 	}
 
 	/**
 	 * Default Constructor 
 	 */
-	public NestedWriteThread(TXEditingDomain domain) {
+	public NestedWriteThread(TransactionalEditingDomain domain) {
 		this(domain, null, null);
 	}
 
@@ -68,7 +68,7 @@ class NestedWriteThread
 		Transaction tx = null;
 
 		try {
-			tx = ((InternalTXEditingDomain) getDomain()).startTransaction(
+			tx = ((InternalTransactionalEditingDomain) getDomain()).startTransaction(
 				false, null);
 			
 			startTime = System.currentTimeMillis();

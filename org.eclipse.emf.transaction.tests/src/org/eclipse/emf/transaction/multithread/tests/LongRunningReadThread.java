@@ -12,11 +12,11 @@
  *
  * </copyright>
  *
- * $Id: LongRunningReadThread.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: LongRunningReadThread.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 /**
  * Thread representing a long running read. This thread yields for other reads.
@@ -31,7 +31,7 @@ class LongRunningReadThread extends ReadThread {
 	 * @param waitObject
 	 * @param notifyObject
 	 */
-	public LongRunningReadThread(TXEditingDomain domain, Object waitObject, Object notifyObject) {
+	public LongRunningReadThread(TransactionalEditingDomain domain, Object waitObject, Object notifyObject) {
 		super(domain, waitObject, notifyObject);
 	}
 

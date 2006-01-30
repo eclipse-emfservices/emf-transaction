@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: RunnableWithResult.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: RunnableWithResult.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -22,7 +22,7 @@ import org.eclipse.core.runtime.IStatus;
 /**
  * Extends the core Java {@link Runnable} interface with the ability to return
  * a result.  Useful for returning results of read operations from the
- * {@link TXEditingDomain#runExclusive(Runnable)} method.
+ * {@link TransactionalEditingDomain#runExclusive(Runnable)} method.
  * <p>
  * Also, because read transactions can roll back on commit if, for example, some
  * other thread performs a concurrent write that corrupts the data being read,
@@ -32,7 +32,7 @@ import org.eclipse.core.runtime.IStatus;
  * 
  * @author Christian W. Damus (cdamus)
  * 
- * @see TXEditingDomain#runExclusive(Runnable)
+ * @see TransactionalEditingDomain#runExclusive(Runnable)
  */
 public interface RunnableWithResult
 	extends Runnable {

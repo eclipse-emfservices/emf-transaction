@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -44,13 +44,13 @@ import org.eclipse.emf.examples.extlibrary.Periodical;
 import org.eclipse.emf.examples.extlibrary.Person;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.examples.extlibrary.util.EXTLibrarySwitch;
-import org.eclipse.emf.transaction.TXCommandStack;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.validation.model.IConstraintStatus;
-import org.eclipse.emf.workspace.WorkbenchEditingDomainFactory;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.osgi.framework.Bundle;
 
 /**
@@ -68,7 +68,7 @@ public class AbstractTest
 	static final Bundle EmfWorkbenchTestsBundle =	TestsPlugin.instance.getBundle();
 
 	protected IProject project;
-	protected TXEditingDomain domain;
+	protected TransactionalEditingDomain domain;
 	protected IOperationHistory history;
 	protected Resource testResource;
 	protected Library root;
@@ -128,10 +128,10 @@ public class AbstractTest
 	}
 
 	/** May be overridden by subclasses to create non-default editing domains. */
-	protected TXEditingDomain createEditingDomain(ResourceSet rset) {
+	protected TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
 		history = new DefaultOperationHistory();  // don't use shared history
 		
-		return WorkbenchEditingDomainFactory.INSTANCE.createEditingDomain(
+		return WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain(
 				rset,
 				history);
 	}
@@ -415,8 +415,8 @@ public class AbstractTest
 	 * 
 	 * @return the command stack
 	 */
-	protected TXCommandStack getCommandStack() {
-		return (TXCommandStack) domain.getCommandStack();
+	protected TransactionalCommandStack getCommandStack() {
+		return (TransactionalCommandStack) domain.getCommandStack();
 	}
 	
 	/**
@@ -425,7 +425,7 @@ public class AbstractTest
 	protected void startWriting() {
 		try {
 			transactionStack.add(
-					((InternalTXEditingDomain) domain).startTransaction(false, null));
+					((InternalTransactionalEditingDomain) domain).startTransaction(false, null));
 		} catch (Exception e) {
 			fail(e);
 		}
@@ -448,7 +448,7 @@ public class AbstractTest
 	protected void startWriting(Map options) {
 		try {
 			transactionStack.add(
-					((InternalTXEditingDomain) domain).startTransaction(false, options));
+					((InternalTransactionalEditingDomain) domain).startTransaction(false, options));
 		} catch (Exception e) {
 			fail(e);
 		}
@@ -460,7 +460,7 @@ public class AbstractTest
 	protected void startReading() {
 		try {
 			transactionStack.add(
-					((InternalTXEditingDomain) domain).startTransaction(true, null));
+					((InternalTransactionalEditingDomain) domain).startTransaction(true, null));
 		} catch (Exception e) {
 			fail(e);
 		}
@@ -483,7 +483,7 @@ public class AbstractTest
 	protected void startReading(Map options) {
 		try {
 			transactionStack.add(
-					((InternalTXEditingDomain) domain).startTransaction(true, options));
+					((InternalTransactionalEditingDomain) domain).startTransaction(true, options));
 		} catch (Exception e) {
 			fail(e);
 		}

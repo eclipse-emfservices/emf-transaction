@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFOperationCommand.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: EMFOperationCommand.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -34,13 +34,13 @@ import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTXEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.workspace.impl.NonEMFTransaction;
-import org.eclipse.emf.workspace.internal.EMFWorkbenchPlugin;
-import org.eclipse.emf.workspace.internal.EMFWorkbenchStatusCodes;
+import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
+import org.eclipse.emf.workspace.internal.EMFWorkspaceStatusCodes;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 import org.eclipse.osgi.util.NLS;
@@ -60,7 +60,7 @@ import org.eclipse.osgi.util.NLS;
  * @author Christian W. Damus (cdamus)
  */
 public class EMFOperationCommand implements Command {
-	private final TXEditingDomain domain;
+	private final TransactionalEditingDomain domain;
 	private IUndoableOperation operation;
 	private Reference adaptable;
 	
@@ -73,7 +73,7 @@ public class EMFOperationCommand implements Command {
 	 * @throws IllegalArgumentException if either the domain or operation is
 	 *      <code>null</code>
 	 */
-	public EMFOperationCommand(TXEditingDomain domain, IUndoableOperation operation) {
+	public EMFOperationCommand(TransactionalEditingDomain domain, IUndoableOperation operation) {
 		this(domain, operation, null);
 	}
 	
@@ -88,7 +88,7 @@ public class EMFOperationCommand implements Command {
 	 * @throws IllegalArgumentException if either the domain or operation is
 	 *      <code>null</code>
 	 */
-	public EMFOperationCommand(TXEditingDomain domain,
+	public EMFOperationCommand(TransactionalEditingDomain domain,
 			IUndoableOperation operation,
 			IAdaptable adaptable) {
 		if (domain == null) {
@@ -149,10 +149,10 @@ public class EMFOperationCommand implements Command {
 			
 			operation.execute(new NullProgressMonitor(), getAdaptable());
 		} catch (ExecutionException e) {
-			EMFWorkbenchPlugin.INSTANCE.log(new Status(
+			EMFWorkspacePlugin.INSTANCE.log(new Status(
 				IStatus.ERROR,
-				EMFWorkbenchPlugin.getPluginId(),
-				EMFWorkbenchStatusCodes.ROLLBACK_FAILED,
+				EMFWorkspacePlugin.getPluginId(),
+				EMFWorkspaceStatusCodes.ROLLBACK_FAILED,
 				NLS.bind(Messages.rollbackFailed, operation.getLabel()),
 				e));
 		} finally {
@@ -165,7 +165,7 @@ public class EMFOperationCommand implements Command {
 					Tracing.catching(EMFOperationCommand.class, "execute", e); //$NON-NLS-1$
 					
 					// rollback should not happen with non-EMF changes
-					EMFWorkbenchPlugin.INSTANCE.log(e.getStatus());
+					EMFWorkspacePlugin.INSTANCE.log(e.getStatus());
 				}
 			}
 		}
@@ -224,10 +224,10 @@ public class EMFOperationCommand implements Command {
 		try {
 			operation.undo(new NullProgressMonitor(), getAdaptable());
 		} catch (ExecutionException e) {
-			EMFWorkbenchPlugin.INSTANCE.log(new Status(
+			EMFWorkspacePlugin.INSTANCE.log(new Status(
 				IStatus.ERROR,
-				EMFWorkbenchPlugin.getPluginId(),
-				EMFWorkbenchStatusCodes.ROLLBACK_FAILED,
+				EMFWorkspacePlugin.getPluginId(),
+				EMFWorkspaceStatusCodes.ROLLBACK_FAILED,
 				NLS.bind(Messages.rollbackFailed, operation.getLabel()),
 				e));
 		}
@@ -251,10 +251,10 @@ public class EMFOperationCommand implements Command {
 		try {
 			operation.redo(new NullProgressMonitor(), getAdaptable());
 		} catch (ExecutionException e) {
-			EMFWorkbenchPlugin.INSTANCE.log(new Status(
+			EMFWorkspacePlugin.INSTANCE.log(new Status(
 				IStatus.ERROR,
-				EMFWorkbenchPlugin.getPluginId(),
-				EMFWorkbenchStatusCodes.ROLLBACK_FAILED,
+				EMFWorkspacePlugin.getPluginId(),
+				EMFWorkspaceStatusCodes.ROLLBACK_FAILED,
 				NLS.bind(Messages.rollbackFailed, operation.getLabel()),
 				e));
 		}
@@ -347,7 +347,7 @@ public class EMFOperationCommand implements Command {
 	 *    read-only
 	 */
 	private InternalTransaction getTransaction() {
-		InternalTransaction result = ((InternalTXEditingDomain) domain).getActiveTransaction();
+		InternalTransaction result = ((InternalTransactionalEditingDomain) domain).getActiveTransaction();
 		
 		if (result != null) {
 			if (result.isReadOnly() || (result.getOwner() != Thread.currentThread())) {

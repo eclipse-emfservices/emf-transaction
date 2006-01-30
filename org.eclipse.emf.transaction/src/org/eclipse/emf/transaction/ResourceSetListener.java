@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListener.java,v 1.2 2006/01/25 17:07:42 cdamus Exp $
+ * $Id: ResourceSetListener.java,v 1.3 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -37,7 +37,7 @@ import org.eclipse.emf.common.command.Command;
  * @see ResourceSetListenerImpl
  * @see ResourceSetChangeEvent
  * @see NotificationFilter
- * @see TXEditingDomain#addResourceSetListener(ResourceSetListener)
+ * @see TransactionalEditingDomain#addResourceSetListener(ResourceSetListener)
  */
 public interface ResourceSetListener extends EventListener {
 	/**

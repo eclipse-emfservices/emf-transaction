@@ -6,7 +6,7 @@
          <meta.schema plugin="org.eclipse.emf.transaction" id="editingDomains" name="EMF Transaction Editing Domains"/>
       </appInfo>
       <documentation>
-         Registers named &lt;code&gt;TXEditingDomain&lt;/code&gt; instances, to be sharable by
+         Registers named &lt;code&gt;TransactionslEditingDomain&lt;/code&gt; instances, to be sharable by
 multiple applications.
       </documentation>
    </annotation>
@@ -63,10 +63,10 @@ multiple applications.
          <attribute name="factory" type="string" use="required">
             <annotation>
                <documentation>
-                  Name of a class implementing the &lt;code&gt;TXEditingDomain.Factory&lt;/code&gt; interface, which is used by the registry to create the registered editing domain the first time that it is accessed.
+                  Name of a class implementing the &lt;code&gt;TransactionalEditingDomain.Factory&lt;/code&gt; interface, which is used by the registry to create the registered editing domain the first time that it is accessed.
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn="org.eclipse.emf.transaction.TXEditingDomain$Factory"/>
+                  <meta.attribute kind="java" basedOn="org.eclipse.emf.transaction.TransactionalEditingDomain$Factory"/>
                </appInfo>
             </annotation>
          </attribute>

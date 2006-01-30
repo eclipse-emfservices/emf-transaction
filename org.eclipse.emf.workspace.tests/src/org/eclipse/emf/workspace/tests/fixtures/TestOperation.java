@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TestOperation.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: TestOperation.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
@@ -23,7 +23,7 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.workspace.AbstractEMFOperation;
 
 /**
@@ -34,11 +34,11 @@ import org.eclipse.emf.workspace.AbstractEMFOperation;
 public abstract class TestOperation
 	extends AbstractEMFOperation {
 
-	public TestOperation(TXEditingDomain domain) {
+	public TestOperation(TransactionalEditingDomain domain) {
 		super(domain, "Testing"); //$NON-NLS-1$
 	}
 
-	public TestOperation(TXEditingDomain domain, Map options) {
+	public TestOperation(TransactionalEditingDomain domain, Map options) {
 		super(domain, "Testing", options); //$NON-NLS-1$
 	}
 

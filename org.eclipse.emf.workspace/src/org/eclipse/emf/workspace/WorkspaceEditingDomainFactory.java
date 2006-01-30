@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchEditingDomainFactory.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: WorkspaceEditingDomainFactory.java,v 1.1 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -20,9 +20,9 @@ import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.OperationHistoryFactory;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
-import org.eclipse.emf.transaction.TXEditingDomain;
-import org.eclipse.emf.transaction.impl.TXEditingDomainImpl;
-import org.eclipse.emf.workspace.impl.WorkbenchCommandStackImpl;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
+import org.eclipse.emf.workspace.impl.WorkspaceCommandStackImpl;
 
 /**
  * Factory for creating transactional editing domains that delegate
@@ -30,18 +30,18 @@ import org.eclipse.emf.workspace.impl.WorkbenchCommandStackImpl;
  *
  * @author Christian W. Damus (cdamus)
  */
-public class WorkbenchEditingDomainFactory extends TXEditingDomainImpl.FactoryImpl {
+public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImpl.FactoryImpl {
 
 	/**
 	 * The single shared instance of the workbench editing domain factory.
 	 */
-	public static final WorkbenchEditingDomainFactory INSTANCE =
-		new WorkbenchEditingDomainFactory();
+	public static final WorkspaceEditingDomainFactory INSTANCE =
+		new WorkspaceEditingDomainFactory();
 	
 	/**
 	 * Initializes me.
 	 */
-	public WorkbenchEditingDomainFactory() {
+	public WorkspaceEditingDomainFactory() {
 		super();
 	}
 	
@@ -51,7 +51,7 @@ public class WorkbenchEditingDomainFactory extends TXEditingDomainImpl.FactoryIm
 	 * 
 	 * @return the new editing domain
 	 */
-	public TXEditingDomain createEditingDomain() {
+	public TransactionalEditingDomain createEditingDomain() {
 		return createEditingDomain(OperationHistoryFactory.getOperationHistory());
 	}
 
@@ -63,7 +63,7 @@ public class WorkbenchEditingDomainFactory extends TXEditingDomainImpl.FactoryIm
 	 * 
 	 * @return the new editing domain
 	 */
-	public TXEditingDomain createEditingDomain(ResourceSet rset) {
+	public TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
 		return createEditingDomain(
 				rset,
 				OperationHistoryFactory.getOperationHistory());
@@ -77,10 +77,10 @@ public class WorkbenchEditingDomainFactory extends TXEditingDomainImpl.FactoryIm
 	 * 
 	 * @return the new editing domain
 	 */
-	public TXEditingDomain createEditingDomain(IOperationHistory history) {
-		WorkbenchCommandStackImpl stack = new WorkbenchCommandStackImpl(history);
+	public TransactionalEditingDomain createEditingDomain(IOperationHistory history) {
+		WorkspaceCommandStackImpl stack = new WorkspaceCommandStackImpl(history);
 		
-		TXEditingDomain result = new TXEditingDomainImpl(
+		TransactionalEditingDomain result = new TransactionalEditingDomainImpl(
 			new ComposedAdapterFactory(
 				ComposedAdapterFactory.Descriptor.Registry.INSTANCE),
 			stack);
@@ -99,10 +99,10 @@ public class WorkbenchEditingDomainFactory extends TXEditingDomainImpl.FactoryIm
 	 * 
 	 * @return the new editing domain
 	 */
-	public TXEditingDomain createEditingDomain(ResourceSet rset, IOperationHistory history) {
-		WorkbenchCommandStackImpl stack = new WorkbenchCommandStackImpl(history);
+	public TransactionalEditingDomain createEditingDomain(ResourceSet rset, IOperationHistory history) {
+		WorkspaceCommandStackImpl stack = new WorkspaceCommandStackImpl(history);
 		
-		TXEditingDomain result = new TXEditingDomainImpl(
+		TransactionalEditingDomain result = new TransactionalEditingDomainImpl(
 			new ComposedAdapterFactory(
 				ComposedAdapterFactory.Descriptor.Registry.INSTANCE),
 			stack,

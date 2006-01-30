@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Tracing.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: Tracing.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace.internal;
 
@@ -118,7 +118,7 @@ public class Tracing {
 	 * 
 	 */
 	protected static boolean shouldTrace() {
-		Plugin plugin = EMFWorkbenchPlugin.getPlugin();
+		Plugin plugin = EMFWorkspacePlugin.getPlugin();
 		
 		// could have shut down the plug-in
 		return (plugin != null) && plugin.isDebugging();
@@ -295,7 +295,7 @@ public class Tracing {
 		String methodName,
 		Throwable throwable) {
 
-		if (shouldTrace(EMFWorkbenchDebugOptions.EXCEPTIONS_CATCHING)) {
+		if (shouldTrace(EMFWorkspaceDebugOptions.EXCEPTIONS_CATCHING)) {
 
 			trace(
 				PREFIX_CATCHING
@@ -326,7 +326,7 @@ public class Tracing {
 		String methodName,
 		Throwable throwable) {
 
-		if (shouldTrace(EMFWorkbenchDebugOptions.EXCEPTIONS_THROWING)) {
+		if (shouldTrace(EMFWorkspaceDebugOptions.EXCEPTIONS_THROWING)) {
 
 			trace(
 				PREFIX_THROWING
@@ -353,7 +353,7 @@ public class Tracing {
 		Class clazz,
 		String methodName) {
 
-		if (shouldTrace(EMFWorkbenchDebugOptions.METHODS_ENTERING)) {
+		if (shouldTrace(EMFWorkspaceDebugOptions.METHODS_ENTERING)) {
 
 			trace(
 				PREFIX_ENTERING
@@ -377,7 +377,7 @@ public class Tracing {
 		String methodName,
 		Object parameter) {
 
-		if (shouldTrace(EMFWorkbenchDebugOptions.METHODS_ENTERING)) {
+		if (shouldTrace(EMFWorkspaceDebugOptions.METHODS_ENTERING)) {
 
 			trace(
 				PREFIX_ENTERING
@@ -404,7 +404,7 @@ public class Tracing {
 		String methodName,
 		Object[] parameters) {
 
-		if (shouldTrace(EMFWorkbenchDebugOptions.METHODS_ENTERING)) {
+		if (shouldTrace(EMFWorkspaceDebugOptions.METHODS_ENTERING)) {
 
 			trace(
 				PREFIX_ENTERING
@@ -428,7 +428,7 @@ public class Tracing {
 		Class clazz,
 		String methodName) {
 
-		if (shouldTrace(EMFWorkbenchDebugOptions.METHODS_EXITING)) {
+		if (shouldTrace(EMFWorkspaceDebugOptions.METHODS_EXITING)) {
 
 			trace(
 				PREFIX_EXITING
@@ -452,7 +452,7 @@ public class Tracing {
 		String methodName,
 		Object returnValue) {
 
-		if (shouldTrace(EMFWorkbenchDebugOptions.METHODS_EXITING)) {
+		if (shouldTrace(EMFWorkspaceDebugOptions.METHODS_EXITING)) {
 
 			trace(
 				PREFIX_EXITING

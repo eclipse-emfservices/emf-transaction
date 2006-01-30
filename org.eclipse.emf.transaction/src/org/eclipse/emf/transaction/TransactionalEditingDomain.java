@@ -12,14 +12,14 @@
  *
  * </copyright>
  *
- * $Id: TXEditingDomain.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: TransactionalEditingDomain.java,v 1.1 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
 
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.edit.domain.EditingDomain;
-import org.eclipse.emf.transaction.impl.TXEditingDomainImpl;
+import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
 
 /**
  * An extension of the {@link EditingDomain} API that applies transactional
@@ -33,12 +33,12 @@ import org.eclipse.emf.transaction.impl.TXEditingDomainImpl;
  * code, simply invoke the static factory instance:
  * </p>
  * <PRE>
- *     TXEditingDomain domain = TXEditingDomain.Factory.INSTANCE.createEditingDomain();
+ *     TransactionalEditingDomain domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
  *     ResourceSet rset = domain.getResourceSet();
  *
  *     // or, create our own resource set and initialize the domain with it
  *     rset = new MyResourceSetImpl();
- *     domain = TXEditingDomain.Factory.INSTANCE.createEditingDomain(rset);
+ *     domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain(rset);
  * </PRE>
  * <p>
  * To share a named editing domain with other applications, the editing domain
@@ -56,7 +56,7 @@ import org.eclipse.emf.transaction.impl.TXEditingDomainImpl;
  *
  *     // in code, access the registered editing domain by:
  *
- *     TXEditingDomain myDomain = TXEditingDomain.Registry.INSTANCE.getEditingDomain(
+ *     TransactionalEditingDomain myDomain = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
  *             "com.example.MyEditingDomain");
  * </pre>
  * <p>
@@ -66,11 +66,11 @@ import org.eclipse.emf.transaction.impl.TXEditingDomainImpl;
  * 
  * @author Christian W. Damus (cdamus)
  * 
- * @see TXCommandStack
+ * @see TransactionalCommandStack
  * @see Transaction
  * @see ResourceSetListener
  */
-public interface TXEditingDomain
+public interface TransactionalEditingDomain
 	extends EditingDomain {
 
 	/**
@@ -94,7 +94,7 @@ public interface TXEditingDomain
 	 * @throws IllegalArgumentException if I am a statically registered domain
 	 * 
 	 * @see #getID()
-	 * @see Registry#add(String, TXEditingDomain)
+	 * @see Registry#add(String, TransactionalEditingDomain)
 	 */
 	void setID(String id);
 	
@@ -156,7 +156,7 @@ public interface TXEditingDomain
 	
 	/**
 	 * Temporarily yields access to another read-only transaction.  The
-	 * <code>TXEditingDomain</code> supports any number of pseudo-concurrent
+	 * <code>TransactionalEditingDomain</code> supports any number of pseudo-concurrent
 	 * read-only transactions.  Transactions that are expected to be
 	 * long-running should yield frequently, as a task running in a progress
 	 * monitor is expected to check for cancellation frequently.  However, there
@@ -207,14 +207,14 @@ public interface TXEditingDomain
 		 * Static factory instance that can create instances of the default
 		 * transactional editing domain implementation.
 		 */
-		Factory INSTANCE = new TXEditingDomainImpl.FactoryImpl();
+		Factory INSTANCE = new TransactionalEditingDomainImpl.FactoryImpl();
 		
 		/**
 		 * Creates an editing domain with a default resource set implementation.
 		 * 
 		 * @return the new editing domain
 		 */
-		TXEditingDomain createEditingDomain();
+		TransactionalEditingDomain createEditingDomain();
 		
 		/**
 		 * Creates a new transactional editing domain on the specified resource
@@ -225,7 +225,7 @@ public interface TXEditingDomain
 		 * 
 		 * @return a new editing domain on the supplied resource set
 		 */
-		TXEditingDomain createEditingDomain(ResourceSet rset);
+		TransactionalEditingDomain createEditingDomain(ResourceSet rset);
 		
 		/**
 		 * Obtains the transactional editing domain (if any) that is currently
@@ -234,13 +234,13 @@ public interface TXEditingDomain
 		 * @param rset a resource set
 		 * 
 		 * @return its editing domain, or <code>null</code> if it is not managed
-		 *     by any <code>TXEditingDomain</code>
+		 *     by any <code>TransactionalEditingDomain</code>
 		 */
-		TXEditingDomain getEditingDomain(ResourceSet rset);
+		TransactionalEditingDomain getEditingDomain(ResourceSet rset);
 	}
 	
 	/**
-	 * An ID-based registry of shareable {@link TXEditingDomain} instances.
+	 * An ID-based registry of shareable {@link TransactionalEditingDomain} instances.
 	 * Although editing domains can be registered in code, the usual means is
 	 * to implement the <code>org.eclipse.emf.transaction.editingDomains</code>
 	 * extension point.
@@ -251,7 +251,7 @@ public interface TXEditingDomain
 		/**
 		 * The single static registry instance.
 		 */
-		Registry INSTANCE = new TXEditingDomainImpl.RegistryImpl();
+		Registry INSTANCE = new TransactionalEditingDomainImpl.RegistryImpl();
 		
 		/**
 		 * Obtains the editing domain having the specified ID.  if the specified
@@ -264,7 +264,7 @@ public interface TXEditingDomain
 		 * @return the matching editing domain, or <code>null</code> if it is
 		 *     not found and it could not be created from the extension point
 		 */
-		TXEditingDomain getEditingDomain(String id);
+		TransactionalEditingDomain getEditingDomain(String id);
 		
 		/**
 		 * Registers an editing domain under the specified ID.  This will displace
@@ -276,13 +276,13 @@ public interface TXEditingDomain
 		 * 
 		 * @param id the domain ID to register
 		 * @param domain the domain to register.  If its current
-		 *    {@link TXEditingDomain#getID() ID} is not the registered ID, then it
+		 *    {@link TransactionalEditingDomain#getID() ID} is not the registered ID, then it
 		 *    is updated to correspond
 		 * 
 		 * @throws IllegalArgumentException if the specified ID is already registered
 		 *    statically on the extension point
 		 */
-		void add(String id, TXEditingDomain domain);
+		void add(String id, TransactionalEditingDomain domain);
 		
 		/**
 		 * Removes the editing domain matching the specified ID from the
@@ -299,6 +299,6 @@ public interface TXEditingDomain
 		 * @throws IllegalArgumentException if the specified ID was registered
 		 *    statically on the extension point
 		 */
-		TXEditingDomain remove(String id);
+		TransactionalEditingDomain remove(String id);
 	}
 }

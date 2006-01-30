@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: NonEMFTransaction.java,v 1.1 2006/01/30 16:18:19 cdamus Exp $
+ * $Id: NonEMFTransaction.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -21,7 +21,7 @@ import java.util.Map;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionImpl;
 import org.eclipse.emf.workspace.util.OperationChangeDescription;
 
@@ -44,7 +44,7 @@ public class NonEMFTransaction extends TransactionImpl {
 	 * @param info the adaptable object provided to the operation when it is
 	 *     executed
 	 */
-	public NonEMFTransaction(TXEditingDomain domain,
+	public NonEMFTransaction(TransactionalEditingDomain domain,
 			IUndoableOperation operation,
 			IAdaptable info) {
 		this(domain, operation, info, null);
@@ -60,7 +60,7 @@ public class NonEMFTransaction extends TransactionImpl {
 	 * @param info the adaptable object provided to the operation when it is
 	 *     executed
 	 */
-	public NonEMFTransaction(TXEditingDomain domain,
+	public NonEMFTransaction(TransactionalEditingDomain domain,
 			IUndoableOperation operation,
 			IAdaptable info,
 			Map options) {

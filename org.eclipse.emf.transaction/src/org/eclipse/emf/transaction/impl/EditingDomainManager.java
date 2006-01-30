@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EditingDomainManager.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: EditingDomainManager.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -28,7 +28,7 @@ import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.transaction.ResourceSetListener;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.internal.Tracing;
@@ -83,8 +83,8 @@ public class EditingDomainManager {
 	 * @return the corresponding editing domain, or <code>null</code> if no
 	 *     such extension was found
 	 */
-	public TXEditingDomain createEditingDomain(String id) {
-		TXEditingDomain result = null;
+	public TransactionalEditingDomain createEditingDomain(String id) {
+		TransactionalEditingDomain result = null;
 		
 		IConfigurationElement config = getDomainConfig(id);
 		
@@ -92,8 +92,8 @@ public class EditingDomainManager {
 			try {
 				Object factory = config.createExecutableExtension(A_FACTORY);
 				
-				if (factory instanceof TXEditingDomain.Factory) {
-					result = ((TXEditingDomain.Factory) factory).createEditingDomain(); 
+				if (factory instanceof TransactionalEditingDomain.Factory) {
+					result = ((TransactionalEditingDomain.Factory) factory).createEditingDomain(); 
 				} else {
 					EMFTransactionPlugin.getPlugin().log(
 							new Status(
@@ -143,7 +143,7 @@ public class EditingDomainManager {
 	 * @param id the editing domain ID
 	 * @param domain the editing domain to which to add the listeners
 	 */
-	public void configureListeners(String id, TXEditingDomain domain) {
+	public void configureListeners(String id, TransactionalEditingDomain domain) {
 		Collection configs = getListenerConfigs(id);
 		
 		for (Iterator iter = configs.iterator(); iter.hasNext();) {
@@ -165,7 +165,7 @@ public class EditingDomainManager {
 	 * @param id the editing domain ID
 	 * @param domain the editing domain from which to remove the listeners
 	 */
-	public void deconfigureListeners(String id, TXEditingDomain domain) {
+	public void deconfigureListeners(String id, TransactionalEditingDomain domain) {
 		Collection configs = getListenerConfigs(id);
 		
 		for (Iterator iter = configs.iterator(); iter.hasNext();) {

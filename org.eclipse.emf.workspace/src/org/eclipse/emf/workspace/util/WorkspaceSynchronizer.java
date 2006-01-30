@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -37,8 +37,8 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.transaction.TXEditingDomain;
-import org.eclipse.emf.workspace.internal.EMFWorkbenchPlugin;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
@@ -71,7 +71,7 @@ import org.eclipse.emf.workspace.internal.l10n.Messages;
  * @author Christian W. Damus (cdamus)
  */
 public final class WorkspaceSynchronizer {
-	private final TXEditingDomain domain;
+	private final TransactionalEditingDomain domain;
 	private Delegate delegate;
 	
 	// we employ a copy-on-write strategy on this collection for thread safety
@@ -93,7 +93,7 @@ public final class WorkspaceSynchronizer {
 	 * 
 	 * @param domain my domain (must not be <code>null</code>)
 	 */
-	public WorkspaceSynchronizer(TXEditingDomain domain) {
+	public WorkspaceSynchronizer(TransactionalEditingDomain domain) {
 		this(domain, null);
 	}
 	
@@ -108,7 +108,7 @@ public final class WorkspaceSynchronizer {
 	 * @param delegate the delegate that handles my resource changes, or
 	 *     <code>null</code> to get the default behaviour
 	 */
-	public WorkspaceSynchronizer(TXEditingDomain domain, Delegate delegate) {
+	public WorkspaceSynchronizer(TransactionalEditingDomain domain, Delegate delegate) {
 		if (domain == null) {
 			throw new IllegalArgumentException("null domain"); //$NON-NLS-1$
 		}
@@ -129,7 +129,7 @@ public final class WorkspaceSynchronizer {
 	 * 
 	 * @return my editing domain
 	 */
-	public TXEditingDomain getEditingDomain() {
+	public TransactionalEditingDomain getEditingDomain() {
 		return domain;
 	}
 	
@@ -355,7 +355,7 @@ public final class WorkspaceSynchronizer {
 				}
 			} catch (CoreException e) {
 				Tracing.catching(WorkspaceListener.class, "resourceChanged", e); //$NON-NLS-1$
-				EMFWorkbenchPlugin.INSTANCE.log(e);
+				EMFWorkspacePlugin.INSTANCE.log(e);
 			}
 		}
 		
@@ -397,7 +397,7 @@ public final class WorkspaceSynchronizer {
 			} catch (IOException e) {
 				Tracing.catching(DefaultDelegate.class,
 						"handleResourceChanged", e); //$NON-NLS-1$
-				EMFWorkbenchPlugin.INSTANCE.log(e);
+				EMFWorkspacePlugin.INSTANCE.log(e);
 			}
 			
 			return true;

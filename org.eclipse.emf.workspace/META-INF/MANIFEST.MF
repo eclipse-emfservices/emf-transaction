@@ -9,7 +9,7 @@ Require-Bundle: org.eclipse.core.runtime;visibility:=reexport,
  org.eclipse.core.resources;visibility:=reexport,
  org.eclipse.core.commands;visibility:=reexport,
  org.eclipse.emf.transaction;visibility:=reexport
-Bundle-Activator: org.eclipse.emf.workspace.internal.EMFWorkbenchPlugin$Implementation
+Bundle-Activator: org.eclipse.emf.workspace.internal.EMFWorkspacePlugin$Implementation
 Eclipse-LazyStart: true
 Export-Package: org.eclipse.emf.workspace,
  org.eclipse.emf.workspace.impl,

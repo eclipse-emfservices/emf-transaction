@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteValidatorImpl.java,v 1.4 2006/01/25 17:07:42 cdamus Exp $
+ * $Id: ReadWriteValidatorImpl.java,v 1.5 2006/01/30 19:47:54 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -54,7 +54,7 @@ import org.eclipse.emf.validation.service.ModelValidationService;
  * 
  * @see ReadOnlyValidatorImpl
  */
-public class ReadWriteValidatorImpl implements TXValidator {
+public class ReadWriteValidatorImpl implements TransactionValidator {
 	/** Code indicating that we are collecting notifications for validation. */
 	static final int VALIDATION = 1;
 	/** Code indicating that we are collecting notifications for pre-commit. */

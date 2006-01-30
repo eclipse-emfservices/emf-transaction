@@ -54,7 +54,7 @@
          </appInfo>
          <documentation>
             Registers a &lt;code&gt;ResourceSetListener&lt;/code&gt; that is attached to the identified editing domain instance when it is added to or created by the editing domain registry.  When (and if) the editing domain is unregistered, the listener is removed from it.
-If no editing domains are referenced by a listener extension, then the listener is attached to all registered. &lt;code&gt;TXEditingDomain&lt;/code&gt; instances.  Unregistered editing domains are not affected.
+If no editing domains are referenced by a listener extension, then the listener is attached to all registered. &lt;code&gt;TransactionalEditingDomain&lt;/code&gt; instances.  Unregistered editing domains are not affected.
          </documentation>
       </annotation>
       <complexType>

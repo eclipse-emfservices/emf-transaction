@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ItemDefaultPublicationDateTrigger.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: ItemDefaultPublicationDateTrigger.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests.fixtures;
 
@@ -22,7 +22,7 @@ import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Item;
 import org.eclipse.emf.transaction.NotificationFilter;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.TriggerListener;
 
 /**
@@ -38,7 +38,7 @@ public class ItemDefaultPublicationDateTrigger extends TriggerListener {
 									Notification.ADD)));
 	}
 	
-	protected Command trigger(TXEditingDomain domain, Notification notification) {
+	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 		Command result = null;
 		
 		Item newItem = (Item) notification.getNewValue();

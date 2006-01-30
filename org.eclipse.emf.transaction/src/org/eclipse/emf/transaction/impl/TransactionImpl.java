@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.3 2006/01/25 17:07:42 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.4 2006/01/30 19:47:55 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -24,8 +24,8 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TXChangeDescription;
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionChangeDescription;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
 import org.eclipse.emf.transaction.internal.Tracing;
@@ -43,7 +43,7 @@ public class TransactionImpl
 	
 	final long id;
 	
-	private final TXEditingDomain domain;
+	private final TransactionalEditingDomain domain;
 	private final Thread owner;
 	private final boolean readOnly;
 	private final Map options;
@@ -67,7 +67,7 @@ public class TransactionImpl
 	 * @param readOnly <code>true</code> if I am read-only; <code>false</code>
 	 *     if I am read/write
 	 */
-	public TransactionImpl(TXEditingDomain domain, boolean readOnly) {
+	public TransactionImpl(TransactionalEditingDomain domain, boolean readOnly) {
 		this(domain, readOnly, null);
 	}
 	
@@ -80,7 +80,7 @@ public class TransactionImpl
 	 *     if I am read/write
 	 * @param options my options, or <code>null</code> for defaults
 	 */
-	public TransactionImpl(TXEditingDomain domain, boolean readOnly, Map options) {
+	public TransactionImpl(TransactionalEditingDomain domain, boolean readOnly, Map options) {
 		this.domain = domain;
 		this.readOnly = readOnly;
 		this.owner = Thread.currentThread();
@@ -124,7 +124,7 @@ public class TransactionImpl
 			int depth = 1;
 			for (Transaction tx = getParent(); tx != null; tx = tx.getParent()) depth++;
 				
-			Tracing.trace("*** Started " + TXEditingDomainImpl.getDebugID(this) //$NON-NLS-1$
+			Tracing.trace("*** Started " + TransactionalEditingDomainImpl.getDebugID(this) //$NON-NLS-1$
 				+ " read-only=" + isReadOnly() //$NON-NLS-1$
 				+ " owner=" + getOwner().getName() //$NON-NLS-1$
 				+ " depth=" + depth //$NON-NLS-1$
@@ -144,7 +144,7 @@ public class TransactionImpl
 	}
 	
 	// Documentation copied from the inherited specification
-	public final TXEditingDomain getEditingDomain() {
+	public final TransactionalEditingDomain getEditingDomain() {
 		return domain;
 	}
 
@@ -243,7 +243,7 @@ public class TransactionImpl
 		}
 		
 		if (Tracing.shouldTrace(EMFTransactionDebugOptions.TRANSACTIONS)) {
-			Tracing.trace("*** Committing " + TXEditingDomainImpl.getDebugID(this) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
+			Tracing.trace("*** Committing " + TransactionalEditingDomainImpl.getDebugID(this) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
 		try {
@@ -315,7 +315,7 @@ public class TransactionImpl
 		rollingBack = true;
 		
 		if (Tracing.shouldTrace(EMFTransactionDebugOptions.TRANSACTIONS)) {
-			Tracing.trace("*** Rolling back " + TXEditingDomainImpl.getDebugID(this) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
+			Tracing.trace("*** Rolling back " + TransactionalEditingDomainImpl.getDebugID(this) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
 		try {
@@ -347,7 +347,7 @@ public class TransactionImpl
 	}
 
 	// Documentation copied from the inherited specification
-	public TXChangeDescription getChangeDescription() {
+	public TransactionChangeDescription getChangeDescription() {
 		return (isActive() && !closing) ? null : change;
 	}
 
@@ -356,8 +356,8 @@ public class TransactionImpl
 	 * 
 	 * @return the internal view of my editing domain
 	 */
-	protected InternalTXEditingDomain getInternalDomain() {
-		return (InternalTXEditingDomain) getEditingDomain();
+	protected InternalTransactionalEditingDomain getInternalDomain() {
+		return (InternalTransactionalEditingDomain) getEditingDomain();
 	}
 
 	/**
@@ -365,7 +365,7 @@ public class TransactionImpl
 	 * transaction, unless undo recording is disabled by my options.
 	 */
 	private void startRecording() {
-		TXChangeRecorder recorder = getInternalDomain().getChangeRecorder();
+		TransactionChangeRecorder recorder = getInternalDomain().getChangeRecorder();
 		
 		if (isUndoEnabled(this) && !recorder.isRecording()) {
 			recorder.beginRecording();
@@ -377,7 +377,7 @@ public class TransactionImpl
 	 * unless undo recording is disabled by my options.
 	 */
 	private void stopRecording() {
-		TXChangeRecorder recorder = getInternalDomain().getChangeRecorder();
+		TransactionChangeRecorder recorder = getInternalDomain().getChangeRecorder();
 		
 		if (isUndoEnabled(this) && recorder.isRecording()) {
 			change.add(recorder.endRecording());
@@ -388,14 +388,15 @@ public class TransactionImpl
 	public void pause() {
 		// if we are rolling back, then we don't need to worry about recording
 		//    changes because we are permanently undoing changes.
-		//    See additional comments in the resume(TXChangeDescription) method
+		//    See additional comments in the resume(TransactionChangeDescription)
+		//    method
 		if (!isRollingBack()) {
 			stopRecording();
 		}
 	}
 	
 	// Documentation copied from the inherited specification
-	public void resume(TXChangeDescription nestedChanges) {
+	public void resume(TransactionChangeDescription nestedChanges) {
 		// if we are rolling back, then we don't need to worry about recording
 		//    changes because we are permanently undoing changes.  It can happen
 		//    that a nested transaction is created in order to roll back changes
@@ -419,7 +420,7 @@ public class TransactionImpl
 	/**
 	 * Closes me.  This is the last step in committing or rolling back,
 	 * deactivating me in my editing domain.  Also, if I have a parent
-	 * transaction, I {@link InternalTransaction#resume(TXChangeDescription) resume}
+	 * transaction, I {@link InternalTransaction#resume(TransactionChangeDescription) resume}
 	 * it.
 	 * <p>
 	 * If a subclass overrides this method, it <em>must</em> ensure that this
@@ -439,7 +440,7 @@ public class TransactionImpl
 			}
 			
 			if (Tracing.shouldTrace(EMFTransactionDebugOptions.TRANSACTIONS)) {
-				Tracing.trace("*** Closed " + TXEditingDomainImpl.getDebugID(this) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
+				Tracing.trace("*** Closed " + TransactionalEditingDomainImpl.getDebugID(this) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
 	}
@@ -462,7 +463,7 @@ public class TransactionImpl
 	 */
 	protected IStatus validate() {
 		if (Tracing.shouldTrace(EMFTransactionDebugOptions.TRANSACTIONS)) {
-			Tracing.trace("*** Validating " + TXEditingDomainImpl.getDebugID(this) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
+			Tracing.trace("*** Validating " + TransactionalEditingDomainImpl.getDebugID(this) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
 		return getInternalDomain().getValidator().validate(this);

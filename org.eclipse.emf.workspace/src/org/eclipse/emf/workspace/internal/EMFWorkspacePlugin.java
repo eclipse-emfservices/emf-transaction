@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFWorkbenchPlugin.java,v 1.1 2006/01/30 16:18:18 cdamus Exp $
+ * $Id: EMFWorkspacePlugin.java,v 1.1 2006/01/30 19:48:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace.internal;
 
@@ -23,10 +23,10 @@ import org.osgi.framework.BundleContext;
 /**
  * The main plugin class to be used in the desktop.
  */
-public class EMFWorkbenchPlugin extends EMFPlugin {
+public class EMFWorkspacePlugin extends EMFPlugin {
 
-	public static final EMFWorkbenchPlugin INSTANCE =
-		new EMFWorkbenchPlugin();
+	public static final EMFWorkspacePlugin INSTANCE =
+		new EMFWorkspacePlugin();
 
 	//The shared instance.
 	private static Implementation plugin;
@@ -34,7 +34,7 @@ public class EMFWorkbenchPlugin extends EMFPlugin {
 	/**
 	 * The constructor.
 	 */
-	public EMFWorkbenchPlugin() {
+	public EMFWorkspacePlugin() {
 		super(new ResourceLocator[]{});
 	}
 
@@ -75,7 +75,7 @@ public class EMFWorkbenchPlugin extends EMFPlugin {
 
 			// Remember the static instance.
 			//
-			EMFWorkbenchPlugin.plugin = this;
+			EMFWorkspacePlugin.plugin = this;
 		}
 
 		/**
@@ -90,7 +90,7 @@ public class EMFWorkbenchPlugin extends EMFPlugin {
 		 */
 		public void stop(BundleContext context) throws Exception {
 			super.stop(context);
-			EMFWorkbenchPlugin.plugin = null;
+			EMFWorkspacePlugin.plugin = null;
 		}
 	}
 

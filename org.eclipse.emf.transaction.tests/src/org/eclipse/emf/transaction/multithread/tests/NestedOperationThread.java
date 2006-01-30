@@ -12,11 +12,11 @@
  *
  * </copyright>
  *
- * $Id: NestedOperationThread.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: NestedOperationThread.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import org.eclipse.emf.transaction.TXEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 /**
  * Thread representing nested Operations.
@@ -44,7 +44,7 @@ class NestedOperationThread
 	 * @param waitObject
 	 * @param notifyObject
 	 */
-	public NestedOperationThread(TXEditingDomain domain, Object waitObject, Object notifyObject) {
+	public NestedOperationThread(TransactionalEditingDomain domain, Object waitObject, Object notifyObject) {
 		super(domain, waitObject, notifyObject);
 	}
 
