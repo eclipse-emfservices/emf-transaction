@@ -32,7 +32,7 @@
 	</zipTypes>
 
 	<logFiles>
-		<logFile name="org.eclipse.emf.workbench.tests_linux.gtk.xml">
+		<logFile name="org.eclipse.emf.workspace.tests_linux.gtk.xml">
 			<effectedFile id="SDK"></effectedFile>
 			<effectedFile id="projRUN"></effectedFile>
 		</logFile>
