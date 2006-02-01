@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceUndoContext.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
+ * $Id: ResourceUndoContext.java,v 1.3 2006/02/01 23:12:11 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -129,8 +129,11 @@ public final class ResourceUndoContext
 					result.add(notifier);
 				} else if (notifier instanceof EObject) {
 					EObject eobj = (EObject) notifier;
-					
-					result.add(eobj.eResource());
+                    Resource resource = eobj.eResource();
+                    
+                    if (resource != null) {
+                        result.add(resource);
+                    }
 					
 					// if the reference has an opposite, then we will get the
 					//   notification from the other end, anyway
@@ -187,31 +190,56 @@ public final class ResourceUndoContext
 		
 		Object oldValue = notification.getOldValue();
 		Object newValue = notification.getNewValue();
+        Resource resource;
 		
 		switch (notification.getEventType()) {
 		case Notification.SET:
 		case Notification.UNSET:
 			if (oldValue != null) {
-				resources.add(((EObject) oldValue).eResource());
+                resource = ((EObject) oldValue).eResource();
+                
+                if (resource != null) {
+                    resources.add(resource);
+                }
 			}
 			if (newValue != null) {
-				resources.add(((EObject) newValue).eResource());
+                resource = ((EObject) newValue).eResource();
+                
+                if (resource != null) {
+                    resources.add(resource);
+                }
 			}
 			break;
 		case Notification.ADD:
-			resources.add(((EObject) newValue).eResource());
+            resource = ((EObject) newValue).eResource();
+            
+            if (resource != null) {
+                resources.add(resource);
+            }
 			break;
 		case Notification.ADD_MANY:
 			for (Iterator iter = ((Collection) newValue).iterator(); iter.hasNext();) {
-				resources.add(((EObject) iter.next()).eResource());
+                resource = ((EObject) iter.next()).eResource();
+                
+                if (resource != null) {
+                    resources.add(resource);
+                }
 			}
 			break;
 		case Notification.REMOVE:
-			resources.add(((EObject) oldValue).eResource());
+            resource = ((EObject) oldValue).eResource();
+            
+            if (resource != null) {
+                resources.add(resource);
+            }
 			break;
 		case Notification.REMOVE_MANY:
 			for (Iterator iter = ((Collection) oldValue).iterator(); iter.hasNext();) {
-				resources.add(((EObject) iter.next()).eResource());
+                resource = ((EObject) iter.next()).eResource();
+                
+                if (resource != null) {
+                    resources.add(resource);
+                }
 			}
 			break;
 		}

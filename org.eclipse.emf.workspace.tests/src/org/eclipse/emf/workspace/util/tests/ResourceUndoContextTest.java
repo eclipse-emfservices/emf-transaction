@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceUndoContextTest.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
+ * $Id: ResourceUndoContextTest.java,v 1.3 2006/02/01 23:12:10 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -184,6 +184,44 @@ public class ResourceUndoContextTest extends TestCase {
 		expected.add(res2);
 		
 		assertEquals(expected, affected);
+	}
+	
+	/**
+	 * Tests the analysis of notifications from detached objects, to avoid
+	 * adding resource contexts with null resources.
+	 */
+	public void test_getAffectedResources_deletedElement_126113() {
+		Library library1 = EXTLibraryFactory.eINSTANCE.createLibrary();
+		res1.getContents().add(library1);
+		
+		Library library2 = EXTLibraryFactory.eINSTANCE.createLibrary();
+		res2.getContents().add(library2);
+		
+		BookOnTape book = EXTLibraryFactory.eINSTANCE.createBookOnTape();
+		library1.getStock().add(book);
+		
+		Person person = EXTLibraryFactory.eINSTANCE.createEmployee();
+		library2.getEmployees().add(person);
+		
+		book.setReader(person);
+		
+		// forget the events so far
+		listener.notifications.clear();
+
+		library2.getEmployees().remove(person);
+		book.setReader(null);   // this caused the null resource context
+		
+		assertFalse(listener.notifications.isEmpty());
+		
+		Set affected = ResourceUndoContext.getAffectedResources(
+				listener.notifications);
+		
+		Set expected = new java.util.HashSet();
+		expected.add(res1);
+		expected.add(res2);
+		
+		assertEquals(expected, affected);
+		assertFalse(affected.contains(null));
 	}
 	
 	//
