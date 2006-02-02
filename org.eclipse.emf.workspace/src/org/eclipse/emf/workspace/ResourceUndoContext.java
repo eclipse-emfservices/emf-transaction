@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceUndoContext.java,v 1.3 2006/02/01 23:12:11 cdamus Exp $
+ * $Id: ResourceUndoContext.java,v 1.4 2006/02/02 16:24:23 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -71,18 +71,30 @@ public final class ResourceUndoContext
 	}
 
 	/**
-	 * Matches another <code>context</code> if it is a
-	 * <code>ResourceUndoContext</code> having at least one resource in common
-	 * with me.
+	 * I match another <code>context</code> if it is a
+	 * <code>ResourceUndoContext</code> representing the same resource as I.
 	 */
 	public boolean matches(IUndoContext context) {
+		return this.equals(context);
+	}
+	
+	/**
+	 * I am equal to other <code>ResourceUndoContexts</code> on the same
+	 * resource as mine.
+	 */
+	public boolean equals(Object o) {
 		boolean result = false;
 		
-		if (context instanceof ResourceUndoContext) {
-			result = getResource() == ((ResourceUndoContext) context).getResource();
+		if (o instanceof ResourceUndoContext) {
+			result = getResource() == ((ResourceUndoContext) o).getResource();
 		}
 		
 		return result;
+	}
+
+	// Redefines the inherited method
+	public int hashCode() {
+		return resource == null ? 0 : resource.hashCode();
 	}
 	
 	/**

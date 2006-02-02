@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: NotificationFilter.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: NotificationFilter.java,v 1.2 2006/02/02 16:24:20 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -78,6 +78,30 @@ public abstract class NotificationFilter {
 	 * </ul>
 	 */
 	public static final NotificationFilter READ = new ReadFilter();
+	
+	/**
+	 * A filter matching "resource loaded" events.
+	 */
+	public static final NotificationFilter RESOURCE_LOADED = new NotificationFilter() {
+		public boolean matches(Notification notification) {
+			return (notification.getNotifier() instanceof Resource)
+					&& (notification.getFeatureID(Resource.class)
+							== Resource.RESOURCE__IS_LOADED)
+					&& !notification.getOldBooleanValue()
+					&& notification.getNewBooleanValue();
+		}};
+	
+	/**
+	 * A filter matching "resource unloaded" events.
+	 */
+	public static final NotificationFilter RESOURCE_UNLOADED = new NotificationFilter() {
+		public boolean matches(Notification notification) {
+			return (notification.getNotifier() instanceof Resource)
+					&& (notification.getFeatureID(Resource.class)
+							== Resource.RESOURCE__IS_LOADED)
+					&& notification.getOldBooleanValue()
+					&& !notification.getNewBooleanValue();
+		}};
 	
 	/** Cannot be instantiated by clients. */
 	NotificationFilter() {

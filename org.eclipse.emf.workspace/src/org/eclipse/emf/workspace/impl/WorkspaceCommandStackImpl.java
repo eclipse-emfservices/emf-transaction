@@ -12,10 +12,11 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.1 2006/01/30 19:48:00 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.2 2006/02/02 16:24:23 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +34,10 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.transaction.ExceptionHandler;
+import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
@@ -448,6 +451,47 @@ public class WorkspaceCommandStackImpl
 						ResourceUndoContext.getAffectedResources(
 								event.getNotifications()));
 			}
+			
+			Set unloaded = getUnloadedResources(event.getNotifications());
+			if (unloaded != null) {
+				if (affectedResources != null) {
+					// don't add these resources to the operation
+					affectedResources.removeAll(unloaded);
+				}
+				
+				for (Iterator iter = unloaded.iterator(); iter.hasNext();) {
+					getOperationHistory().dispose(
+							new ResourceUndoContext(
+									getDomain(),
+									(Resource) iter.next()),
+							true, true, true);
+				}
+			}
+		}
+		
+		/**
+		 * Finds resources that have sent unload notifications.
+		 * 
+		 * @param notifications notifications received from a transaction
+		 * @return a set of resources that the notifications indicate have been
+		 *     unloaded, or <code>null</code> if none
+		 */
+		private Set getUnloadedResources(Collection notifications) {
+			Set result = null;
+			
+			for (Iterator iter = notifications.iterator(); iter.hasNext();) {
+				Notification next = (Notification) iter.next();
+				
+				if (NotificationFilter.RESOURCE_UNLOADED.matches(next)) {
+					if (result == null) {
+						result = new java.util.HashSet();
+					}
+					
+					result.add(next.getNotifier());
+				}
+			}
+			
+			return result;
 		}
 		
 		public boolean isPostcommitOnly() {

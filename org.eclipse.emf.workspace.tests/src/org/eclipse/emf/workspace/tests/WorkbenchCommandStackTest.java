@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.3 2006/02/02 16:24:19 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -22,6 +22,8 @@ import junit.framework.TestSuite;
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.edit.command.SetCommand;
+import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.workspace.EMFCommandOperation;
 import org.eclipse.emf.workspace.IWorkspaceCommandStack;
 import org.eclipse.emf.workspace.ResourceUndoContext;
@@ -147,6 +149,40 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		getCommandStack().flush();
 		
 		operations = history.getUndoHistory(defaultContext);
+		
+		assertNotNull(operations);
+		assertEquals(0, operations.length);
+	}
+	
+	public void test_flushingOnResourceUnload() {
+		Command cmd = new SetCommand(
+				domain,
+				root,
+				EXTLibraryPackage.eINSTANCE.getLibrary_Name(),
+				"foo"); //$NON-NLS-1$
+		
+		getCommandStack().execute(cmd);
+		
+		IUndoContext resctx = new ResourceUndoContext(domain, testResource);
+		IUndoableOperation[] operations = history.getUndoHistory(resctx);
+		
+		assertNotNull(operations);
+		assertEquals(1, operations.length);
+		
+		IUndoableOperation operation = operations[0];
+		
+		IUndoContext[] contexts = operation.getContexts();
+		
+		assertEquals(2, contexts.length);
+		
+		assertTrue((resctx.matches(contexts[0]) && defaultContext.matches(contexts[1]))
+				|| (resctx.matches(contexts[1]) && defaultContext.matches(contexts[0])));
+		
+		// unload the resource (no transaction required)
+		testResource.unload();
+
+		// resource context was flushed
+		operations = history.getUndoHistory(resctx);
 		
 		assertNotNull(operations);
 		assertEquals(0, operations.length);
