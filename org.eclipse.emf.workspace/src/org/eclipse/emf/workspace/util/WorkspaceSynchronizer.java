@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.3 2006/02/16 22:26:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -202,7 +202,7 @@ public final class WorkspaceSynchronizer {
 		
 		if ("platform".equals(uri.scheme()) && (uri.segmentCount() > 2)) { //$NON-NLS-1$
 			if ("resource".equals(uri.segment(0))) { //$NON-NLS-1$
-				IPath path = new Path(uri.path()).removeFirstSegments(1);
+				IPath path = new Path(URI.decode(uri.path())).removeFirstSegments(1);
 				
 				result = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
 			}

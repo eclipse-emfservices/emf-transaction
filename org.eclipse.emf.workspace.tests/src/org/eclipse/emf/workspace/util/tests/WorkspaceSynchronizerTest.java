@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizerTest.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: WorkspaceSynchronizerTest.java,v 1.2 2006/02/16 22:26:49 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -33,6 +33,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.workspace.tests.AbstractTest;
 import org.eclipse.emf.workspace.util.WorkspaceSynchronizer;
 
@@ -290,6 +291,25 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		waitForWorkspaceChanges();
 		
 		assertFalse(testResource.isLoaded());
+	}
+	
+	/**
+	 * Checks that URIs are decoded when constructing file paths.
+	 */
+	public void test_getFileWithEncodedURI_128315() {
+		final String filePath = "/My Project/some dir/file.foo"; //$NON-NLS-1$
+		final String encoded = "platform:/resource/My%20Project/some%20dir/file.foo"; //$NON-NLS-1$
+		
+		URI uri = URI.createPlatformResourceURI(filePath, true);
+		
+		// URI does encodes itself
+		assertEquals(encoded, uri.toString());
+		
+		Resource res = new ResourceImpl(uri);
+		
+		IFile file = WorkspaceSynchronizer.getFile(res);
+		
+		assertEquals(filePath, file.getFullPath().toString());
 	}
 	
 	//
