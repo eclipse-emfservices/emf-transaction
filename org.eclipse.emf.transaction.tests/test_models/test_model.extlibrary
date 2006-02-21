@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--xtools2_universal_type_manager-->
-<?RSA version="7.0"?>
 <rmplib:Library xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:rmplib="http:///org/eclipse/emf/examples/library/extlibrary.ecore/1.0.0" xmi:id="_Jn_FAO1OEdmNZLgVDnynlw" name="root">
   <stock xmi:type="rmplib:Book" xmi:id="_o-3oUO1OEdmNZLgVDnynlw" title="Root Book"/>
   <branches xmi:id="_SJhBMO1OEdmNZLgVDnynlw" name="level1">
