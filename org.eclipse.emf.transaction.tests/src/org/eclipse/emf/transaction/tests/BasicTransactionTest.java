@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: BasicTransactionTest.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
+ * $Id: BasicTransactionTest.java,v 1.3 2006/02/21 22:16:40 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -311,7 +311,7 @@ public class BasicTransactionTest extends AbstractTest {
 		
 		// check that we got the expected events
 		assertNotNull(listener.postcommit);
-		List notifications = listener.postcommit.getNotifications();
+		List notifications = listener.postcommitNotifications;
 		assertFalse(notifications.isEmpty());
 		
 		// look for an event indicating resource was loaded and one indicating
@@ -349,7 +349,7 @@ public class BasicTransactionTest extends AbstractTest {
 		
 		// check that we got the expected events
 		assertNotNull(listener.postcommit);
-		notifications = listener.postcommit.getNotifications();
+		notifications = listener.postcommitNotifications;
 		assertFalse(notifications.isEmpty());
 		
 		// look for an event indicating resource was unloaded and one indicating

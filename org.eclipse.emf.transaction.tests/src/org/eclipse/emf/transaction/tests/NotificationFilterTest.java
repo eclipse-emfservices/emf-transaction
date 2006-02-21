@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: NotificationFilterTest.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: NotificationFilterTest.java,v 1.2 2006/02/21 22:16:40 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -73,18 +73,16 @@ public class NotificationFilterTest extends AbstractTest {
 			commit();
 			
 			assertNotNull(bookListener.postcommit);
-			assertEquals(1, bookListener.postcommit.getNotifications().size());
-			Notification notification = (Notification) bookListener.postcommit
-				.getNotifications().get(0);
+			assertEquals(1, bookListener.postcommitNotifications.size());
+			Notification notification = (Notification) bookListener.postcommitNotifications.get(0);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
 			assertSame(oldTitle, notification.getOldValue());
 			assertSame(newTitle, notification.getNewValue());
 			
 			assertNotNull(authorListener.postcommit);
-			assertEquals(1, authorListener.postcommit.getNotifications().size());
-			notification = (Notification) authorListener.postcommit
-				.getNotifications().get(0);
+			assertEquals(1, authorListener.postcommitNotifications.size());
+			notification = (Notification) authorListener.postcommitNotifications.get(0);
 			assertSame(newAuthor, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getWriter_Books(), notification.getFeature());
 			assertSame(book, notification.getNewValue());
@@ -112,8 +110,8 @@ public class NotificationFilterTest extends AbstractTest {
 		commit();
 		
 		assertNotNull(listener.postcommit);
-		assertNotNull(listener.postcommit.getNotifications());
-		assertEquals(1, listener.postcommit.getNotifications().size());
+		assertNotNull(listener.postcommitNotifications);
+		assertEquals(1, listener.postcommitNotifications.size());
 		
 		listener.reset();
 
@@ -125,8 +123,8 @@ public class NotificationFilterTest extends AbstractTest {
 		commit();
 		
 		assertNotNull(listener.postcommit);
-		assertNotNull(listener.postcommit.getNotifications());
-		assertEquals(1, listener.postcommit.getNotifications().size());
+		assertNotNull(listener.postcommitNotifications);
+		assertEquals(1, listener.postcommitNotifications.size());
 		
 		listener.reset();
 		
@@ -152,8 +150,8 @@ public class NotificationFilterTest extends AbstractTest {
 		commit();
 		
 		assertNotNull(listener.postcommit);
-		assertNotNull(listener.postcommit.getNotifications());
-		assertEquals(1, listener.postcommit.getNotifications().size());
+		assertNotNull(listener.postcommitNotifications);
+		assertEquals(1, listener.postcommitNotifications.size());
 		
 		listener.reset();
 
@@ -165,8 +163,8 @@ public class NotificationFilterTest extends AbstractTest {
 		commit();
 		
 		assertNotNull(listener.postcommit);
-		assertNotNull(listener.postcommit.getNotifications());
-		assertEquals(1, listener.postcommit.getNotifications().size());
+		assertNotNull(listener.postcommitNotifications);
+		assertEquals(1, listener.postcommitNotifications.size());
 		
 		listener.reset();
 		
@@ -248,8 +246,8 @@ public class NotificationFilterTest extends AbstractTest {
 		commit();
 		
 		assertNotNull(listener.postcommit);
-		assertNotNull(listener.postcommit.getNotifications());
-		assertEquals(1, listener.postcommit.getNotifications().size());
+		assertNotNull(listener.postcommitNotifications);
+		assertEquals(1, listener.postcommitNotifications.size());
 		
 		listener.reset();
 
@@ -261,8 +259,8 @@ public class NotificationFilterTest extends AbstractTest {
 		commit();
 		
 		assertNotNull(listener.postcommit);
-		assertNotNull(listener.postcommit.getNotifications());
-		assertEquals(1, listener.postcommit.getNotifications().size());
+		assertNotNull(listener.postcommitNotifications);
+		assertEquals(1, listener.postcommitNotifications.size());
 		
 		listener.reset();
 		

@@ -12,9 +12,12 @@
  *
  * </copyright>
  *
- * $Id: TestListener.java,v 1.1 2006/01/03 20:51:12 cdamus Exp $
+ * $Id: TestListener.java,v 1.2 2006/02/21 22:16:40 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.tests.fixtures;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.transaction.NotificationFilter;
@@ -32,8 +35,14 @@ public class TestListener extends ResourceSetListenerImpl {
 	/** The last pre-commit event received. */
 	public ResourceSetChangeEvent precommit;
 	
+	/** The copied list of precommit notifications from the precommit event. */
+	public List precommitNotifications;
+	
 	/** The last post-commit event received. */
 	public ResourceSetChangeEvent postcommit;
+	
+	/** The copied list of postcommit notifications from the postcommit event.*/
+	public List postcommitNotifications;
 	
 	public TestListener() {
 		super(NotificationFilter.ANY);
@@ -47,12 +56,14 @@ public class TestListener extends ResourceSetListenerImpl {
 		throws RollbackException {
 		
 		precommit = event;
+		precommitNotifications = new ArrayList(event.getNotifications());
 		
 		return null;
 	}
 	
 	public void resourceSetChanged(ResourceSetChangeEvent event) {
 		postcommit = event;
+		postcommitNotifications = new ArrayList(event.getNotifications());
 	}
 	
 	/**
@@ -60,6 +71,8 @@ public class TestListener extends ResourceSetListenerImpl {
 	 */
 	public void reset() {
 		precommit = null;
+		precommitNotifications = null;
 		postcommit = null;
+		postcommitNotifications = null;
 	}
 }

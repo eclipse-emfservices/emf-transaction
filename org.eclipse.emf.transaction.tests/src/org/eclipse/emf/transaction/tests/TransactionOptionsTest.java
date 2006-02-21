@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionOptionsTest.java,v 1.1 2006/01/18 19:03:57 cdamus Exp $
+ * $Id: TransactionOptionsTest.java,v 1.2 2006/02/21 22:16:40 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -238,11 +238,11 @@ public class TransactionOptionsTest extends AbstractTest {
 		
 		// listeners are notified of the changes
 		assertNotNull(listener.postcommit);
-		assertNotNull(listener.postcommit.getNotifications());
+		assertNotNull(listener.postcommitNotifications);
 		
 		// one notification from the book title, one from the book author,
 		//    and one from the author books
-		assertEquals(3, listener.postcommit.getNotifications().size());
+		assertEquals(3, listener.postcommitNotifications.size());
 	}
 	
 	/**

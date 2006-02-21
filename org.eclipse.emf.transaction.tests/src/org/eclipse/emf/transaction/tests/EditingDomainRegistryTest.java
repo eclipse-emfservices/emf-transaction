@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EditingDomainRegistryTest.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
+ * $Id: EditingDomainRegistryTest.java,v 1.3 2006/02/21 22:16:40 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -282,7 +282,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		
 		// should have gotten events from the read transaction, above
 		assertNotNull(TestListener2.getInstance().postcommit);
-		List notifications = TestListener2.getInstance().postcommit.getNotifications();
+		List notifications = TestListener2.getInstance().postcommitNotifications;
 		assertFalse(notifications == null);
 		assertEquals(1, notifications.size());
 		Notification notification = (Notification) notifications.get(0);
@@ -305,7 +305,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		
 		// should have gotten events from this read transaction, too
 		assertNotNull(TestListener2.getInstance().postcommit);
-		notifications = TestListener2.getInstance().postcommit.getNotifications();
+		notifications = TestListener2.getInstance().postcommitNotifications;
 		assertFalse(notifications == null);
 		assertEquals(1, notifications.size());
 		notification = (Notification) notifications.get(0);
@@ -365,7 +365,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		
 		// should have gotten events from the read transaction, above
 		assertNotNull(TestListener3.getInstance().postcommit);
-		List notifications = TestListener3.getInstance().postcommit.getNotifications();
+		List notifications = TestListener3.getInstance().postcommitNotifications;
 		assertFalse(notifications == null);
 		assertEquals(1, notifications.size());
 		Notification notification = (Notification) notifications.get(0);
@@ -388,7 +388,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		
 		// should have gotten events from this read transaction, too
 		assertNotNull(TestListener3.getInstance().postcommit);
-		notifications = TestListener3.getInstance().postcommit.getNotifications();
+		notifications = TestListener3.getInstance().postcommitNotifications;
 		assertFalse(notifications == null);
 		assertEquals(1, notifications.size());
 		notification = (Notification) notifications.get(0);

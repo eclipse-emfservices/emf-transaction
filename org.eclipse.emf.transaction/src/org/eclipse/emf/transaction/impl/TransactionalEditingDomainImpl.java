@@ -12,12 +12,13 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.1 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.2 2006/02/21 22:16:42 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -529,11 +530,13 @@ public class TransactionalEditingDomainImpl
 			}
 			
 			public void run() {
+				ArrayList cache = new ArrayList(notifications.size());
 				for (int i = 0; i < listeners.length; i++) {
 					try {
 						List filtered = FilterManager.getInstance().select(
 								notifications,
-								listeners[i].getFilter());
+								listeners[i].getFilter(),
+								cache);
 						
 						if (!filtered.isEmpty()) {
 							Command cmd = listeners[i].transactionAboutToCommit(
@@ -641,6 +644,7 @@ public class TransactionalEditingDomainImpl
 		if ((notifications == null) || notifications.isEmpty()) {
 			return;
 		}
+		final ArrayList cache = new ArrayList(notifications.size());
 		
 		// dispose the validator now because starting the read-only transaction
 		//    below will replace it with a new validator
@@ -655,7 +659,8 @@ public class TransactionalEditingDomainImpl
 						try {
 							List filtered = FilterManager.getInstance().select(
 									notifications,
-									listeners[i].getFilter());
+									listeners[i].getFilter(),
+									cache);
 							
 							if (!filtered.isEmpty()) {
 								listeners[i].resourceSetChanged(

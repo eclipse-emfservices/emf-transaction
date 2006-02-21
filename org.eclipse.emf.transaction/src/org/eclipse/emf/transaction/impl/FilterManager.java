@@ -12,10 +12,11 @@
  *
  * </copyright>
  *
- * $Id: FilterManager.java,v 1.2 2006/01/27 14:05:24 cdamus Exp $
+ * $Id: FilterManager.java,v 1.3 2006/02/21 22:16:41 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -59,18 +60,24 @@ public final class FilterManager {
 	 * 
 	 * @param notifications a list of notifications to select from
 	 * @param filter a notification filter
+	 * @param cache A cache list that is precisely the same size as the notifications
+	 *  list but is used and reused as a scratch pad. Its purpose is to cut down the
+	 *  number of objects created and garbage collected while propagating filtered
+	 *  events to a group of listeners. Note that it will be repeatedly cleared and
+	 *  populated each time it is given to this method.
 	 * 
 	 * @return the notifications that match the filter
 	 * 
 	 * @see #selectUnbatched(List, NotificationFilter)
 	 */
-	public List select(List notifications, NotificationFilter filter) {
+	public List select(List notifications, NotificationFilter filter, ArrayList cache) {
 		List result;
 		
 		if (filter == NotificationFilter.ANY) {
 			result = notifications;
 		} else {
-			result = new java.util.ArrayList();
+			result = cache;
+			result.clear();
 			
 			if (filter == null) {
 				// the default filter
@@ -87,6 +94,25 @@ public final class FilterManager {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Selects the notifications in the given list that match the specified
+	 * filter.
+	 * <p>
+	 * For unbatched notifications, it is better to use the
+	 * {@link #selectUnbatched(List, NotificationFilter)} method.
+	 * </p>
+	 * 
+	 * @param notifications a list of notifications to select from
+	 * @param filter a notification filter
+	 * 
+	 * @return the notifications that match the filter
+	 * 
+	 * @see #selectUnbatched(List, NotificationFilter)
+	 */
+	public List select(List notifications, NotificationFilter filter) {
+		return select(notifications, filter, new ArrayList());
 	}
 	
 	/**

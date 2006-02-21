@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListenersTest.java,v 1.2 2006/01/25 17:07:40 cdamus Exp $
+ * $Id: ResourceSetListenersTest.java,v 1.3 2006/02/21 22:16:40 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -80,7 +80,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertFalse(listener.postcommit.getTransaction().isActive());
 			assertSame(domain, listener.postcommit.getEditingDomain());
 			
-			List notifications = listener.postcommit.getNotifications();
+			List notifications = listener.postcommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(1, notifications.size());
 			
@@ -135,7 +135,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertFalse(listener.postcommit.getTransaction().isActive());
 			assertSame(domain, listener.postcommit.getEditingDomain());
 			
-			List notifications = listener.postcommit.getNotifications();
+			List notifications = listener.postcommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(1, notifications.size());
 			
@@ -191,7 +191,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertFalse(listener.postcommit.getTransaction().isActive());
 			assertSame(domain, listener.postcommit.getEditingDomain());
 			
-			List notifications = listener.postcommit.getNotifications();
+			List notifications = listener.postcommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(3, notifications.size());
 			
@@ -303,7 +303,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertFalse(listener.precommit.getTransaction().isActive());
 			assertSame(domain, listener.precommit.getEditingDomain());
 			
-			List notifications = listener.precommit.getNotifications();
+			List notifications = listener.precommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(1, notifications.size());
 			
@@ -392,7 +392,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 						assertFalse(listener.precommit.getTransaction().isActive());
 						assertSame(domain, listener.precommit.getEditingDomain());
 						
-						List notifications = listener.precommit.getNotifications();
+						List notifications = listener.precommitNotifications;
 						assertNotNull(notifications);
 						assertEquals(1, notifications.size());
 						
@@ -417,7 +417,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertFalse(listener.precommit.getTransaction().isActive());
 			assertSame(domain, listener.precommit.getEditingDomain());
 			
-			List notifications = listener.precommit.getNotifications();
+			List notifications = listener.precommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(1, notifications.size());
 			
@@ -641,13 +641,13 @@ public class ResourceSetListenersTest extends AbstractTest {
 		commit();
 
 		assertNotNull(testListener.postcommit);
-		assertNotNull(testListener.postcommit.getNotifications());
+		assertNotNull(testListener.postcommitNotifications);
 		
 		// only one notification actually is directly caused by the transaction.
 		//   The others come from the (chained) triggers:  one adding a book to
 		//   Library.stock; one for adding the book to Library.books; one for
 		//   setting the book's Item.publicationDate
-		assertEquals(4, testListener.postcommit.getNotifications().size());
+		assertEquals(4, testListener.postcommitNotifications.size());
 	}
 
 	/**
@@ -660,7 +660,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			
 			assertNotNull(listener.postcommit);
 			
-			List notifications = listener.postcommit.getNotifications();
+			List notifications = listener.postcommitNotifications;
 			assertNotNull(notifications);
 			
 			// unbatched notifications are always singletons
@@ -715,7 +715,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			//     caused more notifications to the listeners)
 			assertNotNull(listener.postcommit);
 			
-			List notifications = listener.postcommit.getNotifications();
+			List notifications = listener.postcommitNotifications;
 			assertNotNull(notifications);
 			
 			// unbatched notifications are always singletons
@@ -790,7 +790,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertNotNull(localListener.precommit.getTransaction());
 			assertEquals(1, localListener.count);
 			
-			List notifications = localListener.precommit.getNotifications();
+			List notifications = localListener.precommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(2, notifications.size());
 			
@@ -879,7 +879,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertNotNull(localListener.precommit.getTransaction());
 			assertEquals(2, localListener.count);
 			
-			List notifications = localListener.precommit.getNotifications();
+			List notifications = localListener.precommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(1, notifications.size());
 			
