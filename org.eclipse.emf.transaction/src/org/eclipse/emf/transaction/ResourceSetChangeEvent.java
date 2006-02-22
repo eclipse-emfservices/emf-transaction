@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetChangeEvent.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: ResourceSetChangeEvent.java,v 1.3 2006/02/22 22:02:36 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -23,7 +23,12 @@ import org.eclipse.emf.common.notify.Notification;
 
 /**
  * Event object describing the nature of changes in a resource set to
- * {@link ResourceSetListener}s.
+ * {@link ResourceSetListener}s.  Note that the event object is only valid
+ * during the scope of the listener call-back invocation; in particular, the
+ * editing domain is free to re-use event objects and/or notification lists
+ * for performance purposes.  Therefore, if it is necessary to retain the
+ * event or its list of notifications beyond the scope of the call-back, this
+ * information must be copied by the client.
  * <p>
  * This class is not intended to be extended or instantiated by clients.
  * </p>

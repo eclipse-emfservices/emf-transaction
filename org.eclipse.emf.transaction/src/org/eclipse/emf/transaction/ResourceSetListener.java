@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListener.java,v 1.3 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: ResourceSetListener.java,v 1.4 2006/02/22 22:02:36 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -49,6 +49,13 @@ public interface ResourceSetListener extends EventListener {
 	 * notifications that were received during a transaction, then it is not
 	 * invoked at all.  Thus, the notification lists received in the
 	 * {@link ResourceSetChangeEvent}s will never be empty.
+	 * </p>
+	 * <p>
+	 * <b>Note</b> also that a listener's filter must not change over time, or
+	 * unpredictable behaviour will occur.  In particular, the editing domain
+	 * is free to obtain the filter from the listener only once when the
+	 * listener is added and never request it thereafter.  Also, it is not
+	 * expected the the same filter object's condition can change over time.
 	 * </p>
 	 * 
 	 * @return the filter used to select notifications, or <code>null</code> to

@@ -12,14 +12,13 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.2 2006/02/21 22:16:42 cmcgee Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.3 2006/02/22 22:02:36 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,9 +39,9 @@ import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.RunnableWithResult;
+import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
-import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
@@ -73,6 +72,11 @@ public class TransactionalEditingDomainImpl
 	private final List precommitListeners = new java.util.ArrayList();
 	private final List aggregatePrecommitListeners = new java.util.ArrayList();
 	private final List postcommitListeners = new java.util.ArrayList();
+	
+	// reusable notification list and event for unbatched change events
+	private final List unbatchedNotifications = new java.util.ArrayList(1);
+	private final ResourceSetChangeEvent unbatchedChangeEvent =
+		new ResourceSetChangeEvent(this, null, unbatchedNotifications);
 	
 	/**
 	 * Initializes me with my adapter factory, command stack, and resource set.
@@ -697,8 +701,7 @@ public class TransactionalEditingDomainImpl
 	public void broadcastUnbatched(Notification notification) {
 		final ResourceSetListener[] listeners = getPostcommitListeners();
 		
-		// TODO: Optimize with a reusable list and reusable event object
-		final List notifications = Collections.singletonList(notification);
+		unbatchedNotifications.add(notification);
 		
 		try {
 			runExclusive(new Runnable() {
@@ -706,15 +709,11 @@ public class TransactionalEditingDomainImpl
 					for (int i = 0; i < listeners.length; i++) {
 						try {
 							List filtered = FilterManager.getInstance().selectUnbatched(
-									notifications,
+									unbatchedNotifications,
 									listeners[i].getFilter());
 							
 							if (!filtered.isEmpty()) {
-								listeners[i].resourceSetChanged(
-										new ResourceSetChangeEvent(
-												TransactionalEditingDomainImpl.this,
-												null,
-												filtered));
+								listeners[i].resourceSetChanged(unbatchedChangeEvent);
 							}
 						} catch (Exception e) {
 							Tracing.catching(TransactionalEditingDomainImpl.class, "broadcastUnbatched", e); //$NON-NLS-1$
@@ -737,6 +736,9 @@ public class TransactionalEditingDomainImpl
 				Messages.postcommitInterrupted,
 				e);
 			EMFTransactionPlugin.INSTANCE.log(status);
+		} finally {
+			// remove the unbatched notification from our reusable cache
+			unbatchedNotifications.remove(0);
 		}
 	}
 	
