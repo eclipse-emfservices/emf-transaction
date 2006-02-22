@@ -11,6 +11,7 @@ Require-Bundle: org.junit,
  org.eclipse.emf.examples.library
 Export-Package: org.eclipse.emf.workspace.tests,
  org.eclipse.emf.workspace.tests.constraints,
- org.eclipse.emf.workspace.tests.fixtures
+ org.eclipse.emf.workspace.tests.fixtures,
+ org.eclipse.emf.workspace.util.tests
 Eclipse-LazyStart: true
 Bundle-Activator: org.eclipse.emf.workspace.tests.TestsPlugin
