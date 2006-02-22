@@ -12,10 +12,11 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListenersTest.java,v 1.3 2006/02/21 22:16:40 cmcgee Exp $
+ * $Id: ResourceSetListenersTest.java,v 1.4 2006/02/22 22:13:57 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
+import java.util.Collections;
 import java.util.List;
 
 import junit.framework.Test;
@@ -33,6 +34,7 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
+import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultBookTrigger;
@@ -671,6 +673,46 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertEquals(Notification.ADD, notification.getEventType());
 			assertEquals(ResourceSet.RESOURCE_SET__RESOURCES, notification.getFeatureID(null));
 			assertSame(newRes, notification.getNewValue());
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+
+	/**
+	 * Tests that events are correctly reused for unbatched notifications.
+	 */
+	public void test_unbatchedNotifications_reuseEvents_128445() {
+		try {
+			class Listener extends ResourceSetListenerImpl {
+				ResourceSetChangeEvent lastEvent = null;
+				List lastNotifications = null;
+				int count = 0;
+				
+				public void resourceSetChanged(ResourceSetChangeEvent event) {
+					count++;
+					
+					if (lastEvent == null) {
+						lastEvent = event;
+						lastNotifications = event.getNotifications();
+					} else {
+						assertSame(lastEvent, event);
+						assertSame(lastNotifications, event.getNotifications());
+						assertEquals(1, lastNotifications.size());
+					}
+				}
+			}
+
+			testResource.unload();
+			
+			Listener localListener = new Listener();
+			
+			domain.addResourceSetListener(localListener);
+			
+			// cause a bunch of unbatched events
+			testResource.load(Collections.EMPTY_MAP);
+			
+			// check that there was actually an opportunity to reuse the event
+			assertTrue(localListener.count > 1);
 		} catch (Exception e) {
 			fail(e);
 		}
