@@ -2,7 +2,7 @@
  * <copyright>
  * </copyright>
  *
- * $Id: EXTLibraryActionBarContributor.java,v 1.1 2006/01/30 16:30:09 cdamus Exp $
+ * $Id: EXTLibraryActionBarContributor.java,v 1.2 2006/02/22 15:17:44 cmcgee Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
 
@@ -196,7 +196,6 @@ public class EXTLibraryActionBarContributor
 	 * as well as the sub-menus for object creation items.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public void contributeToMenu(IMenuManager menuManager) {
 		super.contributeToMenu(menuManager);
@@ -430,7 +429,6 @@ public class EXTLibraryActionBarContributor
 	 * This inserts global actions before the "additions-end" separator.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	protected void addGlobalActions(IMenuManager menuManager) {
 		menuManager.insertAfter("additions-end", new Separator("ui-actions")); //$NON-NLS-1$ //$NON-NLS-2$

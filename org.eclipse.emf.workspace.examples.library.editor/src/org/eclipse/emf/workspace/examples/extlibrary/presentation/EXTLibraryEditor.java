@@ -2,7 +2,7 @@
  * <copyright>
  * </copyright>
  *
- * $Id: EXTLibraryEditor.java,v 1.2 2006/01/30 19:47:47 cdamus Exp $
+ * $Id: EXTLibraryEditor.java,v 1.3 2006/02/22 15:17:44 cmcgee Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
 
@@ -332,9 +332,9 @@ public class EXTLibraryEditor
 	 * Synchronizes workspace changes with the editing domain.
 	 */
 	protected WorkspaceSynchronizer workspaceSynchronizer;
+	
 	/**
 	 * Handles activation of the editor or it's associated views.
-	 * @generated
 	 */
 	protected void handleActivate() {
 		setCurrentViewer(selectionViewer);
@@ -492,7 +492,6 @@ public class EXTLibraryEditor
 	 * This creates a model editor.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public EXTLibraryEditor() {
 		super();
@@ -571,7 +570,6 @@ public class EXTLibraryEditor
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public class ReverseAdapterFactoryContentProvider extends TransactionalAdapterFactoryContentProvider {
 		public ReverseAdapterFactoryContentProvider(AdapterFactory adapterFactory) {
@@ -734,7 +732,6 @@ public class EXTLibraryEditor
 	 * This is how the framework determines which interfaces we implement.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public Object getAdapter(Class key) {
 		if (key.equals(IContentOutlinePage.class)) {
@@ -759,7 +756,6 @@ public class EXTLibraryEditor
 	 * This accesses a cached version of the content outliner.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public IContentOutlinePage getContentOutlinePage() {
 		if (contentOutlinePage == null) {
@@ -828,7 +824,6 @@ public class EXTLibraryEditor
 	 * This accesses a cached version of the property sheet.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public IPropertySheetPage getPropertySheetPage() {
 		if (propertySheetPage == null) {
@@ -854,7 +849,6 @@ public class EXTLibraryEditor
 	 * This deals with how we want selection in the outliner to affect the other views.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public void handleContentOutlineSelection(ISelection selection) {
 		if (!selection.isEmpty() && selection instanceof IStructuredSelection) {
@@ -881,7 +875,6 @@ public class EXTLibraryEditor
 	 * This is for implementing {@link IEditorPart} and simply tests the command stack.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public boolean isDirty() {
 		return dirty;
@@ -891,7 +884,6 @@ public class EXTLibraryEditor
 	 * This is for implementing {@link IEditorPart} and simply saves the model file.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public void doSave(IProgressMonitor progressMonitor) {
 		// Do the work within an operation because this is a long running activity
@@ -972,7 +964,6 @@ public class EXTLibraryEditor
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	protected void doSaveAs(final URI uri, final IEditorInput editorInput) {
 		// changing the URI is, conceptually, a write operation.  However, it does
@@ -1004,7 +995,6 @@ public class EXTLibraryEditor
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public void gotoMarker(IMarker marker) {
 		try {
@@ -1036,7 +1026,6 @@ public class EXTLibraryEditor
 	 * This is called during startup.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public void init(IEditorSite site, IEditorInput editorInput) {
 		setSite(site);
@@ -1053,7 +1042,6 @@ public class EXTLibraryEditor
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public void setFocus() {
 		selectionViewer.getControl().setFocus();
@@ -1204,7 +1192,6 @@ public class EXTLibraryEditor
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
 	 */
 	public void dispose() {
 		workspaceSynchronizer.dispose();
