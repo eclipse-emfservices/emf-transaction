@@ -14,13 +14,13 @@
  *
  * </copyright>
  *
- * $Id: feature.xml,v 1.6 2006/02/23 14:03:53 cdamus Exp $
+ * $Id: feature.xml,v 1.7 2006/02/23 22:27:22 cdamus Exp $
  */
 -->
 <feature
     id="org.eclipse.emf.transaction.sdk"
     label="%featureName"
-    version="1.0.0"
+    version="1.0.0.qualifier"
     image= "eclipse_update_120.jpg"
     provider-name="%providerName">
 
@@ -39,45 +39,45 @@
 
     <includes
         id="org.eclipse.emf.transaction"
-        version="1.0.0"/>
+        version="0.0.0"/>
 
     <includes
         id="org.eclipse.emf.transaction.doc"
-        version="1.0.0"/>
+        version="0.0.0"/>
 
     <includes
         id="org.eclipse.emf.transaction.examples"
-        version="1.0.0"/>
+        version="0.0.0"/>
 
     <includes
         id="org.eclipse.emf.workspace"
-        version="1.0.0"/>
+        version="0.0.0"/>
 
     <includes
         id="org.eclipse.emf.workspace.doc"
-        version="1.0.0"/>
+        version="0.0.0"/>
 
     <includes
         id="org.eclipse.emf.workspace.examples"
-        version="1.0.0"/>
+        version="0.0.0"/>
         
     <includes
          id="org.eclipse.emf.transaction.source"
-         version="1.0.0"
+         version="0.0.0"
          match="compatible"/>
         
     <includes
          id="org.eclipse.emf.workspace.source"
-         version="1.0.0"
+         version="0.0.0"
          match="compatible"/>
         
     <includes
          id="org.eclipse.emf.transaction.examples.source"
-         version="1.0.0"
+         version="0.0.0"
          match="compatible"/>
         
     <includes
          id="org.eclipse.emf.workspace.examples.source"
-         version="1.0.0"
+         version="0.0.0"
          match="compatible"/>
 </feature>

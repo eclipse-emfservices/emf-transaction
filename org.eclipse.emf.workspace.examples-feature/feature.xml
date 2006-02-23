@@ -14,13 +14,13 @@
  *
  * </copyright>
  *
- * $Id: feature.xml,v 1.1 2006/01/30 16:28:41 cdamus Exp $
+ * $Id: feature.xml,v 1.2 2006/02/23 22:27:09 cdamus Exp $
  */
 -->
 <feature
       id="org.eclipse.emf.workspace.examples"
       label="%featureName"
-      version="1.0.0"
+      version="1.0.0.qualifier"
       provider-name="%providerName"
       image="eclipse_update_120.jpg">
 
@@ -54,14 +54,14 @@ http://www.eclipse.org/legal/epl-v10.html
          id="org.eclipse.emf.workspace.examples"
          download-size="0"
          install-size="0"
-         version="1.0.0"
+         version="0.0.0"
          unpack="false"/>
 
    <plugin
          id="org.eclipse.emf.workspace.examples.library.editor"
          download-size="0"
          install-size="0"
-         version="1.0.0"
+         version="0.0.0"
          unpack="false"/>
 
 </feature>
