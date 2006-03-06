@@ -3,7 +3,7 @@
 	<property name="destDir"    value="doc"/>
 	<property name="classpath"  value="bin"/>
 	<property name="overview"   value="build/overview.html"/>
-	<property name="eclipseDir" value="../../.."/>
+	<property name="eclipseDir" value="@eclipseDir@"/>
 	
 	<property environment="env"/>
 	<property name="javaHome" value="${env.JAVA_HOME}"/>
@@ -11,18 +11,29 @@
 	<property name="javadoc.link.location" value="${eclipseDir}/javadoc"/>
 	<available property="platformJavadocExists" file="${javadoc.link.location}/platform/"/>
 
-	<target name="extractPlatformJavadoc" unless="platformJavadocExists">
-		<unzip src="${eclipseDir}/plugins/org.eclipse.platform.doc.isv.jar" dest="${javadoc.link.location}/platform/"/>
-	</target>
+	<!-- TODO Enable linking to the platform javadoc -->
+	<!-- <target name="extractPlatformJavadoc" unless="platformJavadocExists">
+		<exec executable="find">
+		   <arg value="${eclipseDir}/.."/>
+		   <arg value="-type"/>
+		   <arg value="d"/>
+		   <arg value="-name"/>
+		   <arg value="javadoc"/>
+		</exec>
+		<unzip src="${eclipseDir}/@docjar@" dest="${javadoc.link.location}/platform/"/>
+	</target> -->
+
+	<!-- TODO Enable linking to the platform javadoc -->
+	<!-- <target name="javadoc" depends="extractPlatformJavadoc"> -->
 	
-	<target name="javadoc" depends="extractPlatformJavadoc">
+	<target name="javadoc">
 		<javadoc 
 			destdir="${destDir}" 
 			classpath="${classpath}"
 			overview="${overview}"
 
-			windowtitle="EMF-TX Javadoc"
-			footer="Copyright 2005 IBM Corporation and others.&lt;br&gt; All Rights Reserved."
+			windowtitle="EMF Transaction Javadoc"
+			footer="Copyright 2002, 2006 IBM Corporation and others.&lt;br&gt; All Rights Reserved."
 
 			access="protected" 
 			additionalparam="-breakiterator -tag model:X -tag generated:X -tag ordered:X"
@@ -35,13 +46,15 @@
 			noindex="false" 
 			nonavbar="false" 
 			notree="false" 
+			source="1.4"
 			splitindex="true" 
 			use="true" 
 			version="true"> 
 				<arg value="-J-Xmx180m"/>
 				
 				<link offline="true" href="http://java.sun.com/j2se/1.4/docs/api/" packagelistLoc="${javaHome}/docs/api/"/>
-				<link offline="true" href="/help/topic/org.eclipse.platform.doc.isv/reference/api/" packagelistLoc="${javadoc.link.location}/platform/reference/api/"/>
+				<!-- TODO Enable link to platform documentation -->
+				<!-- <link offline="true" href="/help/topic/org.eclipse.platform.doc.isv/reference/api/" packagelistLoc="${javadoc.link.location}/platform/reference/api/"/> -->
 				
 				<tag name="ignore"     description="ignore" enabled="false"/>
 				<tag name="generated"  description="ignore" enabled="false"/>
@@ -51,13 +64,13 @@
 				<tag name="implements" description="ignore" enabled="false"/>
 				<tag name="ordered"    description="ignore" enabled="false"/>
 
-				<!-- If you add a @plugin@ below, don't forget to update the antjavadoc.sh file -->
+				<!-- If you add a @ plugin @ below, don't forget to update the antjavadoc.sh file -->
 
-				<group title="Transactions"                   packages="@org.eclipse.emf.transaction@"/>
+				<group title="EMF Transaction" packages="@plugin@"/>
 				
-				<!-- If you add a @plugin@ above, don't forget to update the antjavadoc.sh file -->
+				<!-- If you add a @ plugin @ above, don't forget to update the antjavadoc.sh file -->
 
-@packagesets@
+				@packagesets@
 				
 		</javadoc>
 		
@@ -71,7 +84,7 @@
 			</sequential>
 		</macrodef>
 
-@copydocfiles@
+		@copydocfiles@
 
 	</target>
 </project>
