@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFCommandOperation.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
+ * $Id: EMFCommandOperation.java,v 1.3 2006/03/10 23:25:56 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -117,33 +117,33 @@ public class EMFCommandOperation
 	}
 	
 	/**
-	 * I can undo if my command and (if any) trigger command can undo.
+	 * I can undo if my command or (if any) trigger command can undo.
 	 */
 	public boolean canUndo() {
-		return super.canUndo() && command.canUndo()
-			&& ((triggerCommand == null) || triggerCommand.canUndo());
+		return super.canUndo() &&
+			(command.canUndo() || ((triggerCommand != null) && triggerCommand.canUndo()));
 	}
 	
 	/**
-	 * Undoes me by undoing my trigger command (if any) followed by my command.
+	 * Undoes me by undoing my trigger command (if any) or my command.
 	 */
 	protected IStatus doUndo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		if (triggerCommand != null) {
 			triggerCommand.undo();
+		} else {
+			command.undo();
 		}
-		
-		command.undo();
 		
 		return Status.OK_STATUS;
 	}
 	
 	/**
-	 * Redoes me by redoing my command followed by my trigger command (if any).
+	 * Redoes me by redoing my command or (if any) my trigger command.
 	 */
 	protected IStatus doRedo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-		command.redo();
-		
-		if (triggerCommand != null) {
+		if (triggerCommand == null) {
+			command.redo();
+		} else {
 			triggerCommand.redo();
 		}
 		
