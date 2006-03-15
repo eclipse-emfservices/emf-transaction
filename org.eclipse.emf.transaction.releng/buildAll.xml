@@ -172,6 +172,9 @@
 				<include name="**/org.eclipse.emf.workspace_*/*"/>
 				<include name="**/org.eclipse.emf.workspace.ui_*"/>
 				<include name="**/org.eclipse.emf.workspace.ui_*/*"/>
+				<exclude name="**/org.eclipse.*.source*"/>
+				<exclude name="**/org.eclipse.*.source*/**"/>
+				<exclude name="**/*src.zip"/>
 			</zipfileset>
 	    </zip>
 
