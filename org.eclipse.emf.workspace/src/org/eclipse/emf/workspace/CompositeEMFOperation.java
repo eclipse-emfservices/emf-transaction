@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeEMFOperation.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
+ * $Id: CompositeEMFOperation.java,v 1.3 2006/03/15 01:40:28 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -22,6 +22,7 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.AbstractOperation;
 import org.eclipse.core.commands.operations.ICompositeOperation;
 import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IUndoContext;
@@ -33,10 +34,11 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.workspace.impl.NonEMFTransaction;
 import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
@@ -248,6 +250,36 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 		result.start();
 		
 		return result;
+	}
+	
+	protected void didCommit(Transaction transaction) {
+		super.didCommit(transaction);
+		
+		final Command triggers = ((InternalTransaction) transaction).getTriggers();
+		if (triggers != null) {
+			// append a child operation for the triggers
+			getChildren().add(new AbstractOperation("") { //$NON-NLS-1$
+				public boolean canUndo() {
+					return triggers.canUndo();
+				}
+
+				public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+					// this method will never be called
+					triggers.execute();
+					return Status.OK_STATUS;
+				}
+
+				public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+					triggers.redo();
+					return Status.OK_STATUS;
+				}
+
+				public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+					triggers.undo();
+					return Status.OK_STATUS;
+				}
+			});
+		}
 	}
 	
 	/**

@@ -12,17 +12,19 @@
  *
  * </copyright>
  *
- * $Id: InternalTransaction.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: InternalTransaction.java,v 1.3 2006/03/15 01:40:31 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
 import java.util.List;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.TransactionChangeDescription;
+import org.eclipse.emf.transaction.util.TriggerCommand;
 
 /**
  * An internal interface that must be provided by any implementation of the
@@ -33,7 +35,7 @@ import org.eclipse.emf.transaction.Transaction;
  */
 public interface InternalTransaction
 	extends Transaction {
-
+	
 	/**
 	 * Obtains the root transaction (the one that has no parent).  This could
 	 * be me if I am the root.
@@ -131,4 +133,21 @@ public interface InternalTransaction
 	 *   <code>false</code> otherwise
 	 */
 	boolean isRollingBack();
+	
+	/**
+	 * Obtains the triggers that were executed during my commit.
+	 * 
+	 * @return my pre-commit trigger commands, or <code>null</code> if I have
+	 *     no triggers (perhaps because the {@link Transaction#OPTION_NO_TRIGGERS}
+	 *     was applied).  This may be a single {@link Command} or a
+	 *     compound of multiple
+	 */
+	Command getTriggers();
+	
+	/**
+	 * Adds a group of triggers that were executed during my commit.
+	 * 
+	 * @param triggers the triggers to add
+	 */
+	void addTriggers(TriggerCommand triggers);
 }

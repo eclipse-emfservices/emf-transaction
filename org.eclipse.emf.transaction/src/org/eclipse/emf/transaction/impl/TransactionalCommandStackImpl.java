@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalCommandStackImpl.java,v 1.1 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: TransactionalCommandStackImpl.java,v 1.2 2006/03/15 01:40:30 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.transaction.ExceptionHandler;
+import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
@@ -54,7 +55,6 @@ public class TransactionalCommandStackImpl
 	public static final Map UNDO_REDO_OPTIONS;
 	
 	private InternalTransactionalEditingDomain domain;
-	private TriggerCommand triggerCommand;
 	
 	private ExceptionHandler exceptionHandler;
 	
@@ -85,23 +85,27 @@ public class TransactionalCommandStackImpl
 	// Documentation copied from the inherited specification
 	public void execute(Command command, Map options) throws InterruptedException, RollbackException {
 		if ((command != null) && command.canExecute()) {
-			Transaction tx = createTransaction(command, options);
+			InternalTransaction tx = createTransaction(command, options);
 			
 			try {
 				super.execute(command);
 			} finally {
 				if ((tx != null) && (tx.isActive())) {
 					// commit the transaction now
-					try {
-						tx.commit();
+					tx.commit();
+					
+					// the transaction has already incorporated the triggers
+					//    into its change description, so the recording command
+					//    doesn't need them again
+					if (!(command instanceof RecordingCommand)) {
+						Command triggerCommand = tx.getTriggers();
 						
 						if (triggerCommand != null) {
-							// replace the executed command by the trigger command
-					        mostRecentCommand = triggerCommand;
-					        commandList.set(top, triggerCommand);
+							// replace the executed command by a compound of the
+							//    original and the trigger commands
+							mostRecentCommand = mostRecentCommand.chain(triggerCommand);
+					        commandList.set(top, mostRecentCommand);
 						}
-					} finally {
-						triggerCommand = null;
 					}
 				}
 			}
@@ -215,8 +219,15 @@ public class TransactionalCommandStackImpl
 
 	// Documentation copied from the inherited specification
 	public EMFCommandTransaction createTransaction(Command command, Map options) throws InterruptedException {
-		EMFCommandTransaction result = new EMFCommandTransaction(
-				command, getDomain(), options);
+		EMFCommandTransaction result;
+		
+		if (command instanceof TriggerCommand) {
+			result = new TriggerCommandTransaction((TriggerCommand) command,
+					getDomain(), options);
+		} else {
+			result = new EMFCommandTransaction(command, getDomain(), options);
+		}
+		
 		result.start();
 		
 		return result;
@@ -229,17 +240,16 @@ public class TransactionalCommandStackImpl
 				? new TriggerCommand(triggers)
 				: new TriggerCommand(command, triggers);
 			
-			Transaction tx = createTransaction(trigger, options);
+			InternalTransaction tx = createTransaction(trigger, options);
 			
 			try {
 				trigger.execute();
 				
-				if ((command != null) &&
-						(!(command instanceof TriggerCommand) || (triggerCommand != null))) {
+				InternalTransaction parent = (InternalTransaction) tx.getParent();
 				
-					// will replace the original command on the stack with the
-					//    trigger
-					triggerCommand = trigger;
+				// shouldn't be null if we're executing triggers!
+				if (parent != null) {
+					parent.addTriggers(trigger);
 				}
 			} finally {
 				if ((tx != null) && (tx.isActive())) {
@@ -252,8 +262,8 @@ public class TransactionalCommandStackImpl
 	
 	// Documentation copied from the inherited specification
 	public void dispose() {
+		flush();
 		setEditingDomain(null);
-		triggerCommand = null;
 		exceptionHandler = null;
 	}
 }

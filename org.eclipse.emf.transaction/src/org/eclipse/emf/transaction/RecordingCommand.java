@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: RecordingCommand.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: RecordingCommand.java,v 1.3 2006/03/15 01:40:31 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -109,7 +109,7 @@ public abstract class RecordingCommand extends AbstractCommand {
 			change = transaction.getChangeDescription();
 		}
 		
-		return (change != null) && change.canApply();
+		return (change == null) || change.canApply();
 	}
 	
 	/**
@@ -117,7 +117,9 @@ public abstract class RecordingCommand extends AbstractCommand {
 	 * Subclasses would not normally need to override this method.
 	 */
 	public final void undo() {
-		change.applyAndReverse();
+		if (change != null) {
+			change.applyAndReverse();
+		}
 	}
 	
 	/**
@@ -125,7 +127,9 @@ public abstract class RecordingCommand extends AbstractCommand {
 	 * Subclasses would not normally need to override this method.
 	 */
 	public final void redo() {
-		change.applyAndReverse();
+		if (change != null) {
+			change.applyAndReverse();
+		}
 	}
 	
 	/**

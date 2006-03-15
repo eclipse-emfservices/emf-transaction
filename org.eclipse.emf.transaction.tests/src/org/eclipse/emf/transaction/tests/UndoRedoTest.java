@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: UndoRedoTest.java,v 1.3 2006/01/30 19:47:50 cdamus Exp $
+ * $Id: UndoRedoTest.java,v 1.4 2006/03/15 01:40:26 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -22,14 +22,15 @@ import junit.framework.TestSuite;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.command.CommandStack;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.change.ChangeDescription;
+import org.eclipse.emf.edit.command.AddCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
+import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.RecordingCommand;
-import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultBookTrigger;
 
@@ -109,9 +110,64 @@ public class UndoRedoTest extends AbstractTest {
 	}
 	
 	/**
-	 * Tests that the changes made by trigger commands can be undone and redone, too.
+	 * Tests that the changes made by trigger commands can be undone and redone,
+	 * too, even when the original command is not a recording command.
 	 */
-	public void test_triggerCommands() {
+	public void test_triggerCommands_nonRecording() {
+		// add the trigger to create a default book in a new library
+		domain.addResourceSetListener(new LibraryDefaultBookTrigger());
+		
+		// add another trigger that will set default publication dates for new items
+		domain.addResourceSetListener(new ItemDefaultPublicationDateTrigger());
+		
+		final Library newLibrary = EXTLibraryFactory.eINSTANCE.createLibrary();
+		
+		Command cmd = new AddCommand(domain, root,
+				EXTLibraryPackage.Literals.LIBRARY__BRANCHES, newLibrary);
+		
+		getCommandStack().execute(cmd);
+		
+		// check that the library exists and was correctly configured with a default book
+		startReading();
+		
+		assertSame(root, newLibrary.eContainer());
+		assertEquals(1, newLibrary.getBooks().size());
+		Book book = (Book) newLibrary.getBooks().get(0);
+		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
+		assertNotNull(book.getPublicationDate());
+		
+		commit();
+		
+		getCommandStack().undo();
+		
+		// check that we undid OK
+		startReading();
+		
+		// undoing attachment to the resource adds the library to the change description
+		assertNotSame(root, newLibrary.eContainer());
+		assertEquals(0, newLibrary.getBooks().size());
+		
+		commit();
+		
+		getCommandStack().redo();
+		
+		// check that we redid OK
+		startReading();
+		
+		assertSame(root, newLibrary.eContainer());
+		assertEquals(1, newLibrary.getBooks().size());
+		book = (Book) newLibrary.getBooks().get(0);
+		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
+		assertNotNull(book.getPublicationDate());
+		
+		commit();
+	}
+	
+	/**
+	 * Tests that the changes made by trigger commands can be undone and redone
+	 * when the original command is a recording command.
+	 */
+	public void test_triggerCommands_recording() {
 		// add the trigger to create a default book in a new library
 		domain.addResourceSetListener(new LibraryDefaultBookTrigger());
 		
@@ -148,7 +204,7 @@ public class UndoRedoTest extends AbstractTest {
 		startReading();
 		
 		// undoing attachment to the resource adds the library to the change description
-		assertTrue(newLibrary.eContainer() instanceof ChangeDescription);
+		assertNotSame(root, newLibrary.eContainer());
 		assertEquals(0, newLibrary.getBooks().size());
 		
 		commit();

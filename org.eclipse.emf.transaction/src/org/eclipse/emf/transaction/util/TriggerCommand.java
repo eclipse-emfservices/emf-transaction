@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TriggerCommand.java,v 1.1 2006/01/03 20:41:55 cdamus Exp $
+ * $Id: TriggerCommand.java,v 1.2 2006/03/15 01:40:31 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -68,6 +68,26 @@ public class TriggerCommand extends CompoundCommand {
 		
 		this.triggeringCommand = triggeringCommand;
 		this.triggers = triggers;
+	}
+	
+	/**
+	 * Retrieves the command that triggered the trigger commands.
+	 * 
+	 * @return the triggering command, or <code>null</code> if the triggers
+	 *     were not instigated by the execution of a command
+	 */
+	public final Command getTriggeringCommand() {
+		return triggeringCommand;
+	}
+	
+	/**
+	 * Retrieves my trigger commands (not including the triggering command,
+	 * if any).
+	 * 
+	 * @return my triggers, as a list of {@link Command}s.  Will not be empty
+	 */
+	public final List getTriggers() {
+		return triggers;
 	}
 	
 	// Documentation copied from the inherited specification

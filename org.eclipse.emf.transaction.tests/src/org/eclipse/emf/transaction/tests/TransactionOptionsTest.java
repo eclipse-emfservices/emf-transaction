@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionOptionsTest.java,v 1.2 2006/02/21 22:16:40 cmcgee Exp $
+ * $Id: TransactionOptionsTest.java,v 1.3 2006/03/15 01:40:26 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -153,7 +153,7 @@ public class TransactionOptionsTest extends AbstractTest {
 
 	/**
 	 * Tests that the <code>OPTION_NO_UNDO</code> results in a
-	 * <code>RecordingCommand</code> not being undoable.
+	 * <code>RecordingCommand</code> not doing anything when undone.
 	 */
 	public void test_noUndo_recordingCommand() {
 		Command cmd = new RecordingCommand(domain) {
@@ -175,7 +175,18 @@ public class TransactionOptionsTest extends AbstractTest {
 			fail(e);
 		}
 		
-		assertFalse(getCommandStack().canUndo());
+		assertTrue(getCommandStack().canUndo());
+		
+		getCommandStack().undo();
+		
+		startReading();
+		
+		// still find these changes
+		Book book = (Book) find("root/New Title"); //$NON-NLS-1$
+		assertNotNull(book.getTitle());
+		assertSame(find("root/level1/Level1 Writer"), book.getAuthor()); //$NON-NLS-1$
+		
+		commit();
 	}
 
 	/**

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.3 2006/03/15 01:40:28 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -113,6 +113,8 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 			
 			transaction.commit();
 			change = transaction.getChangeDescription();
+			
+			didCommit(transaction);
 		} catch (InterruptedException e) {
 			Tracing.catching(AbstractEMFOperation.class, "execute", e); //$NON-NLS-1$
 			ExecutionException exc = new ExecutionException(Messages.executeInterrupted, e);
@@ -191,12 +193,24 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	}
 
 	/**
+	 * Hook for subclasses to learn that the specified <code>transaction</code>
+	 * has been successfully committed and, if necessary, to extract information
+	 * from it.
+	 * 
+	 * @param transaction a transaction that has committed, which has recorded
+	 *     our changes
+	 */
+	protected void didCommit(Transaction transaction) {
+		// nothing to do
+	}
+	
+	/**
 	 * Queries whether I can be undone.  I can generally be undone if I was
 	 * successfully executed.  Subclasses would not usually need to override
 	 * this method.
 	 */
 	public boolean canUndo() {
-		return (getChange() != null) && getChange().canApply();
+		return (getChange() == null) || getChange().canApply();
 	}
 
 	/**
@@ -243,7 +257,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * this method.
 	 */
 	public boolean canRedo() {
-		return (getChange() != null) && getChange().canApply();
+		return (getChange() == null) || getChange().canApply();
 	}
 	
 	/**
@@ -361,17 +375,19 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		
 		InternalTransaction active = domain.getActiveTransaction();
 		
-		if ((active != null) && active.isRollingBack()) {
-			// my changes are included in my parent's change description, and it
-			//    is already applying them.  I am only being asked to undo
-			//    because I am nested in some kind of non-EMF composite
-			//    operation, and this is how non-EMF operations roll back.  So,
-			//    I must simply apply() rather than applyAndReverse(), otherwise
-			//    my parent transaction will find changes that can be applied
-			//    again, effectively undoing my rollback
-			getChange().apply();
-		} else {
-			getChange().applyAndReverse();
+		if (change != null) {
+			if ((active != null) && active.isRollingBack()) {
+				// my changes are included in my parent's change description, and it
+				//    is already applying them.  I am only being asked to undo
+				//    because I am nested in some kind of non-EMF composite
+				//    operation, and this is how non-EMF operations roll back.  So,
+				//    I must simply apply() rather than applyAndReverse(), otherwise
+				//    my parent transaction will find changes that can be applied
+				//    again, effectively undoing my rollback
+				getChange().apply();
+			} else {
+				getChange().applyAndReverse();
+			}
 		}
 		
 		return Status.OK_STATUS;
@@ -393,7 +409,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 */
 	protected IStatus doRedo(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
-		getChange().applyAndReverse();
+		if (change != null) {
+			getChange().applyAndReverse();
+		}
+		
 		return Status.OK_STATUS;
 	}
 	

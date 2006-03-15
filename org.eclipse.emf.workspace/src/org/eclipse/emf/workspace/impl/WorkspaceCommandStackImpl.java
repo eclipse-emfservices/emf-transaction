@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.2 2006/02/02 16:24:23 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.3 2006/03/15 01:40:28 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -41,10 +41,11 @@ import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.impl.EMFCommandTransaction;
+import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalCommandStack;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.impl.TriggerCommandTransaction;
 import org.eclipse.emf.transaction.util.TriggerCommand;
 import org.eclipse.emf.workspace.EMFCommandOperation;
 import org.eclipse.emf.workspace.IWorkspaceCommandStack;
@@ -321,13 +322,12 @@ public class WorkspaceCommandStackImpl
 		EMFCommandTransaction result;
 		
 		if (command instanceof TriggerCommand) {
-			// do not create an EMFOperationTransaction for the triggers because
-			//     triggers are commands, not operations, and we don't want to
-			//     find this transaction to add triggers to
-			result = new EMFCommandTransaction(command, getDomain(), options);
+			result = new TriggerCommandTransaction((TriggerCommand) command,
+					getDomain(), options);
 		} else {
 			result = new EMFOperationTransaction(command, getDomain(), options);
 		}
+		
 		result.start();
 		
 		return result;
@@ -340,16 +340,16 @@ public class WorkspaceCommandStackImpl
 				? new TriggerCommand(triggers)
 				: new TriggerCommand(command, triggers);
 			
-			Transaction tx = createTransaction(trigger, options);
+			InternalTransaction tx = createTransaction(trigger, options);
 			
 			try {
 				trigger.execute();
 				
-				// if the triggers ultimately stem from a command operation, then
-				//    it needs to know the triggers to undo/redo
-				EMFCommandOperation oper = getEMFCommandOperation(tx);
-				if (oper != null) {
-					oper.setTriggerCommand(trigger);
+				InternalTransaction parent = (InternalTransaction) tx.getParent();
+				
+				// shouldn't be null if we're executing triggers!
+				if (parent != null) {
+					parent.addTriggers(trigger);
 				}
 			} finally {
 				if ((tx != null) && (tx.isActive())) {
@@ -358,29 +358,6 @@ public class WorkspaceCommandStackImpl
 				}
 			}
 		}
-	}
-
-	/**
-	 * Obtains the {@link EMFCommandOperation} that ultimately triggered a trigger
-	 * command.
-	 * 
-	 * @param tx a trigger command transaction
-	 * 
-	 * @return the original command operation, or <code>null</code> if the trigger
-	 *     did not result from a command operation
-	 */
-	protected EMFCommandOperation getEMFCommandOperation(Transaction tx) {
-		EMFCommandOperation result = null;
-		
-		while ((tx != null) && !(tx instanceof EMFOperationTransaction)) {
-			tx = tx.getParent();
-		}
-		
-		if (tx != null) {
-			result = ((EMFOperationTransaction) tx).getOperation();
-		}
-		
-		return result;
 	}
 	
 	// Documentation copied from the method specification

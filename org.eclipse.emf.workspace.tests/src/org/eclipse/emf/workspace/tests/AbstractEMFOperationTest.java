@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.2 2006/03/15 01:40:32 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -24,12 +24,18 @@ import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
+import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.workspace.AbstractEMFOperation;
+import org.eclipse.emf.workspace.tests.fixtures.ExternalDataCommand;
 import org.eclipse.emf.workspace.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultBookTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultNameTrigger;
@@ -117,6 +123,87 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		// verify that the changes were redone
 		assertSame(newTitle, book.getTitle());
 		assertSame(newAuthor, book.getAuthor());
+		
+		commit();
+	}
+	
+	/**
+	 * Tests that trigger commands are executed correctly when executing operations,
+	 * including undo and redo, where those triggers do non-EMF work.
+	 */
+	public void test_triggerCommands_nonEMF() {
+		final String[] externalData = new String[] {"..."}; //$NON-NLS-1$
+		
+		// one trigger sets the external data
+		domain.addResourceSetListener(new TriggerListener() {
+		
+			protected Command trigger(TransactionalEditingDomain domain,
+					Notification notification) {
+				if (notification.getFeature() == EXTLibraryPackage.Literals.LIBRARY__NAME) {
+					return new ExternalDataCommand(externalData, notification.getNewStringValue());
+				}
+				
+				return null;
+			}});
+		
+		final Library[] newLibrary = new Library[1];
+		
+		IUndoContext ctx = new TestUndoContext();
+		
+		IUndoableOperation oper = new TestOperation(domain) {
+			protected void doExecute() {
+				// add a new library.  Our triggers will set a default name and book
+				newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
+				root.getBranches().add(newLibrary[0]);
+				
+				assertNull(newLibrary[0].getName());
+				assertTrue(newLibrary[0].getBranches().isEmpty());
+				
+				newLibrary[0].setName("New Library"); //$NON-NLS-1$
+			}};
+		
+		try {
+			oper.addContext(ctx);
+			history.execute(oper, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		startReading();
+		
+		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
+		assertEquals("New Library", externalData[0]); //$NON-NLS-1$
+		
+		commit();
+
+		try {
+			assertTrue(history.canUndo(ctx));
+			history.undo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		startReading();
+		
+		// verify that the changes were undone
+		assertFalse(root.getBranches().contains(newLibrary[0]));
+		assertEquals("...", externalData[0]); //$NON-NLS-1$
+		
+		commit();
+		
+		try {
+			assertTrue(history.canRedo(ctx));
+			history.redo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		startReading();
+		
+		// verify that the changes were redone
+		assertTrue(root.getBranches().contains(newLibrary[0]));
+		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
+		assertEquals("New Library", externalData[0]); //$NON-NLS-1$
 		
 		commit();
 	}
@@ -348,7 +435,6 @@ public class AbstractEMFOperationTest extends AbstractTest {
 					Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE,
 					Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE,
 					Transaction.OPTION_NO_VALIDATION, Boolean.TRUE,
-					Transaction.OPTION_NO_UNDO, Boolean.TRUE
 				})) {
 			protected void doExecute() {
 				book.setTitle(newTitle);
@@ -378,9 +464,6 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		// no validation was performed
 		assertNotNull(status);
 		assertTrue(status.isOK());
-		
-		// no undo information was recorded
-		assertFalse(history.canUndo(ctx));
 		
 		// no triggers were invoked
 		assertNull(listener.precommit);

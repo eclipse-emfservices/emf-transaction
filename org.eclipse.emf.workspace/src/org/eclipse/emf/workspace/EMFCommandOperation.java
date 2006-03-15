@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFCommandOperation.java,v 1.3 2006/03/10 23:25:56 cdamus Exp $
+ * $Id: EMFCommandOperation.java,v 1.4 2006/03/15 01:40:28 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -41,9 +41,10 @@ import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.provider.IItemPropertyDescriptor;
 import org.eclipse.emf.edit.provider.IItemPropertySource;
 import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
-import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalCommandStack;
 import org.eclipse.emf.workspace.impl.EMFOperationTransaction;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
@@ -116,56 +117,48 @@ public class EMFCommandOperation
 		return Status.OK_STATUS;
 	}
 	
+	protected void didCommit(Transaction transaction) {
+		super.didCommit(transaction);
+		
+		if (!(command instanceof RecordingCommand)) {
+			// the recording command already includes the triggers in its
+			//    undo information
+			triggerCommand = ((InternalTransaction) transaction).getTriggers();
+		}
+	}
+	
 	/**
 	 * I can undo if my command or (if any) trigger command can undo.
 	 */
 	public boolean canUndo() {
 		return super.canUndo() &&
-			(command.canUndo() || ((triggerCommand != null) && triggerCommand.canUndo()));
+			(command.canUndo() && ((triggerCommand == null) || triggerCommand.canUndo()));
 	}
 	
 	/**
-	 * Undoes me by undoing my trigger command (if any) or my command.
+	 * Undoes me by undoing my trigger command (if any) and my command.
 	 */
 	protected IStatus doUndo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		if (triggerCommand != null) {
 			triggerCommand.undo();
-		} else {
-			command.undo();
 		}
+		
+		command.undo();
 		
 		return Status.OK_STATUS;
 	}
 	
 	/**
-	 * Redoes me by redoing my command or (if any) my trigger command.
+	 * Redoes me by redoing my command and my trigger command (if any).
 	 */
 	protected IStatus doRedo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
-		if (triggerCommand == null) {
-			command.redo();
-		} else {
+		command.redo();
+		
+		if (triggerCommand != null) {
 			triggerCommand.redo();
 		}
 		
 		return Status.OK_STATUS;
-	}
-	
-	/**
-	 * Gives me a command encapsulating all of the triggers that were fired by
-	 * execution of my "main" command.
-	 * <p>
-	 * <b>Note</b> that if my command is a {@link RecordingCommand}, then it
-	 * has already recorded all of the triggers, so I ignore this trigger
-	 * command.
-	 * </p>
-	 * 
-	 * @param trigger the trigger command
-	 */
-	public void setTriggerCommand(Command trigger) {
-		// recording commands automatically record everything that the triggers do
-		if (!(command instanceof RecordingCommand)) {
-			this.triggerCommand = trigger;
-		}
 	}
 
 	/**

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.4 2006/01/30 19:47:55 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.5 2006/03/15 01:40:30 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -22,14 +22,18 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.transaction.RollbackException;
+import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
-import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
 import org.eclipse.emf.transaction.internal.Tracing;
+import org.eclipse.emf.transaction.util.CommandChangeDescription;
 import org.eclipse.emf.transaction.util.CompositeChangeDescription;
+import org.eclipse.emf.transaction.util.TriggerCommand;
 
 /**
  * The default transaction implementation.
@@ -59,6 +63,7 @@ public class TransactionImpl
 	
 	private boolean aborted;
 	private IStatus status = Status.OK_STATUS;
+	private Command triggers;
 	
 	/**
 	 * Initializes me with my editing domain and read-only state.
@@ -467,6 +472,38 @@ public class TransactionImpl
 		}
 		
 		return getInternalDomain().getValidator().validate(this);
+	}
+	
+	// Documentation copied from the inherited specification
+	public Command getTriggers() {
+		return triggers;
+	}
+
+	// Documentation copied from the inherited specification
+	public void addTriggers(TriggerCommand triggers) {
+		// extract out only the triggered commands (exclude the triggering command)
+		List triggerCommands = triggers.getTriggers();
+		Command triggerCommand;
+		
+		switch (triggerCommands.size()) {
+		case 0:
+			return;
+		case 1:
+			triggerCommand = (Command) triggerCommands.get(0);
+			break;
+		default:
+			triggerCommand = new CompoundCommand(triggerCommands);
+			break;
+		}
+		
+		if (this.triggers == null) {
+			this.triggers = triggerCommand;
+		} else {
+			this.triggers = this.triggers.chain(triggerCommand);
+		}
+		
+		// record the triggers in my change description
+		change.add(new CommandChangeDescription(triggerCommand));
 	}
 	
 	public String toString() {

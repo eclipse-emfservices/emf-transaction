@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeEMFOperationTest.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: CompositeEMFOperationTest.java,v 1.2 2006/03/15 01:40:32 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -568,7 +568,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 				root.getBranches().add(newLibrary[0]);
 				
 				assertNull(newLibrary[0].getName());
-				assertTrue(newLibrary[0].getBranches().isEmpty());
+				assertTrue(newLibrary[0].getBooks().isEmpty());
 			}});
 		
 		// the operation will find the new book and set the externalData from its
@@ -603,6 +603,8 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		// verify that the changes were undone
 		assertFalse(root.getBranches().contains(newLibrary[0]));
 		assertEquals("...", externalData[0]); //$NON-NLS-1$
+		assertFalse("New Library".equals(newLibrary[0].getName())); //$NON-NLS-1$
+		assertEquals(0, newLibrary[0].getBooks().size());
 		
 		commit();
 		
@@ -621,6 +623,85 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		assertEquals(1, newLibrary[0].getBooks().size());
 		assertEquals("New Book", ((Book) newLibrary[0].getBooks().get(0)).getTitle()); //$NON-NLS-1$
 		assertEquals("New Book", externalData[0]); //$NON-NLS-1$
+		
+		commit();
+	}
+	
+	/**
+	 * Tests that commands from aggregate pre-commit listeners are executed
+	 * correctly when executing composite operations, including undo and redo.
+	 * This is different from the non-aggregate case because they are
+	 * contributed only to the top-level transaction (which otherwise has no
+	 * changes of its own).
+	 */
+	public void test_triggerCommands_aggregate() {
+		// one trigger sets default library names
+		domain.addResourceSetListener(new LibraryDefaultNameTrigger(true));
+		
+		// another (distinct) trigger creates default books in new libraries
+		domain.addResourceSetListener(new LibraryDefaultBookTrigger(true));
+		
+		final Library[] newLibrary = new Library[1];
+		
+		IUndoContext ctx = new TestUndoContext();
+		
+		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
+		
+		composite.add(new TestOperation(domain) {
+			protected void doExecute() {
+				// add a new library.  Our triggers will set a default name and book
+				newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
+				root.getBranches().add(newLibrary[0]);
+				
+				assertNull(newLibrary[0].getName());
+				assertTrue(newLibrary[0].getBooks().isEmpty());
+			}});
+		
+		try {
+			composite.addContext(ctx);
+			history.execute(composite, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		startReading();
+		
+		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
+		assertEquals(1, newLibrary[0].getBooks().size());
+		assertEquals("New Book", ((Book) newLibrary[0].getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		
+		commit();
+
+		try {
+			assertTrue(history.canUndo(ctx));
+			history.undo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		startReading();
+		
+		// verify that the changes were undone
+		assertFalse(root.getBranches().contains(newLibrary[0]));
+		assertFalse("New Library".equals(newLibrary[0].getName())); //$NON-NLS-1$
+		assertEquals(0, newLibrary[0].getBooks().size());
+		
+		commit();
+		
+		try {
+			assertTrue(history.canRedo(ctx));
+			history.redo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		startReading();
+		
+		// verify that the changes were redone
+		assertTrue(root.getBranches().contains(newLibrary[0]));
+		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
+		assertEquals(1, newLibrary[0].getBooks().size());
+		assertEquals("New Book", ((Book) newLibrary[0].getBooks().get(0)).getTitle()); //$NON-NLS-1$
 		
 		commit();
 	}

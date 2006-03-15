@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: LibraryDefaultBookTrigger.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
+ * $Id: LibraryDefaultBookTrigger.java,v 1.3 2006/03/15 01:40:32 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
@@ -33,11 +33,19 @@ import org.eclipse.emf.transaction.TriggerListener;
  * @author Christian W. Damus (cdamus)
  */
 public class LibraryDefaultBookTrigger extends TriggerListener {
+	private final boolean isAggregate;
+	
 	public LibraryDefaultBookTrigger() {
+		this(false);
+	}
+	
+	public LibraryDefaultBookTrigger(boolean isAggregate) {
 		super(NotificationFilter.createFeatureFilter(
 					EXTLibraryPackage.eINSTANCE.getLibrary_Branches()).and(
 							NotificationFilter.createEventTypeFilter(
 									Notification.ADD)));
+		
+		this.isAggregate = isAggregate;
 	}
 	
 	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
@@ -54,5 +62,9 @@ public class LibraryDefaultBookTrigger extends TriggerListener {
 		}
 		
 		return result;
+	}
+	
+	public boolean isAggregatePrecommitListener() {
+		return isAggregate;
 	}
 }
