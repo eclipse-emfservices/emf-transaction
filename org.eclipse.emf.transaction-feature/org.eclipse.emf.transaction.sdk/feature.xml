@@ -44,19 +44,11 @@
         version="0.0.0"/>
 
     <includes
-        id="org.eclipse.emf.transaction.examples"
-        version="0.0.0"/>
-
-    <includes
         id="org.eclipse.emf.workspace"
         version="0.0.0"/>
 
     <includes
         id="org.eclipse.emf.workspace.doc"
-        version="0.0.0"/>
-
-    <includes
-        id="org.eclipse.emf.workspace.examples"
         version="0.0.0"/>
         
     <includes
@@ -66,16 +58,6 @@
         
     <includes
          id="org.eclipse.emf.workspace.source"
-         version="0.0.0"
-         match="compatible"/>
-        
-    <includes
-         id="org.eclipse.emf.transaction.examples.source"
-         version="0.0.0"
-         match="compatible"/>
-        
-    <includes
-         id="org.eclipse.emf.workspace.examples.source"
          version="0.0.0"
          match="compatible"/>
 </feature>
