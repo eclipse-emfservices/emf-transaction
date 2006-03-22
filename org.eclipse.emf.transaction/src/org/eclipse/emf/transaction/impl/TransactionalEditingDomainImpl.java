@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.3 2006/02/22 22:02:36 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.4 2006/03/22 19:53:49 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -58,7 +58,7 @@ import org.eclipse.osgi.util.NLS;
 public class TransactionalEditingDomainImpl
 	extends AdapterFactoryEditingDomain
 	implements InternalTransactionalEditingDomain {
-
+	
 	private String id;
 	
 	private TransactionChangeRecorder recorder;
@@ -362,6 +362,10 @@ public class TransactionalEditingDomainImpl
 	// Documentation copied from the inherited specification
 	public TransactionValidator getValidator() {
 		return validator;
+	}
+	
+	protected void setValidator(TransactionValidator newValidator) {
+		validator = newValidator;
 	}
 	
 	/**
@@ -943,5 +947,9 @@ public class TransactionalEditingDomainImpl
 			return result;
 		}
 		
+	}
+
+	public Map getUndoRedoOptions() {
+		return TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS;
 	}
 }

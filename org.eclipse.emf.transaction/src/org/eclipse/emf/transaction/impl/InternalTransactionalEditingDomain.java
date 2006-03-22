@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: InternalTransactionalEditingDomain.java,v 1.1 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: InternalTransactionalEditingDomain.java,v 1.2 2006/03/22 19:53:49 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -33,7 +33,7 @@ import org.eclipse.emf.transaction.Transaction;
  *
  * @author Christian W. Damus (cdamus)
  */
-public interface InternalTransactionalEditingDomain extends TransactionalEditingDomain {
+public interface InternalTransactionalEditingDomain extends TransactionalEditingDomain {	
 	/**
 	 * Creates and starts a new transaction.  The current thread is blocked
 	 * until I grant it exclusive access to my resource set.
@@ -178,4 +178,12 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	 * @see FilterManager#selectUnbatched(java.util.List, NotificationFilter)
 	 */
 	void broadcastUnbatched(Notification notification);
+
+	/**
+	 * Retrieves the undo/redo options that should be used when creating
+	 *  transactions.
+	 *  
+	 * @return A map with undo/redo options.
+	 */
+	Map getUndoRedoOptions();
 }

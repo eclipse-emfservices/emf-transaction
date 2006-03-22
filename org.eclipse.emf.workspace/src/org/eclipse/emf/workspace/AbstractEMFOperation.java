@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.3 2006/03/15 01:40:28 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.4 2006/03/22 19:53:51 cmcgee Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -29,12 +29,11 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.transaction.RollbackException;
+import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
-import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
-import org.eclipse.emf.transaction.impl.TransactionalCommandStackImpl;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
@@ -223,11 +222,13 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		IStatus result = null;
 		
 		try {
-			tx = createTransaction(TransactionalCommandStackImpl.UNDO_REDO_OPTIONS);
+			tx = createTransaction(domain.getUndoRedoOptions());
 			
 			result = doUndo(monitor, info);
 			
 			tx.commit();
+			
+			didUndo(tx);
 		} catch (InterruptedException e) {
 			Tracing.catching(AbstractEMFOperation.class, "undo", e); //$NON-NLS-1$
 			ExecutionException exc = new ExecutionException(Messages.undoInterrupted, e);
@@ -252,6 +253,17 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	}
 
 	/**
+	 * Hook for subclasses to learn that the specified <code>transaction</code>
+	 * has been successfully undone and, if necessary, to extract information
+	 * from it.
+	 * 
+	 * @param transaction a transaction that has been undone.
+	 */
+	protected void didUndo(Transaction tx) {
+		// Method can be overriden by subclasses.
+	}
+
+	/**
 	 * Queries whether I can be redone.  I can generally be redone if I was
 	 * successfully executed.  Subclasses would not usually need to override
 	 * this method.
@@ -270,11 +282,13 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		IStatus result = null;
 		
 		try {
-			tx = createTransaction(TransactionalCommandStackImpl.UNDO_REDO_OPTIONS);
+			tx = createTransaction(domain.getUndoRedoOptions());
 			
 			result = doRedo(monitor, info);
 			
 			tx.commit();
+			
+			didRedo(tx);
 		} catch (InterruptedException e) {
 			Tracing.catching(AbstractEMFOperation.class, "redo", e); //$NON-NLS-1$
 			ExecutionException exc = new ExecutionException(Messages.redoInterrupted, e);
@@ -298,6 +312,17 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		return result;
 	}
 	
+	/**
+	 * Hook for subclasses to learn that the specified <code>transaction</code>
+	 * has been successfully redone and, if necessary, to extract information
+	 * from it.
+	 * 
+	 * @param transaction a transaction that has been redone.
+	 */
+	protected void didRedo(Transaction tx) {
+		// Subclasses may override this
+	}
+
 	/**
 	 * Obtains my editing domain.
 	 * 

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalCommandStackImpl.java,v 1.2 2006/03/15 01:40:30 cdamus Exp $
+ * $Id: TransactionalCommandStackImpl.java,v 1.3 2006/03/22 19:53:49 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -43,27 +43,9 @@ public class TransactionalCommandStackImpl
 	extends BasicCommandStack
 	implements InternalTransactionalCommandStack {
 
-	/**
-	 * The transaction options that should be used when undoing/redoing changes
-	 * on the command stack.  Undo and redo must not perform triggers because
-	 * these were implemented as chained commands during the original execution.
-	 * Moreover, validation is not required during undo/redo because we can
-	 * only return the model from a valid state to another valid state if the
-	 * original execution did so.  Finally, it is not necessary to record
-	 * undo information when we are undoing or redoing.
-	 */
-	public static final Map UNDO_REDO_OPTIONS;
-	
 	private InternalTransactionalEditingDomain domain;
 	
 	private ExceptionHandler exceptionHandler;
-	
-	static {
-		UNDO_REDO_OPTIONS = new java.util.HashMap();
-		UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
-		UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_UNDO, Boolean.TRUE);
-		UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
-	}
 	
 	/**
 	 * Initializes me.
@@ -178,12 +160,12 @@ public class TransactionalCommandStackImpl
 	/**
 	 * Extends the inherited implementation by invoking it within the context
 	 * of an undo transaction (a read/write transaction with the
-	 * {@link #UNDO_REDO_OPTIONS undo/redo options}).
+	 * {@link #getUndoRedoOptions() undo/redo options}).
 	 */
 	public void undo() {
 		if (canUndo()) {
 			try {
-				Transaction tx = createTransaction(getUndoCommand(), UNDO_REDO_OPTIONS);
+				Transaction tx = createTransaction(getUndoCommand(), getUndoRedoOptions());
 			
 				super.undo();
 				
@@ -196,15 +178,19 @@ public class TransactionalCommandStackImpl
 		}
 	}
 
+	private Map getUndoRedoOptions() {
+		return domain.getUndoRedoOptions();
+	}
+
 	/**
 	 * Extends the inherited implementation by invoking it within the context
 	 * of a redo transaction (a read/write transaction with the
-	 * {@link #UNDO_REDO_OPTIONS undo/redo options}).
+	 * {@link #getUndoRedoOptions() undo/redo options}).
 	 */
 	public void redo() {
 		if (canRedo()) {
 			try {
-				Transaction tx = createTransaction(getRedoCommand(), UNDO_REDO_OPTIONS);
+				Transaction tx = createTransaction(getRedoCommand(), getUndoRedoOptions());
 			
 				super.redo();
 				

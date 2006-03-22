@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.5 2006/03/15 01:40:30 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.6 2006/03/22 19:53:49 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -43,6 +43,23 @@ import org.eclipse.emf.transaction.util.TriggerCommand;
 public class TransactionImpl
 	implements InternalTransaction {
 
+	/**
+	 * The transaction options that should be used when undoing/redoing changes
+	 * on the command stack.  Undo and redo must not perform triggers because
+	 * these were implemented as chained commands during the original execution.
+	 * Moreover, validation is not required during undo/redo because we can
+	 * only return the model from a valid state to another valid state if the
+	 * original execution did so.  Finally, it is not necessary to record
+	 * undo information when we are undoing or redoing.
+	 */
+	public static final Map DEFAULT_UNDO_REDO_OPTIONS;
+	static {
+		DEFAULT_UNDO_REDO_OPTIONS = new java.util.HashMap();
+		DEFAULT_UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
+		DEFAULT_UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_UNDO, Boolean.TRUE);
+		DEFAULT_UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
+	}
+	
 	private static long nextId = 0L;
 	
 	final long id;
@@ -98,7 +115,7 @@ public class TransactionImpl
 			this.id = nextId++;
 		}
 		
-		change = isUndoEnabled(this)? new CompositeChangeDescription() : null;
+		change = new CompositeChangeDescription();
 	}
 
 	

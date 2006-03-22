@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionOptionsTest.java,v 1.3 2006/03/15 01:40:26 cdamus Exp $
+ * $Id: TransactionOptionsTest.java,v 1.4 2006/03/22 19:53:45 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -148,7 +148,7 @@ public class TransactionOptionsTest extends AbstractTest {
 		
 		commit();
 
-		assertNull(tx.getChangeDescription());
+		assertTrue(tx.getChangeDescription().isEmpty());
 	}
 
 	/**
