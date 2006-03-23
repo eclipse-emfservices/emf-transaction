@@ -7,34 +7,34 @@ fragment@org.eclipse.ant.optional.junit=v20050226,:pserver:anonymous@dev.eclipse
 
 !*** Default entries
 
-feature@org.eclipse.emf.transaction.sdk=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.transaction-feature/org.eclipse.emf.transaction.sdk
+feature@org.eclipse.emf.transaction.sdk=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.transaction-feature/org.eclipse.emf.transaction.sdk
 
 !*** EMFT plugins, features and fragments
 
-plugin@org.eclipse.emf.transaction=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.transaction
-feature@org.eclipse.emf.transaction=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.transaction-feature
-plugin@org.eclipse.emf.transaction.ui=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.transaction.ui
-plugin@org.eclipse.emf.workbench=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workbench
-feature@org.eclipse.emf.workbench=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workbench-feature
-plugin@org.eclipse.emf.workbench.ui=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workbench.ui
-plugin@org.eclipse.emf.workspace=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workspace
-feature@org.eclipse.emf.workspace=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workspace-feature
-plugin@org.eclipse.emf.workspace.ui=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workspace.ui
-plugin@org.eclipse.emf.transaction.examples=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.transaction.examples
-feature@org.eclipse.emf.transaction.examples=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.transaction.examples-feature
-plugin@org.eclipse.emf.workbench.examples=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workbench.examples
-feature@org.eclipse.emf.workbench.examples=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workbench.examples-feature
-plugin@org.eclipse.emf.workbench.examples.library.editor=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workbench.examples.library.editor
-plugin@org.eclipse.emf.workspace.examples=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workspace.examples
-feature@org.eclipse.emf.workspace.examples=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workspace.examples-feature
-plugin@org.eclipse.emf.workspace.examples.library.editor=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workspace.examples.library.editor
-plugin@org.eclipse.emf.transaction.tests=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/tests/org.eclipse.emf.transaction.tests
-feature@org.eclipse.emf.transaction.tests=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/tests/org.eclipse.emf.transaction.tests-feature
-plugin@org.eclipse.emf.workbench.tests=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/tests/org.eclipse.emf.workbench.tests
-plugin@org.eclipse.emf.workspace.tests=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/tests/org.eclipse.emf.workspace.tests
-plugin@org.eclipse.emf.transaction.doc=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.transaction.doc
-feature@org.eclipse.emf.transaction.doc=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.transaction.doc-feature
-plugin@org.eclipse.emf.workbench.doc=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.workbench.doc
-feature@org.eclipse.emf.workbench.doc=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.workbench.doc-feature
-plugin@org.eclipse.emf.workspace.doc=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.workspace.doc
-feature@org.eclipse.emf.workspace.doc=build_200603161138,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.workspace.doc-feature
+plugin@org.eclipse.emf.transaction=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.transaction
+feature@org.eclipse.emf.transaction=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.transaction-feature
+plugin@org.eclipse.emf.transaction.ui=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.transaction.ui
+plugin@org.eclipse.emf.workbench=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workbench
+feature@org.eclipse.emf.workbench=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workbench-feature
+plugin@org.eclipse.emf.workbench.ui=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workbench.ui
+plugin@org.eclipse.emf.workspace=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workspace
+feature@org.eclipse.emf.workspace=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workspace-feature
+plugin@org.eclipse.emf.workspace.ui=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.workspace.ui
+plugin@org.eclipse.emf.transaction.examples=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.transaction.examples
+feature@org.eclipse.emf.transaction.examples=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.transaction.examples-feature
+plugin@org.eclipse.emf.workbench.examples=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workbench.examples
+feature@org.eclipse.emf.workbench.examples=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workbench.examples-feature
+plugin@org.eclipse.emf.workbench.examples.library.editor=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workbench.examples.library.editor
+plugin@org.eclipse.emf.workspace.examples=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workspace.examples
+feature@org.eclipse.emf.workspace.examples=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workspace.examples-feature
+plugin@org.eclipse.emf.workspace.examples.library.editor=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/examples/org.eclipse.emf.workspace.examples.library.editor
+plugin@org.eclipse.emf.transaction.tests=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/tests/org.eclipse.emf.transaction.tests
+feature@org.eclipse.emf.transaction.tests=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/tests/org.eclipse.emf.transaction.tests-feature
+plugin@org.eclipse.emf.workbench.tests=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/tests/org.eclipse.emf.workbench.tests
+plugin@org.eclipse.emf.workspace.tests=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/tests/org.eclipse.emf.workspace.tests
+plugin@org.eclipse.emf.transaction.doc=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.transaction.doc
+feature@org.eclipse.emf.transaction.doc=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.transaction.doc-feature
+plugin@org.eclipse.emf.workbench.doc=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.workbench.doc
+feature@org.eclipse.emf.workbench.doc=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.workbench.doc-feature
+plugin@org.eclipse.emf.workspace.doc=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.workspace.doc
+feature@org.eclipse.emf.workspace.doc=build_200603231008,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.workspace.doc-feature
