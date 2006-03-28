@@ -12,15 +12,19 @@
  *
  * </copyright>
  *
- * $Id: UndoRedoTest.java,v 1.4 2006/03/15 01:40:26 cdamus Exp $
+ * $Id: UndoRedoTest.java,v 1.5 2006/03/28 14:05:24 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
+
+import java.util.Iterator;
+import java.util.Set;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.command.CommandStack;
+import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.edit.command.AddCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
@@ -31,8 +35,10 @@ import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionChangeDescription;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultBookTrigger;
+import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 
 
 /**
@@ -331,6 +337,98 @@ public class UndoRedoTest extends AbstractTest {
 		assertTrue(change.getResourceChanges().isEmpty());
 		assertTrue(change.getObjectsToAttach().isEmpty());
 		assertTrue(change.getObjectsToDetach().isEmpty());
+	}
+	
+	/**
+	 * Tests that trigger commands are not undone and redone multiple times
+	 * when triggers are propagated to a parent transaction.
+	 */
+	public void test_triggerCommands_singleUndoRedo_133388() {
+		class CountingCommand extends TestCommand {
+			private int count;
+			
+			void reset() { count = 0; }
+			
+			public void execute() { reset(); }
+			public void undo() { assertEquals(1, ++count); }
+			public void redo() { assertEquals(1, ++count); }
+		}
+		
+		final Set countingCommands = new java.util.HashSet();
+		
+		// add the trigger to create a default book in a new library, combined
+		//    with a counting command
+		domain.addResourceSetListener(new LibraryDefaultBookTrigger() {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+				Command result = super.trigger(domain, notification);
+				
+				if (result != null) {
+					CountingCommand cc = new CountingCommand();
+					countingCommands.add(cc);
+					result = result.chain(cc);
+				}
+				
+				return result;
+			}});
+		
+		// add another trigger that will set default publication dates for new
+		//    items, combined with a counting command
+		domain.addResourceSetListener(new ItemDefaultPublicationDateTrigger() {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+				Command result = super.trigger(domain, notification);
+				
+				if (result != null) {
+					CountingCommand cc = new CountingCommand();
+					countingCommands.add(cc);
+					result = result.chain(cc);
+				}
+				
+				return result;
+			}});
+		startWriting();
+		
+		// add a new library.  Our triggers will set a default name and book
+		Library newLibrary = EXTLibraryFactory.eINSTANCE.createLibrary();
+		root.getBranches().add(newLibrary);
+		
+		assertNull(newLibrary.getName());
+		assertTrue(newLibrary.getBranches().isEmpty());
+		
+		Transaction tx = commit();
+		TransactionChangeDescription change = tx.getChangeDescription();
+		
+		startWriting();
+
+		// undo.  Would fail assertion if a command was repeated
+		change.applyAndReverse();
+		
+		commit();
+		
+		for (Iterator iter = countingCommands.iterator(); iter.hasNext();) {
+			((CountingCommand) iter.next()).reset();
+		}
+		
+		startWriting();
+
+		// redo.  Would fail assertion if a command was repeated
+		change.applyAndReverse();
+		
+		commit();
+		
+		for (Iterator iter = countingCommands.iterator(); iter.hasNext();) {
+			((CountingCommand) iter.next()).reset();
+		}
+		
+		startWriting();
+
+		// un-redo.  Would fail assertion if a command was repeated
+		change.applyAndReverse();
+		
+		commit();
+		
+		for (Iterator iter = countingCommands.iterator(); iter.hasNext();) {
+			((CountingCommand) iter.next()).reset();
+		}
 	}
 	
 	//

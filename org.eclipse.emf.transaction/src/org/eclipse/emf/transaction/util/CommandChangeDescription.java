@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CommandChangeDescription.java,v 1.1 2006/03/15 01:40:31 cdamus Exp $
+ * $Id: CommandChangeDescription.java,v 1.2 2006/03/28 14:05:26 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -44,6 +44,19 @@ public class CommandChangeDescription
 	 */
 	public CommandChangeDescription(Command command) {
 		this.command = command;
+	}
+	
+	/**
+	 * Chains a new command onto the command that I encapsulate, returning the
+	 * chained result.
+	 * 
+	 * @param newCommand a command to chain onto my command
+	 * 
+	 * @return the new command chain
+	 */
+	public Command chain(Command newCommand) {
+		command = command.chain(newCommand);
+		return command;
 	}
 	
 	/**

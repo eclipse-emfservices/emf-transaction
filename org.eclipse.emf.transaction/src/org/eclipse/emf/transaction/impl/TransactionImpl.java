@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.6 2006/03/22 19:53:49 cmcgee Exp $
+ * $Id: TransactionImpl.java,v 1.7 2006/03/28 14:05:26 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -81,6 +81,7 @@ public class TransactionImpl
 	private boolean aborted;
 	private IStatus status = Status.OK_STATUS;
 	private Command triggers;
+	private CommandChangeDescription triggerChange;
 	
 	/**
 	 * Initializes me with my editing domain and read-only state.
@@ -515,12 +516,13 @@ public class TransactionImpl
 		
 		if (this.triggers == null) {
 			this.triggers = triggerCommand;
+			
+			// record the triggers in my change description
+			triggerChange = new CommandChangeDescription(triggerCommand);
+			change.add(triggerChange);
 		} else {
-			this.triggers = this.triggers.chain(triggerCommand);
+			this.triggers = triggerChange.chain(triggerCommand);
 		}
-		
-		// record the triggers in my change description
-		change.add(new CommandChangeDescription(triggerCommand));
 	}
 	
 	public String toString() {
