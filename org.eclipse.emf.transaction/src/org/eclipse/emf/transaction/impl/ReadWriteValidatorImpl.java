@@ -12,13 +12,14 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteValidatorImpl.java,v 1.5 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: ReadWriteValidatorImpl.java,v 1.6 2006/04/03 18:14:11 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -65,6 +66,9 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	private TransactionTree tree = null;
 	private TransactionTree transactionToPrecommit = null;
 	
+	// anticipate large-ish transaction trees
+	private final Map txToNode = new java.util.HashMap(512);
+	
 	/**
 	 * Initializes me.
 	 */
@@ -88,6 +92,8 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 			newTree = parent.addChild(transaction);
 		}
 		
+		txToNode.put(transaction, newTree);
+		
 		// next phase of aggregated precommit must start with this transaction
 		if ((transactionToPrecommit == null) && !transaction.isReadOnly()) {
 			transactionToPrecommit = newTree;
@@ -103,6 +109,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		
 		if (parent != null) {
 			parent.removeChild(transaction);
+			txToNode.remove(transaction);
 		}
 	}
 	
@@ -111,7 +118,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		List result = null;
 		
 		if (tree != null) {
-			TransactionTree nested = tree.find(tx);
+			TransactionTree nested = findTree(tx);
 			
 			if (nested != null) {
 				result = nested.collectNotifications(VALIDATION);
@@ -143,7 +150,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		List result = null;
 		
 		if (tree != null) {
-			TransactionTree nested = tree.find(tx);
+			TransactionTree nested = findTree(tx);
 			
 			if (nested != null) {
 				result = nested.collectNotifications(POSTCOMMIT);
@@ -165,7 +172,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		TransactionTree result = null;
 		
 		if (tree != null) {
-			result = tree.find(tx);
+			result = (TransactionTree) txToNode.get(tx);
 		}
 		
 		return result;
@@ -270,29 +277,6 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 					break;
 				}
 			}
-		}
-		
-		/**
-		 * Finds the tree node corresponding to the specified transaction.
-		 * 
-		 * @param tx the transaction to search for
-		 * @return the corresponding tree node, or <code>null</code> if it has
-		 *    not (yet) been added
-		 */
-		TransactionTree find(Transaction tx) {
-			TransactionTree result = null;
-			
-			if (transaction == tx) {
-				result = this;
-			} else {
-				for (Iterator iter = children.iterator();
-						iter.hasNext() && (result == null);) {
-					
-					result = ((TransactionTree) iter.next()).find(tx);
-				}
-			}
-			
-			return result;
 		}
 		
 		/**
