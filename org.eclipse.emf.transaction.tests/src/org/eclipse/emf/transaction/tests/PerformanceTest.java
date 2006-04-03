@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: PerformanceTest.java,v 1.1 2006/04/03 18:14:09 cdamus Exp $
+ * $Id: PerformanceTest.java,v 1.2 2006/04/03 19:10:59 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -51,6 +51,9 @@ public class PerformanceTest extends AbstractTest {
 	public void test_ReadWriteValidator_findTree_132590() {
 		int count = RUNS + OUTLIERS;
 		
+		System.out.println("Performance test: " + getName()); //$NON-NLS-1$
+		System.out.println("==============================="); //$NON-NLS-1$
+		
 		for (int i = 0; i < count; i++) {
 			startClock();
 			
@@ -65,6 +68,8 @@ public class PerformanceTest extends AbstractTest {
 		
 		System.out.println("Mean time for " + RUNS + " runs: " + meanTiming()); //$NON-NLS-1$ //$NON-NLS-2$
 		System.out.println("Standard deviation: " + stddevTiming()); //$NON-NLS-1$
+		
+		System.out.println("==============================="); //$NON-NLS-1$
 	}
 	
 	//
@@ -119,8 +124,8 @@ public class PerformanceTest extends AbstractTest {
 		Collections.sort(timings);
 		
 		for (int i = 0; i < OUTLIERS / 2; i++) {
-			timings.remove(0);
-			timings.remove(timings.size() - 1);
+			System.out.println("Remove high timing: " + timings.remove(timings.size() - 1)); //$NON-NLS-1$
+			System.out.println("Remove low timing : " + timings.remove(0)); //$NON-NLS-1$
 		}
 	}
 	
