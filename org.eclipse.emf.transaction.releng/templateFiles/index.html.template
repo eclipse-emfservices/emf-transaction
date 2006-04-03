@@ -47,17 +47,17 @@ To view the Overall Build Log for this Build click <a href="buildlog.txt">here</
 				<td><b>Build Details &amp; Other Downloads</b></td>
 			</tr>
 			<tr>
-				<td><a href="http://eclipse.org/eclipse/">Eclipse</a></td>
+				<td><a href="http://www.eclipse.org/eclipse/">Eclipse</a></td>
 				<td><a href="@eclipseDownloadURL@@eclipseDropFile@">@eclipseFile@</a></td>
 				<td><a href="@eclipseDownloadURL@@eclipseBuildURL@">Build Page</a></td>
 			</tr>
 			<tr>
-				<td><a href="http://eclipse.org/emf/">EMF</a></td>
+				<td><a href="http://www.eclipse.org/emf/">EMF</a></td>
 				<td><a href="@eclipseDownloadURL@@emfDropFile@">@emfFile@</a></td>
 				<td><a href="@eclipseDownloadURL@@emfBuildURL@">Build Page</a></td>
 			</tr>
 			<tr>
-				<td><a href="http://eclipse.org/emft/?proj=validation">EMFT Validation</a></td>
+				<td><a href="http://www.eclipse.org/emft/?proj=validation">EMFT Validation</a></td>
 				<td><a href="@eclipseDownloadURL@@validationDropFile@">@validationFile@</a></td>
 				<td><a href="@eclipseDownloadURL@@validationBuildURL@">Build Page</a></td>
 			</tr>
