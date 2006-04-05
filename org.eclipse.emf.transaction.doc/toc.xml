@@ -2,5 +2,16 @@
 <?NLS TYPE="org.eclipse.help.toc"?>
 
 <toc label="EMF Transaction Programmer&apos;s Guide">
+	<anchor id="reference-before" />
+	<topic label="Reference">
+		<anchor id="reference-ext-pt-before" />
+		<topic label="Extension Points Reference">
+			<topic label="org.eclipse.emf.transaction.editingDomains" href="references/extension-points/org_eclipse_emf_transaction_editingDomains.html" />
+			<topic label="org.eclipse.emf.transaction.listeners" href="references/extension-points/org_eclipse_emf_transaction_listeners.html" />
+		</topic>
+		<anchor id="reference-ext-pt-after" />
+	</topic>	
+	<anchor id="reference-after" />
+
 	<topic label="Javadoc" href="references/javadoc/index.html"/>
 </toc>

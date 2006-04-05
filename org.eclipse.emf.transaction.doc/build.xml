@@ -5,7 +5,7 @@
 	<property name="plugin" value="org.eclipse.emf.transaction"/>
 	<property name="docPlugin" value="org.eclipse.emf.transaction.doc"/>
 	<property name="pluginVersion" value="1.0.0"/>
-	<property name="filesToInclude" value="META-INF/,about.html,about.ini,about.mappings,about.properties,eclipse.gif,eclipse.png,eclipse24.gif,eclipse32.gif,eclipse48.gif,eclipse32.png,eclipse48.png,eclipse_lg.gif,plugin.xml,plugin.properties,doc.zip,toc.xml,index/**"/>
+	<property name="filesToInclude" value="META-INF/,about.html,about.ini,book.css,schema.css,about.mappings,about.properties,eclipse.gif,eclipse.png,eclipse24.gif,eclipse32.gif,eclipse48.gif,eclipse32.png,eclipse48.png,eclipse_lg.gif,plugin.xml,plugin.properties,doc.zip,toc.xml,index/**"/>
 	
 	<property name="basews" value="${ws}"/>
 	<property name="baseos" value="${os}"/>
@@ -63,6 +63,8 @@
 		</exec>
 		
 		<antcall target="build.index"/>
+		
+		<antcall target="convertSchemaToHtml"/>
 		
 		<!-- Zip up all of the documentation artifacts - references(including javadoc), images, tutorials, etc. -->
 		<zip destfile="doc.zip" compress="true">
@@ -123,4 +125,8 @@
 		<delete dir="${temp.folder}"/>
 	</target>
 
+	<target name="convertSchemaToHtml">
+		<property name="schema-destination" value="./references/extension-points" />
+		<pde.convertSchemaToHTML manifest="../org.eclipse.emf.transaction/plugin.xml" destination="${schema-destination}" />
+	</target>
 </project>
