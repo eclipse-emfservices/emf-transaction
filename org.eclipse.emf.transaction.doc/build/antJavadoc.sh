@@ -26,8 +26,9 @@ function groupPackage
 		srcDir=$currentPath/../../$plugin/src
 		if [ -d "$srcDir" ]; then
 			packages=`find $srcDir -type f -name '*.java' -exec grep -e '^package .*;' {} \; | sed -e 's/^package *\(.*\);/\1/' | sed -e 's/[ ]*//g' | sort | uniq | xargs | sed -e 's/ /:/g'`
+			echo Packages: ${packages}
 			packages=`echo $packages | sed -e 's/\//\\\\\\//g' | sed -e 's/\./\\\\\./g'`
-	
+			echo Packages: ${packages}
 			sed -e "s/\@plugin\@/${packages}/g" $currentPath/javadoc.xml.template > $currentPath/javadoc.xml.template.tmp
 		fi
 	fi
