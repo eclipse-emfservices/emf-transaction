@@ -25,13 +25,8 @@ function groupPackage
 	if [ "x$hasToken" != "x"  ]; then
 		srcDir=$currentPath/../../$plugin/src
 		if [ -d "$srcDir" ]; then
-			find $srcDir -type f -name '*.java' -exec grep -e '^package .*;' {} \; | fromdos | sort | uniq > /tmp/package-declarations.txt
-			packages=`find $srcDir -type f -name '*.java' -exec grep -e '^package .*;' {} \; | sort | uniq | sed -e 's/^package *\(.*\);/\1/'`
-			echo Packages-Before: ${packages}
 			packages=`find $srcDir -type f -name '*.java' -exec grep -e '^package .*;' {} \; | sed -e 's/^package *\(.*\);/\1/' | sed -e 's/[ ]*//g' | fromdos | sort | uniq | xargs | sed -e 's/ /:/g'`
-			echo Packages: ${packages}
 			packages=`echo $packages | sed -e 's/\//\\\\\\//g' | sed -e 's/\./\\\\\./g'`
-			echo Packages: ${packages}
 			sed -e "s/\@plugin\@/${packages}/g" $currentPath/javadoc.xml.template > $currentPath/javadoc.xml.template.tmp
 		fi
 	fi
@@ -83,9 +78,6 @@ sed -e "s/\@docjar\@/${docjar}/g" $currentPath/javadoc.xml.template.tmp > $curre
 # Replaces the token @eclipseDir@ in the template by the actual value
 eclipseDirEsc=`echo $eclipseDir | sed -e 's/\//\\\\\//g' | sed -e 's/\./\\\\\./g'`
 sed -e "s/\@eclipseDir\@/${eclipseDirEsc}/g" $currentPath/javadoc.xml.template.tmp2 > $currentPath/javadoc.xml
-
-echo Current javadoc.xml
-cat $currentPath/javadoc.xml
 
 # Executes the ant script
 ant -f $currentPath/javadoc.xml \
