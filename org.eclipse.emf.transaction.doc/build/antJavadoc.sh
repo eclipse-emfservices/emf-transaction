@@ -80,6 +80,9 @@ sed -e "s/\@docjar\@/${docjar}/g" $currentPath/javadoc.xml.template.tmp > $curre
 eclipseDirEsc=`echo $eclipseDir | sed -e 's/\//\\\\\//g' | sed -e 's/\./\\\\\./g'`
 sed -e "s/\@eclipseDir\@/${eclipseDirEsc}/g" $currentPath/javadoc.xml.template.tmp2 > $currentPath/javadoc.xml
 
+echo Current javadoc.xml
+cat $currentPath/javadoc.xml
+
 # Executes the ant script
 ant -f $currentPath/javadoc.xml \
 	-DdestDir="$destDir" \

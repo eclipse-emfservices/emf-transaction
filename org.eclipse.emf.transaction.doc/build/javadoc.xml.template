@@ -27,6 +27,7 @@
 	<!-- <target name="javadoc" depends="extractPlatformJavadoc"> -->
 	
 	<target name="javadoc">
+		<echo>Classpath: ${classpath}</echo>
 		<javadoc 
 			destdir="${destDir}" 
 			classpath="${classpath}"
