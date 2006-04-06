@@ -25,7 +25,7 @@ function groupPackage
 	if [ "x$hasToken" != "x"  ]; then
 		srcDir=$currentPath/../../$plugin/src
 		if [ -d "$srcDir" ]; then
-			packages=`find $srcDir -type f -name '*.java' -exec grep -e '^package .*;' {} \; | sed -e 's/^package *\(.*\);/\1 /' | uniq`
+			packages=`find $srcDir -type f -name '*.java' -exec grep -e '^package .*;' {} \; | sort | uniq | sed -e 's/^package *\(.*\);/\1/'`
 			echo Packages-Before: ${packages}
 			packages=`find $srcDir -type f -name '*.java' -exec grep -e '^package .*;' {} \; | sed -e 's/^package *\(.*\);/\1/' | sed -e 's/[ ]*//g' | sort | uniq | xargs | sed -e 's/ /:/g'`
 			echo Packages: ${packages}
