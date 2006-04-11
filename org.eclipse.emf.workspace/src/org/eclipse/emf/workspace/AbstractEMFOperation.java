@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.4 2006/03/22 19:53:51 cmcgee Exp $
+ * $Id: AbstractEMFOperation.java,v 1.5 2006/04/11 14:29:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -130,7 +130,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 				//    have been thrown.  Roll back to protect data integrity
 				//    but let the exception reach the caller.  Cannot return
 				//    an error status because we're throwing
-				transaction.rollback();
+				rollback(transaction);
 			}
 			
 			transaction = null;
@@ -245,7 +245,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 				//    have been thrown.  Roll back to protect data integrity
 				//    but let the exception reach the caller.  Cannot return
 				//    an error status because we're throwing
-				tx.rollback();
+				rollback(tx);
 			}
 		}
 		
@@ -305,7 +305,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 				//    have been thrown.  Roll back to protect data integrity
 				//    but let the exception reach the caller.  Cannot return
 				//    an error status because we're throwing
-				tx.rollback();
+				rollback(tx);
 			}
 		}
 		
@@ -354,6 +354,20 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 */
 	Transaction createTransaction(Map options) throws InterruptedException {
 		return domain.startTransaction(false, options);
+	}
+	
+	/**
+	 * Ensures that the specified transaction is rolled back, first rolling
+	 * back a nested transaction (if any).
+	 * 
+	 * @param tx a transaction to roll back
+	 */
+	void rollback(Transaction tx) {
+		while (tx.isActive()) {
+			Transaction active = domain.getActiveTransaction();
+			
+			active.rollback();
+		}
 	}
 	
 	/**

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalCommandStackImpl.java,v 1.3 2006/03/22 19:53:49 cmcgee Exp $
+ * $Id: TransactionalCommandStackImpl.java,v 1.4 2006/04/11 14:29:56 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -71,11 +71,14 @@ public class TransactionalCommandStackImpl
 			
 			try {
 				super.execute(command);
+				
+				// commit the transaction now
+				tx.commit();
 			} finally {
 				if ((tx != null) && (tx.isActive())) {
-					// commit the transaction now
-					tx.commit();
-					
+					// roll back
+					rollback(tx);
+				} else {
 					// the transaction has already incorporated the triggers
 					//    into its change description, so the recording command
 					//    doesn't need them again
@@ -93,6 +96,20 @@ public class TransactionalCommandStackImpl
 			}
 		} else if (command != null) {
 			command.dispose();
+		}
+	}
+	
+	/**
+	 * Ensures that the specified transaction is rolled back, first rolling
+	 * back a nested transaction (if any).
+	 * 
+	 * @param tx a transaction to roll back
+	 */
+	void rollback(Transaction tx) {
+		while (tx.isActive()) {
+			Transaction active = domain.getActiveTransaction();
+			
+			active.rollback();
 		}
 	}
 
@@ -237,10 +254,13 @@ public class TransactionalCommandStackImpl
 				if (parent != null) {
 					parent.addTriggers(trigger);
 				}
+				
+				// commit the transaction now
+				tx.commit();
 			} finally {
 				if ((tx != null) && (tx.isActive())) {
-					// commit the transaction now
-					tx.commit();
+					// roll back because an uncaught exception occurred
+					rollback(tx);
 				}
 			}
 		}

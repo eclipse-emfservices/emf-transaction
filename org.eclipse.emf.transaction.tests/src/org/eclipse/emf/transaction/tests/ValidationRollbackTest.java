@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ValidationRollbackTest.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
+ * $Id: ValidationRollbackTest.java,v 1.3 2006/04/11 14:29:51 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -21,8 +21,10 @@ import junit.framework.TestSuite;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.Writer;
+import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
@@ -304,6 +306,35 @@ public class ValidationRollbackTest extends AbstractTest {
 		assertSame(status, xa.getStatus());
 	}
 	
+	/**
+	 * Tests that, when an exception unwinds the Java stack during the execution
+	 * of a Command, the active transactions are rolled back in
+	 * the correct sequence.
+	 */
+	public void test_rollbackNestingTransactionOnException_135673() {
+		Command command = new RecordingCommand(domain, "") { //$NON-NLS-1$
+			public boolean canUndo() { return true; }
+			protected void doExecute() {
+				// start some nested transactions
+				try {
+					((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+					((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+				} catch (Exception e) {
+					fail("Failed to start nested transaction: " + e.getLocalizedMessage()); //$NON-NLS-1$
+				}
+				throw new TestError("intentional error"); //$NON-NLS-1$
+			}
+		};
+		
+		try {
+			getCommandStack().execute(command);
+		} catch (TestError error) {
+			// success case -- error was not masked by IllegalStateException
+		} catch (IllegalArgumentException e) {
+			fail("Rolled back out of order: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+	}
+	
 	//
 	// Fixture methods
 	//
@@ -324,5 +355,13 @@ public class ValidationRollbackTest extends AbstractTest {
 		validationEnabled = false;
 		
 		super.doTearDown();
+	}
+	
+	static class TestError extends Error {
+		private static final long serialVersionUID = 1502966836790504386L;
+
+		TestError(String msg) {
+			super(msg);
+		}
 	}
 }

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.2 2006/03/15 01:40:32 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.3 2006/04/11 14:29:49 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -22,6 +22,8 @@ import junit.framework.TestSuite;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.common.command.Command;
@@ -34,7 +36,9 @@ import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.TriggerListener;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.workspace.AbstractEMFOperation;
+import org.eclipse.emf.workspace.CompositeEMFOperation;
 import org.eclipse.emf.workspace.tests.fixtures.ExternalDataCommand;
 import org.eclipse.emf.workspace.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultBookTrigger;
@@ -470,5 +474,53 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		
 		// no listeners were notified
 		assertNull(listener.postcommit);
+	}
+	
+	/**
+	 * Tests that, when an exception unwinds the Java stack during the execution
+	 * of an AbstractEMFOperation, the active transactions are rolled back in
+	 * the correct sequence.
+	 */
+	public void test_rollbackNestingTransactionOnException_135673() {
+		CompositeEMFOperation outer = new CompositeEMFOperation(domain, ""); //$NON-NLS-1$
+		AbstractEMFOperation inner = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
+			public boolean canExecute() {
+				return true;
+			}
+			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				// start some nested transactions
+				try {
+					((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+					((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+				} catch (Exception e) {
+					fail("Failed to start nested transaction: " + e.getLocalizedMessage()); //$NON-NLS-1$
+				}
+				throw new TestError("intentional error"); //$NON-NLS-1$
+			}};
+			
+		outer.add(inner);
+		
+		try {
+			outer.execute(new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		} catch (TestError error) {
+			// success case -- error was not masked by IllegalStateException
+		} catch (IllegalArgumentException e) {
+			fail("Rolled back out of order: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+	}
+	
+	//
+	// Fixtures
+	//
+	
+	static class TestError extends Error {
+		private static final long serialVersionUID = 1502966836790504386L;
+
+		TestError(String msg) {
+			super(msg);
+		}
 	}
 }
