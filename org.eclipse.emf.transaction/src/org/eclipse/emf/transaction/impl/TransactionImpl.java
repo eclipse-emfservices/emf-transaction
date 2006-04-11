@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.7 2006/03/28 14:05:26 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.8 2006/04/11 14:51:15 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -108,9 +108,26 @@ public class TransactionImpl
 		this.readOnly = readOnly;
 		this.owner = Thread.currentThread();
 		
-		this.options = (options == null)
-				? Collections.EMPTY_MAP
-				: Collections.unmodifiableMap(new java.util.HashMap(options));
+		Transaction activeTx = ((InternalTransactionalEditingDomain) domain).getActiveTransaction();
+		Map parentOptions = (activeTx == null)? null : activeTx.getOptions();
+		
+		if ((parentOptions == null) && (options == null)) {
+			this.options = Collections.EMPTY_MAP;
+		} else {
+			Map myOptions = new java.util.HashMap();
+			
+			// inherit my parent transaction's options
+			if (parentOptions != null) {
+				myOptions.putAll(parentOptions);
+			}
+			
+			// override with child transaction options
+			if (options != null) {
+				myOptions.putAll(options);
+			}
+			
+			this.options = Collections.unmodifiableMap(myOptions);
+		}
 		
 		synchronized (TransactionImpl.class) {
 			this.id = nextId++;

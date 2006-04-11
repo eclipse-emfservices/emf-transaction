@@ -12,11 +12,12 @@
  *
  * </copyright>
  *
- * $Id: TransactionOptionsTest.java,v 1.4 2006/03/22 19:53:45 cmcgee Exp $
+ * $Id: TransactionOptionsTest.java,v 1.5 2006/04/11 14:51:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
 import java.util.Collection;
+import java.util.Map;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -355,6 +356,72 @@ public class TransactionOptionsTest extends AbstractTest {
 			// the inner transaction's error was not detected
 			assertEquals(1, errors.size());
 		}
+	}
+	
+	public void test_transactionOptionInheritance_135569() {
+		Map options = new java.util.HashMap();
+		Map active;
+		
+		// test the inheritance of empty options
+		startWriting();
+		active = getActiveTransaction().getOptions();
+		
+		assertTrue(getActiveTransaction().getOptions().isEmpty());
+		
+		startWriting();
+		active = getActiveTransaction().getOptions();
+		
+		assertTrue(getActiveTransaction().getOptions().isEmpty());
+
+		commit();
+		commit();
+		
+		// test the inheritance of non-empty options
+		options.put(Transaction.OPTION_NO_UNDO, Boolean.TRUE);
+		Object marker = new Object();
+		options.put("my own option", marker); //$NON-NLS-1$
+		
+		startWriting(options);
+		active = getActiveTransaction().getOptions();
+		
+		assertSame(Boolean.TRUE, active.get(Transaction.OPTION_NO_UNDO));
+		assertSame(marker, active.get("my own option")); //$NON-NLS-1$
+		
+		startWriting();
+		active = getActiveTransaction().getOptions();
+		
+		assertSame(Boolean.TRUE, active.get(Transaction.OPTION_NO_UNDO));
+		assertSame(marker, active.get("my own option")); //$NON-NLS-1$
+		
+		commit();
+		commit();
+		
+		// test the overriding of options
+		
+		options.put(Transaction.OPTION_NO_UNDO, Boolean.TRUE);
+		marker = new Object();
+		options.put("my own option", marker); //$NON-NLS-1$
+		
+		startWriting(options);
+		
+		options.put(Transaction.OPTION_NO_UNDO, Boolean.FALSE);
+		Object marker2 = new Object();
+		options.put("my own option", marker2); //$NON-NLS-1$
+		
+		// active options should be copied, not affected by changes to 'options'
+		active = getActiveTransaction().getOptions();
+		
+		assertSame(Boolean.TRUE, active.get(Transaction.OPTION_NO_UNDO));
+		assertSame(marker, active.get("my own option")); //$NON-NLS-1$
+		
+		startWriting(options);
+		active = getActiveTransaction().getOptions();
+		
+		assertSame(Boolean.FALSE, active.get(Transaction.OPTION_NO_UNDO));
+		assertSame(marker2, active.get("my own option")); //$NON-NLS-1$
+		
+		commit();
+		commit();
 	}
 	
 	//
