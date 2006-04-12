@@ -1,7 +1,7 @@
 /**
  * <copyright> 
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFTransactionStatusCodes.java,v 1.1 2006/01/03 20:41:54 cdamus Exp $
+ * $Id: EMFTransactionStatusCodes.java,v 1.2 2006/04/12 22:09:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.internal;
 
@@ -39,6 +39,7 @@ public class EMFTransactionStatusCodes {
 	public static final int POSTCOMMIT_FAILED = 45;
 
 	public static final int EXCEPTION_HANDLER_FAILED = 50;
+	public static final int PRIVILEGED_RUNNABLE_FAILED = 51;
 	
 	
 	/** Not instantiable. */

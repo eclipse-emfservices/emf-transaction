@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: InternalTransaction.java,v 1.3 2006/03/15 01:40:31 cdamus Exp $
+ * $Id: InternalTransaction.java,v 1.4 2006/04/12 22:09:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -150,4 +150,20 @@ public interface InternalTransaction
 	 * @param triggers the triggers to add
 	 */
 	void addTriggers(TriggerCommand triggers);
+	
+	/**
+	 * Transfers ownership of this transaction to the specified
+	 * privileged runnable.
+	 *  
+	 * @param runnable the runnable whose thread is to borrow me
+	 */
+	void startPrivileged(PrivilegedRunnable runnable);
+	
+	/**
+	 * Returns me to my previous owner, upon completion of the specified
+	 * privileged runnable.
+	 * 
+	 * @param runnable the runnable whose thread had borrowed me
+	 */
+	void endPrivileged(PrivilegedRunnable runnable);
 }

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: InternalTransactionalEditingDomain.java,v 1.2 2006/03/22 19:53:49 cmcgee Exp $
+ * $Id: InternalTransactionalEditingDomain.java,v 1.3 2006/04/12 22:09:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -186,4 +186,20 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	 * @return A map with undo/redo options.
 	 */
 	Map getUndoRedoOptions();
+	
+	/**
+	 * Transfers ownership of this editing domain to the specified
+	 * privileged runnable.
+	 *  
+	 * @param runnable the runnable whose thread is to borrow me
+	 */
+	void startPrivileged(PrivilegedRunnable runnable);
+	
+	/**
+	 * Returns me to my previous owner, upon completion of the specified
+	 * privileged runnable.
+	 * 
+	 * @param runnable the runnable whose thread had borrowed me
+	 */
+	void endPrivileged(PrivilegedRunnable runnable);
 }

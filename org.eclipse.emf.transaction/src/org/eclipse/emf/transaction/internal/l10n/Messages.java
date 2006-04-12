@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Messages.java,v 1.3 2006/01/13 21:50:43 cdamus Exp $
+ * $Id: Messages.java,v 1.4 2006/04/12 22:09:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.internal.l10n;
 
@@ -49,6 +49,8 @@ public class Messages
 	
 	public static String acquireJobLabel;
 	public static String upgradeReadLock;
+
+	public static String privilegedRunnable;
 	
 	static {
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomain.java,v 1.1 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: TransactionalEditingDomain.java,v 1.2 2006/04/12 22:09:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -180,6 +180,53 @@ public interface TransactionalEditingDomain
 	 * </p>
 	 */
 	void yield();
+	
+	/**
+	 * Wraps the specified <code>runnable</code> to give it access to the currently
+	 * active transaction.  This is useful for two or more cooperating threads
+	 * to share a transaction (read-only or read-write), executing code in
+	 * the a <code>runnable</code> on one thread in the context of another
+	 * thread's transaction.
+	 * <p>
+	 * For example, in an Eclipse UI application, this might be used when a
+	 * long-running task in a modal context thread needs to synchronously
+	 * execute some operation on the UI thread, which operation needs to read
+	 * or write the editing domain. e.g.,
+	 * </p>
+	 * <pre>
+	 *     Runnable uiBoundAction = // ...
+	 *     Runnable privileged = domain.createPrivilegedRunnable(uiBoundAction);
+	 *     Display.syncExec(privileged);
+	 * </pre>
+	 * <p>
+	 * Note that it is <em>critically important</em> that this mechanism only
+	 * be used to share a transaction with another thread <em>synchronously</em>.
+	 * Or, more generally, during the execution of the privileged runnable, the
+	 * thread that originally owned the transaction no longer does, and may not
+	 * access the editing domain.  Upon completion of the privileged runnable,
+	 * the transaction is returned to its original owner.
+	 * </p>
+	 * <p>
+	 * Also, the resulting runnable may only be executed while the currently
+	 * active transaction remains active.  Any attempt to execute the runnable
+	 * after this transaction has committed or while a nested transaction is
+	 * active will result in an {@link IllegalStateException}.
+	 * </p>
+	 * 
+	 * @param runnable a runnable to execute in the context of the active
+	 *     transaction, on any thread
+	 *     
+	 * @return the privileged runnable.  If the wrapped <code>runnable</code>
+	 *     is a {@link RunnableWithResult}, then the privileged runnable will
+	 *     inherit its result when it completes
+	 * 
+	 * @throws IllegalStateException on an attempt by a thread that does not
+	 *     own the active transaction to create a privileged runnable.  This
+	 *     prevents "theft" of transactions by malicious code.  Note also
+	 *     that this implies an exception if there is no active transaction at
+	 *     the time of this call
+	 */
+	RunnableWithResult createPrivilegedRunnable(Runnable runnable);
 	
 	/**
 	 * Disposes of this editing domain and any resources that it has allocated.

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.8 2006/04/11 14:51:15 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.9 2006/04/12 22:09:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -65,7 +65,7 @@ public class TransactionImpl
 	final long id;
 	
 	private final TransactionalEditingDomain domain;
-	private final Thread owner;
+	private Thread owner;
 	private final boolean readOnly;
 	private final Map options;
 	
@@ -540,6 +540,46 @@ public class TransactionImpl
 		} else {
 			this.triggers = triggerChange.chain(triggerCommand);
 		}
+	}
+	
+	// Documentation copied from the inherited specification
+	public void startPrivileged(PrivilegedRunnable runnable) {
+		if (runnable.getTransaction() != this) {
+			throw new IllegalArgumentException(
+					"runnable has no privileges on this transaction"); //$NON-NLS-1$
+		}
+		
+		InternalTransactionalEditingDomain internalDomain =
+			(InternalTransactionalEditingDomain) getEditingDomain();
+		
+		if (!isActive() || (internalDomain.getActiveTransaction() != this)) {
+			throw new IllegalStateException(
+					"transaction is not the domain's current transaction"); //$NON-NLS-1$
+		}
+		
+		internalDomain.startPrivileged(runnable);
+		
+		owner = Thread.currentThread();
+	}
+
+	// Documentation copied from the inherited specification
+	public void endPrivileged(PrivilegedRunnable runnable) {
+		if (runnable.getTransaction() != this) {
+			throw new IllegalArgumentException(
+					"runnable has no privileges on this transaction"); //$NON-NLS-1$
+		}
+		
+		InternalTransactionalEditingDomain internalDomain =
+			(InternalTransactionalEditingDomain) getEditingDomain();
+		
+		if (!isActive() || (internalDomain.getActiveTransaction() != this)) {
+			throw new IllegalStateException(
+					"transaction is not the domain's current transaction"); //$NON-NLS-1$
+		}
+		
+		owner = runnable.getOwner();
+		
+		internalDomain.endPrivileged(runnable);
 	}
 	
 	public String toString() {

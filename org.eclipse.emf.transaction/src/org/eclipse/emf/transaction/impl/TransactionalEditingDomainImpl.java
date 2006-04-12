@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.4 2006/03/22 19:53:49 cmcgee Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.5 2006/04/12 22:09:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -66,8 +66,10 @@ public class TransactionalEditingDomainImpl
 	private volatile InternalTransaction activeTransaction;
 	private TransactionValidator validator;
 	
-	private final Lock transactionLock = new Lock();
-	private final Lock writeLock = new Lock();
+	private Lock transactionLock = new Lock();
+	private Lock writeLock = new Lock();
+	private final List transactionLockStack = new java.util.ArrayList();
+	private final List writeLockStack = new java.util.ArrayList();
 	
 	private final List precommitListeners = new java.util.ArrayList();
 	private final List aggregatePrecommitListeners = new java.util.ArrayList();
@@ -744,6 +746,67 @@ public class TransactionalEditingDomainImpl
 			// remove the unbatched notification from our reusable cache
 			unbatchedNotifications.remove(0);
 		}
+	}
+	
+	// Documentation copied from the inherited specification
+	public final RunnableWithResult createPrivilegedRunnable(Runnable runnable) {
+		InternalTransaction tx = getActiveTransaction();
+		
+		if ((tx == null) || (tx.getOwner() != Thread.currentThread())) {
+			throw new IllegalStateException(
+					"active transaction not owned by caller"); //$NON-NLS-1$
+		}
+		
+		return new PrivilegedRunnable(tx, runnable);
+	}
+	
+	// Documentation copied from the inherited specification
+	public void startPrivileged(PrivilegedRunnable runnable) {
+		if (runnable.getTransaction().getEditingDomain() != this) {
+			throw new IllegalArgumentException(
+					"runnable has no privileges on this editing domain"); //$NON-NLS-1$
+		}
+		
+		synchronized (this) {
+			// push the current locks onto the stack to restore them later
+			transactionLockStack.add(0, transactionLock);
+			writeLockStack.add(0, writeLock);
+			
+			transactionLock = new Lock();
+			writeLock = new Lock();
+		}
+		
+		// should be trivially easy
+		try {
+			acquire((InternalTransaction) runnable.getTransaction());
+		} catch (InterruptedException e) {
+			// should not happen
+			Tracing.catching(TransactionalEditingDomainImpl.class, "startPrivileged", e); //$NON-NLS-1$
+			IStatus status = new Status(
+				IStatus.ERROR,
+				EMFTransactionPlugin.getPluginId(),
+				EMFTransactionStatusCodes.PRIVILEGED_RUNNABLE_FAILED,
+				Messages.privilegedRunnable,
+				e);
+			EMFTransactionPlugin.INSTANCE.log(status);
+		}
+	}
+
+	// Documentation copied from the inherited specification
+	public void endPrivileged(PrivilegedRunnable runnable) {
+		if (runnable.getTransaction().getEditingDomain() != this) {
+			throw new IllegalArgumentException(
+					"runnable has no privileges on this editing domain"); //$NON-NLS-1$
+		}
+		
+		release((InternalTransaction) runnable.getTransaction());
+		
+		synchronized (this) {
+			// pop the current locks from the stack
+			transactionLock = (Lock) transactionLockStack.remove(0);
+			writeLock = (Lock) writeLockStack.remove(0);
+		}
+		
 	}
 	
 	// Documentation copied from the inherited specification
