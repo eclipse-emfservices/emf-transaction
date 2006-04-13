@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+		<link rel="Stylesheet" type="text/css" href="doc.css" />
+		<title>EMFT Workspace Integration Overview</title>
+	</head>
+	<body>
+		<h1><a name="top">EMFT Workspace Integration Overview</a></h1>
+		<p>
+			As a second part of the transaction framework there is a support layer for using the <code>TransactionalEditingDomain</code>
+			in the context of an eclipse <code>IOperationHistory</code>. This support layer can be found in the <code>org.eclipse.emf.workspace</code>
+			plugin and has the following main classes that can be used by clients:
+			<ol>
+				<li>
+					The <code>WorkspaceEditingDomainFactory</code> can be used to create a new transactional editing domain
+					that delegates it command execution, undo and redo to an <code>IOperationHistory</code> that is either provided
+					by the client or retrieved from the <code>OperationHistoryFactory</code>. Any EMF-style commands executed
+					on this special transactional editing domain's command stack will be wrapped and executed on the operation history.
+				</li>
+				<li>
+					All <code>IOperation</code>s that will be making changes to a workspace transactional editing domain
+					can subclass the <code>AbstractEMFOperation</code> class in order to obtain the necessary write lock.
+					Note that undo and redo is handled automatically because the changes made during the operation's execution
+					are recorded. The <code>CompositeEMFOperation</code> allows clients to compose operations that change
+					their editing domain and those that makes changes to non-EMF objects. It is not recommended that clients
+					make changes to non-EMF objects within an AbstractEMFOperation.
+				</li>
+				<li>
+					Clients can determine if an <code>IOperation</code> affects their EMF resource(s) by
+					calling <code>ResourceUndoContext.getAffectedResources()</code>. This is particularly useful for
+					<code>IOperationHistoryListener</code>s to determine whether or not a completed operation
+					should be tagged with their own <code>IUndoContext</code> to signal that this operation should
+					show up on their undo/redo menus.
+				</li>
+				<li>
+					A <code>WorkspaceSynchronizer</code> is provided to help clients keep their editing domains
+					synchronized with changes that are being made to file in the eclipse workspace.
+				</li>
+			</ol>
+		</p>
+		
+		<p>
+			Please refer to the tutorial <a href="../../tutorials/workspaceTutorial.html">Workspace Integration Tutorial</a>.
+		</p>
+
+		<hr/>
+
+		<p>
+			<a href="http://www.eclipse.org/legal/epl-v10.html">Copyright (c) 2000,2005 IBM Corporation and others. All Rights Reserved.</a>
+		</p>
+	</body>
+</html>

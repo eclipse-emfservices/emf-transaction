@@ -2,6 +2,18 @@
 <?NLS TYPE="org.eclipse.help.toc"?>
 
 <toc label="EMF Transaction Programmer&apos;s Guide">
+	<anchor id="overviews-before" />
+	<topic label="Overviews">
+		<topic label="Transaction Overview" href="references/overview/transactionOverview.html" />
+	</topic>
+	<anchor id="overviews-after" />
+
+	<anchor id="tutorial-before" />
+	<topic label="Tutorials">	
+		<topic label="Transaction Tutorial" href="tutorials/transactionTutorial.html" />
+	</topic>
+	<anchor id="tutorial-after" />
+	
 	<anchor id="reference-before" />
 	<topic label="Reference">
 		<anchor id="reference-ext-pt-before" />
