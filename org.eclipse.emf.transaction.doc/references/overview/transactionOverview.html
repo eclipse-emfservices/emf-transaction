@@ -10,11 +10,11 @@
 		<p>
 			The transaction framework provides the capability of managing access to an editing domain by
 			multiple reading and writing threads. It also provides a facility to register and share an
-			editing domain amongst different clients and listeners. Special resource set listeners are
-			provided with batched notifications. The resource set listener has the option to append changes
-			before the transaction is committed (pre-commit) or receive only the notifications of
-			transactions that were validated and not rolled-back (post-commit). The following are the 
-			main extension points and classes to be used with the transaction framework:
+			editing domain amongst different clients and listeners. Resource set listeners are defined
+			in the transaction layer and are provided with notifications in batches. The resource set listener 
+			has the option to append changes before the transaction is committed (pre-commit) or receive only 
+			the notifications of transactions that were validated and not rolled-back (post-commit). 
+			The following are the main extension points and classes to be used with the transaction framework:
 			<ol>
 				<li>
 					The extension point
@@ -29,12 +29,14 @@
 					constructed. A listener can be registered against all, one or many editing domains.
 				</li>
 				<li>
-					The <code>TransactionalEditingDomain</code> has two singletons called <code>Registry</code> and <code>Factory</code>. The <code>Registry</code> singleton
+					The <code>TransactionalEditingDomain</code> has two interfaces called <code>Registry</code> and <code>Factory</code>. 
+					The <code>Registry</code> singleton
 					can be used to add new transactional editing domains to the registry using a unique identifier or
-					to retrieve (or construct) an editing domain from its unique identifier. The <code>Factory</code> singleton is used
+					to retrieve (or construct) an editing domain from its unique identifier. The <code>Factory</code> has a default
+					implementation that is used
 					to construct new transactional editing domains. A <code>TransactionalEditingDomain</code> allows clients to
 					add and remove their <code>ResourceSetListeners</code> as well as allowing clients to perform exclusive reads blocking
-					any other reading / writing threads. Write access is attained by executing an EMF-style command
+					any other reading / writing threads. Write access is obtained by executing an EMF-style command
 					on the editing domain's command stack.
 				</li>
 				<li>
@@ -58,7 +60,7 @@
 		<hr/>
 
 		<p>
-			<a href="http://www.eclipse.org/legal/epl-v10.html">Copyright (c) 2000,2005 IBM Corporation and others. All Rights Reserved.</a>
+			<a href="http://www.eclipse.org/legal/epl-v10.html">Copyright (c) 2006 IBM Corporation and others. All Rights Reserved.</a>
 		</p>
 	</body>
 </html>

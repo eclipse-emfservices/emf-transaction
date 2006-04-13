@@ -21,10 +21,10 @@
 		<h2><a name="overview">Overview</a></h2>
 		<p>
 			The EMF transaction framework provides a means to manage multiple read/write threads on one
-			EMF-style editing domain. Transactional editing domains can be registered against a unique identifier
+			EMF-style editing domain. Transactional editing domains can be registered with a unique identifier
 			and later retrieved (or constructed). These editing domains conform to the standard EMF editing
-			domain contract and can be used with little modification in the context of regular EMF-style
-			commands.
+			domain contract and can be used with little modification to client code to make it work in the context 
+			of regular EMF-style commands.
 		</p>
 		<p>	
 			Listeners receive events in batches and can be registered
@@ -33,17 +33,12 @@
 			opportunity to append more changes onto the end of the transaction. If a transaction is rolled back
 			then listeners are not given the notification of the post-commit.
 		</p>
-		<p>
-			An added benefit of using transactional editing domains is that commands do not require
-			code for undo and redo. The editing domain can record what is changed in a command so that
-			undo and redo are automatic.
-		</p>
 
 		<p class="small">[<a href="#top">back to top</a>]</p>
 
 		<h2><a name="refs">References</a></h2>
 		<p>
-			This tutorial assumes that the reader has a knowledge of EMF, and the eclipse PDE development
+			This tutorial assumes that the reader has knowledge of EMF and the eclipse PDE development
 			environment. It is essential that the reader understands the basic reflective mechanisms of EMF 
 			as well as its adapter/notifier system for broadcasting events.
 		</p>
@@ -85,7 +80,7 @@
    &lt;/extension&gt;
 </pre>
 		<p>
-			Here are the implementations of the two classes mentioned in the XML:
+			Here is the implementation of the editing domain factory:
 		</p>
 		
 <pre class="codeblock">
@@ -113,58 +108,45 @@
 
 <pre class="codeblock">
 public class MyListener
-	extends ResourceSetListenerImpl {
-	
-	public boolean isPostcommitOnly() {
-		return false;
-	}
-	
-	public boolean isPrecommitOnly() {
-		return false;
-	}
-	
-	public void resourceSetChanged(ResourceSetChangeEvent event) {
-		System.out.println("A change has been made with "+event.getNotifications().size()+" notifications produced.");
-	}
-	
-	public Command transactionAboutToCommit(ResourceSetChangeEvent event)
-		throws RollbackException {
-		
-		List notifications = event.getNotifications();
-		CompoundCommand cc = new CompoundCommand();
-		Set handledLibraries = new HashSet();
-		
-		for (Iterator i = notifications.iterator(); i.hasNext();) {
-			Notification n = (Notification)i.next();
-			
-			if (n.getNotifier() instanceof EObject && !handledLibraries.contains(n)) {
-				EObject notifier = (EObject)n.getNotifier();
-				if (notifier.eClass() == EXTLibraryPackage.eINSTANCE.getLibrary()) {
-					final Library l = (Library)notifier;
-					String name = l.getName();
-					
-					// Libraries should have some name
-					if (name == null || name.equals("")) {
-						
-						// We use a RecordingCommand because we get undo/redo for free
-						//  and we must support undo/redo if we are going to be added to
-						//  a transaction that might be undone / redone.
-						cc.append(new RecordingCommand(event.getEditingDomain()) {
-							protected void doExecute() {
-								l.setName("SomeName");
-							}
-						});
-					}
-					
-					handledLibraries.add(l);
-				}
-			}
-		}
-		
-		// It is important to return null if we have nothing to 
-		//  contribute to this transaction.
-		return cc.isEmpty() ? null : cc;
-	}
+   extends ResourceSetListenerImpl {
+   
+   public void resourceSetChanged(ResourceSetChangeEvent event) {
+      System.out.println("A change has been made with "+event.getNotifications().size()+" notifications produced.");
+   }
+   
+   public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+      throws RollbackException {
+      
+      List notifications = event.getNotifications();
+      CompoundCommand cc = new CompoundCommand();
+      Set handledLibraries = new HashSet();
+      
+      for (Iterator i = notifications.iterator(); i.hasNext();) {
+         Notification n = (Notification)i.next();
+         
+         if (n.getNotifier() instanceof EObject && !handledLibraries.contains(n)) {
+            EObject notifier = (EObject)n.getNotifier();
+            if (notifier.eClass() == EXTLibraryPackage.eINSTANCE.getLibrary()) {
+               final Library l = (Library)notifier;
+               String name = l.getName();
+               
+               // Libraries should have some name
+               if (name == null || name.equals("")) {
+                  // We can use any EMF command here
+                  cc.append(new SetCommand(event.getEditingDomain(),
+                        l, EXTLibraryPackage.eINSTANCE.getLibrary_Name(), 
+                        "SomeName"));
+               }
+               
+               handledLibraries.add(l);
+            }
+         }
+      }
+      
+      // It is important to return null if we have nothing to 
+      //  contribute to this transaction.
+      return cc.isEmpty() ? null : cc;
+   }
 }
 </pre>	
 		<p>
@@ -172,8 +154,10 @@ public class MyListener
 			report to the console how many notifications were batched at the completion of each root transaction.
 			It declares that it is interested in both the post commit and pre commit events by overriding
 			the <code>isPrecommitOnly</code> and <code>isPostCommitOnly</code> methods.
-			Note that the listener makes no attempt to modify the state of any EObjects in the <code>resourceSetChanged</code>
-			as this would constitute a protocol violation. As an optimization,
+			Note that the listener makes no attempt to modify the state of any EObjects
+			as this would constitute a protocol violation. The listener makes an attempt to modify EObjects
+			only as a command that it returns in the <code>transactionAboutToCommit</code>. At no point
+			did the listener attempt to execute this command however. As an optimization,
 			the listener ensures that it will return null for <code>transactionAboutToCommit</code> if
 			it has nothing to add to the transaction.
 		</p>
@@ -191,7 +175,8 @@ public class MyListener
 		</p>
 
 <pre class="codeblock">
-		final TransactionalEditingDomain domain = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain("myExample");
+final TransactionalEditingDomain domain = 
+		TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain("myExample");
 </pre>		
 
 		<p>
@@ -202,17 +187,17 @@ public class MyListener
 		</p>
 
 <pre class="codeblock">
-		final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.extlibrary"));
-		
-		// We execute this command on the command stack because otherwise, we will not
-		//  have write permissions on the editing domain.
-		domain.getCommandStack().execute(new RecordingCommand(domain) {
-			protected void doExecute() {
-				Library l = EXTLibraryFactory.eINSTANCE.createLibrary();
-				r.getContents().add(l);
-				l.setName("");
-			}
-		});
+final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.extlibrary"));
+
+// We execute this command on the command stack because otherwise, we will not
+//  have write permissions on the editing domain.
+domain.getCommandStack().execute(new RecordingCommand(domain) {
+	protected void doExecute() {
+		Library l = EXTLibraryFactory.eINSTANCE.createLibrary();
+		r.getContents().add(l);
+		l.setName("");
+	}
+});
 </pre>
 
 		<p>
@@ -222,33 +207,33 @@ public class MyListener
 		</p>
 
 <pre class="codeblock">
-		Runnable getLibraryName = new Runnable() {
-			public void run() {
-				// Any reading that is done on the editing domain must be done inside an
-				//  runExclusive call to ensure we have the read lock
-				String libraryName = null;
-				try {
-					libraryName = (String)domain.runExclusive(new RunnableWithResult.Impl() {
-						public void run() {
-							// Find the library's name and pass it back to the caller.
-							setResult(((Library)r.getContents().get(0)).getName());
-						}
-					});
-				} catch (InterruptedException e) {
-					// Handle the interrupted exception in an graceful way ...
+Runnable getLibraryName = new Runnable() {
+	public void run() {
+		// Any reading that is done on the editing domain must be done inside an
+		//  runExclusive call to ensure we have the read lock
+		String libraryName = null;
+		try {
+			libraryName = (String)domain.runExclusive(new RunnableWithResult.Impl() {
+				public void run() {
+					// Find the library's name and pass it back to the caller.
+					setResult(((Library)r.getContents().get(0)).getName());
 				}
-				
-				// The library name won't be empty because our listener will
-				//  give it a default name since we gave it an empty name.
-				System.out.println(libraryName);
-			}
-		};
+			});
+		} catch (InterruptedException e) {
+			// Handle the interrupted exception in an graceful way ...
+		}
 		
-		Thread t1 = new Thread(getLibraryName);
-		Thread t2 = new Thread(getLibraryName);
-		
-		t1.start();
-		t2.start();
+		// The library name won't be empty because our listener will
+		//  give it a default name since we gave it an empty name.
+		System.out.println(libraryName);
+	}
+};
+
+Thread t1 = new Thread(getLibraryName);
+Thread t2 = new Thread(getLibraryName);
+
+t1.start();
+t2.start();
 </pre>
 
 		<p class="small">[<a href="#top">back to top</a>]</p>
@@ -272,7 +257,7 @@ public class MyListener
 		<hr />
 
 		<p>
-			<a href="http://www.eclipse.org/legal/epl-v10.html">Copyright (c) 2000,2005 IBM Corporation and others. All Rights Reserved.</a>
+			<a href="http://www.eclipse.org/legal/epl-v10.html">Copyright (c) 2006 IBM Corporation and others. All Rights Reserved.</a>
 		</p>
 	</body>
 </html>

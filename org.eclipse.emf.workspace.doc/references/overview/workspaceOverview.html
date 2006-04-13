@@ -23,11 +23,12 @@
 					can subclass the <code>AbstractEMFOperation</code> class in order to obtain the necessary write lock.
 					Note that undo and redo is handled automatically because the changes made during the operation's execution
 					are recorded. The <code>CompositeEMFOperation</code> allows clients to compose operations that change
-					their editing domain and those that makes changes to non-EMF objects. It is not recommended that clients
-					make changes to non-EMF objects within an AbstractEMFOperation.
+					their editing domain and those that make changes to non-EMF objects. Client must not
+					make changes to non-EMF objects within an AbstractEMFOperation because undo/redo is expected to
+					be handled automatically by recording changes to EMF objects.
 				</li>
 				<li>
-					Clients can determine if an <code>IOperation</code> affects their EMF resource(s) by
+					Clients can determine if an operation affects their EMF resource(s) by
 					calling <code>ResourceUndoContext.getAffectedResources()</code>. This is particularly useful for
 					<code>IOperationHistoryListener</code>s to determine whether or not a completed operation
 					should be tagged with their own <code>IUndoContext</code> to signal that this operation should
@@ -35,7 +36,7 @@
 				</li>
 				<li>
 					A <code>WorkspaceSynchronizer</code> is provided to help clients keep their editing domains
-					synchronized with changes that are being made to file in the eclipse workspace.
+					synchronized with changes that are being made to files in the eclipse workspace.
 				</li>
 			</ol>
 		</p>
@@ -47,7 +48,7 @@
 		<hr/>
 
 		<p>
-			<a href="http://www.eclipse.org/legal/epl-v10.html">Copyright (c) 2000,2005 IBM Corporation and others. All Rights Reserved.</a>
+			<a href="http://www.eclipse.org/legal/epl-v10.html">Copyright (c) 2006 IBM Corporation and others. All Rights Reserved.</a>
 		</p>
 	</body>
 </html>
