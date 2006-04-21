@@ -12,13 +12,21 @@
  *
  * </copyright>
  *
- * $Id: TransactionUtil.java,v 1.1 2006/01/30 21:40:52 cdamus Exp $
+ * $Id: TransactionUtil.java,v 1.2 2006/04/21 14:59:10 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
+import java.util.Iterator;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+
+import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EStructuralFeature;
+import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.util.EContentsEList;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.edit.domain.IEditingDomainProvider;
 import org.eclipse.emf.transaction.Transaction;
@@ -124,5 +132,150 @@ public class TransactionUtil {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Obtains a dynamic view on the "proper" contents of an {@link EObject}.
+	 * These are the contained objects that are stored in the same resource
+	 * as the <code>eobject</code>.
+	 * 
+	 * @param eobject a model element
+	 * @return all of its directly- and properly-contained elements
+	 */
+	public static EList getProperContents(EObject eobject) {
+		return new EContentsEList(eobject) {
+
+			protected boolean resolve() {
+				return false;
+			}
+			
+			public int size() {
+				int result = 0;
+				
+				for (Iterator iter = newNonResolvingListIterator(); iter.hasNext(); iter.next()) {
+					result++;
+				}
+				
+				return result;
+			}
+			
+			public boolean isEmpty() {
+				return size() == 0;
+			}
+			
+			public Object basicGet(int index) {
+				Object result = null;
+				
+				if (index < 0) {
+					throw new IndexOutOfBoundsException();
+				}
+				
+				try {
+					Iterator iter = newNonResolvingListIterator();
+					for (int i = 0; i <= index; i++) {
+						result = iter.next();
+					}
+				} catch (NoSuchElementException e) {
+					throw new IndexOutOfBoundsException();
+				}
+				
+				return result;
+			}
+			
+			protected ListIterator newNonResolvingListIterator() {
+				final FeatureListIterator delegate =
+					(FeatureListIterator) super.newNonResolvingListIterator();
+				
+				return new FeatureListIterator() {
+					private Object nextResult = null;
+					private int nextIndex = 0;
+					private Object previousResult = null;
+					private int previousIndex = -1;
+					
+					private boolean isCrossResourceContained(Object obj) {
+						InternalEObject eobj = (InternalEObject) obj;
+						
+						return eobj.eIsProxy() || (eobj.eDirectResource() != null);
+					}
+					
+					public boolean hasNext() {
+						while ((nextResult == null) && delegate.hasNext()) {
+							nextResult = delegate.next();
+							
+							if (isCrossResourceContained(nextResult)) {
+								nextResult = null;
+							}
+						}
+						
+						return nextResult != null;
+					}
+
+					public Object next() {
+						if (!hasNext()) {
+							// must check hasNext() in order to initialize
+							//    the nextResult
+							throw new NoSuchElementException();
+						}
+						
+						Object result = nextResult;
+						nextResult = null;
+						previousResult = null;
+						nextIndex++;
+						previousIndex++;
+						return result;
+					}
+
+					public boolean hasPrevious() {
+						while ((previousResult == null) && delegate.hasPrevious()) {
+							previousResult = delegate.previous();
+							
+							if (isCrossResourceContained(previousResult)) {
+								previousResult = null;
+							}
+						}
+						
+						return previousResult != null;
+					}
+
+					public Object previous() {
+						if (!hasPrevious()) {
+							// must check hasPrevious() in order to initialize
+							//    the previousResult
+							throw new NoSuchElementException();
+						}
+						
+						Object result = previousResult;
+						previousResult = null;
+						nextResult = null;
+						nextIndex--;
+						previousIndex--;
+						return result;
+					}
+
+					public int nextIndex() {
+						return nextIndex;
+					}
+
+					public int previousIndex() {
+						return previousIndex;
+					}
+					
+					public EStructuralFeature feature() {
+						return delegate.feature();
+					}
+
+					public void remove() {
+						delegate.remove();
+					}
+
+					public void add(Object arg0) {
+						delegate.add(arg0);
+					}
+
+					public void set(Object arg0) {
+						delegate.set(arg0);
+					}
+				};
+			}};
 	}
 }

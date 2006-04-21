@@ -12,12 +12,13 @@
  *
  * </copyright>
  *
- * $Id: ReadFilter.java,v 1.3 2006/01/06 16:16:22 cdamus Exp $
+ * $Id: ReadFilter.java,v 1.4 2006/04/21 14:59:07 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.transaction.impl.ResourceSetManager;
 
@@ -60,8 +61,27 @@ class ReadFilter extends NotificationFilter {
 				return checkResource(notification);
 			}
 			
-			return (!(notifier instanceof EObject)
-					|| isLoadingOrUnloading(((EObject) notifier).eResource()));
+			if (notifier instanceof EObject) {
+				EObject eobject = (EObject) notifier;
+				
+				// ignore changes to a container feature because these will
+				//    always be accomanied by changes in the opposite
+				//    containment feature (because a container is defined by
+				//    being the opposite of a containment).  A special case is
+				//    resolution of a containment proxy, in which case the
+				//    eInverseAdd() will notify on the container feature but
+				//    we do not get a containment notification; this is a
+				//    read-compatible change
+				Object feature = notification.getFeature();
+				if ((feature instanceof EReference)
+						&& ((EReference) feature).isContainer()) {
+					return true;
+				}
+				
+				return isLoadingOrUnloading(eobject.eResource());
+			}
+			
+			return true;  // not an EObject
 		default:
 			// any other event type is not one that is supported by EMF, so
 			//    we will not prevent it

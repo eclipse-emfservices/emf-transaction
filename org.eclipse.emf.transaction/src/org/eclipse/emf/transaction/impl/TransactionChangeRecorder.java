@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorder.java,v 1.1 2006/01/30 19:47:55 cdamus Exp $
+ * $Id: TransactionChangeRecorder.java,v 1.2 2006/04/21 14:59:10 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -34,6 +34,7 @@ import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.internal.l10n.Messages;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 
 /**
  * The change recorder for a {@link org.eclipse.emf.transaction.TransactionalEditingDomain},
@@ -114,12 +115,18 @@ public class TransactionChangeRecorder
 	 * </ul>
 	 */
 	public void setTarget(Notifier target) {
-		// TODO: Account for containment proxies
-		Collection contents = (target instanceof EObject)? ((EObject) target).eContents()
-			: (target instanceof ResourceSet)? ((ResourceSet) target).getResources()
-				: (target instanceof Resource)? ((Resource) target).getContents()
-					: null;
-
+		Collection contents;
+		
+		if (target instanceof EObject) {
+			contents = TransactionUtil.getProperContents((EObject) target);
+		} else if (target instanceof ResourceSet) {
+			contents = ((ResourceSet) target).getResources();
+		} else if (target instanceof Resource) {
+			contents = ((Resource) target).getContents();
+		} else {
+			contents = null;
+		}
+		
 		if (contents != null) {
 			for (Iterator i = contents.iterator(); i.hasNext();) {
 				Notifier notifier = (Notifier) i.next();
@@ -136,7 +143,42 @@ public class TransactionChangeRecorder
 	 * transaction (if any).
 	 */
 	public void notifyChanged(Notification notification) {
-		super.notifyChanged(notification);
+		boolean record = true;
+		
+		switch (notification.getEventType()) {
+		case Notification.SET:
+		case Notification.UNSET:
+		case Notification.ADD:
+		case Notification.ADD_MANY:
+		case Notification.REMOVE:
+		case Notification.REMOVE_MANY:
+			Resource sourceRes = null;
+			Object notifier = notification.getNotifier();
+			
+			if (notifier instanceof Resource) {
+				sourceRes = (Resource) notifier;
+			} else if (notifier instanceof EObject) {
+				sourceRes = ((EObject) notifier).eResource();
+			}
+			
+			if ((sourceRes != null) && !ResourceSetManager.getInstance().isLoaded(sourceRes)) {
+				// resource load and unload are not undoable changes
+				record = false;
+			}
+			
+			break;
+		}
+		
+		if (record || !isRecording()) {
+			super.notifyChanged(notification);
+		} else {
+			try {
+				recording = false;
+				super.notifyChanged(notification);
+			} finally {
+				recording = true;
+			}
+		}
 		
 		if (notification.getEventType() != Notification.REMOVING_ADAPTER) {
 			// the removing adapter event is only sent to me when I am removed
@@ -147,7 +189,7 @@ public class TransactionChangeRecorder
 				processResourceSetNotification(notification);
 			} else if (notifier instanceof Resource) {
 				processResourceNotification(notification);
-			} else {
+			} else if (record) {
 				processObjectNotification(notification);
 			}
 		}
@@ -256,5 +298,4 @@ public class TransactionChangeRecorder
 			throw ise;
 		}
 	}
-
 }

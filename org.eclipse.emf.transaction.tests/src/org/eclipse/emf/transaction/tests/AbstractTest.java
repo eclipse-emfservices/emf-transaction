@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.3 2006/01/30 19:47:50 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.4 2006/04/21 14:59:17 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -157,13 +157,7 @@ public class AbstractTest
 		
 		root = null;
 		if (testResource != null) {
-			if (testResource.isLoaded()) {
-				testResource.unload();
-			}
-			
-			if (testResource.getResourceSet() != null) {
-				testResource.getResourceSet().getResources().remove(testResource);
-			}
+			unloadAndRemove(testResource);
 			testResource = null;
 		}
 		
@@ -205,6 +199,16 @@ public class AbstractTest
 		}
 		
 		return result;
+	}
+	
+	protected void unloadAndRemove(Resource res) {
+		if (res.isLoaded()) {
+			res.unload();
+		}
+		
+		if (res.getResourceSet() != null) {
+			res.getResourceSet().getResources().remove(res);
+		}
 	}
 	
 	/**
@@ -319,7 +323,7 @@ public class AbstractTest
 	 * @param object the object
 	 * @return its name
 	 */
-	private String getName(EObject object) {
+	protected String getName(EObject object) {
 		return (String) GetName.INSTANCE.doSwitch(object);
 	}
 	

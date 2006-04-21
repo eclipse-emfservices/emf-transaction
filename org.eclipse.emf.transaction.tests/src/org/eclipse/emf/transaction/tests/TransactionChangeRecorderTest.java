@@ -1,0 +1,329 @@
+/**
+ * <copyright>
+ *
+ * Copyright (c) 2006 IBM Corporation and others.
+ * All rights reserved.   This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   IBM - Initial API and implementation
+ *
+ * </copyright>
+ *
+ * $Id: TransactionChangeRecorderTest.java,v 1.1 2006/04/21 14:59:17 cdamus Exp $
+ */
+package org.eclipse.emf.transaction.tests;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Iterator;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
+import org.eclipse.emf.common.notify.Notifier;
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EClass;
+import org.eclipse.emf.ecore.ENamedElement;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.EcorePackage;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.util.InternalEList;
+import org.eclipse.emf.transaction.impl.TransactionChangeRecorder;
+import org.eclipse.emf.transaction.util.TransactionUtil;
+
+
+/**
+ * Tests the <code>TransactionChangeRecorder</code> class, specifically.
+ *
+ * @author Christian W. Damus (cdamus)
+ */
+public class TransactionChangeRecorderTest extends AbstractTest {
+	
+	private Resource rootResource;
+	private Resource nestedResource1;
+	private Resource nestedResource2;
+	
+	public TransactionChangeRecorderTest(String name) {
+		super(name);
+	}
+
+	public static Test suite() {
+		return new TestSuite(TransactionChangeRecorderTest.class, "Change Recorder Tests"); //$NON-NLS-1$
+	}
+
+	/**
+	 * Tests that the change recorder did not cause the nested resources to load
+	 * when loading in a read-only transaction (not creating change descriptions).
+	 */
+	public void test_nestedNotLoaded_readOnlyTX() {
+		startReading();
+		loadRoot();
+		
+		assertTrue(rootResource.isLoaded());
+		
+		assertFalse(nestedResource1.isLoaded());
+		assertFalse(nestedResource2.isLoaded());
+	}
+	
+	/**
+	 * Tests that the change recorder is correctly propagated to the objects in
+	 * a resource when it is loaded when loading in a read-only transaction
+	 * (not creating change descriptions).
+	 */
+	public void test_changeRecorderPropagatedOnLoad_readOnlyTX() {
+		startReading();
+		loadRoot();
+		
+		TransactionChangeRecorder recorder = getRecorder(rootResource);
+		
+		EPackage pkg = findPackage("root/nested1", true); //$NON-NLS-1$
+		assertSame(recorder, getRecorder(pkg));
+		
+		EList properContents = TransactionUtil.getProperContents(pkg);
+		assertEquals(1, properContents.size());
+		assertSame(EcorePackage.Literals.ECLASS, ((EObject) properContents.get(0)).eClass());
+		assertSame(recorder, getRecorder((Notifier) properContents.get(0)));
+		
+		InternalEList contents = (InternalEList) pkg.eContents();
+		assertEquals(2, contents.size());
+		
+		// check that the EPackage is not yet resolved
+		EObject obj = (EObject) contents.basicGet(0);
+		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
+		obj = (EObject) contents.basicGet(1);
+		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
+		
+		assertFalse(nestedResource1.isLoaded());
+		assertFalse(nestedResource2.isLoaded());
+		
+		// force load of the first nested resource by looking for its package
+		pkg = findPackage("root/nested1/nested2", true); //$NON-NLS-1$
+		assertFalse(pkg.eIsProxy());
+		assertSame(recorder, getRecorder(pkg));
+		
+		assertTrue(nestedResource1.isLoaded());
+		assertFalse(nestedResource2.isLoaded());
+	}
+
+	/**
+	 * Tests that the <code>setTarget()</code> method does not cause proxy
+	 * resolution.
+	 */
+	public void test_propagation_setTarget() {
+		startReading();
+		
+		TransactionChangeRecorder recorder = getRecorder(rootResource);
+		rootResource.eAdapters().remove(recorder);
+		
+		loadRoot();
+		
+		commit();
+		
+		startWriting();
+		
+		assertFalse(nestedResource1.isLoaded());
+		assertFalse(nestedResource2.isLoaded());
+		
+		rootResource.eAdapters().add(recorder);
+		
+		assertFalse(nestedResource1.isLoaded());
+		assertFalse(nestedResource2.isLoaded());
+		
+		// our editing domain doesn't know that this resource was loaded, so
+		//   we have to unload it behind its back also, otherwise tearDown()
+		//   will throw IllegalStateException
+		rootResource.eAdapters().add(recorder);
+		unloadAndRemove(rootResource);
+		
+		commit();
+	}
+
+	/**
+	 * Tests that the change recorder did not cause the nested resources to load
+	 * when loading in a read-write transaction (creating change descriptions).
+	 */
+	public void test_nestedNotLoaded_writeTX() {
+		startWriting();
+		loadRoot();
+		
+		assertTrue(rootResource.isLoaded());
+		
+		assertFalse(nestedResource1.isLoaded());
+		assertFalse(nestedResource2.isLoaded());
+	}
+	
+	/**
+	 * Tests that the change recorder is correctly propagated to the objects in
+	 * a resource when it is loadedwhen loading in a read-write transaction
+	 * (creating change descriptions).
+	 */
+	public void test_changeRecorderPropagatedOnLoad_writeTX() {
+		startWriting();
+		loadRoot();
+		
+		TransactionChangeRecorder recorder = getRecorder(rootResource);
+		
+		EPackage pkg = findPackage("root/nested1", true); //$NON-NLS-1$
+		assertSame(recorder, getRecorder(pkg));
+		
+		EList properContents = TransactionUtil.getProperContents(pkg);
+		assertEquals(1, properContents.size());
+		assertSame(EcorePackage.Literals.ECLASS, ((EObject) properContents.get(0)).eClass());
+		assertSame(recorder, getRecorder((Notifier) properContents.get(0)));
+		
+		InternalEList contents = (InternalEList) pkg.eContents();
+		assertEquals(2, contents.size());
+		
+		// check that the EPackage is not yet resolved
+		EObject obj = (EObject) contents.basicGet(0);
+		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
+		obj = (EObject) contents.basicGet(1);
+		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
+		
+		assertFalse(nestedResource1.isLoaded());
+		assertFalse(nestedResource2.isLoaded());
+		
+		// force load of the first nested resource by looking for its package
+		pkg = findPackage("root/nested1/nested2", true); //$NON-NLS-1$
+		assertFalse(pkg.eIsProxy());
+		assertSame(recorder, getRecorder(pkg));
+		
+		assertTrue(nestedResource1.isLoaded());
+		assertFalse(nestedResource2.isLoaded());
+	}
+	
+	//
+	// Framework methods
+	//
+	
+	protected void doSetUp() throws Exception {
+		super.doSetUp();
+		
+		ResourceSet rset = domain.getResourceSet();
+		
+		try {
+			rootResource = rset.getResource(
+					URI.createURI(EmfTransactionTestsBundle.getEntry(
+						"/test_models/test_model.ecore").toString()), //$NON-NLS-1$
+						true);
+			rootResource.setURI(URI.createPlatformResourceURI(
+					"/" + PROJECT_NAME + "/test_model.ecore")); //$NON-NLS-1$ //$NON-NLS-2$
+			
+			nestedResource1 = rset.createResource(URI.createPlatformResourceURI(
+					"/" + PROJECT_NAME + "/test_model1.ecore")); //$NON-NLS-1$ //$NON-NLS-2$
+			nestedResource2 = rset.createResource(URI.createPlatformResourceURI(
+					"/" + PROJECT_NAME + "/test_model2.ecore")); //$NON-NLS-1$ //$NON-NLS-2$
+			
+			startWriting();
+			
+			EPackage pkg = findPackage("root/nested1/nested2", true); //$NON-NLS-1$
+			nestedResource1.getContents().add(pkg);  // cross-resource-contained
+			
+			pkg = findPackage("root/nested1/nested2/nested3/nested4", true); //$NON-NLS-1$
+			nestedResource2.getContents().add(pkg);  // cross-resource-contained
+			
+			commit();
+			
+			startReading();
+			
+			// save the units
+			rootResource.save(Collections.EMPTY_MAP);
+			nestedResource1.save(Collections.EMPTY_MAP);
+			nestedResource2.save(Collections.EMPTY_MAP);
+			
+			// unload them
+			rootResource.unload();
+			nestedResource1.unload();
+			nestedResource2.unload();
+			
+			commit();
+		} catch (IOException e) {
+			fail("Failed to create test model: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+	}
+	
+	protected void doTearDown() throws Exception {
+		if (rootResource != null) {
+			unloadAndRemove(rootResource);
+			rootResource = null;
+		}
+		
+		if (nestedResource1 != null) {
+			unloadAndRemove(nestedResource1);
+			nestedResource1 = null;
+		}
+		
+		if (nestedResource2 != null) {
+			unloadAndRemove(nestedResource2);
+			nestedResource2 = null;
+		}
+		
+		super.doTearDown();
+	}
+	
+	protected EPackage findPackage(String qname, boolean require) {
+		EPackage result = (EPackage) find(rootResource, qname);
+		
+		if (require) {
+			assertNotNull("Did not find package " + qname, result); //$NON-NLS-1$
+		}
+		
+		return result;
+	}
+	
+	protected EClass findClass(String qname, boolean require) {
+		EClass result = (EClass) find(rootResource, qname);
+		
+		if (require) {
+			assertNotNull("Did not find class " + qname, result); //$NON-NLS-1$
+		}
+		
+		return result;
+	}
+
+	/**
+	 * Gets the name of an Ecore object.
+	 * 
+	 * @param object the object
+	 * @return its name
+	 */
+	protected String getName(EObject object) {
+		if (object instanceof ENamedElement) {
+			return ((ENamedElement) object).getName();
+		}
+		
+		return super.getName(object);
+	}
+	
+	protected void loadRoot() {
+		try {
+			rootResource.load(Collections.EMPTY_MAP);
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail("Failed to load root resource: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+	}
+	
+	protected TransactionChangeRecorder getRecorder(Notifier notifier) {
+		TransactionChangeRecorder result = null;
+		
+		for (Iterator iter = notifier.eAdapters().iterator(); iter.hasNext();) {
+			Object next = iter.next();
+			
+			if (next instanceof TransactionChangeRecorder) {
+				result = (TransactionChangeRecorder) next;
+				break;
+			}
+		}
+		
+		assertNotNull("Did not find change recorder", result); //$NON-NLS-1$
+		
+		return result;
+	}
+}

@@ -12,12 +12,30 @@
  *
  * </copyright>
  *
- * $Id: PerformanceTest.java,v 1.2 2006/04/03 19:10:59 cdamus Exp $
+ * $Id: PerformanceTest.java,v 1.3 2006/04/21 14:59:17 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
+import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
+import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.command.CompoundCommand;
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.examples.extlibrary.Book;
+import org.eclipse.emf.examples.extlibrary.BookCategory;
+import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
+import org.eclipse.emf.examples.extlibrary.Library;
+import org.eclipse.emf.transaction.ResourceSetChangeEvent;
+import org.eclipse.emf.transaction.ResourceSetListener;
+import org.eclipse.emf.transaction.ResourceSetListenerImpl;
+import org.eclipse.emf.transaction.RollbackException;
+import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -35,6 +53,8 @@ public class PerformanceTest extends AbstractTest {
 	private List timings;
 	private long clock;
 	
+	private int count = RUNS + OUTLIERS;
+	
 	public PerformanceTest(String name) {
 		super(name);
 	}
@@ -49,11 +69,6 @@ public class PerformanceTest extends AbstractTest {
 	 * <code>ReadWriteValidator.findTree(Transaction)</code> method.
 	 */
 	public void test_ReadWriteValidator_findTree_132590() {
-		int count = RUNS + OUTLIERS;
-		
-		System.out.println("Performance test: " + getName()); //$NON-NLS-1$
-		System.out.println("==============================="); //$NON-NLS-1$
-		
 		for (int i = 0; i < count; i++) {
 			startClock();
 			
@@ -63,13 +78,98 @@ public class PerformanceTest extends AbstractTest {
 			
 			System.out.println("Raw timing: " + timing); //$NON-NLS-1$
 		}
+	}
+	
+	/**
+	 * Measures the time taken to load a largish resource, to measure the
+	 * performance benefit of not recording resource load/unload events.
+	 */
+	public void test_loadLargishModelWithoutRecording() {
+		addStuffToTestResourceAndClose();
+
+		final Transaction[] originalTransaction = new Transaction[1];
+		final int[] precommitEvents = new int[1];
+		final int[] postcommitEvents = new int[1];
 		
-		removeOutliers();
+		// add a listener to incur the cost of broadcasting pre- and post-commit
+		ResourceSetListener listener = new ResourceSetListenerImpl() {
+			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+					throws RollbackException {
+				CompoundCommand result = null;
+				
+				if (originalTransaction[0] == null) {
+					originalTransaction[0] = event.getTransaction();
+				}
+				
+				if (event.getTransaction() == originalTransaction[0]) {
+					// only create a command on the first transaction
+					result = new CompoundCommand();
+					
+					for (Iterator iter = event.getNotifications().iterator(); iter.hasNext();) {
+						iter.next();
+						
+						precommitEvents[0]++;
+						
+						result.append(new TestCommand() {
+							public void execute() {}});
+					}
+				}
+				
+				return result;
+			}
 		
-		System.out.println("Mean time for " + RUNS + " runs: " + meanTiming()); //$NON-NLS-1$ //$NON-NLS-2$
-		System.out.println("Standard deviation: " + stddevTiming()); //$NON-NLS-1$
+			public void resourceSetChanged(ResourceSetChangeEvent event) {
+				for (Iterator iter = event.getNotifications().iterator(); iter.hasNext();) { 
+					iter.next();
+					
+					// do a trivial amount of work
+					postcommitEvents[0]++;
+					assertNotNull(event.getTransaction());
+				}
+			}};
+
+		domain.addResourceSetListener(listener);
 		
-		System.out.println("==============================="); //$NON-NLS-1$
+		Map options = new java.util.HashMap();
+//		options.put(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE);
+//		options.put(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
+//		options.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
+		
+		try {
+			for (int i = 0; i < count; i++) {
+				originalTransaction[0] = null;
+				
+				// we will report the number of events from just a single run
+				precommitEvents[0] = 0;
+				postcommitEvents[0] = 0;
+				
+				startClock();
+				
+				startWriting(options);
+				
+				testResource.load(Collections.EMPTY_MAP);
+				
+				commit();
+				
+				startWriting(options);
+				
+				testResource.unload();
+				
+				commit();
+				
+				long timing = stopClock();
+				
+				System.out.println("Raw timing: " + timing); //$NON-NLS-1$
+			}
+			
+			System.out.println("Number of pre-commit events : " + precommitEvents[0]); //$NON-NLS-1$
+			System.out.println("Number of post-commit events: " + postcommitEvents[0]); //$NON-NLS-1$
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail("Failed to load test resource: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		} finally {
+			domain.removeResourceSetListener(listener);
+		}
 	}
 	
 	//
@@ -79,10 +179,20 @@ public class PerformanceTest extends AbstractTest {
 	protected void doSetUp() throws Exception {
 		super.doSetUp();
 		
+		System.out.println("Performance test: " + getName()); //$NON-NLS-1$
+		System.out.println("==============================="); //$NON-NLS-1$
+		
 		timings = new java.util.ArrayList();
 	}
 	
 	protected void doTearDown() throws Exception {
+		removeOutliers();
+		
+		System.out.println("Mean time for " + RUNS + " runs: " + meanTiming()); //$NON-NLS-1$ //$NON-NLS-2$
+		System.out.println("Standard deviation: " + stddevTiming()); //$NON-NLS-1$
+		
+		System.out.println("==============================="); //$NON-NLS-1$
+		
 		timings = null;
 		
 		super.doTearDown();
@@ -106,6 +216,60 @@ public class PerformanceTest extends AbstractTest {
 			
 			commit();
 		}
+	}
+	
+	/**
+	 * Adds a largish number of libraries to the test resource, each with
+	 * some books.
+	 */
+	protected void addStuffToTestResourceAndClose() {
+		startWriting();
+		
+		Date today = new Date();
+		
+		for (int i = 0; i < 50; i++) {
+			addLibraryWithBooks(today);
+		}
+		
+		commit();
+		
+		startReading();
+		
+		try {
+			testResource.save(Collections.EMPTY_MAP);
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail("Failed to save test resource: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+		
+		testResource.unload();
+		
+		commit();
+	}
+	
+	protected void addLibraryWithBooks(Date today) {
+		Library lib = EXTLibraryFactory.eINSTANCE.createLibrary();
+		EList branches = lib.getBranches();
+		
+		for (int j = 0; j < 20; j++) {
+			Library branch = EXTLibraryFactory.eINSTANCE.createLibrary();
+			EList books = branch.getBooks();
+			
+			for (int i = 0; i < 10; i++) {
+				Book book = EXTLibraryFactory.eINSTANCE.createBook();
+	
+				book.setTitle("Foo"); //$NON-NLS-1$
+				book.setPages(30);
+				book.setCategory(BookCategory.BIOGRAPHY_LITERAL);
+				book.setCopies(7);
+				book.setPublicationDate(today);
+				books.add(book);
+			}
+			
+			branches.add(branch);
+		}
+		
+		testResource.getContents().add(lib);
 	}
 	
 	final void startClock() {

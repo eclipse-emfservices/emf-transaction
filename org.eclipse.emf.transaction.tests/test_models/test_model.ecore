@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="root">
+  <eAnnotations source="http:///org.eclipse.emf.transaction.tests" references="#//nested1/nested2"/>
+  <eClassifiers xsi:type="ecore:EClass" name="A"/>
+  <eSubpackages name="nested1">
+    <eClassifiers xsi:type="ecore:EClass" name="B"/>
+    <eSubpackages name="nested2">
+      <eClassifiers xsi:type="ecore:EClass" name="C"/>
+      <eSubpackages name="nested3" nsPrefix="">
+        <eClassifiers xsi:type="ecore:EClass" name="D"/>
+        <eSubpackages name="nested4">
+          <eClassifiers xsi:type="ecore:EClass" name="E"/>
+        </eSubpackages>
+      </eSubpackages>
+    </eSubpackages>
+  </eSubpackages>
+</ecore:EPackage>
