@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorderTest.java,v 1.1 2006/04/21 14:59:17 cdamus Exp $
+ * $Id: TransactionChangeRecorderTest.java,v 1.2 2006/04/21 18:03:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -24,18 +24,15 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.eclipse.emf.common.notify.Notifier;
-import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.ENamedElement;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
-import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.InternalEList;
 import org.eclipse.emf.transaction.impl.TransactionChangeRecorder;
-import org.eclipse.emf.transaction.util.TransactionUtil;
 
 
 /**
@@ -85,18 +82,12 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 		EPackage pkg = findPackage("root/nested1", true); //$NON-NLS-1$
 		assertSame(recorder, getRecorder(pkg));
 		
-		EList properContents = TransactionUtil.getProperContents(pkg);
-		assertEquals(1, properContents.size());
-		assertSame(EcorePackage.Literals.ECLASS, ((EObject) properContents.get(0)).eClass());
-		assertSame(recorder, getRecorder((Notifier) properContents.get(0)));
-		
-		InternalEList contents = (InternalEList) pkg.eContents();
-		assertEquals(2, contents.size());
+		Iterator contents = ((InternalEList) pkg.eContents()).basicIterator();
 		
 		// check that the EPackage is not yet resolved
-		EObject obj = (EObject) contents.basicGet(0);
+		EObject obj = (EObject) contents.next();
 		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
-		obj = (EObject) contents.basicGet(1);
+		obj = (EObject) contents.next();
 		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
 		
 		assertFalse(nestedResource1.isLoaded());
@@ -172,18 +163,12 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 		EPackage pkg = findPackage("root/nested1", true); //$NON-NLS-1$
 		assertSame(recorder, getRecorder(pkg));
 		
-		EList properContents = TransactionUtil.getProperContents(pkg);
-		assertEquals(1, properContents.size());
-		assertSame(EcorePackage.Literals.ECLASS, ((EObject) properContents.get(0)).eClass());
-		assertSame(recorder, getRecorder((Notifier) properContents.get(0)));
-		
-		InternalEList contents = (InternalEList) pkg.eContents();
-		assertEquals(2, contents.size());
+		Iterator contents = ((InternalEList) pkg.eContents()).basicIterator();
 		
 		// check that the EPackage is not yet resolved
-		EObject obj = (EObject) contents.basicGet(0);
+		EObject obj = (EObject) contents.next();
 		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
-		obj = (EObject) contents.basicGet(1);
+		obj = (EObject) contents.next();
 		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
 		
 		assertFalse(nestedResource1.isLoaded());

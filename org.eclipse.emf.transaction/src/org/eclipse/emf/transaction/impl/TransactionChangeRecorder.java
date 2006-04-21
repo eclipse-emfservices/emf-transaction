@@ -12,11 +12,10 @@
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorder.java,v 1.2 2006/04/21 14:59:10 cdamus Exp $
+ * $Id: TransactionChangeRecorder.java,v 1.3 2006/04/21 18:03:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
@@ -29,12 +28,12 @@ import org.eclipse.emf.ecore.change.ChangeDescription;
 import org.eclipse.emf.ecore.change.util.ChangeRecorder;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.util.InternalEList;
 import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.internal.l10n.Messages;
-import org.eclipse.emf.transaction.util.TransactionUtil;
 
 /**
  * The change recorder for a {@link org.eclipse.emf.transaction.TransactionalEditingDomain},
@@ -66,6 +65,9 @@ public class TransactionChangeRecorder
 		
 		// super already started recording
 		endRecording();
+		
+		// TODO: Restore when API available
+		//setResolveProxies(false);
 		
 		// tell the resource set manager about any resources that already exist
 		ResourceSetManager.getInstance().observe(rset);
@@ -115,21 +117,17 @@ public class TransactionChangeRecorder
 	 * </ul>
 	 */
 	public void setTarget(Notifier target) {
-		Collection contents;
-		
-		if (target instanceof EObject) {
-			contents = TransactionUtil.getProperContents((EObject) target);
-		} else if (target instanceof ResourceSet) {
-			contents = ((ResourceSet) target).getResources();
-		} else if (target instanceof Resource) {
-			contents = ((Resource) target).getContents();
-		} else {
-			contents = null;
-		}
-		
+		// TODO: Restore when API available
+		Iterator contents = target instanceof EObject ? /*resolveProxies*/false ? ((EObject) target).eContents().iterator()
+				: ((InternalEList) ((EObject) target).eContents()).basicIterator()
+				: target instanceof ResourceSet ? ((ResourceSet) target)
+						.getResources().iterator()
+						: target instanceof Resource ? ((Resource) target)
+								.getContents().iterator() : null;
+
 		if (contents != null) {
-			for (Iterator i = contents.iterator(); i.hasNext();) {
-				Notifier notifier = (Notifier) i.next();
+			while (contents.hasNext()) {
+				Notifier notifier = (Notifier) contents.next();
 				addAdapter(notifier);
 			}
 		}

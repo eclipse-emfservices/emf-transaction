@@ -12,20 +12,13 @@
  *
  * </copyright>
  *
- * $Id: TransactionUtilTests.java,v 1.2 2006/04/21 14:59:17 cdamus Exp $
+ * $Id: TransactionUtilTests.java,v 1.3 2006/04/21 18:03:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util.tests;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import org.eclipse.emf.common.util.EList;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EClass;
-import org.eclipse.emf.ecore.EPackage;
-import org.eclipse.emf.ecore.EcoreFactory;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.edit.domain.EditingDomain;
@@ -94,57 +87,5 @@ public class TransactionUtilTests extends AbstractTest {
 			}};
 			
 		assertSame(domain, TransactionUtil.getEditingDomain((Object) edp));
-	}
-	
-	/**
-	 * Tests the <code>getProperContents(EObject)</code> method.
-	 */
-	public void test_getProperContents() {
-		EPackage rootPackage = EcoreFactory.eINSTANCE.createEPackage();
-		rootPackage.setName("root"); //$NON-NLS-1$
-		
-		// proper contents consistent with EContents when no cross-resource
-		//   containment is involved
-		
-		EList contents = rootPackage.eContents();
-		EList properContents = TransactionUtil.getProperContents(rootPackage);
-		
-		EClass eclass = EcoreFactory.eINSTANCE.createEClass();
-		eclass.setName("Foo"); //$NON-NLS-1$
-		rootPackage.getEClassifiers().add(eclass);
-		
-		assertTrue(contents.contains(eclass));
-		assertTrue(properContents.equals(contents));
-		
-		EPackage nested = EcoreFactory.eINSTANCE.createEPackage();
-		nested.setName("nested"); //$NON-NLS-1$
-		rootPackage.getESubpackages().add(nested);
-		
-		assertTrue(contents.contains(eclass));
-		assertTrue(contents.contains(nested));
-		assertTrue(properContents.equals(contents));
-		
-		ResourceSet rset = new ResourceSetImpl();
-		Resource res1 = rset.createResource(URI.createURI("null:///res1.ecore")); //$NON-NLS-1$
-		Resource res2 = rset.createResource(URI.createURI("null:///res2.ecore")); //$NON-NLS-1$
-		
-		res1.getContents().add(rootPackage);
-		res2.getContents().add(nested);  // cross-resource-contained
-		
-		// the nested package is no longer properly contained
-		
-		assertTrue(contents.contains(nested));
-		assertFalse(properContents.contains(nested));
-		assertFalse(properContents.equals(contents));
-		assertTrue(properContents.contains(eclass));
-		
-		res2.unload();
-		
-		assertTrue(nested.eIsProxy());
-		
-		assertTrue(contents.contains(nested));
-		assertFalse(properContents.contains(nested));
-		assertFalse(properContents.equals(contents));
-		assertTrue(properContents.contains(eclass));
 	}
 }
