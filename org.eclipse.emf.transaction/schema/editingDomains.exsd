@@ -60,10 +60,10 @@ multiple applications.
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="factory" type="string" use="required">
+         <attribute name="factory" type="string">
             <annotation>
                <documentation>
-                  Name of a class implementing the &lt;code&gt;TransactionalEditingDomain.Factory&lt;/code&gt; interface, which is used by the registry to create the registered editing domain the first time that it is accessed.
+                  Name of a class implementing the &lt;code&gt;TransactionalEditingDomain.Factory&lt;/code&gt; interface, which is used by the registry to create the registered editing domain the first time that it is accessed.  If not specified, the default shared factory instance is used.
                </documentation>
                <appInfo>
                   <meta.attribute kind="java" basedOn="org.eclipse.emf.transaction.TransactionalEditingDomain$Factory"/>
@@ -111,7 +111,6 @@ the domain when a client first requests it from the registry.
       <documentation>
          The value of the &lt;tt&gt;&amp;lt;editingDomain&amp;gt;&lt;/tt&gt; element &lt;tt&gt;factory&lt;/tt&gt; attribute must be the fully qualified name of a class that implements
 the &lt;code&gt;org.eclipse.emf.transaction.TransactionalEditingDomain.Factory&lt;/code&gt; interface.  It is instantiated using the default (no-argument) constructor.  If the &lt;tt&gt;factory&lt;/tt&gt; attribute is omitted, the default factory instance is used.
-
       </documentation>
    </annotation>
 

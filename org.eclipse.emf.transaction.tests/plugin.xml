@@ -62,4 +62,8 @@
    	<listener class="org.eclipse.emf.transaction.tests.EditingDomainRegistryTest$TestListener3">
 	</listener>
    </extension>
+   <extension point="org.eclipse.emf.transaction.editingDomains">
+   	<editingDomain
+   	      id="org.eclipse.emf.transaction.tests.TestDefaultFactoryDomain1"/>
+   </extension>
 </plugin>

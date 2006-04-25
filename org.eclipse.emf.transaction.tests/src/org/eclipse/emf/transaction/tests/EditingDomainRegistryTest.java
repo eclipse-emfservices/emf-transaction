@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EditingDomainRegistryTest.java,v 1.3 2006/02/21 22:16:40 cmcgee Exp $
+ * $Id: EditingDomainRegistryTest.java,v 1.4 2006/04/25 20:04:27 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -402,6 +402,17 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		// can't test for clean removal because it is also on TestDomain1 (being
 		//   a universal listener) and TestDomain1 cannot be removed.  It's not
 		//   necessary to test this again, though, anyway
+	}
+	
+	/**
+	 * Tests that we can omit the factory class in the editing domain
+	 * registration to use the default shared factory instance.
+	 */
+	public void test_registerDefaultFactory_136674() {
+		TransactionalEditingDomain defaultDomain =
+			TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
+				"org.eclipse.emf.transaction.tests.TestDefaultFactoryDomain1"); //$NON-NLS-1$
+		assertNotNull(defaultDomain);
 	}
 	
 	//

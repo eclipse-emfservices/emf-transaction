@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EditingDomainManager.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: EditingDomainManager.java,v 1.3 2006/04/25 20:04:28 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -89,31 +89,39 @@ public class EditingDomainManager {
 		IConfigurationElement config = getDomainConfig(id);
 		
 		if (config != null) {
-			try {
-				Object factory = config.createExecutableExtension(A_FACTORY);
-				
-				if (factory instanceof TransactionalEditingDomain.Factory) {
-					result = ((TransactionalEditingDomain.Factory) factory).createEditingDomain(); 
-				} else {
-					EMFTransactionPlugin.getPlugin().log(
-							new Status(
-									IStatus.ERROR,
-									EMFTransactionPlugin.getPluginId(),
-									EMFTransactionStatusCodes.FACTORY_TYPE,
-									NLS.bind(
-										Messages.factoryInterface,
-										factory.getClass().getName(),
-										id),
-									null));
+			String factoryClass = config.getAttribute(A_FACTORY);
+			
+			if ((factoryClass == null) || (factoryClass.trim().length() == 0)) {
+				// default editing domain factory
+				result = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain(); 
+			} else {
+				// client-specified domain factory
+				try {
+					Object factory = config.createExecutableExtension(A_FACTORY);
+					
+					if (factory instanceof TransactionalEditingDomain.Factory) {
+						result = ((TransactionalEditingDomain.Factory) factory).createEditingDomain(); 
+					} else {
+						EMFTransactionPlugin.getPlugin().log(
+								new Status(
+										IStatus.ERROR,
+										EMFTransactionPlugin.getPluginId(),
+										EMFTransactionStatusCodes.FACTORY_TYPE,
+										NLS.bind(
+											Messages.factoryInterface,
+											factory.getClass().getName(),
+											id),
+										null));
+					}
+				} catch (CoreException e) {
+					Tracing.catching(EditingDomainManager.class, "createEditingDomain", e); //$NON-NLS-1$
+					EMFTransactionPlugin.INSTANCE.log(new MultiStatus(
+						EMFTransactionPlugin.getPluginId(),
+						EMFTransactionStatusCodes.FACTORY_INITIALIZATION,
+						new IStatus[] {e.getStatus()},
+						NLS.bind(Messages.factoryInitialization, id),
+						null));
 				}
-			} catch (CoreException e) {
-				Tracing.catching(EditingDomainManager.class, "createEditingDomain", e); //$NON-NLS-1$
-				EMFTransactionPlugin.INSTANCE.log(new MultiStatus(
-					EMFTransactionPlugin.getPluginId(),
-					EMFTransactionStatusCodes.FACTORY_INITIALIZATION,
-					new IStatus[] {e.getStatus()},
-					NLS.bind(Messages.factoryInitialization, id),
-					null));
 			}
 		}
 		
