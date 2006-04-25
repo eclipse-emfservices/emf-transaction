@@ -78,7 +78,7 @@ multiple applications.
          <meta.section type="since"/>
       </appInfo>
       <documentation>
-         [Enter the first release in which this extension point appears.]
+         1.0
       </documentation>
    </annotation>
 
@@ -87,7 +87,20 @@ multiple applications.
          <meta.section type="examples"/>
       </appInfo>
       <documentation>
-         [Enter extension point usage example here.]
+         &lt;p&gt;
+This example shows an extension that declares a registered editing domain, possibly to be shared with other applications.  A custom editing domain factory is specified to configure
+the domain when a client first requests it from the registry.
+&lt;/p&gt;
+&lt;pre&gt;
+   &lt;extension
+         point=&quot;org.eclipse.emf.transaction.editingDomains&quot;&gt;
+         
+      &lt;editingDomain
+            id=&quot;com.example.my.editing.domain&quot;
+            factory=&quot;com.example.transaction.MyEditingDomainFactory&quot;/&gt;
+      &lt;/listener&gt;
+   &lt;/extension&gt;
+&lt;/pre&gt;
       </documentation>
    </annotation>
 
@@ -96,7 +109,9 @@ multiple applications.
          <meta.section type="apiInfo"/>
       </appInfo>
       <documentation>
-         [Enter API information here.]
+         The value of the &lt;tt&gt;&amp;lt;editingDomain&amp;gt;&lt;/tt&gt; element &lt;tt&gt;factory&lt;/tt&gt; attribute must be the fully qualified name of a class that implements
+the &lt;code&gt;org.eclipse.emf.transaction.TransactionalEditingDomain.Factory&lt;/code&gt; interface.  It is instantiated using the default (no-argument) constructor.  If the &lt;tt&gt;factory&lt;/tt&gt; attribute is omitted, the default factory instance is used.
+
       </documentation>
    </annotation>
 
@@ -105,7 +120,7 @@ multiple applications.
          <meta.section type="implementation"/>
       </appInfo>
       <documentation>
-         [Enter information about supplied implementation of this extension point.]
+         
       </documentation>
    </annotation>
 
@@ -114,7 +129,11 @@ multiple applications.
          <meta.section type="copyright"/>
       </appInfo>
       <documentation>
-         
+         Copyright (c) 2005, 2006  IBM Corporation and others.&lt;br&gt;
+ All rights reserved. This program and the accompanying materials 
+ are made available under the terms of the Eclipse Public License v1.0 
+ which accompanies this distribution, and is available at 
+ &lt;a href=&quot;http://www.eclipse.org/legal/epl-v10.html&quot;&gt;http://www.eclipse.org/legal/epl-v10.html&lt;/a&gt;
       </documentation>
    </annotation>
 

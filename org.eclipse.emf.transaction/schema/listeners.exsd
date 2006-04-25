@@ -97,7 +97,7 @@ This class is instantiated (using the default constructor).
          <meta.section type="since"/>
       </appInfo>
       <documentation>
-         [Enter the first release in which this extension point appears.]
+         1.0
       </documentation>
    </annotation>
 
@@ -106,7 +106,21 @@ This class is instantiated (using the default constructor).
          <meta.section type="examples"/>
       </appInfo>
       <documentation>
-         [Enter extension point usage example here.]
+         &lt;p&gt;
+This example shows an extension that declares a listener for an example editing domain,
+which applies triggers (a pre-commit listener) to ensure model integrity.
+&lt;/p&gt;
+&lt;pre&gt;
+   &lt;extension
+         point=&quot;org.eclipse.emf.transaction.listeners&quot;&gt;
+         
+      &lt;listener
+            namespaceUri=&quot;http:///org/eclipse/emf/examples/library/extlibrary.ecore/1.0.0&quot;
+            class=&quot;com.example.transaction.listeners.EXTLibraryTriggerListener&quot;/&gt;
+         &lt;editingDomain id=&quot;com.example.my.editing.domain&quot;/&gt;
+      &lt;/listener&gt;
+   &lt;/extension&gt;
+&lt;/pre&gt;
       </documentation>
    </annotation>
 
@@ -115,7 +129,23 @@ This class is instantiated (using the default constructor).
          <meta.section type="apiInfo"/>
       </appInfo>
       <documentation>
-         [Enter API information here.]
+         The value of the &lt;tt&gt;&amp;lt;listener&amp;gt;&lt;/tt&gt; element &lt;tt&gt;class&lt;/tt&gt; attribute must be the fully qualified name of a class that implements
+the &lt;code&gt;org.eclipse.emf.transaction.ResourceSetListener&lt;/code&gt; interface.  It is instantiated using the default (no-argument) constructor.
+&lt;p&gt;
+A few convenient abstract classes are provided that you may extend instead of directly implementing the listener interface.  These include:
+&lt;ul&gt;
+  &lt;li&gt;&lt;code&gt;org.eclipse.emf.transaction.ResourceSetListenerImpl&lt;/code&gt;:  provides empty
+      implementations of the call-back methods, so that subclasses simply implement those
+      that are of interest&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;org.eclipse.emf.transaction.DemultiplexingListener&lt;/code&gt;:  a post-commit
+      listener that calls an abstract callback (implemented by subclasses) for each
+      notification individually&lt;/li&gt;
+  &lt;li&gt;&lt;code&gt;org.eclipse.emf.transaction.TriggerListener&lt;/code&gt;:  a pret-commit
+      listener that calls an abstract callback (implemented by subclasses) for each
+      notification individually, composing the resulting commands on the subclass&apos;s
+      behalf&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/p&gt;
       </documentation>
    </annotation>
 
@@ -124,7 +154,7 @@ This class is instantiated (using the default constructor).
          <meta.section type="implementation"/>
       </appInfo>
       <documentation>
-         [Enter information about supplied implementation of this extension point.]
+         
       </documentation>
    </annotation>
 
@@ -133,7 +163,11 @@ This class is instantiated (using the default constructor).
          <meta.section type="copyright"/>
       </appInfo>
       <documentation>
-         
+         Copyright (c) 2005, 2006  IBM Corporation and others.&lt;br&gt;
+ All rights reserved. This program and the accompanying materials 
+ are made available under the terms of the Eclipse Public License v1.0 
+ which accompanies this distribution, and is available at 
+ &lt;a href=&quot;http://www.eclipse.org/legal/epl-v10.html&quot;&gt;http://www.eclipse.org/legal/epl-v10.html&lt;/a&gt;
       </documentation>
    </annotation>
 
