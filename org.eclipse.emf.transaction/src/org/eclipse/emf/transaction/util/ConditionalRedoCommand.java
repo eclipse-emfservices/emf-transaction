@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ConditionalRedoCommand.java,v 1.1 2006/04/26 13:13:39 cdamus Exp $
+ * $Id: ConditionalRedoCommand.java,v 1.2 2006/04/26 13:17:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -26,7 +26,10 @@ import org.eclipse.emf.common.command.CompoundCommand;
  * A specialization of the EMF {@link Command} API that accounts for conditional
  * redoable-ness.  This interface adds a {@link #canRedo()} operation in
  * conjunction with the {@link Command#canUndo()}.
- *
+ * <p>
+ * This interface is intended to be implemented by clients.
+ * </p>
+ * 
  * @author Christian W. Damus (cdamus)
  */
 public interface ConditionalRedoCommand extends Command {

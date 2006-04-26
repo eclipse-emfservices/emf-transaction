@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TriggerCommand.java,v 1.2 2006/03/15 01:40:31 cdamus Exp $
+ * $Id: TriggerCommand.java,v 1.3 2006/04/26 13:13:39 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -21,7 +21,6 @@ import java.util.ListIterator;
 
 import org.eclipse.emf.common.CommonPlugin;
 import org.eclipse.emf.common.command.Command;
-import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
@@ -35,7 +34,7 @@ import org.eclipse.emf.transaction.internal.Tracing;
  *
  * @author Christian W. Damus (cdamus)
  */
-public class TriggerCommand extends CompoundCommand {
+public class TriggerCommand extends ConditionalRedoCommand.Compound {
 	private final Command triggeringCommand;
 	private final List triggers;
 	
