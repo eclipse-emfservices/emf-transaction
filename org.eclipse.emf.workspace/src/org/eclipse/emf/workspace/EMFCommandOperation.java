@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFCommandOperation.java,v 1.4 2006/03/15 01:40:28 cdamus Exp $
+ * $Id: EMFCommandOperation.java,v 1.5 2006/04/26 13:13:34 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -46,6 +46,7 @@ import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalCommandStack;
+import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
 import org.eclipse.emf.workspace.impl.EMFOperationTransaction;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 import org.eclipse.osgi.util.NLS;
@@ -146,6 +147,20 @@ public class EMFCommandOperation
 		command.undo();
 		
 		return Status.OK_STATUS;
+	}
+	
+	/**
+	 * I can redo if either my wrapped command is a {@link ConditionalRedoCommand}
+	 * that can undo, or it is not a conditionally redoable command.
+	 */
+	public boolean canRedo() {
+		return super.canRedo() &&
+			(canRedo(command) && ((triggerCommand == null) || canRedo(triggerCommand)));
+	}
+	
+	private boolean canRedo(Command cmd) {
+		return !(cmd instanceof ConditionalRedoCommand)
+				|| ((ConditionalRedoCommand) cmd).canRedo();
 	}
 	
 	/**

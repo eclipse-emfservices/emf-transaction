@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFCommandOperationTest.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: EMFCommandOperationTest.java,v 1.2 2006/04/26 13:13:35 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -25,6 +25,7 @@ import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.edit.command.AddCommand;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
@@ -33,10 +34,13 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.workspace.EMFCommandOperation;
 import org.eclipse.emf.workspace.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultBookTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultNameTrigger;
+import org.eclipse.emf.workspace.tests.fixtures.TestCommand;
 import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
 
 
@@ -473,5 +477,62 @@ public class EMFCommandOperationTest extends AbstractTest {
 		assertSame(oldAuthor, book.getAuthor());
 		
 		commit();
+	}
+	
+	/**
+	 * Tests that the the <code>EMFCommandOperation</code> tests its wrapped
+	 * command for redoability.
+	 */
+	public void test_nonredoableCommand_138287() {
+		Command cmd = new TestCommand.Redoable() {
+			public void execute() {
+				// nothing to do
+			}
+		
+			public boolean canRedo() {
+				return false;
+			}};
+		
+		getCommandStack().execute(cmd);
+		
+		assertTrue(getCommandStack().canUndo());
+		
+		getCommandStack().undo();
+		
+		assertFalse(getCommandStack().canRedo());
+	}
+	
+	/**
+	 * Tests that the <code>EMFCommandOperation</code> tests its wrapped trigger
+	 * command for redoability.
+	 */
+	public void test_nonredoableTriggerCommand_138287() {
+		// add a trigger command that is not redoable
+		domain.addResourceSetListener(new TriggerListener() {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+				return new TestCommand.Redoable() {
+					public void execute() {
+						// nothing to do
+					}
+				
+					public boolean canRedo() {
+						return false;
+					}};
+			}});
+		
+		Library newLibrary = EXTLibraryFactory.eINSTANCE.createLibrary();
+		
+		// this command *is* implicitly redoable; it is the trigger that is not
+		Command cmd = AddCommand.create(
+				domain, root, EXTLibraryPackage.Literals.LIBRARY__BRANCHES,
+				newLibrary);
+		
+		getCommandStack().execute(cmd);
+		
+		assertTrue(getCommandStack().canUndo());
+		
+		getCommandStack().undo();
+		
+		assertFalse(getCommandStack().canRedo());
 	}
 }

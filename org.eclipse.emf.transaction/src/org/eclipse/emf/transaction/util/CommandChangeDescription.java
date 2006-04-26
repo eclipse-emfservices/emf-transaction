@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CommandChangeDescription.java,v 1.2 2006/03/28 14:05:26 cdamus Exp $
+ * $Id: CommandChangeDescription.java,v 1.3 2006/04/26 13:13:39 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -71,7 +71,12 @@ public class CommandChangeDescription
 	 */
 	public boolean canApply() {
 		return (command != null)
-				&& (isRedone? command.canUndo() : true);
+				&& (isRedone? command.canUndo() : canRedo(command));
+	}
+	
+	private boolean canRedo(Command cmd) {
+		return !(cmd instanceof ConditionalRedoCommand)
+				|| ((ConditionalRedoCommand) cmd).canRedo();
 	}
 	
 	/**

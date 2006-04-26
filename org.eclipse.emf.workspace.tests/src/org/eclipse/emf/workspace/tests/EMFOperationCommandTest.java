@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFOperationCommandTest.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
+ * $Id: EMFOperationCommandTest.java,v 1.3 2006/04/26 13:13:35 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -35,6 +35,7 @@ import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.workspace.EMFOperationCommand;
 import org.eclipse.emf.workspace.tests.fixtures.ContextAdder;
 import org.eclipse.emf.workspace.tests.fixtures.ExternalDataOperation;
+import org.eclipse.emf.workspace.tests.fixtures.TestOperation;
 import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
 
 
@@ -382,6 +383,29 @@ public class EMFOperationCommandTest extends AbstractTest {
 		assertEquals(newExternalData, externalData[0]);
 		
 		commit();
+	}
+	
+	/**
+	 * Tests that the EMFOperationCommand tests its wrapped operation for
+	 * redoability.
+	 */
+	public void test_nonredoableOperation_138287() {
+		IUndoableOperation operation = new TestOperation(domain) {
+			protected void doExecute() {
+				// nothing to do
+			}
+			
+			public boolean canRedo() {
+				return false;
+			}};
+		
+		getCommandStack().execute(new EMFOperationCommand(domain, operation));
+		
+		assertTrue(getCommandStack().canUndo());
+		
+		getCommandStack().undo();
+		
+		assertFalse(getCommandStack().canRedo());
 	}
 	
 	//

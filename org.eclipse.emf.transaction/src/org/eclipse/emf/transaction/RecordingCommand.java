@@ -12,12 +12,14 @@
  *
  * </copyright>
  *
- * $Id: RecordingCommand.java,v 1.3 2006/03/15 01:40:31 cdamus Exp $
+ * $Id: RecordingCommand.java,v 1.4 2006/04/26 13:13:39 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
 import org.eclipse.emf.common.command.AbstractCommand;
+import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
 
 /**
  * A partial {@link org.eclipse.emf.common.command.Command} implementation that
@@ -35,7 +37,9 @@ import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
  *
  * @author Christian W. Damus (cdamus)
  */
-public abstract class RecordingCommand extends AbstractCommand {
+public abstract class RecordingCommand
+		extends AbstractCommand
+		implements ConditionalRedoCommand {
 	private final TransactionalEditingDomain domain;
 	private Transaction transaction;
 	private TransactionChangeDescription change;
@@ -105,6 +109,18 @@ public abstract class RecordingCommand extends AbstractCommand {
 	 * Subclasses would not normally need to override this method.
 	 */
 	public boolean canUndo() {
+		return canApplyChange();
+	}
+
+	/**
+	 * I can be redone if I successfully recorded the changes that I executed.
+	 * Subclasses would not normally need to override this method.
+	 */
+	public boolean canRedo() {
+		return canApplyChange();
+	}
+	
+	private boolean canApplyChange() {
 		if ((change == null) && (transaction != null)) {
 			change = transaction.getChangeDescription();
 		}
@@ -138,4 +154,9 @@ public abstract class RecordingCommand extends AbstractCommand {
 	 * <em>not</em> by executing commands.
 	 */
 	protected abstract void doExecute();
+	
+	// Documentation copied from the inherited specification
+	public Command chain(Command command) {
+	    return new ConditionalRedoCommand.Compound().chain(this).chain(command);
+	}
 }

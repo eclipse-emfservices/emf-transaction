@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalCommandStackImpl.java,v 1.4 2006/04/11 14:29:56 cdamus Exp $
+ * $Id: TransactionalCommandStackImpl.java,v 1.5 2006/04/26 13:13:39 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.transaction.ExceptionHandler;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.RollbackException;
@@ -32,6 +33,7 @@ import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.internal.l10n.Messages;
+import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
 import org.eclipse.emf.transaction.util.TriggerCommand;
 
 /**
@@ -88,7 +90,10 @@ public class TransactionalCommandStackImpl
 						if (triggerCommand != null) {
 							// replace the executed command by a compound of the
 							//    original and the trigger commands
-							mostRecentCommand = mostRecentCommand.chain(triggerCommand);
+							CompoundCommand compound = new ConditionalRedoCommand.Compound();
+							compound.append(mostRecentCommand);
+							compound.append(triggerCommand);
+							mostRecentCommand = compound;
 					        commandList.set(top, mostRecentCommand);
 						}
 					}
@@ -199,6 +204,25 @@ public class TransactionalCommandStackImpl
 		return domain.getUndoRedoOptions();
 	}
 
+	/**
+	 * Extends the inherited implementation to consider the redoability of
+	 * {@link ConditionalRedoCommand}s.
+	 */
+	public boolean canRedo() {
+		boolean result = super.canRedo();
+		
+		if (result) {
+			// I know that this is a valid index if super returned true
+			Object nextRedo = commandList.get(top + 1);
+			
+			if (nextRedo instanceof ConditionalRedoCommand) {
+				result = ((ConditionalRedoCommand) nextRedo).canRedo();
+			}
+		}
+		
+		return result;
+	}
+	
 	/**
 	 * Extends the inherited implementation by invoking it within the context
 	 * of a redo transaction (a read/write transaction with the

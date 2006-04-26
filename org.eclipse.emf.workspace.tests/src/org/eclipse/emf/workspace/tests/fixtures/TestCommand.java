@@ -12,9 +12,9 @@
  *
  * </copyright>
  *
- * $Id: TestCommand.java,v 1.2 2006/04/26 13:13:37 cdamus Exp $
+ * $Id: TestCommand.java,v 1.1 2006/04/26 13:13:35 cdamus Exp $
  */
-package org.eclipse.emf.transaction.tests.fixtures;
+package org.eclipse.emf.workspace.tests.fixtures;
 
 import org.eclipse.emf.common.command.AbstractCommand;
 import org.eclipse.emf.transaction.util.ConditionalRedoCommand;

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFOperationCommand.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
+ * $Id: EMFOperationCommand.java,v 1.3 2006/04/26 13:13:34 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -30,14 +30,14 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
-import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
 import org.eclipse.emf.workspace.impl.NonEMFTransaction;
 import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
 import org.eclipse.emf.workspace.internal.EMFWorkspaceStatusCodes;
@@ -59,7 +59,7 @@ import org.eclipse.osgi.util.NLS;
  *
  * @author Christian W. Damus (cdamus)
  */
-public class EMFOperationCommand implements Command {
+public class EMFOperationCommand implements ConditionalRedoCommand {
 	private final TransactionalEditingDomain domain;
 	private IUndoableOperation operation;
 	private Reference adaptable;
@@ -234,6 +234,13 @@ public class EMFOperationCommand implements Command {
 	}
 
 	/**
+	 * I can redo if my wrapped operation can redo.
+	 */
+	public boolean canRedo() {
+		return operation.canRedo();
+	}
+
+	/**
 	 * I redo my wrapped operation.  If an adaptable was initially provided to
 	 * me and it is still available, then it is passed along to the operation. 
 	 * 
@@ -313,13 +320,7 @@ public class EMFOperationCommand implements Command {
 
 	// Documentation copied from the inherited specification
 	public Command chain(Command command) {
-	    CompoundCommand compound = new CompoundCommand() {
-			public Command chain(Command c) {
-				append(c);
-				return this;
-			}};
-	    
-	    return compound.chain(this).chain(command);
+	    return new ConditionalRedoCommand.Compound().chain(this).chain(command);
 	}
 
 	/**
