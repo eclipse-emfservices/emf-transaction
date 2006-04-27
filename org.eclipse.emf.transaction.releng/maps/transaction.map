@@ -38,3 +38,8 @@ plugin@org.eclipse.emf.workbench.doc=build_200604200942,:ext:nickb@dev.eclipse.o
 feature@org.eclipse.emf.workbench.doc=build_200604200942,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.workbench.doc-feature
 plugin@org.eclipse.emf.workspace.doc=build_200604200942,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.workspace.doc
 feature@org.eclipse.emf.workspace.doc=build_200604200942,:ext:nickb@dev.eclipse.org:/cvsroot/technology,,org.eclipse.emft/transaction/doc/org.eclipse.emf.workspace.doc-feature
+
+!*** EMF Examples plugins
+plugin@org.eclipse.emf.examples.library=HEAD,:pserver:anonymous@dev.eclipse.org:/cvsroot/tools,,org.eclipse.emf/examples/org.eclipse.emf.examples.library
+plugin@org.eclipse.emf.examples.library.edit=HEAD,:pserver:anonymous@dev.eclipse.org:/cvsroot/tools,,org.eclipse.emf/examples/org.eclipse.emf.examples.library.edit
+plugin@org.eclipse.emf.examples.library.editor=HEAD,:pserver:anonymous@dev.eclipse.org:/cvsroot/tools,,org.eclipse.emf/examples/org.eclipse.emf.examples.library.editor
