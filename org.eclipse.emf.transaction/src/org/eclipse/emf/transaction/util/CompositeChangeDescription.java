@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeChangeDescription.java,v 1.3 2006/01/30 19:47:55 cdamus Exp $
+ * $Id: CompositeChangeDescription.java,v 1.4 2006/05/05 14:29:43 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -157,7 +157,6 @@ public class CompositeChangeDescription
 			} else {
 				result = changeDescription.getObjectChanges().isEmpty()
 					&& changeDescription.getObjectsToAttach().isEmpty()
-					&& changeDescription.getObjectsToDetach().isEmpty()
 					&& changeDescription.getResourceChanges().isEmpty();
 			}
 		}
