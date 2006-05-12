@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.5 2006/04/11 14:29:54 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.6 2006/05/12 19:49:29 cmcgee Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -34,6 +34,7 @@ import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.workspace.impl.WorkspaceCommandStackImpl;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
@@ -89,7 +90,12 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		super(label);
 		
 		this.domain = (InternalTransactionalEditingDomain) domain;
-		this.txOptions = (options == null) ? Collections.EMPTY_MAP : options;
+		if (options == null) {
+			this.txOptions = Collections.singletonMap(WorkspaceCommandStackImpl.OPTION_OPERATION_INSTANCE, this);
+		} else {
+			this.txOptions = options;
+			this.txOptions.put(WorkspaceCommandStackImpl.OPTION_OPERATION_INSTANCE, this);
+		}
 	}
 
 	/**

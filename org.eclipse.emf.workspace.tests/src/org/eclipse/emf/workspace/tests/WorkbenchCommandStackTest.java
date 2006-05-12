@@ -12,21 +12,44 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.3 2006/02/02 16:24:19 cdamus Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.4 2006/05/12 19:49:17 cmcgee Exp $
  */
 package org.eclipse.emf.workspace.tests;
+
+import java.util.Collection;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.commands.operations.OperationHistoryFactory;
+import org.eclipse.core.commands.operations.UndoContext;
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.edit.command.SetCommand;
+import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
+import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.ResourceSetChangeEvent;
+import org.eclipse.emf.transaction.ResourceSetListenerImpl;
+import org.eclipse.emf.transaction.RollbackException;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.AbstractEMFOperation;
+import org.eclipse.emf.workspace.CommandWithUndoContext;
 import org.eclipse.emf.workspace.EMFCommandOperation;
 import org.eclipse.emf.workspace.IWorkspaceCommandStack;
 import org.eclipse.emf.workspace.ResourceUndoContext;
+import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
+import org.eclipse.emf.workspace.impl.WorkspaceCommandStackImpl;
 import org.eclipse.emf.workspace.tests.fixtures.NullCommand;
 
 
@@ -186,6 +209,122 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		
 		assertNotNull(operations);
 		assertEquals(0, operations.length);
+	}
+	
+	public void testUndoContextPropagationFromTriggerListeners() {
+		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+		final IUndoContext[] undoContexts = {new UndoContext()};
+		
+		class MyCommandWithUndoContexts extends RecordingCommand implements CommandWithUndoContext {
+			public MyCommandWithUndoContexts() {
+				super(domain);
+			}
+			
+			protected void doExecute() {
+				// This command doesn't actually do anything but it has some
+				//  additional undo contexts to add to the parent operation.
+			}
+
+			public IUndoContext[] getUndoContexts() {
+				return undoContexts;
+			}
+		};
+		
+		domain.addResourceSetListener(new ResourceSetListenerImpl() {
+			public boolean isPrecommitOnly() {
+				return true;
+			}
+			
+			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+				throws RollbackException {
+				
+				return new MyCommandWithUndoContexts();
+			}
+		});
+		
+		final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml")); //$NON-NLS-1$
+		
+		AbstractEMFOperation op = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
+			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+				throws ExecutionException {
+				
+				r.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+				
+				return Status.OK_STATUS;
+			}
+		};
+		
+		assertTrue(op.getContexts().length == 0);
+		
+		// Try executing the operation manually
+		try {
+			op.execute(new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+			fail();
+		}
+		
+		assertNotNull(op.getContexts());
+		assertTrue(op.getContexts().length > 0);
+		assertTrue(op.getContexts()[0] == undoContexts[0]);
+		
+		op.removeContext(undoContexts[0]);
+		
+		try {
+			OperationHistoryFactory.getOperationHistory().execute(op, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+			fail();
+		}
+		
+		assertNotNull(op.getContexts());
+		assertTrue(op.getContexts().length > 0);
+		assertTrue(op.getContexts()[0] == undoContexts[0]);
+	}
+	
+	public void testSaveIsDoneAPIs() {
+		TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+		final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml")); //$NON-NLS-1$
+		
+		Command op = new RecordingCommand(domain) {
+
+			protected void doExecute() {
+				r.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+				
+			}
+		};
+		
+		BasicCommandStack stack = (BasicCommandStack)domain.getCommandStack();
+		
+		// Force the operation history to clear itself of our operations.
+		OperationHistoryFactory.getOperationHistory().setLimit(
+			((WorkspaceCommandStackImpl)stack).getDefaultUndoContext(), 0);
+		OperationHistoryFactory.getOperationHistory().setLimit(
+			((WorkspaceCommandStackImpl)stack).getDefaultUndoContext(), 20);
+		
+		stack.saveIsDone();
+		
+		assertFalse(stack.isSaveNeeded());
+		
+		stack.execute(op);
+		
+		assertTrue(stack.isSaveNeeded());
+		
+		stack.undo();
+		
+		assertFalse(stack.isSaveNeeded());
+		
+		stack.redo();
+		
+		assertTrue(stack.isSaveNeeded());
+		
+		stack.saveIsDone();
+		
+		assertFalse(stack.isSaveNeeded());
+		
+		stack.execute(op);
+		
+		assertTrue(stack.isSaveNeeded());
 	}
 	
 	//

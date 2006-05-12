@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.3 2006/03/15 01:40:28 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.4 2006/05/12 19:49:29 cmcgee Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -47,6 +47,8 @@ import org.eclipse.emf.transaction.impl.InternalTransactionalCommandStack;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TriggerCommandTransaction;
 import org.eclipse.emf.transaction.util.TriggerCommand;
+import org.eclipse.emf.workspace.AbstractEMFOperation;
+import org.eclipse.emf.workspace.CommandWithUndoContext;
 import org.eclipse.emf.workspace.EMFCommandOperation;
 import org.eclipse.emf.workspace.IWorkspaceCommandStack;
 import org.eclipse.emf.workspace.ResourceUndoContext;
@@ -70,11 +72,31 @@ public class WorkspaceCommandStackImpl
 		extends BasicCommandStack
 		implements IWorkspaceCommandStack, InternalTransactionalCommandStack {
 	
+	/**
+	 * <p>
+	 * This option allows IUndoableOperation implementations to contribute a reference
+	 *  to their instance to this command stack for the purposes of copying undo contexts
+	 *  optionally provided by trigger listeners through the {@link CommandWithUndoContext}
+	 *  interface. The way that this option is propagated is through the options map of a
+	 *  transaction that the IUndoableOperation will create in order to perform its EMF
+	 *  changes. 
+	 * </p>
+	 * <p>
+	 *  Example:
+	 * <pre>
+	 *   // 'this' is an IUndoableOperation
+	 *   options.put(WorkspaceCommandStackImpl.OPTION_OPERATION_INSTANCE, this);
+	 *   domain.startTransaction(false, options);
+	 * </pre>
+	 */
+	public static final String OPTION_OPERATION_INSTANCE = "option_operation_instance"; //$NON-NLS-1$
+	
 	private InternalTransactionalEditingDomain domain;
 	private final IOperationHistory history;
 	private DomainListener domainListener;
 	
 	private final IUndoContext defaultContext = new UndoContext();
+	private IUndoContext savedContext = null;
 	private Set affectedResources;
 	
 	private ExceptionHandler exceptionHandler;
@@ -122,6 +144,13 @@ public class WorkspaceCommandStackImpl
 	// Documentation copied from the method specification
 	public final IUndoContext getDefaultUndoContext() {
 		return defaultContext;
+	}
+	
+	private final IUndoContext getSavedContext() {
+		if (savedContext == null) {
+			savedContext = new UndoContext();
+		}
+		return savedContext;
 	}
 
 	// Documentation copied from the method specification
@@ -336,6 +365,28 @@ public class WorkspaceCommandStackImpl
 	// Documentation copied from the method specification
 	public void executeTriggers(Command command, List triggers, Map options) throws InterruptedException, RollbackException {
 		if (!triggers.isEmpty()) {
+			AbstractEMFOperation undoableOperation = (AbstractEMFOperation)options.get(OPTION_OPERATION_INSTANCE);
+			
+			// If we are in the scenario where we have an AbstractEMFOperation
+			//  that caused this transaction and there are some triggers
+			//  that are providing additional undo contexts then we shall add
+			//  those contexts to the operation.
+			if (undoableOperation != null) {
+				for (Iterator i = triggers.iterator(); i.hasNext();) {
+					Object trigger = i.next();
+					
+					if (trigger instanceof CommandWithUndoContext) {
+						IUndoContext[] undoContextsToAdd = ((CommandWithUndoContext)trigger).getUndoContexts();
+						for (int j = 0; j<undoContextsToAdd.length; j++) {
+							if (undoContextsToAdd[j] == null)
+								continue;
+							
+							undoableOperation.addContext(undoContextsToAdd[j]);
+						}
+					}
+				}
+			}
+			
 			TriggerCommand trigger = (command == null)
 				? new TriggerCommand(triggers)
 				: new TriggerCommand(command, triggers);
@@ -475,5 +526,41 @@ public class WorkspaceCommandStackImpl
 			// only interested in post-commit "resourceSetChanged" event
 			return true;
 		}
+	}
+	
+	public boolean isSaveNeeded() {
+		// We override the execute method and never call the super implementation
+		//  so we have to implement the isSaveNeeded method ourselves.
+		IUndoableOperation nextUndoableOperation = history.getUndoOperation(getDefaultUndoContext());
+		
+		if (nextUndoableOperation == null)
+			return false;
+		
+		return savedContext != null ? !nextUndoableOperation.hasContext(getSavedContext()) : true;
+	}
+	
+	public void saveIsDone() {
+		// We override the execute method and never call the super implementation
+		//  so we have to implement the saveIsDone method ourselves.
+		
+		if (savedContext != null) {
+			// The save context is only stored on one operation. We must
+			//  remove it from any other operation that may have contained it before.
+			IUndoableOperation[] undoableOperations = history.getUndoHistory(getSavedContext());
+			for (int i=0; i<undoableOperations.length; i++) {
+				undoableOperations[i].removeContext(getSavedContext());
+			}
+			IUndoableOperation[] redoableOperations = history.getRedoHistory(getSavedContext());
+			for (int i=0; i<redoableOperations.length; i++) {
+				redoableOperations[i].removeContext(getSavedContext());
+			}
+		}
+		
+		IUndoableOperation nextUndoableOperation = history.getUndoOperation(getDefaultUndoContext());
+		if (nextUndoableOperation == null) {
+			return;
+		}
+		
+		nextUndoableOperation.addContext(getSavedContext());
 	}
 }
