@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.6 2006/05/12 19:49:29 cmcgee Exp $
+ * $Id: AbstractEMFOperation.java,v 1.7 2006/05/15 20:05:23 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -93,7 +93,11 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		if (options == null) {
 			this.txOptions = Collections.singletonMap(WorkspaceCommandStackImpl.OPTION_OPERATION_INSTANCE, this);
 		} else {
-			this.txOptions = options;
+			// make a defensive copy to
+			//  - avoid modifying client's data
+			//  - guard against client modifying my map
+			//  - avoid exceptions on immutable maps
+			this.txOptions = new java.util.HashMap(options);
 			this.txOptions.put(WorkspaceCommandStackImpl.OPTION_OPERATION_INSTANCE, this);
 		}
 	}
