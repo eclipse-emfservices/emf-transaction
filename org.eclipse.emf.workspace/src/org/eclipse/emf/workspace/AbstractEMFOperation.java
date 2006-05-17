@@ -12,10 +12,11 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.8 2006/05/17 21:18:27 cmcgee Exp $
+ * $Id: AbstractEMFOperation.java,v 1.9 2006/05/17 21:32:16 cmcgee Exp $
  */
 package org.eclipse.emf.workspace;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -217,28 +218,25 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 *     our changes
 	 */
 	protected void didCommit(Transaction transaction) {
-		Command cmd = ((InternalTransaction)transaction).getTriggers();
-		List triggers;
-		if (cmd instanceof CompoundCommand) {
-			triggers = ((CompoundCommand)cmd).getCommandList();
-		} else {
-			triggers = Collections.singletonList(cmd);
-		}
-		
-		for (Iterator i = triggers.iterator(); i.hasNext();) {
-			Object trigger = i.next();
-			
-			if (trigger instanceof EMFOperationCommand) {
-				IUndoContext[] undoContextsToAdd = ((EMFOperationCommand)trigger).getOperation().getContexts();
-				for (int j = 0; j<undoContextsToAdd.length; j++) {
-					if (undoContextsToAdd[j] != null) {
-						addContext(undoContextsToAdd[j]);
-					}
+		gatherUndoContextsFromTrigger(((InternalTransaction)transaction).getTriggers());
+	}
+	
+	private void gatherUndoContextsFromTrigger(Command trigger) {
+		if (trigger instanceof CompoundCommand) {
+			for (Iterator i = ((CompoundCommand) trigger).getCommandList()
+				.iterator(); i.hasNext();) {
+				gatherUndoContextsFromTrigger((Command)i.next());
+			}
+		} else if (trigger instanceof EMFOperationCommand) {
+			IUndoContext[] undoContextsToAdd = ((EMFOperationCommand)trigger).getOperation().getContexts();
+			for (int j = 0; j<undoContextsToAdd.length; j++) {
+				if (undoContextsToAdd[j] != null) {
+					addContext(undoContextsToAdd[j]);
 				}
 			}
 		}
 	}
-	
+
 	/**
 	 * Queries whether I can be undone.  I can generally be undone if I was
 	 * successfully executed.  Subclasses would not usually need to override
