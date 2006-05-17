@@ -12,11 +12,10 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.9 2006/05/17 21:32:16 cmcgee Exp $
+ * $Id: AbstractEMFOperation.java,v 1.10 2006/05/17 21:32:32 cmcgee Exp $
  */
 package org.eclipse.emf.workspace;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
