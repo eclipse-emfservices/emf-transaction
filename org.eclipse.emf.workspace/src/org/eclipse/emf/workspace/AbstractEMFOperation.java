@@ -12,29 +12,32 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.7 2006/05/15 20:05:23 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.8 2006/05/17 21:18:27 cmcgee Exp $
  */
 package org.eclipse.emf.workspace;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.AbstractOperation;
+import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
-import org.eclipse.emf.workspace.impl.WorkspaceCommandStackImpl;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
@@ -91,14 +94,13 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		
 		this.domain = (InternalTransactionalEditingDomain) domain;
 		if (options == null) {
-			this.txOptions = Collections.singletonMap(WorkspaceCommandStackImpl.OPTION_OPERATION_INSTANCE, this);
+			this.txOptions = Collections.EMPTY_MAP;
 		} else {
 			// make a defensive copy to
 			//  - avoid modifying client's data
 			//  - guard against client modifying my map
 			//  - avoid exceptions on immutable maps
 			this.txOptions = new java.util.HashMap(options);
-			this.txOptions.put(WorkspaceCommandStackImpl.OPTION_OPERATION_INSTANCE, this);
 		}
 	}
 
@@ -202,15 +204,39 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	}
 
 	/**
+	 * <p>
 	 * Hook for subclasses to learn that the specified <code>transaction</code>
 	 * has been successfully committed and, if necessary, to extract information
 	 * from it.
-	 * 
+	 * </p>
+	 * <p>
+	 * Note: subclasses should call this super implementation to get some default
+	 *  behaviours.
+	 * </p>
 	 * @param transaction a transaction that has committed, which has recorded
 	 *     our changes
 	 */
 	protected void didCommit(Transaction transaction) {
-		// nothing to do
+		Command cmd = ((InternalTransaction)transaction).getTriggers();
+		List triggers;
+		if (cmd instanceof CompoundCommand) {
+			triggers = ((CompoundCommand)cmd).getCommandList();
+		} else {
+			triggers = Collections.singletonList(cmd);
+		}
+		
+		for (Iterator i = triggers.iterator(); i.hasNext();) {
+			Object trigger = i.next();
+			
+			if (trigger instanceof EMFOperationCommand) {
+				IUndoContext[] undoContextsToAdd = ((EMFOperationCommand)trigger).getOperation().getContexts();
+				for (int j = 0; j<undoContextsToAdd.length; j++) {
+					if (undoContextsToAdd[j] != null) {
+						addContext(undoContextsToAdd[j]);
+					}
+				}
+			}
+		}
 	}
 	
 	/**

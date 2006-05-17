@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFOperationCommand.java,v 1.3 2006/04/26 13:13:34 cdamus Exp $
+ * $Id: EMFOperationCommand.java,v 1.4 2006/05/17 21:18:27 cmcgee Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -357,5 +357,14 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Obtains the undoable operation that this command is wrapping.
+	 * 
+	 * @return An undoable operation.
+	 */
+	IUndoableOperation getOperation() {
+		return operation;
 	}
 }

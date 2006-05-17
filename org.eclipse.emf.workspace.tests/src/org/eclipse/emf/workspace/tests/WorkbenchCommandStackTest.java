@@ -12,16 +12,19 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.4 2006/05/12 19:49:17 cmcgee Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.5 2006/05/17 21:18:28 cmcgee Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
 import java.util.Collection;
 
+import javax.swing.undo.AbstractUndoableEdit;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.AbstractOperation;
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.core.commands.operations.OperationHistoryFactory;
@@ -44,8 +47,8 @@ import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.workspace.AbstractEMFOperation;
-import org.eclipse.emf.workspace.CommandWithUndoContext;
 import org.eclipse.emf.workspace.EMFCommandOperation;
+import org.eclipse.emf.workspace.EMFOperationCommand;
 import org.eclipse.emf.workspace.IWorkspaceCommandStack;
 import org.eclipse.emf.workspace.ResourceUndoContext;
 import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
@@ -213,22 +216,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 	
 	public void testUndoContextPropagationFromTriggerListeners() {
 		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
-		final IUndoContext[] undoContexts = {new UndoContext()};
-		
-		class MyCommandWithUndoContexts extends RecordingCommand implements CommandWithUndoContext {
-			public MyCommandWithUndoContexts() {
-				super(domain);
-			}
-			
-			protected void doExecute() {
-				// This command doesn't actually do anything but it has some
-				//  additional undo contexts to add to the parent operation.
-			}
-
-			public IUndoContext[] getUndoContexts() {
-				return undoContexts;
-			}
-		};
+		final IUndoContext undoContext = new UndoContext();
 		
 		domain.addResourceSetListener(new ResourceSetListenerImpl() {
 			public boolean isPrecommitOnly() {
@@ -238,7 +226,26 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
 				throws RollbackException {
 				
-				return new MyCommandWithUndoContexts();
+				IUndoableOperation op = new AbstractOperation("") { //$NON-NLS-1$
+					public IStatus execute(IProgressMonitor monitor, IAdaptable info)
+						throws ExecutionException {
+						return Status.OK_STATUS;
+					}
+	
+					public IStatus redo(IProgressMonitor monitor, IAdaptable info)
+						throws ExecutionException {
+						return Status.OK_STATUS;
+					}
+	
+					public IStatus undo(IProgressMonitor monitor, IAdaptable info)
+						throws ExecutionException {
+						return Status.OK_STATUS;
+					}
+				};
+				
+				op.addContext(undoContext);
+				
+				return new EMFOperationCommand(domain, op);
 			}
 		});
 		
@@ -266,9 +273,9 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		
 		assertNotNull(op.getContexts());
 		assertTrue(op.getContexts().length > 0);
-		assertTrue(op.getContexts()[0] == undoContexts[0]);
+		assertTrue(op.getContexts()[0] == undoContext);
 		
-		op.removeContext(undoContexts[0]);
+		op.removeContext(undoContext);
 		
 		try {
 			OperationHistoryFactory.getOperationHistory().execute(op, new NullProgressMonitor(), null);
@@ -279,7 +286,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		
 		assertNotNull(op.getContexts());
 		assertTrue(op.getContexts().length > 0);
-		assertTrue(op.getContexts()[0] == undoContexts[0]);
+		assertTrue(op.getContexts()[0] == undoContext);
 	}
 	
 	public void testSaveIsDoneAPIs() {
