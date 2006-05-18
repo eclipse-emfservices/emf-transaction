@@ -2,7 +2,7 @@
  * <copyright>
  * </copyright>
  *
- * $Id: EXTLibraryEditor.java,v 1.3 2006/02/22 15:17:44 cmcgee Exp $
+ * $Id: EXTLibraryEditor.java,v 1.4 2006/05/18 21:19:26 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
 
@@ -428,7 +428,7 @@ public class EXTLibraryEditor
 	protected void handleChangedResource() {
 		Resource res = getResource();
 		
-		if (!isDirty() || handleDirtyConflict()) {
+		if (changedResources.contains(res) && (!isDirty() || handleDirtyConflict())) {
 			changedResources.remove(res);
 			
 			getOperationHistory().dispose(undoContext, true, true, true);
