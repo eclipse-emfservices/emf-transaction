@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeEMFOperation.java,v 1.3 2006/03/15 01:40:28 cdamus Exp $
+ * $Id: CompositeEMFOperation.java,v 1.4 2006/05/19 17:19:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -54,6 +54,18 @@ import org.eclipse.osgi.util.NLS;
  * transaction context.  The composite can combine EMF and non-EMF operations
  * freely, and even include nested <code>CompositeEMFOperation</code>s.
  * <p>
+ * Although a <code>CompositeEMFOperation</code> provides a single root
+ * transaction context for all of its children, these children open nested
+ * transactions of their own, by default.  This can be disabled by turning off
+ * the {@link #isTransactionNestingEnabled() transactionNestingEnabled} property.
+ * This is a hint that child operations should just execute in the transaction
+ * that is already open, unless they require a nested transaction.  In
+ * consequence, child operations would not be able to depend on changes being
+ * {@linkplain ResourceSetListener#transactionAboutToCommit triggered} by
+ * previous operations, as triggers will be deferred to the end of the composite
+ * (when it commits).
+ * </p>
+ * <p>
  * Note that this kind of a composite is different from the
  * {@link IOperationHistory}'s notion of a {@link TriggeredOperations}, because
  * the children of a composite are not "triggered" by any primary operation.
@@ -81,6 +93,7 @@ import org.eclipse.osgi.util.NLS;
 public class CompositeEMFOperation extends AbstractEMFOperation {
 
 	private final List children;
+	private boolean transactionNestingEnabled = true;
 	
 	/**
 	 * Initializes me with the editing domain in which I am making model changes
@@ -184,6 +197,14 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 						ExecutionException exc = new ExecutionException(Messages.executeInterrupted, e);
 						Tracing.throwing(CompositeEMFOperation.class, "execute", exc); //$NON-NLS-1$
 						throw exc;
+					}
+				} else {
+					AbstractEMFOperation emf = (AbstractEMFOperation) next;
+					if (emf.isReuseParentTransaction() == isTransactionNestingEnabled()) {
+						// tell the child operation to use my transaction, if
+						//    appropriate.  This will also propagate transaction
+						//    nesting disablement state to nested composites
+						emf.setReuseParentTransaction(!isTransactionNestingEnabled());
 					}
 				}
 				
@@ -304,7 +325,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	public boolean canUndo() {
 		boolean result = (getChange() != null);
 		
-		if (result) {
+		if (result && isTransactionNestingEnabled()) {
 			for (Iterator iter = iterator(); result && iter.hasNext();) {
 				result = ((IUndoableOperation) iter.next()).canUndo();
 			}
@@ -318,6 +339,13 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 */
 	protected final IStatus doUndo(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
+		
+		if (!isTransactionNestingEnabled()) {
+			// if we are not nesting transactions, then our change description
+			//    has all of the changes required for undo/redo and children
+			//    will not know for themselves what their changes are
+			return super.doUndo(monitor, info);
+		}
 		
 		final List result = new java.util.ArrayList(size());
 		
@@ -410,7 +438,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	public boolean canRedo() {
 		boolean result = (getChange() != null);
 		
-		if (result) {
+		if (result && isTransactionNestingEnabled()) {
 			for (Iterator iter = iterator(); result && iter.hasNext();) {
 				result = ((IUndoableOperation) iter.next()).canRedo();
 			}
@@ -424,6 +452,13 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 */
 	protected final IStatus doRedo(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
+		
+		if (!isTransactionNestingEnabled()) {
+			// if we are not nesting transactions, then our change description
+			//    has all of the changes required for undo/redo and children
+			//    will not know for themselves what their changes are
+			return super.doRedo(monitor, info);
+		}
 		
 		final List result = new java.util.ArrayList(size());
 		
@@ -635,6 +670,63 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Extends the inherited method to toggle my
+	 * {@link #setTransactionNestingDisabled(boolean) transaction nesting}
+	 * state accordingly.
+	 */
+	void setReuseParentTransaction(boolean reuseParentTransaction) {
+		super.setReuseParentTransaction(reuseParentTransaction);
+		
+		setTransactionNestingEnabled(!reuseParentTransaction);
+	}
+	
+	/**
+	 * Queries whether nesting of transactions is enabled, meaning that all
+	 * child operations (recursively) execute in their own (nested) transactions.
+	 * Nested transactions are enabled by default.
+	 * 
+	 * @return <code>false</code> if child operations execute in a single (flat)
+	 *    transaction where possible; <code>false</code>, otherwise
+	 *    
+	 * @see #setTransactionNestingEnabled(boolean)
+	 */
+	public boolean isTransactionNestingEnabled() {
+		return transactionNestingEnabled;
+	}
+	
+	/**
+	 * Sets whether nesting of transactions is enabled.  Turning this off can
+	 * improve performance considerably by avoiding the book-keeping overhead
+	 * of large numbers of small transactions, where a composite operation is
+	 * a large nested structure.  This property is propagated to child
+	 * composite operations (recursively).
+	 * <p>
+	 * <b>Note</b> that this is really only a hint:  there are exceptions where
+	 * child operation will still create nested transactions.  These are:
+	 * <ul>
+	 *   <li>when the child is not an {@link AbstractEMFOperation}.  Non-EMF
+	 *       operations are given special transactions that capture their changes
+	 *       as change descriptions in the parent transaction</li>
+	 *   <li>when the child has different
+	 *       {@link AbstractEMFOperation#getOptions() transaction options} than
+	 *       the parent composite operation</li>
+	 * </ul>
+	 * </p>
+	 *  
+	 * @param enable whether to force all child operations to create nested
+	 *     transactions
+	 *     
+	 * @throws IllegalStateException if I have already been
+	 *     {@link #execute(IProgressMonitor, IAdaptable) executed}, after which
+	 *     time transaction nesting cannot be changed
+	 */
+	public void setTransactionNestingEnabled(boolean enable) {
+		assertNotExecuted();
+		
+		transactionNestingEnabled = enable;
 	}
 	
 	/**

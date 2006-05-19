@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: BasicTransactionTest.java,v 1.3 2006/02/21 22:16:40 cmcgee Exp $
+ * $Id: BasicTransactionTest.java,v 1.4 2006/05/19 17:19:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -106,6 +106,49 @@ public class BasicTransactionTest extends AbstractTest {
 				}});
 			
 			assertNotNull(book[0]);
+		} catch (InterruptedException e) {
+			fail("Should not be interrupted"); //$NON-NLS-1$
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+
+	/**
+	 * Tests that nested <code>runExclusive()</code> runnables do not open
+	 * (superfluous) nested transactions.
+	 */
+	public void test_read_exclusive_nested() {
+		try {
+			domain.runExclusive(new Runnable() {
+				public void run() {
+					try {
+						domain.runExclusive(new Runnable() {
+							public void run() {
+								try {
+									domain.runExclusive(new Runnable() {
+										public void run() {
+											// there should be an active transaction
+											Transaction active =
+												((InternalTransactionalEditingDomain) domain).getActiveTransaction();
+											assertNotNull(active);
+											
+											assertTrue(active.isReadOnly());
+											
+											// the transaction is not nested
+											assertNull(active.getParent());
+										}});
+								} catch (InterruptedException e) {
+									fail("Should not be interrupted"); //$NON-NLS-1$
+								} catch (Exception e) {
+									fail(e);
+								}
+							}});
+					} catch (InterruptedException e) {
+						fail("Should not be interrupted"); //$NON-NLS-1$
+					} catch (Exception e) {
+						fail(e);
+					}
+				}});
 		} catch (InterruptedException e) {
 			fail("Should not be interrupted"); //$NON-NLS-1$
 		} catch (Exception e) {

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.10 2006/05/17 21:32:32 cmcgee Exp $
+ * $Id: AbstractEMFOperation.java,v 1.11 2006/05/19 17:19:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -70,6 +70,8 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	private Transaction transaction;
 	private TransactionChangeDescription change;
 	
+	private boolean reuseParentTransaction;
+	
 	/**
 	 * Initializes me with the editing domain in which I am making model changes
 	 * and a label.
@@ -118,14 +120,18 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		final List result = new java.util.ArrayList(2);
 		
 		try {
-			transaction = createTransaction(getOptions());
+			if (!isReuseParentTransaction() || optionsDiffer()) {
+				transaction = createTransaction(getOptions());
+			}
 			
 			result.add(doExecute(monitor, info));
 			
-			transaction.commit();
-			change = transaction.getChangeDescription();
-			
-			didCommit(transaction);
+			if (transaction != null) {
+				transaction.commit();
+				change = transaction.getChangeDescription();
+				
+				didCommit(transaction);
+			}
 		} catch (InterruptedException e) {
 			Tracing.catching(AbstractEMFOperation.class, "execute", e); //$NON-NLS-1$
 			ExecutionException exc = new ExecutionException(Messages.executeInterrupted, e);
@@ -149,6 +155,25 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		}
 		
 		return aggregateStatuses(result);
+	}
+	
+	/**
+	 * Queries whether my options differ from the currently active transaction,
+	 * if there is one.
+	 * 
+	 * @return <code>false</code> if either there is an active transaction and it
+	 *     has the same options as I; <code>true</code>, otherwise
+	 */
+	private boolean optionsDiffer() {
+		boolean result = true;
+		
+		Transaction active =
+			((InternalTransactionalEditingDomain) getEditingDomain()).getActiveTransaction();
+		if ((active != null) && !active.isReadOnly()) {
+			result = !active.getOptions().equals(getOptions());
+		}
+		
+		return result;
 	}
 	
 	/**
@@ -496,5 +521,34 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		
 		transaction = null;
 		change = null;
+	}
+	
+	/**
+	 * Queries whether I reuse an existing read/write transaction when possible.
+	 * It is not possible when either there is not currently any active
+	 * transaction or when the active transaction has different options from my
+	 * options.
+	 * 
+	 * @return whether I reuse existing transactions
+	 * 
+	 * @see #setReuseParentTransaction(boolean)
+	 */
+	boolean isReuseParentTransaction() {
+		return reuseParentTransaction;
+	}
+	
+	/**
+	 * Sets whether I reuse an existing read/write transaction when possible.
+	 * It is not possible when either there is not currently any active
+	 * transaction or when the active transaction has different options from my
+	 * options.  This can be useful for performance of large nested operation
+	 * structures, to eliminate the overhead of creating large numbers of small
+	 * transactions with all of the data that they record.
+	 * <p>
+	 *  
+	 * @param reuseParentTransaction whether to reuse parent transactions
+	 */
+	void setReuseParentTransaction(boolean reuseParentTransaction) {
+		this.reuseParentTransaction = reuseParentTransaction;
 	}
 }

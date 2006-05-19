@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.5 2006/04/12 22:09:41 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.6 2006/05/19 17:19:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -239,7 +239,17 @@ public class TransactionalEditingDomainImpl
 	public Object runExclusive(Runnable read)
 		throws InterruptedException {
 		
-		Transaction tx = startTransaction(true, null);
+		Transaction active = getActiveTransaction();
+		Transaction tx = null;
+		
+		if ((active == null)
+				|| !(active.isActive() && active.isReadOnly()
+						&& (active.getOwner() == Thread.currentThread()))) {
+			
+			// only need to start a new transaction if we don't already have
+			//   exclusive read-only access
+			tx = startTransaction(true, null);
+		}
 		
 		final RunnableWithResult rwr = (read instanceof RunnableWithResult)?
 			(RunnableWithResult) read : null;

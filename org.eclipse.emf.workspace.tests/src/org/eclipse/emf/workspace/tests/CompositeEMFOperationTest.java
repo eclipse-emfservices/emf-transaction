@@ -12,11 +12,13 @@
  *
  * </copyright>
  *
- * $Id: CompositeEMFOperationTest.java,v 1.2 2006/03/15 01:40:32 cdamus Exp $
+ * $Id: CompositeEMFOperationTest.java,v 1.3 2006/05/19 17:19:43 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.ListIterator;
 
@@ -38,6 +40,10 @@ import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Writer;
+import org.eclipse.emf.transaction.ResourceSetChangeEvent;
+import org.eclipse.emf.transaction.ResourceSetListenerImpl;
+import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.util.CompositeChangeDescription;
 import org.eclipse.emf.workspace.CompositeEMFOperation;
 import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultBookTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultNameTrigger;
@@ -1249,9 +1255,374 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		assertEquals(IStatus.CANCEL, status.getSeverity());
 	}
 	
+	/**
+	 * Tests that an pure EMF composite operation can use a single, unnested,
+	 * transaction.
+	 */
+	public void test_noTransactionNesting_pureEMF_135545() {
+		TransactionCapture capture = new TransactionCapture();
+		domain.addResourceSetListener(capture);
+		
+		startReading();
+		
+		int originalBranchCount = root.getBranches().size();
+		
+		commit();
+
+		IUndoContext ctx = new TestUndoContext();
+		
+		// create a nested composite operation structure
+		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
+		
+		// tell the composite to reuse a single transaction
+		composite.setTransactionNestingEnabled(false);
+		
+		composite.add(new TestOperation(domain) {
+			protected void doExecute() {
+				// add a new library
+				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+			}});
+
+		CompositeEMFOperation nestedComposite = new CompositeEMFOperation(domain, "Nested"); //$NON-NLS-1$
+		nestedComposite.add(new TestOperation(domain) {
+			protected void doExecute() {
+				// add a new library
+				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+			}});
+		nestedComposite.add(new TestOperation(domain) {
+			protected void doExecute() {
+				// add a new library
+				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+			}});
+
+		composite.add(nestedComposite);
+		
+		try {
+			composite.addContext(ctx);
+			history.execute(composite, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		Transaction transaction = capture.getTransaction();
+		assertNotNull(transaction);
+		
+		// only one transaction (contributing one change description to the composite)
+		Collection changes = getChanges(transaction);
+		assertEquals(1, changes.size());
+		
+		capture.clear();
+		
+		startReading();
+		
+		assertEquals(originalBranchCount + 3, root.getBranches().size());
+		
+		commit();
+
+		try {
+			assertTrue(history.canUndo(ctx));
+			history.undo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		transaction = capture.getTransaction();
+		assertNotNull(transaction);
+		
+		// transaction didn't record any changes on undo
+		changes = getChanges(transaction);
+		assertEquals(0, changes.size());
+		
+		startReading();
+		
+		// verify that the changes were undone
+		assertEquals(originalBranchCount, root.getBranches().size());
+		
+		commit();
+		
+		try {
+			assertTrue(history.canRedo(ctx));
+			history.redo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		transaction = capture.getTransaction();
+		assertNotNull(transaction);
+		
+		// transaction didn't record any changes on redo
+		changes = getChanges(transaction);
+		assertEquals(0, changes.size());
+		
+		startReading();
+		
+		// verify that the changes were redone
+		assertEquals(originalBranchCount + 3, root.getBranches().size());
+		
+		commit();
+	}
+	
+	/**
+	 * Tests that a mixed EMF and non-EMF composite operation can use a single,
+	 * unnested, transaction as much as possible (some nesting must still occur
+	 * to account for non-EMF changes).
+	 */
+	public void test_noTransactionNesting_mixed_135545() {
+		TransactionCapture capture = new TransactionCapture();
+		domain.addResourceSetListener(capture);
+		
+		startReading();
+		
+		int originalBranchCount = root.getBranches().size();
+		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final String title = book.getTitle();
+		
+		commit();
+
+		// non-EMF "external" data to be modified by the composite
+		final String[] externalData = new String[1];
+		externalData[0] = "..."; //$NON-NLS-1$
+		
+		IUndoContext ctx = new TestUndoContext();
+		
+		// create a nested composite operation structure
+		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
+		
+		// tell the composite to reuse a single transaction
+		composite.setTransactionNestingEnabled(false);
+		
+		composite.add(new TestOperation(domain) {
+			protected void doExecute() {
+				// add a new library
+				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+			}});
+
+		CompositeEMFOperation nestedComposite = new CompositeEMFOperation(domain, "Nested"); //$NON-NLS-1$
+		nestedComposite.add(new ChangeExternalData(externalData, book));  // non-EMF change
+		nestedComposite.add(new TestOperation(domain) {
+			protected void doExecute() {
+				// add a new library
+				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+			}});
+		nestedComposite.add(new TestOperation(domain) {
+			protected void doExecute() {
+				// add a new library
+				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+			}});
+
+		composite.add(nestedComposite);
+		
+		try {
+			composite.addContext(ctx);
+			history.execute(composite, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		Transaction transaction = capture.getTransaction();
+		assertNotNull(transaction);
+		
+		// only two transactions:  the parent and a single child for the
+		//    non-EMF changes.  These result in three changes:  one change
+		//    before the non-EMF changes, one change for the non-EMF changes,
+		//    and one change for everything after.  We would have 4 changes
+		//    without the no-nesting hint
+		Collection changes = getChanges(transaction);
+		assertEquals(3, changes.size());
+		
+		capture.clear();
+		
+		startReading();
+		
+		// verify that the changes were done
+		assertEquals(originalBranchCount + 3, root.getBranches().size());
+		assertEquals(title, externalData[0]);
+		
+		commit();
+
+		try {
+			assertTrue(history.canUndo(ctx));
+			history.undo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		transaction = capture.getTransaction();
+		assertNotNull(transaction);
+		
+		// transaction didn't record any changes on undo
+		changes = getChanges(transaction);
+		assertEquals(0, changes.size());
+		
+		startReading();
+		
+		// verify that the changes were undone
+		assertEquals(originalBranchCount, root.getBranches().size());
+		assertEquals("...", externalData[0]); //$NON-NLS-1$
+		
+		commit();
+		
+		try {
+			assertTrue(history.canRedo(ctx));
+			history.redo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		transaction = capture.getTransaction();
+		assertNotNull(transaction);
+		
+		// transaction didn't record any changes on redo
+		changes = getChanges(transaction);
+		assertEquals(0, changes.size());
+		
+		startReading();
+		
+		// verify that the changes were redone
+		assertEquals(originalBranchCount + 3, root.getBranches().size());
+		assertEquals(title, externalData[0]);
+		
+		commit();
+	}
+	
+	/**
+	 * Tests that an EMF operation with different options forces nesting.
+	 */
+	public void test_noTransactionNesting_differentOptions_135545() {
+		TransactionCapture capture = new TransactionCapture();
+		domain.addResourceSetListener(capture);
+		
+		startReading();
+		
+		int originalBranchCount = root.getBranches().size();
+		
+		commit();
+
+		IUndoContext ctx = new TestUndoContext();
+		
+		// create a nested composite operation structure
+		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
+		
+		// tell the composite to reuse a single transaction
+		composite.setTransactionNestingEnabled(false);
+		
+		composite.add(new TestOperation(domain) {
+			protected void doExecute() {
+				// add a new library
+				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+			}});
+
+		CompositeEMFOperation nestedComposite = new CompositeEMFOperation(domain, "Nested"); //$NON-NLS-1$
+		nestedComposite.add(new TestOperation(domain,
+				// this transaction has different options
+				Collections.singletonMap(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE)) {
+			protected void doExecute() {
+				// add a new library
+				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+			}});
+		nestedComposite.add(new TestOperation(domain) {
+			protected void doExecute() {
+				// add a new library
+				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+			}});
+		nestedComposite.add(new TestOperation(domain) {
+			protected void doExecute() {
+				// add a new library
+				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+			}});
+
+		composite.add(nestedComposite);
+		
+		try {
+			composite.addContext(ctx);
+			history.execute(composite, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		Transaction transaction = capture.getTransaction();
+		assertNotNull(transaction);
+		
+		// only two transactions:  the parent and a single child for the
+		//    non-EMF changes.  These result in three changes:  one change
+		//    before the different options, one change for the different options,
+		//    and one change for everything after.  We would have 4 changes
+		//    without the no-nesting hint
+		Collection changes = getChanges(transaction);
+		assertEquals(3, changes.size());
+		
+		capture.clear();
+		
+		startReading();
+		
+		assertEquals(originalBranchCount + 4, root.getBranches().size());
+		
+		commit();
+
+		try {
+			assertTrue(history.canUndo(ctx));
+			history.undo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		transaction = capture.getTransaction();
+		assertNotNull(transaction);
+		
+		// transaction didn't record any changes on undo
+		changes = getChanges(transaction);
+		assertEquals(0, changes.size());
+		
+		startReading();
+		
+		// verify that the changes were undone
+		assertEquals(originalBranchCount, root.getBranches().size());
+		
+		commit();
+		
+		try {
+			assertTrue(history.canRedo(ctx));
+			history.redo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		transaction = capture.getTransaction();
+		assertNotNull(transaction);
+		
+		// transaction didn't record any changes on redo
+		changes = getChanges(transaction);
+		assertEquals(0, changes.size());
+		
+		startReading();
+		
+		// verify that the changes were redone
+		assertEquals(originalBranchCount + 4, root.getBranches().size());
+		
+		commit();
+	}
+	
 	//
 	// Test fixtures
 	//
+	
+	/**
+	 * Does a reflective hack to get the private <tt>changes</tt> field of a
+	 * composite change description.
+	 */
+	private Collection getChanges(Transaction tx) {
+		Collection result = null;
+		CompositeChangeDescription composite = (CompositeChangeDescription) tx.getChangeDescription();
+		
+		try {
+			Field changes = composite.getClass().getDeclaredField("changes"); //$NON-NLS-1$
+			changes.setAccessible(true);
+			result = (Collection) changes.get(composite);
+		} catch (Exception e) {
+			fail("Could not access private changes field of CompositeChangeDescription: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+		return result;
+	}
 	
 	private static class ChangeExternalData extends AbstractOperation {
 		private final String[] externalData;
@@ -1371,6 +1742,28 @@ public class CompositeEMFOperationTest extends AbstractTest {
 			throws ExecutionException {
 			wasRedone = true;
 			return Status.OK_STATUS;
+		}
+	}
+	
+	private static class TransactionCapture extends ResourceSetListenerImpl {
+		private Transaction transaction;
+		
+		public boolean isPostcommitOnly() {
+			return true;
+		}
+		
+		public void resourceSetChanged(ResourceSetChangeEvent event) {
+			if (transaction == null) {
+				transaction = event.getTransaction();
+			}
+		}
+		
+		void clear() {
+			transaction = null;
+		}
+		
+		Transaction getTransaction() {
+			return transaction;
 		}
 	}
 }
