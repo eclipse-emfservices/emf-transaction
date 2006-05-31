@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?NLS TYPE="org.eclipse.help.toc"?>
 
-<toc label="EMFT Workspace Programmer&apos;s Guide">
+<toc label="EMFT Workspace Developer Guide">
 	<anchor id="overviews-before" />
-	<topic label="Overviews">
-		<topic label="Workspace Integration Overview" href="references/overview/workspaceOverview.html" />
+	<topic label="Programmer&apos;s Guides">
+		<topic label="Workspace Integration Programmer&apos;s Guide" href="references/overview/workspaceOverview.html" />
 	</topic>
 	<anchor id="overviews-after" />
 	
