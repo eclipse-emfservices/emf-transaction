@@ -14,7 +14,7 @@
  *
  * </copyright>
  *
- * $Id: plugin.xml,v 1.3 2006/05/17 17:00:58 cmcgee Exp $
+ * $Id: plugin.xml,v 1.4 2006/05/31 13:17:09 cdamus Exp $
  */
 -->
 <?eclipse version="3.0"?>
@@ -24,7 +24,7 @@
          point="org.eclipse.ui.newWizards">
       <category
             id="org.eclipse.emf.transaction.examples.category"
-            name="EMFT Transaction"
+            name="%Transaction_category"
             parentCategory="org.eclipse.ui.Examples"/>
       <wizard
             canFinishEarly="true"
@@ -32,6 +32,8 @@
             class="org.eclipse.emf.transaction.examples.internal.wizard.WorkspaceExampleWizard"
             hasPages="false"
             id="org.eclipse.emf.transaction.examples.workspace"
-            name="Workspace Integration Example"/>
+            name="%Transaction_Editor_name">
+         <description>%Transaction_Editor_description</description>
+      </wizard>
    </extension>
 </plugin>
