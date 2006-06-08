@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.9 2006/04/12 22:09:41 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.10 2006/06/08 14:26:34 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -359,21 +359,21 @@ public class TransactionImpl
 		}
 		
 		try {
-			if (isValidationEnabled(this)) {
+			if (!isReadOnly()) {
 				// ensure that validation of a nesting transaction does not
-				//     include any of my changes that I have rolled back
+				//   include any of my changes that I have rolled back and that
+				//   post-commit doesn't find any of my changes, either  
 				getInternalDomain().getValidator().remove(this);
+				notifications.clear();
 				
 				stopRecording();
 				
 				if (isUndoEnabled(this)) {
 					change.apply();
+					
+					// forget the description.  The changes are reverted
+					change.clear();
 				}
-			}
-			
-			if (isUndoEnabled(this)) {
-				// forget the description.  The changes are reverted
-				change.clear();
 			}
 		} finally {
 			rollingBack = false;
@@ -487,7 +487,9 @@ public class TransactionImpl
 	
 	// Documentation copied from the inherited specification
 	public void add(Notification notification) {
-		notifications.add(notification);
+		if (!rollingBack) {
+			notifications.add(notification);
+		}
 	}
 	
 	// Documentation copied from the inherited specification

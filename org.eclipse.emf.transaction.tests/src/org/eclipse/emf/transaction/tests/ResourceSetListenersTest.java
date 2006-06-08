@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListenersTest.java,v 1.4 2006/02/22 22:13:57 cdamus Exp $
+ * $Id: ResourceSetListenersTest.java,v 1.5 2006/06/08 14:26:31 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -33,9 +33,11 @@ import org.eclipse.emf.examples.extlibrary.BookCategory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
+import org.eclipse.emf.transaction.DemultiplexingListener;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultBookTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultNameTrigger;
@@ -932,6 +934,284 @@ public class ResourceSetListenersTest extends AbstractTest {
 		} catch (Exception e) {
 			fail(e);
 		}
+	}
+	
+	/**
+	 * Tests the propagation of resource change events to post-commit listeners
+	 * even in the case of a transaction rolling back, where the resource change
+	 * is a URI change.
+	 */
+	public void test_rollback_resourceChangePropagation_uri_145321() {
+		class ResourceListener extends DemultiplexingListener {
+			boolean wasCalled;
+			
+			protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
+				wasCalled = true;
+			}
+		}
+		
+		Resource test1 = domain.getResourceSet().createResource(URI.createURI("http://foo1.xmi")); //$NON-NLS-1$
+		Book book = EXTLibraryFactory.eINSTANCE.createBook();
+		
+		startWriting();
+		
+		// load the resource
+		test1.getContents().add(book);
+		
+		commit();
+
+		ResourceListener listener = new ResourceListener();
+		domain.addResourceSetListener(listener);
+		
+		// now the meat of the test:  unload in a transaction
+		startWriting();
+		
+		book.setTitle("foo"); //$NON-NLS-1$
+		
+		rollback();
+		
+		// contents change was rolled back
+		assertNull(book.getTitle());
+		
+		// no notifications were sent out
+		assertFalse(listener.wasCalled);
+	}
+	
+	/**
+	 * Tests that, when non-undoable changes such as resource loads do not occur
+	 * during a transaction that was rolled back, listeners are not invoked.
+	 */
+	public void test_rollback_noEvents_145321() {
+		class ResourceListener extends DemultiplexingListener {
+			private final ResourceSet interestingResourceSet;
+			private final Book interestingBook;
+			
+			boolean changed;
+			
+			ResourceListener(ResourceSet resourceSet, Book book) {
+				interestingResourceSet = resourceSet;
+				interestingBook = book;
+			}
+			
+			protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
+				Object notifier = notification.getNotifier();
+				
+				if (notifier == interestingResourceSet) {
+					int featureID = notification.getFeatureID(ResourceSet.class);
+					
+					switch (featureID) {
+					case ResourceSet.RESOURCE_SET__RESOURCES:
+						changed = true;
+						break;
+					}
+				} else if (notifier == interestingBook) {
+					fail("Should not have received notification of contents change"); //$NON-NLS-1$
+				}
+			}
+		}
+		
+		Resource test1 = domain.getResourceSet().createResource(URI.createURI("http://foo1.xmi")); //$NON-NLS-1$
+		Book book = EXTLibraryFactory.eINSTANCE.createBook();
+		
+		ResourceListener listener = new ResourceListener(domain.getResourceSet(), book);
+		domain.addResourceSetListener(listener);
+		
+		startWriting();
+		
+		test1.getContents().add(book);
+		book.setTitle("foo"); //$NON-NLS-1$
+		
+		// create another resource
+		URI newURI = URI.createURI("http://newfoo.xmi"); //$NON-NLS-1$
+		domain.getResourceSet().createResource(newURI);
+		
+		rollback();
+		
+		// contents change was rolled back
+		assertNull(book.getTitle());
+		
+		// resource set state change was not
+		assertNotNull(domain.getResourceSet().getResource(newURI, false));
+		assertTrue(listener.changed);
+	}
+	
+	/**
+	 * Tests the propagation of resource change events to post-commit listeners
+	 * even in the case of a transaction rolling back, where the resource change
+	 * is a created change.
+	 */
+	public void test_rollback_resourceChangePropagation_created_145321() {
+		class ResourceListener extends DemultiplexingListener {
+			private final ResourceSet interestingResourceSet;
+			private final Book interestingBook;
+			
+			boolean changed;
+			
+			ResourceListener(ResourceSet resourceSet, Book book) {
+				interestingResourceSet = resourceSet;
+				interestingBook = book;
+			}
+			
+			protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
+				Object notifier = notification.getNotifier();
+				
+				if (notifier == interestingResourceSet) {
+					int featureID = notification.getFeatureID(ResourceSet.class);
+					
+					switch (featureID) {
+					case ResourceSet.RESOURCE_SET__RESOURCES:
+						changed = true;
+						break;
+					}
+				} else if (notifier == interestingBook) {
+					fail("Should not have received notification of contents change"); //$NON-NLS-1$
+				}
+			}
+		}
+		
+		Resource test1 = domain.getResourceSet().createResource(URI.createURI("http://foo1.xmi")); //$NON-NLS-1$
+		Book book = EXTLibraryFactory.eINSTANCE.createBook();
+		
+		ResourceListener listener = new ResourceListener(domain.getResourceSet(), book);
+		domain.addResourceSetListener(listener);
+		
+		startWriting();
+		
+		test1.getContents().add(book);
+		book.setTitle("foo"); //$NON-NLS-1$
+		
+		// create another resource
+		URI newURI = URI.createURI("http://newfoo.xmi"); //$NON-NLS-1$
+		domain.getResourceSet().createResource(newURI);
+		
+		rollback();
+		
+		// contents change was rolled back
+		assertNull(book.getTitle());
+		
+		// resource set state change was not
+		assertNotNull(domain.getResourceSet().getResource(newURI, false));
+		assertTrue(listener.changed);
+	}
+	
+	/**
+	 * Tests the propagation of resource change events to post-commit listeners
+	 * even in the case of a transaction rolling back, where the resource change
+	 * is a loaded change.
+	 */
+	public void test_rollback_resourceChangePropagation_loaded_145321() {
+		class ResourceListener extends DemultiplexingListener {
+			private final Resource interestingResource;
+			private final Book interestingBook;
+			
+			boolean changed;
+			
+			ResourceListener(Resource resource, Book book) {
+				interestingResource = resource;
+				interestingBook = book;
+			}
+			
+			protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
+				Object notifier = notification.getNotifier();
+				
+				if (notifier == interestingResource) {
+					int featureID = notification.getFeatureID(Resource.class);
+					
+					switch (featureID) {
+					case Resource.RESOURCE__IS_LOADED:
+						changed = true;
+						break;
+					}
+				} else if (notifier == interestingBook) {
+					fail("Should not have received notification of contents change"); //$NON-NLS-1$
+				}
+			}
+		}
+		
+		Resource test1 = domain.getResourceSet().createResource(URI.createURI("http://foo1.xmi")); //$NON-NLS-1$
+		Book book = EXTLibraryFactory.eINSTANCE.createBook();
+		
+		ResourceListener listener = new ResourceListener(test1, book);
+		domain.addResourceSetListener(listener);
+		
+		startWriting();
+		
+		// causes a load event
+		test1.getContents().add(book);
+		book.setTitle("foo"); //$NON-NLS-1$
+		
+		rollback();
+		
+		// contents change was rolled back
+		assertNull(book.getTitle());
+		
+		// loaded state change was not
+		assertTrue(test1.isLoaded());
+		assertTrue(listener.changed);
+	}
+	
+	/**
+	 * Tests the propagation of resource change events to post-commit listeners
+	 * even in the case of a transaction rolling back, where the resource change
+	 * is an unloaded change.
+	 */
+	public void test_rollback_resourceChangePropagation_unloaded_145321() {
+		class ResourceListener extends DemultiplexingListener {
+			private final Resource interestingResource;
+			private final Book interestingBook;
+			
+			boolean changed;
+			
+			ResourceListener(Resource resource, Book book) {
+				interestingResource = resource;
+				interestingBook = book;
+			}
+			
+			protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
+				Object notifier = notification.getNotifier();
+				
+				if (notifier == interestingResource) {
+					int featureID = notification.getFeatureID(Resource.class);
+					
+					switch (featureID) {
+					case Resource.RESOURCE__IS_LOADED:
+						changed = true;
+						break;
+					}
+				} else if (notifier == interestingBook) {
+					fail("Should not have received notification of contents change"); //$NON-NLS-1$
+				}
+			}
+		}
+		
+		Resource test1 = domain.getResourceSet().createResource(URI.createURI("http://foo1.xmi")); //$NON-NLS-1$
+		Book book = EXTLibraryFactory.eINSTANCE.createBook();
+		
+		startWriting();
+		
+		// load the resource
+		test1.getContents().add(book);
+		
+		commit();
+
+		ResourceListener listener = new ResourceListener(test1, book);
+		domain.addResourceSetListener(listener);
+		
+		// now the meat of the test:  unload in a transaction
+		startWriting();
+		
+		book.setTitle("foo"); //$NON-NLS-1$
+		test1.unload();
+		
+		rollback();
+		
+		// contents change was rolled back
+		assertNull(book.getTitle());
+		
+		// loaded state change was not
+//TODO:	Proxies are being added back into the resource!		
+//		assertFalse(test1.isLoaded());
+		assertTrue(listener.changed);
 	}
 	
 	//

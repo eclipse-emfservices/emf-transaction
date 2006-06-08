@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteValidatorImpl.java,v 1.6 2006/04/03 18:14:11 cdamus Exp $
+ * $Id: ReadWriteValidatorImpl.java,v 1.7 2006/06/08 14:26:34 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -23,6 +23,9 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
@@ -105,11 +108,10 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	 * when the transaction is rolled back (<em>not</em> when it is committed).
 	 */
 	public void remove(InternalTransaction transaction) {
-		TransactionTree parent = findTree(transaction.getParent());
+		TransactionTree parent = findTree(transaction);
 		
 		if (parent != null) {
-			parent.removeChild(transaction);
-			txToNode.remove(transaction);
+			parent.setRolledBack();
 		}
 	}
 	
@@ -204,6 +206,8 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	// Documentation copied from the inherited method specification
 	public void dispose() {
 		tree = null;
+		txToNode.clear();
+		transactionToPrecommit = null;
 	}
 
 	/**
@@ -229,7 +233,9 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		private final List children = new java.util.ArrayList();
 		
 		// number of notifications in parent before start of child transaction
-		private final int parentNotificationCount;
+		private int parentNotificationCount;
+		
+		private List rollbackNotifications;
 		
 		/**
 		 * Initializes a new tree node for the specified transaction.  If it
@@ -365,7 +371,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		private void collectNotifications(List notifications, int purpose) {
 			if (canCollectNotificationsFor(purpose)) {
 				int lastIndex = 0;
-				List parentNotifications = transaction.getNotifications();
+				List parentNotifications = getNotifications();
 				
 				for (Iterator iter = children.iterator(); iter.hasNext();) {
 					TransactionTree next = (TransactionTree) iter.next();
@@ -385,6 +391,77 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 						lastIndex,
 						parentNotifications.size()));
 			}
+		}
+		
+		/**
+		 * Indicates that my transaction has been rolled back.  This will
+		 * reduce the list of notifications that I have to only those indicating
+		 * changes that rollback did not revert (i.e., resource-level changes
+		 * that are not semantic changes, such as resource load/unload, URI
+		 * change, etc.).
+		 */
+		void setRolledBack() {
+			List originalNotifications = transaction.getNotifications();
+			rollbackNotifications = new java.util.ArrayList();
+			
+			Iterator children = getChildren().iterator();
+			Iterator iter = originalNotifications.iterator();
+			
+			// filter out all undoable notifications, leaving only those that
+			//    indicate changes that rollback could not undo (resource-level
+			//    changes).  In doing so, adjust the information indicating
+			//    where in the notification ordering the child transactions fit
+			//    so that we retain correct linear ordering overall
+			for (int i = 0; children.hasNext();) {
+				TransactionTree child = (TransactionTree) children.next();
+				int parentNotificationCount = child.parentNotificationCount;
+				
+				for (; (i < parentNotificationCount) && iter.hasNext(); i++) {
+					Notification next = (Notification) iter.next();
+					
+					if (!isUndoableObjectChange(next)) {
+						rollbackNotifications.add(next);
+					}
+				}
+					
+				// we have reached the point in the original notifications
+				//    where this child transaction started.  Adjust for the
+				//    reduced list of notifications
+				child.parentNotificationCount = rollbackNotifications.size();
+			}
+			
+			// filter the remaining notifications
+			while (iter.hasNext()) {
+				Notification next = (Notification) iter.next();
+				
+				if (!isUndoableObjectChange(next)) {
+					rollbackNotifications.add(next);
+				}
+			}
+		}
+		
+		private boolean isUndoableObjectChange(Notification notification) {
+			return (notification.getNotifier() instanceof EObject) ||
+				((notification.getNotifier() instanceof Resource)
+						&& (notification.getFeatureID(Resource.class) == Resource.RESOURCE__CONTENTS));
+		}
+		
+		/**
+		 * Queries whether my transaction was rolled back.
+		 * 
+		 * @return whether my transaction was rolled back
+		 */
+		boolean isRolledBack() {
+			return rollbackNotifications != null;
+		}
+		
+		/**
+		 * Obtains my transaction's notifications.
+		 * 
+		 * @return my notifications
+		 */
+		List getNotifications() {
+			return isRolledBack()? rollbackNotifications : getTransaction().getNotifications();
 		}
 	}
 }
