@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.4 2006/01/13 21:50:43 cdamus Exp $
+ * $Id: Lock.java,v 1.5 2006/06/09 22:10:48 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -89,7 +89,7 @@ public class Lock {
 
 	private final long id;
 	
-	private Thread owner = null;
+	private volatile Thread owner = null;
 
 	private int depth = 0;
 	
@@ -114,7 +114,11 @@ public class Lock {
 	 * 
 	 * @return the thread that owns me, or <code>null</code> if I am available
 	 */
-	public synchronized Thread getOwner() {
+	public Thread getOwner() {
+		// note that there is no need to synchronize this method because, if
+		//   calling thread is currently the owner, it cannot cease to be while
+		//   invoking this method.  Likewise, if it is not the owner, it cannot
+		//   become the owner while invoking this method
 		return owner;
 	}
 	
@@ -127,7 +131,11 @@ public class Lock {
 	 * 
 	 * @return my depth
 	 */
-	public synchronized int getDepth() {
+	public int getDepth() {
+		// note that there is no need to synchronize this method because, if
+		//   calling thread is currently the owner, it cannot cease to be while
+		//   invoking this method.  Likewise, if it is not the owner, it cannot
+		//   become the owner while invoking this method
 		if (Thread.currentThread() != owner) {
 			return 0;
 		}

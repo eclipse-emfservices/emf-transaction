@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.6 2006/05/19 17:19:41 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.7 2006/06/09 22:10:48 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -457,26 +457,24 @@ public class TransactionalEditingDomainImpl
 			Tracing.trace(">>> Deactivating " + getDebugID(tx) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-		synchronized (transactionLock) {
-			if (activeTransaction != tx) {
-				IllegalArgumentException exc = new IllegalArgumentException("Can only deactivate the active transaction"); //$NON-NLS-1$
-				Tracing.throwing(TransactionalEditingDomainImpl.class, "deactivate", exc); //$NON-NLS-1$
-				throw exc;
-			}
-			
-			activeTransaction = (InternalTransaction) tx.getParent();
-			
-			if (activeTransaction == null) {
-				// deactivation of a root transaction generates post-commit event
-				postcommit(tx);
-				
-				// and also clears the validator
-				validator.dispose();
-				validator = TransactionValidator.NULL;
-			}
-			
-			release(tx);
+		if (activeTransaction != tx) {
+			IllegalArgumentException exc = new IllegalArgumentException("Can only deactivate the active transaction"); //$NON-NLS-1$
+			Tracing.throwing(TransactionalEditingDomainImpl.class, "deactivate", exc); //$NON-NLS-1$
+			throw exc;
 		}
+		
+		activeTransaction = (InternalTransaction) tx.getParent();
+		
+		if (activeTransaction == null) {
+			// deactivation of a root transaction generates post-commit event
+			postcommit(tx);
+			
+			// and also clears the validator
+			validator.dispose();
+			validator = TransactionValidator.NULL;
+		}
+		
+		release(tx);
 	}
 	
 	/**
