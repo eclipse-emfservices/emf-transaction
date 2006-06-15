@@ -12,17 +12,17 @@
  *
  * </copyright>
  *
- * $Id: PrivilegedRunnableTest.java,v 1.1 2006/04/12 22:09:38 cdamus Exp $
+ * $Id: PrivilegedRunnableTest.java,v 1.2 2006/06/15 13:33:34 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
-
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.emf.transaction.RunnableWithResult;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.transaction.RunnableWithResult;
 
 
 /**
@@ -200,6 +200,35 @@ public class PrivilegedRunnableTest extends AbstractTest {
 		System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
 		
 		commit();
+		commit();
+	}
+	
+	/**
+	 * Ensure that the catching of run-time exceptions in privileged runnables
+	 * does not cause an overriding <code>IllegalArgumentException</code> on
+	 * initializing a <code>Status</code> with a <code>null</code> message from
+	 * the exception.  The privileged runnable must have a status when finished,
+	 * whether successfully or not.
+	 */
+	public void test_runtimeExceptionInRunnable_146625() {
+		final RuntimeException e = new RuntimeException();
+		
+		RunnableWithResult privileged;
+		startReading();
+		
+		privileged = domain.createPrivilegedRunnable(new Runnable() {
+			public void run() {
+				// throw the run-time exception
+				throw e;
+			}});
+		
+		thread.syncExec(privileged);
+
+		// check that we have the same exception as was thrown by the runnable
+		assertNotNull(privileged.getStatus());
+		assertFalse(privileged.getStatus().isOK());
+		assertSame(e, privileged.getStatus().getException());
+		
 		commit();
 	}
 

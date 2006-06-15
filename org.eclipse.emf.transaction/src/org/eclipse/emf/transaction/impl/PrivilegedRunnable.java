@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: PrivilegedRunnable.java,v 1.1 2006/04/12 22:09:41 cdamus Exp $
+ * $Id: PrivilegedRunnable.java,v 1.2 2006/06/15 13:33:32 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -95,16 +95,24 @@ public final class PrivilegedRunnable extends RunnableWithResult.Impl {
 				setStatus(Status.OK_STATUS);
 			}
 		} catch (RuntimeException e) {
+			String message = e.getLocalizedMessage();
+			if (message == null) {
+				message = e.getClass().getName();
+			}
 			setStatus(new Status(
 					IStatus.ERROR, EMFTransactionPlugin.getPluginId(),
 					EMFTransactionStatusCodes.PRIVILEGED_RUNNABLE_FAILED,
-					e.getLocalizedMessage(), e));
+					message, e));
 			throw e;
 		} catch (Error e) {
+			String message = e.getLocalizedMessage();
+			if (message == null) {
+				message = e.getClass().getName();
+			}
 			setStatus(new Status(
 					IStatus.ERROR, EMFTransactionPlugin.getPluginId(),
 					EMFTransactionStatusCodes.PRIVILEGED_RUNNABLE_FAILED,
-					e.getLocalizedMessage(), e));
+					message, e));
 			throw e;
 		} finally {
 			if (needPrivilege) {
