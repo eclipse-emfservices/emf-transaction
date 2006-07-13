@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.5 2006/06/09 22:10:48 cdamus Exp $
+ * $Id: Lock.java,v 1.5.2.1 2006/07/13 19:07:07 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -327,11 +327,11 @@ public class Lock {
 			//    doing so via a delayed UI job without a scheduling rule
 			acquire(exclusive);
 		} else {
-			// should always check whether a thread is already interrupted before
-			//     trying to get a lock
-			if (Thread.interrupted()) {
-				throw new InterruptedException();
-			}
+			// if we already are interrupted, clear the interrupt status
+			//     because we will be performing a timed wait that must not
+			//     be interrupted.  We ignore interrupts because we know that
+			//     the UI thread will often be interrupted by Display.syncExec
+			Thread.interrupted();
 			
 			if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
 				Tracing.trace("::: UI-Safe Acquire  [id=" //$NON-NLS-1$
@@ -339,8 +339,10 @@ public class Lock {
 						+ " at " + Tracing.now()); //$NON-NLS-1$
 			}
 			
-			// try acquiring it just in case we can avoid scheduling a job
-			acquired = acquire(250L, exclusive);
+			// try acquiring it just in case we can avoid scheduling a job.
+			//   Don't allow the UI thread to be interrupted during this
+			//   interval
+			acquired = uninterruptibleAcquire(250L, exclusive);
 
 			if (acquired) {
 				assert getOwner() == current;
@@ -362,8 +364,9 @@ public class Lock {
 					
 					job.schedule();
 					
-					// wait for the job to tell us it's running
-					sync.wait();
+					// wait for the job to tell us it's running.  Don't allow
+					//   the UI thread to be interrupted during this interval
+					uninterruptibleWait(sync);
 				}
 				
 				// begin the job's rule. This ensures that if we are the
@@ -435,6 +438,69 @@ public class Lock {
 		assert getOwner() == current;
 	}
 
+	/**
+	 * Performs a timed wait, during which I ignore any attempt to interrupt.
+	 * Because this method ignores interrupts, it must time out, so the
+	 * <tt>timeout</tt> must be positive.
+	 * 
+	 * @param timeout the positive timeout, in millis
+	 * @param exclusive whether the lock is to be obtained for exclusive
+	 *     access
+	 *     
+	 * @return <code>true</code> if the lock was successfully acquired;
+	 *     <code>false</code> if it timed out
+	 * 
+	 * @throws IllegalArgumentException if the <tt>timeout</tt> is not more
+	 *     than zero
+	 */
+	private boolean uninterruptibleAcquire(long timeout, boolean exclusive) {
+		if (timeout <= 0L) {
+			IllegalArgumentException exc = new IllegalArgumentException("nonpositive timeout"); //$NON-NLS-1$
+			Tracing.throwing(Lock.class, "uninterruptibleAcquire", exc); //$NON-NLS-1$
+			throw exc;
+		}
+		
+		long start = System.currentTimeMillis();
+		boolean result = false;
+		
+		while (timeout > 0L) {
+			try {
+				result = acquire(timeout, exclusive);
+				break;
+			} catch (InterruptedException e) {
+				// ignore it and clear the interrupt status
+				Thread.interrupted();
+				
+				// see how much longer we have to wait
+				long when = System.currentTimeMillis();
+				timeout -= (when - start);  // how long did we just wait?
+				start = when;               // restart the clock
+			}
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Waits for the specified object's monitor, ignoring any interrupt
+	 * requests received in the interim.
+	 * 
+	 * @param o the object to wait for without interruption
+	 */
+	private static void uninterruptibleWait(Object o) {
+		synchronized (o) {
+			for (;;) {
+				try {
+					o.wait();
+					break;
+				} catch (InterruptedException e) {
+					// ignore it and clear the interrupt status
+					Thread.interrupted();
+				}
+			}
+		}
+	}
+	
 	/**
 	 * Releases me.  Note that my depth may still be positive, in which case
 	 * I would need to be released again (recursively).

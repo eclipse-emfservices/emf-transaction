@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteOperationTest.java,v 1.1 2006/01/03 20:51:13 cdamus Exp $
+ * $Id: ReadWriteOperationTest.java,v 1.1.2.1 2006/07/13 19:07:06 cdamus Exp $
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
@@ -305,5 +305,67 @@ public class ReadWriteOperationTest
 			.occurredAfter(longReadThread, writeThd1))
 			&& !Constants.occurredDuring(longReadThread, writeThd1));
 		assertTrue(!Constants.occurIntersect(longReadThread, readThd3));
+	}
+
+	/**
+	 *  Tests that the lock implementation does not allow interruption of the
+	 *  UI thread during timed waits.
+	 */
+	public void test_interruptionOfUIThread_149982() {
+		Object notifier = new Object();
+		LongRunningReadThread longReadThread = new LongRunningReadThread(
+			getDomain(),
+			null,
+			notifier);
+		WriteThread writeThd1 = new WriteThread(getDomain());
+		
+		synchronized (notifier) {
+			try {
+				longReadThread.start();
+				notifier.wait();
+			} catch (InterruptedException e) {
+				// nothing
+			}
+		}
+
+		final Thread uiThread = Thread.currentThread();
+		class Interrupter implements Runnable {
+			private volatile boolean dead;
+			
+			public void run() {
+				while (!dead) {
+					uiThread.interrupt();
+					
+					try {
+						Thread.sleep(50L);
+					} catch (InterruptedException e) {
+						// don't care.  Just interrupt the UI again!
+					}
+				}
+			}
+			
+			void die() {
+				dead = true;
+			}};
+			
+		Interrupter interrupter = new Interrupter();
+		Thread interrupterThread = new Thread(interrupter);
+		interrupterThread.setDaemon(true);
+		interrupterThread.start();
+		
+		try {
+			// for good measure, interrupt the "UI thread" now
+			uiThread.interrupt();
+			
+			// run this one on the UI thread.  It will have to wait, and while it is
+			//   waiting, the interrupter thread will try to interrupt it
+			writeThd1.run();
+			
+			assertFalse(writeThd1.isFailed());
+			assertTrue(writeThd1.isExecuted());
+		} finally {			
+			interrupter.die();
+			Thread.interrupted();  // don't interfere with the following tests
+		}
 	}
 }

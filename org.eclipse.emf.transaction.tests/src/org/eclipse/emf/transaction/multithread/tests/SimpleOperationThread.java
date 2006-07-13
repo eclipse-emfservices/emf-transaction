@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: SimpleOperationThread.java,v 1.2 2006/01/30 19:47:50 cdamus Exp $
+ * $Id: SimpleOperationThread.java,v 1.2.2.1 2006/07/13 19:07:06 cdamus Exp $
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
@@ -93,12 +93,12 @@ class SimpleOperationThread
 	 * 
 	 * @return isFailed
 	 */
-	public boolean isFailed() {
+	public synchronized boolean isFailed() {
 		return isFailed;
 	}
 	
-	protected final void setFailed(Throwable t) {
-		isFailed = false;
+	protected synchronized final void setFailed(Throwable t) {
+		isFailed = true;
 		t.printStackTrace();
 	}
 	
