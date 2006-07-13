@@ -14,7 +14,7 @@
  *
  * </copyright>
  *
- * $Id: plugin.xml,v 1.4 2006/05/31 13:17:09 cdamus Exp $
+ * $Id: plugin.xml,v 1.4.2.1 2006/07/13 15:42:54 cdamus Exp $
  */
 -->
 <?eclipse version="3.0"?>
@@ -32,7 +32,8 @@
             class="org.eclipse.emf.transaction.examples.internal.wizard.WorkspaceExampleWizard"
             hasPages="false"
             id="org.eclipse.emf.transaction.examples.workspace"
-            name="%Transaction_Editor_name">
+            name="%Transaction_Editor_name"
+            icon="$nl$/icons/obj16/wksexview_obj.gif">
          <description>%Transaction_Editor_description</description>
       </wizard>
    </extension>
