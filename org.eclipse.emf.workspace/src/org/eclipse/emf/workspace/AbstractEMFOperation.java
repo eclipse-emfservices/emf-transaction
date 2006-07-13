@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.11 2006/05/19 17:19:47 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.11.2.1 2006/07/13 19:06:45 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.command.CompoundCommand;
@@ -142,6 +143,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 			
 			// rollback is a normal, anticipated condition
 			result.add(e.getStatus());
+		} catch (OperationCanceledException e) {
+			// snuff the exception, because this is expected (user asked to
+			//    cancel the model change).  We will rollback, below
+			result.add(Status.CANCEL_STATUS);
 		} finally {
 			if ((transaction != null) && transaction.isActive()) {
 				// we didn't commit it, so some RuntimeException or Error must
@@ -297,6 +302,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 			
 			// rollback is a normal, anticipated condition
 			result = e.getStatus();
+		} catch (OperationCanceledException e) {
+			// snuff the exception, because this is expected (user asked to
+			//    cancel the model change).  We will rollback, below
+			result = Status.CANCEL_STATUS;
 		} finally {
 			if ((tx != null) && tx.isActive()) {
 				// we didn't commit it, so some RuntimeException or Error must
@@ -357,6 +366,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 			
 			// rollback is a normal, anticipated condition
 			result = e.getStatus();
+		} catch (OperationCanceledException e) {
+			// snuff the exception, because this is expected (user asked to
+			//    cancel the model change).  We will rollback, below
+			result = Status.CANCEL_STATUS;
 		} finally {
 			if ((tx != null) && tx.isActive()) {
 				// we didn't commit it, so some RuntimeException or Error must

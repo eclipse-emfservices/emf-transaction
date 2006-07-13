@@ -12,13 +12,9 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.5 2006/05/17 21:18:28 cmcgee Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.5.2.1 2006/07/13 19:06:52 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
-
-import java.util.Collection;
-
-import javax.swing.undo.AbstractUndoableEdit;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -33,9 +29,11 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.edit.command.SetCommand;
@@ -43,9 +41,11 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
+import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.workspace.AbstractEMFOperation;
 import org.eclipse.emf.workspace.EMFCommandOperation;
 import org.eclipse.emf.workspace.EMFOperationCommand;
@@ -53,6 +53,8 @@ import org.eclipse.emf.workspace.IWorkspaceCommandStack;
 import org.eclipse.emf.workspace.ResourceUndoContext;
 import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.eclipse.emf.workspace.impl.WorkspaceCommandStackImpl;
+import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
+import org.eclipse.emf.workspace.tests.fixtures.LogCapture;
 import org.eclipse.emf.workspace.tests.fixtures.NullCommand;
 
 
@@ -333,6 +335,175 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		
 		assertTrue(stack.isSaveNeeded());
 	}
+	
+    /**
+     * Test that run-time exceptions in a trigger command cause rollback of
+     * the whole transaction.
+     */
+    public void test_triggerRollback_146853() {
+        final RuntimeException error = new RuntimeException();
+        
+        ResourceSetListener testListener = new TriggerListener() {
+        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
+        			protected void doExecute() {
+        				throw error;
+        			}};
+        	}};
+        
+        LogCapture logCapture = new LogCapture(
+        		getCommandStack(), EMFWorkspacePlugin.getPlugin().getBundle());
+            
+        try {
+            domain.addResourceSetListener(testListener);
+            
+            domain.getCommandStack().execute(new RecordingCommand(domain) {
+                protected void doExecute() {
+                    root.getWriters().clear();
+                    root.getStock().clear();
+                    root.getBranches().clear();
+                }});
+            
+            // verify that the exception was duly logged
+            logCapture.assertLogged(error);
+            
+            // verify that rollback occurred
+            assertFalse(root.getWriters().isEmpty());
+            assertFalse(root.getStock().isEmpty());
+            assertFalse(root.getBranches().isEmpty());
+        } finally {
+            logCapture.stop();
+            domain.removeResourceSetListener(testListener);
+        }
+    }
+	
+    /**
+     * Test that OperationCanceledException in a trigger command causes
+     * rollback of the whole transaction, without any log message (because it
+     * is a normal condition).
+     */
+    public void test_triggerRollback_cancel_146853() {
+        final RuntimeException error = new OperationCanceledException();
+        
+        ResourceSetListener testListener = new TriggerListener() {
+        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
+        			protected void doExecute() {
+        				throw error;
+        			}};
+        	}};
+        
+        LogCapture logCapture = new LogCapture(
+        		getCommandStack(), EMFWorkspacePlugin.getPlugin().getBundle());
+            
+        try {
+            domain.addResourceSetListener(testListener);
+            
+            domain.getCommandStack().execute(new RecordingCommand(domain) {
+                protected void doExecute() {
+                    root.getWriters().clear();
+                    root.getStock().clear();
+                    root.getBranches().clear();
+                }});
+            
+            // verify that the exception was *not* logged
+            IStatus log = logCapture.getLastLog();
+            assertNull(log);
+            
+            // verify that rollback occurred
+            assertFalse(root.getWriters().isEmpty());
+            assertFalse(root.getStock().isEmpty());
+            assertFalse(root.getBranches().isEmpty());
+        } finally {
+            logCapture.stop();
+            domain.removeResourceSetListener(testListener);
+        }
+    }
+	
+    /**
+     * Test that run-time exceptions in a trigger command cause rollback of
+     * the whole transaction when executing an AbstractEMFOperation.
+     */
+    public void test_triggerRollback_operation_146853() {
+        final RuntimeException error = new RuntimeException();
+        
+        ResourceSetListener testListener = new TriggerListener() {
+        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
+        			protected void doExecute() {
+        				throw error;
+        			}};
+        	}};
+        
+        try {
+            domain.addResourceSetListener(testListener);
+            
+            try {
+	            IStatus status = new AbstractEMFOperation(domain, "test") { //$NON-NLS-1$
+	                protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
+	                    root.getWriters().clear();
+	                    root.getStock().clear();
+	                    root.getBranches().clear();
+	                    
+	                    return Status.OK_STATUS;
+	                }}.execute(null, null);
+	            
+	            assertEquals(IStatus.ERROR, status.getSeverity());
+            } catch (ExecutionException e) {
+            	fail("Execution failed: " + e.getLocalizedMessage()); //$NON-NLS-1$
+            }
+            
+            // verify that rollback occurred
+            assertFalse(root.getWriters().isEmpty());
+            assertFalse(root.getStock().isEmpty());
+            assertFalse(root.getBranches().isEmpty());
+        } finally {
+            domain.removeResourceSetListener(testListener);
+        }
+    }
+	
+    /**
+     * Test that OperationCanceledException in a trigger command causes
+     * rollback of the whole transaction, without any log message (because it
+     * is a normal condition) when executing an AbstractEMFOperation.
+     */
+    public void test_triggerRollback_operation_cancel_146853() {
+        final RuntimeException error = new OperationCanceledException();
+        
+        ResourceSetListener testListener = new TriggerListener() {
+        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
+        			protected void doExecute() {
+        				throw error;
+        			}};
+        	}};
+        
+        try {
+            domain.addResourceSetListener(testListener);
+            
+            try {
+	            IStatus status = new AbstractEMFOperation(domain, "test") { //$NON-NLS-1$
+	                protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
+	                    root.getWriters().clear();
+	                    root.getStock().clear();
+	                    root.getBranches().clear();
+	                    
+	                    return Status.OK_STATUS;
+	                }}.execute(null, null);
+	            
+	            assertEquals(IStatus.CANCEL, status.getSeverity());
+            } catch (ExecutionException e) {
+            	fail("Execution failed: " + e.getLocalizedMessage()); //$NON-NLS-1$
+            }
+            
+            // verify that rollback occurred
+            assertFalse(root.getWriters().isEmpty());
+            assertFalse(root.getStock().isEmpty());
+            assertFalse(root.getBranches().isEmpty());
+        } finally {
+            domain.removeResourceSetListener(testListener);
+        }
+    }
 	
 	//
 	// Fixture methods

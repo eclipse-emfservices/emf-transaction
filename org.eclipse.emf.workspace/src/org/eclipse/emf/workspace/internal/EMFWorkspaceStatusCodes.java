@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFWorkspaceStatusCodes.java,v 1.1 2006/01/30 19:48:00 cdamus Exp $
+ * $Id: EMFWorkspaceStatusCodes.java,v 1.1.2.1 2006/07/13 19:06:45 cdamus Exp $
  */
 package org.eclipse.emf.workspace.internal;
 
@@ -34,6 +34,8 @@ public class EMFWorkspaceStatusCodes {
 	public static final int UNDO_RECOVERY_FAILED = 30;
 	public static final int REDO_RECOVERY_FAILED = 31;
 	public static final int ROLLBACK_FAILED = 32;
+	
+	public static final int PRECOMMIT_FAILED = 43;
 	
 	public static final int EXCEPTION_HANDLER_FAILED = 50;
 	

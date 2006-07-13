@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalCommandStackImpl.java,v 1.5 2006/04/26 13:13:39 cdamus Exp $
+ * $Id: TransactionalCommandStackImpl.java,v 1.5.2.1 2006/07/13 19:06:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
@@ -76,9 +77,13 @@ public class TransactionalCommandStackImpl
 				
 				// commit the transaction now
 				tx.commit();
+			} catch (OperationCanceledException e) {
+				// snuff the exception, because this is expected (user asked to
+				//    cancel the model change).  We will rollback, below
 			} finally {
 				if ((tx != null) && (tx.isActive())) {
-					// roll back
+					// roll back (some exception, possibly being thrown now or
+					//    an operation cancel, has occurred)
 					rollback(tx);
 				} else {
 					// the transaction has already incorporated the triggers
@@ -140,21 +145,48 @@ public class TransactionalCommandStackImpl
 			active.rollback();
 		}
 		
-		if (exceptionHandler != null) {
-			try {
-				exceptionHandler.handleException(exception);
-			} catch (Exception e) {
-				Tracing.catching(TransactionalCommandStackImpl.class, "handleError", e); //$NON-NLS-1$
-				EMFTransactionPlugin.INSTANCE.log(new Status(
-						IStatus.WARNING,
-						EMFTransactionPlugin.getPluginId(),
-						EMFTransactionStatusCodes.EXCEPTION_HANDLER_FAILED,
-						Messages.exceptionHandlerFailed,
-						e));
+		if (!isCancelException(exception)) {
+			if (exceptionHandler != null) {
+				try {
+					exceptionHandler.handleException(exception);
+				} catch (Exception e) {
+					Tracing.catching(TransactionalCommandStackImpl.class, "handleError", e); //$NON-NLS-1$
+					EMFTransactionPlugin.INSTANCE.log(new Status(
+							IStatus.WARNING,
+							EMFTransactionPlugin.getPluginId(),
+							EMFTransactionStatusCodes.EXCEPTION_HANDLER_FAILED,
+							Messages.exceptionHandlerFailed,
+							e));
+				}
 			}
+			
+			super.handleError(exception);
+		}
+	}
+	
+	/**
+	 * Does the specified exception indicate that the user canceled execution,
+	 * undo, or redo of a command?
+	 * 
+	 * @param exception an exception
+	 * @return <code>true</code> if it is an {@link OperationCanceledException}
+	 *     or a {@link RollbackException} that was caused by operation cancel
+	 */
+	private boolean isCancelException(Throwable exception) {
+		boolean result;
+		
+		if (exception instanceof OperationCanceledException) {
+			result = true;
+		} else if (exception instanceof RollbackException) {
+			IStatus status = ((RollbackException) exception).getStatus();
+			result = (status != null) &&
+				((status.getSeverity() == IStatus.CANCEL)
+						|| isCancelException(status.getException()));
+		} else {
+			result = false;
 		}
 		
-		super.handleError(exception);
+		return result;
 	}
 	
 	/**
@@ -281,6 +313,24 @@ public class TransactionalCommandStackImpl
 				
 				// commit the transaction now
 				tx.commit();
+			} catch (RuntimeException e) {
+				Tracing.catching(TransactionalCommandStackImpl.class, "executeTriggers", e); //$NON-NLS-1$
+				
+				IStatus status;
+				if (e instanceof OperationCanceledException) {
+					status = Status.CANCEL_STATUS;
+				} else {
+					status = new Status(
+							IStatus.ERROR,
+							EMFTransactionPlugin.getPluginId(),
+							EMFTransactionStatusCodes.PRECOMMIT_FAILED,
+							Messages.precommitFailed,
+							e);
+				}
+				
+				RollbackException rbe = new RollbackException(status);
+				Tracing.throwing(TransactionalCommandStackImpl.class, "executeTriggers", rbe); //$NON-NLS-1$
+				throw rbe;
 			} finally {
 				if ((tx != null) && (tx.isActive())) {
 					// roll back because an uncaught exception occurred
