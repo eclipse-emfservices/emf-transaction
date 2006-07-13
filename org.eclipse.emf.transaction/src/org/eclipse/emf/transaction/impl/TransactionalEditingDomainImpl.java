@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.7 2006/06/09 22:10:48 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.7.2.1 2006/07/13 15:47:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -465,16 +465,18 @@ public class TransactionalEditingDomainImpl
 		
 		activeTransaction = (InternalTransaction) tx.getParent();
 		
-		if (activeTransaction == null) {
-			// deactivation of a root transaction generates post-commit event
-			postcommit(tx);
-			
-			// and also clears the validator
-			validator.dispose();
-			validator = TransactionValidator.NULL;
-		}
-		
-		release(tx);
+        try {
+    		if (activeTransaction == null) {
+    			// deactivation of a root transaction generates post-commit event
+    			postcommit(tx);
+    			
+    			// and also clears the validator
+    			validator.dispose();
+    			validator = TransactionValidator.NULL;
+    		}
+        } finally {		
+            release(tx);
+        }
 	}
 	
 	/**
