@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.10 2006/06/08 14:26:34 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.10.2.1 2006/08/01 19:48:11 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -75,8 +75,8 @@ public class TransactionImpl
 	private boolean active;
 	private boolean closing; // prevents re-entrant commit/rollback
 	private boolean rollingBack;
+	protected List notifications;
 	protected final CompositeChangeDescription change;
-	protected final List notifications = new java.util.ArrayList();
 	
 	private boolean aborted;
 	private IStatus status = Status.OK_STATUS;
@@ -134,6 +134,15 @@ public class TransactionImpl
 		}
 		
 		change = new CompositeChangeDescription();
+		
+		if (isNotificationEnabled(this)
+				|| isTriggerEnabled(this)
+				|| isValidationEnabled(this)) {
+			notifications = new java.util.ArrayList();
+		} else {
+			// no need to collect any notifications if we won't use them
+			notifications = null;
+		}
 	}
 
 	
@@ -364,7 +373,7 @@ public class TransactionImpl
 				//   include any of my changes that I have rolled back and that
 				//   post-commit doesn't find any of my changes, either  
 				getInternalDomain().getValidator().remove(this);
-				notifications.clear();
+				notifications = null;
 				
 				stopRecording();
 				
@@ -477,6 +486,9 @@ public class TransactionImpl
 				// my parent resumes recording its changes now that mine are either
 				//    committed to it or rolled back
 				parent.resume(change);
+			} else {
+				// I am a root transaction.  Forget my notifications, if any
+				notifications = null;
 			}
 			
 			if (Tracing.shouldTrace(EMFTransactionDebugOptions.TRANSACTIONS)) {
@@ -487,14 +499,14 @@ public class TransactionImpl
 	
 	// Documentation copied from the inherited specification
 	public void add(Notification notification) {
-		if (!rollingBack) {
+		if (!rollingBack && (notifications != null)) {
 			notifications.add(notification);
 		}
 	}
 	
 	// Documentation copied from the inherited specification
 	public List getNotifications() {
-		return notifications;
+		return (notifications == null)? Collections.EMPTY_LIST : notifications;
 	}
 	
 	/**
