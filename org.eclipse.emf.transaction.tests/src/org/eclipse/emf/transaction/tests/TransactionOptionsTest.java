@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionOptionsTest.java,v 1.5.2.1 2006/08/01 19:48:11 cdamus Exp $
+ * $Id: TransactionOptionsTest.java,v 1.5.2.2 2006/08/09 16:32:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -24,6 +24,7 @@ import junit.framework.TestSuite;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
@@ -482,6 +483,56 @@ public class TransactionOptionsTest extends AbstractTest {
         
         // so, of course we still don't have any
         assertTrue(tx.getNotifications().isEmpty());
+    }
+    
+    /**
+     * Tests that when a silent unprotected transaction has children that think
+     * they are collecting notifications, they do not, but notifications for
+     * ancestor transactions are not lost.
+     */
+    public void test_childrenOfSilentUnprotected_152332() {
+		TestListener listener = new TestListener();
+		domain.addResourceSetListener(listener);
+		
+		startWriting();
+		
+        final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+        assertNotNull(book);
+        
+        final String newTitle = "New Title"; //$NON-NLS-1$
+        book.setTitle(newTitle);
+        
+        Map options = new java.util.HashMap();
+        options.put(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE);
+        options.put(Transaction.OPTION_UNPROTECTED, Boolean.TRUE);
+        
+        // intervening silent-unprotected
+        startWriting(options);
+        
+        // this transaction thinks it is normal, but it isn't
+        startWriting();
+        
+        final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+        assertNotNull(newAuthor);
+        
+        newAuthor.getBooks().add(book);
+        
+        commit();  // the "normal" child
+        
+        commit();  // the silent, unprotected
+        
+        commit();  // the root transaction
+        
+        // check that the book's title and author were both changed
+        assertEquals(newTitle, book.getTitle());
+        assertSame(newAuthor, book.getAuthor());
+        
+        // check that we got the notification for the book's title changing,
+        //    and only that notification
+        assertNotNull(listener.postcommitNotifications);
+        assertEquals(1, listener.postcommitNotifications.size());
+        Notification notification = (Notification) listener.postcommitNotifications.get(0);
+        assertSame(EXTLibraryPackage.Literals.BOOK__TITLE, notification.getFeature());
     }
 	
 	//

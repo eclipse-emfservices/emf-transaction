@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.10.2.1 2006/08/01 19:48:11 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.10.2.2 2006/08/09 16:32:37 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -135,10 +135,8 @@ public class TransactionImpl
 		
 		change = new CompositeChangeDescription();
 		
-		if (isNotificationEnabled(this)
-				|| isTriggerEnabled(this)
-				|| isValidationEnabled(this)) {
-			notifications = new java.util.ArrayList();
+		if (collectsNotifications(this)) {
+			notifications = new org.eclipse.emf.common.util.BasicEList.FastCompare();
 		} else {
 			// no need to collect any notifications if we won't use them
 			notifications = null;
@@ -371,7 +369,9 @@ public class TransactionImpl
 			if (!isReadOnly()) {
 				// ensure that validation of a nesting transaction does not
 				//   include any of my changes that I have rolled back and that
-				//   post-commit doesn't find any of my changes, either  
+				//   post-commit doesn't find any of my changes, either.  Do
+				//   this now (before deactivation) so that the validator can
+				//   see that I am rolling back
 				getInternalDomain().getValidator().remove(this);
 				notifications = null;
 				
@@ -671,6 +671,26 @@ public class TransactionImpl
 	protected static boolean isUnprotected(Transaction tx) {
 		return !tx.isReadOnly()
 				&& hasOption(tx, OPTION_UNPROTECTED);
+	}
+	
+	/**
+	 * Queries whether the specified transaction collects notifications for
+	 * broadcast to listeners or for validation.  This is determined by
+	 * the transaction's options.
+	 * 
+	 * @param tx a transaction
+	 * 
+	 * @return <code>true</code> any of notification, triggers, and validation
+	 *     are enabled; <code>false</code>, otherwise
+	 * 
+	 * @see #isNotificationEnabled(Transaction)
+	 * @see #isTriggerEnabled(Transaction)
+	 * @see #isValidationEnabled(Transaction)
+	 */
+	protected static boolean collectsNotifications(Transaction tx) {
+		return isNotificationEnabled(tx)
+			|| isTriggerEnabled(tx)
+			|| isValidationEnabled(tx);
 	}
 	
 	/**

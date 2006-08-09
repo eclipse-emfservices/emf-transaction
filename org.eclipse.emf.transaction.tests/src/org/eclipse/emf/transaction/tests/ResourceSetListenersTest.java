@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListenersTest.java,v 1.5 2006/06/08 14:26:31 cdamus Exp $
+ * $Id: ResourceSetListenersTest.java,v 1.5.2.1 2006/08/09 16:32:39 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -1021,18 +1021,13 @@ public class ResourceSetListenersTest extends AbstractTest {
 		test1.getContents().add(book);
 		book.setTitle("foo"); //$NON-NLS-1$
 		
-		// create another resource
-		URI newURI = URI.createURI("http://newfoo.xmi"); //$NON-NLS-1$
-		domain.getResourceSet().createResource(newURI);
-		
 		rollback();
 		
 		// contents change was rolled back
 		assertNull(book.getTitle());
 		
-		// resource set state change was not
-		assertNotNull(domain.getResourceSet().getResource(newURI, false));
-		assertTrue(listener.changed);
+		// no resource set change occurred
+		assertFalse(listener.changed);
 	}
 	
 	/**

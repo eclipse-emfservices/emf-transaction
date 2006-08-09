@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.7.2.1 2006/07/13 15:47:41 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.7.2.2 2006/08/09 16:32:37 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -473,7 +473,11 @@ public class TransactionalEditingDomainImpl
     			// and also clears the validator
     			validator.dispose();
     			validator = TransactionValidator.NULL;
-    		}
+    		} else {
+                // ensure that the validator no longer retains this transaction in
+                //     its map (if it's a read/write validator)
+                validator.remove(tx);
+            }
         } finally {		
             release(tx);
         }

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteValidatorImpl.java,v 1.7 2006/06/08 14:26:34 cdamus Exp $
+ * $Id: ReadWriteValidatorImpl.java,v 1.7.2.1 2006/08/09 16:32:37 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -59,18 +59,21 @@ import org.eclipse.emf.validation.service.ModelValidationService;
  * @see ReadOnlyValidatorImpl
  */
 public class ReadWriteValidatorImpl implements TransactionValidator {
-	/** Code indicating that we are collecting notifications for validation. */
-	static final int VALIDATION = 1;
-	/** Code indicating that we are collecting notifications for pre-commit. */
-	static final int PRECOMMIT = 2;
-	/** Code indicating that we are collecting notifications for post-commit. */
-	static final int POSTCOMMIT = 3;
+	/** Bit indicating that we are collecting notifications for validation. */
+	static final byte VALIDATION = 1;
+	/** Bit indicating that we are collecting notifications for pre-commit. */
+	static final byte PRECOMMIT = 2;
+	/** Bit indicating that we are collecting notifications for post-commit. */
+	static final byte POSTCOMMIT = 4;
 	
-	private TransactionTree tree = null;
-	private TransactionTree transactionToPrecommit = null;
+	// a tree of notifications gathered by (potentially) nested transactions
+	private NotificationTree tree = null;
 	
-	// anticipate large-ish transaction trees
-	private final Map txToNode = new java.util.HashMap(512);
+	// the next transaction to pre-commit in the "aggregate" mode
+	private NotificationTree transactionToPrecommit = null;
+	
+	// maps the active transaction and its ancestors to notification tree nodes
+	private final Map txToNode = new java.util.HashMap();
 	
 	/**
 	 * Initializes me.
@@ -84,34 +87,57 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	 * when the transaction is activated.
 	 */
 	public void add(InternalTransaction transaction) {
-		TransactionTree parent = findTree(transaction.getParent());
-		TransactionTree newTree;
+		byte notificationMask = computeNotificationMask(transaction);
 		
-		if (parent == null) {
-			// got the root transaction
-			tree = new TransactionTree(transaction);
-			newTree = tree;
-		} else {
-			newTree = parent.addChild(transaction);
-		}
-		
-		txToNode.put(transaction, newTree);
-		
-		// next phase of aggregated precommit must start with this transaction
-		if ((transactionToPrecommit == null) && !transaction.isReadOnly()) {
-			transactionToPrecommit = newTree;
+		// there is no point in allocating a tree node for a transaction that
+		//    does not collect notifications
+		if (notificationMask > 0) {
+			NotificationTree parent = findTree(transaction.getParent());
+			NotificationTree newTree = null;
+			
+			if (transaction.getParent() == null) {
+				// got the root transaction
+				tree = new NotificationTree(transaction, notificationMask);
+				newTree = tree;
+			} else if (parent != null) {
+				// if the transaction has a parent but there is no matching
+				//    tree node, then this parent is silent, so there is no
+				//    need to create any descendent nodes
+				newTree = parent.addChild(transaction, notificationMask);
+			}
+			
+			if (newTree != null) {
+				txToNode.put(transaction, newTree);
+				
+				// next phase of aggregated precommit must start with this transaction
+				if ((transactionToPrecommit == null) && !transaction.isReadOnly()) {
+					transactionToPrecommit = newTree;
+				}
+			}
 		}
 	}
 	
 	/**
 	 * Removes the specified transaction from me.  This must be called
-	 * when the transaction is rolled back (<em>not</em> when it is committed).
+	 * when the transaction is rolled back, and is recommended also after a
+	 * successful commit.
 	 */
 	public void remove(InternalTransaction transaction) {
-		TransactionTree parent = findTree(transaction);
+		NotificationTree node = findTree(transaction);
 		
-		if (parent != null) {
-			parent.setRolledBack();
+		if (node != null) {
+			if (transaction.isRollingBack()) {
+				// the transaction is not yet closed, but is rolling back:
+				//    filter the notifications now
+				node.setRolledBack();
+			} else {
+				// unmap the closed transaction
+				txToNode.remove(transaction);
+				
+				// obtains the transaction's notifications now and forget the
+				//   reference to it
+				node.detachTransaction();
+			}
 		}
 	}
 	
@@ -120,7 +146,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		List result = null;
 		
 		if (tree != null) {
-			TransactionTree nested = findTree(tx);
+			NotificationTree nested = findTree(tx);
 			
 			if (nested != null) {
 				result = nested.collectNotifications(VALIDATION);
@@ -135,7 +161,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		List result = null;
 		
 		if ((transactionToPrecommit != null)
-				&& (tx == transactionToPrecommit.getTransaction())) {
+				&& (transactionToPrecommit == findTree(tx))) {
 			
 			result = transactionToPrecommit.collectNotifications(PRECOMMIT);
 			
@@ -152,7 +178,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		List result = null;
 		
 		if (tree != null) {
-			TransactionTree nested = findTree(tx);
+			NotificationTree nested = findTree(tx);
 			
 			if (nested != null) {
 				result = nested.collectNotifications(POSTCOMMIT);
@@ -163,18 +189,20 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	}
 	
 	/**
-	 * Finds the specified transaction in the tree structure that I maintain.
+	 * Finds the specified transaction's corresponding node in the notification
+	 * tree structure that I maintain.
 	 * 
 	 * @param tx the transaction to search for
 	 * 
-	 * @return the corresponding tree node, or <code>null</code> if this
-	 *    transaction has not yet been added to me
+	 * @return the corresponding notification tree node, or
+	 *    <code>null</code> if this transaction has not yet been added to me
+	 *    or has already completed (in which case, it is no longer in my map)
 	 */
-	private TransactionTree findTree(Transaction tx) {
-		TransactionTree result = null;
+	private NotificationTree findTree(Transaction tx) {
+		NotificationTree result = null;
 		
 		if (tree != null) {
-			result = (TransactionTree) txToNode.get(tx);
+			result = (NotificationTree) txToNode.get(tx);
 		}
 		
 		return result;
@@ -211,16 +239,45 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	}
 
 	/**
+	 * Computes a mask of notification kinds that the specified transaction
+	 * supports.  The notification kinds indicate which functions that use
+	 * notifications are enabled for the transaction.
+	 * 
+	 * @param transaction a transaction
+	 * @return a mask of the {@link #POSTCOMMIT}, {@link #PRECOMMIT}, and
+	 *     {@link #VALIDATION} bits
+	 */
+	private static byte computeNotificationMask(Transaction transaction) {
+		byte result = 0;
+		
+		if (TransactionImpl.isNotificationEnabled(transaction)) {
+			result |= ReadWriteValidatorImpl.POSTCOMMIT;
+		}
+		if (TransactionImpl.isTriggerEnabled(transaction)) {
+			result |= ReadWriteValidatorImpl.PRECOMMIT;
+		}
+		if (TransactionImpl.isValidationEnabled(transaction)) {
+			result |= ReadWriteValidatorImpl.VALIDATION;
+		}
+		
+		return result;
+	}
+	
+	/**
 	 * A tree mirroring the nesting structure of transactions.  The tree
 	 * records, for every transaction:
 	 * <ul>
-	 *   <li>the children of the transaction (transactions otherwise only know
-	 *       their parents)</li>
+	 *   <li>the notifications (by directly referencing the mutable
+	 *       notification list)</li>
+	 *   <li>tree nodes for corresponding to the the children of the transaction
+	 *       (transactions otherwise only know their parents)</li>
 	 *   <li>the number of notifications in the parent transaction that
 	 *       preceded its activation, if it has a parent</li>
+	 *   <li>a bit mask indicating which kinds of notifications (pre/post commit
+	 *       and validation) the transaction provides</li>
 	 * </ul>
 	 * <p>
-	 * The second item above is important in reconstructing the complete
+	 * The third item above is important in reconstructing the complete
 	 * ordering (in linear time) of the notifications received during nesting
 	 * transactions, so that both validation and post-commit listeners get
 	 * the correct sequence of events.
@@ -228,14 +285,16 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	 * 
 	 * @author Christian W. Damus (cdamus)
 	 */
-	private static class TransactionTree {
-		private final InternalTransaction transaction;
-		private final List children = new java.util.ArrayList();
+	private static class NotificationTree {
+		private final List children = new org.eclipse.emf.common.util.BasicEList.FastCompare();
 		
 		// number of notifications in parent before start of child transaction
 		private int parentNotificationCount;
 		
-		private List rollbackNotifications;
+		private InternalTransaction transaction;
+		private List notifications;  // stores the notifications
+		
+		private final byte notificationMask;
 		
 		/**
 		 * Initializes a new tree node for the specified transaction.  If it
@@ -243,10 +302,14 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 * parent has so far collected.
 		 * 
 		 * @param transaction the transaction
+		 * @param notificationMask a mask of the {@link #POSTCOMMIT}, {@link #PRECOMMIT}, and
+		 *     {@link #VALIDATION} bits of the kinds of notifications that the
+		 *     transaction collects
 		 */
-		TransactionTree(InternalTransaction transaction) {
-			this.transaction = transaction;
+		NotificationTree(InternalTransaction transaction, byte notificationMask) {
+			assert notificationMask > 0: "transaction must be collecting notifications"; //$NON-NLS-1$
 			
+			this.transaction = transaction;
 			InternalTransaction parent = (InternalTransaction) transaction.getParent();
 			
 			if (parent == null) {
@@ -254,6 +317,8 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 			} else {
 				parentNotificationCount = parent.getNotifications().size();
 			}
+			
+			this.notificationMask = notificationMask;
 		}
 		
 		/**
@@ -261,9 +326,12 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 * then it is the root transaction.
 		 * 
 		 * @param child the child transaction to add
+		 * @param notificationMask a mask of the {@link #POSTCOMMIT}, {@link #PRECOMMIT}, and
+		 *     {@link #VALIDATION} bits of the kinds of notifications that the
+		 *     transaction collects
 		 */
-		TransactionTree addChild(InternalTransaction child) {
-			TransactionTree result = new TransactionTree(child);
+		NotificationTree addChild(InternalTransaction child, byte notificationMask) {
+			NotificationTree result = new NotificationTree(child, notificationMask);
 			
 			children.add(result);
 			
@@ -271,31 +339,8 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		}
 		
 		/**
-		 * Removes the specified child transaction from me (which has rolled
-		 * back).
-		 * 
-		 * @param child the child transaction to remove
-		 */
-		void removeChild(InternalTransaction child) {
-			for (Iterator iter = children.iterator(); iter.hasNext();) {
-				if (((TransactionTree) iter.next()).getTransaction() == child) {
-					iter.remove();
-					break;
-				}
-			}
-		}
-		
-		/**
-		 * Obtains the transaction that this tree node represents.
-		 * 
-		 * @return my transaction
-		 */
-		InternalTransaction getTransaction() {
-			return transaction;
-		}
-		
-		/**
-		 * Obtains my child nodes, representing my transaction's children.
+		 * Obtains my child nodes, storing the notifications from my
+		 * transaction's children.
 		 * 
 		 * @return my children
 		 */
@@ -307,7 +352,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 * Collects all of the notifications from me and my children, in the
 		 * correct time-linear order.
 		 * 
-		 * @param purpose an integer code indicating what kind of notifications
+		 * @param purpose a bit indicating what kind of notifications
 		 *     to collect (for what purpose we are collecting them)
 		 * 
 		 * @return my notifications (which might be an empty list)
@@ -316,10 +361,10 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 * @see ReadWriteValidatorImpl#PRECOMMIT
 		 * @see ReadWriteValidatorImpl#POSTCOMMIT
 		 */
-		List collectNotifications(int purpose) {
+		List collectNotifications(byte purpose) {
 			List result;
 			
-			if (canCollectNotificationsFor(purpose)) {
+			if ((notificationMask & purpose) == purpose) {
 				result = new java.util.ArrayList();
 				collectNotifications(result, purpose);
 			} else {
@@ -330,51 +375,21 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		}
 		
 		/**
-		 * Queries whether my transaction supports collecting notifications
-		 * for the specified purpose.
-		 * 
-		 * @param purpose an integer code indicating what kind of notifications
-		 *     to collect (for what purpose we are collecting them)
-		 *     
-		 * @return <code>true</code> if my transaction is enabled for this
-		 *     purpose; <code>false</code>, otherwise
-		 */
-		private boolean canCollectNotificationsFor(int purpose) {
-			boolean result;
-			
-			switch (purpose) {
-			case ReadWriteValidatorImpl.VALIDATION:
-				result = TransactionImpl.isValidationEnabled(transaction);
-				break;
-			case ReadWriteValidatorImpl.PRECOMMIT:
-				result = TransactionImpl.isTriggerEnabled(transaction);
-				break;
-			case ReadWriteValidatorImpl.POSTCOMMIT:
-				result = TransactionImpl.isNotificationEnabled(transaction);
-				break;
-			default:
-				result = false;
-			}
-			
-			return result;
-		}
-		
-		/**
 		 * Recursive implementation of the {@link #collectNotifications()} method.
 		 * 
 		 * @param notifications the accumulator list
-		 * @param purpose an integer code indicating what kind of notifications
+		 * @param purpose a bit indicating what kind of notifications
 		 *     to collect (for what purpose we are collecting them)
 		 * 
 		 * @see #collectNotifications()
 		 */
-		private void collectNotifications(List notifications, int purpose) {
-			if (canCollectNotificationsFor(purpose)) {
+		private void collectNotifications(List notifications, byte purpose) {
+			if ((notificationMask & purpose) == purpose) {
 				int lastIndex = 0;
 				List parentNotifications = getNotifications();
 				
 				for (Iterator iter = children.iterator(); iter.hasNext();) {
-					TransactionTree next = (TransactionTree) iter.next();
+					NotificationTree next = (NotificationTree) iter.next();
 					
 					// append the parent transaction's notifications from the
 					//    last position to this child's position
@@ -395,17 +410,17 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		
 		/**
 		 * Indicates that my transaction has been rolled back.  This will
-		 * reduce the list of notifications that I have to only those indicating
+		 * reduce the list of notifications that I store to only those indicating
 		 * changes that rollback did not revert (i.e., resource-level changes
 		 * that are not semantic changes, such as resource load/unload, URI
 		 * change, etc.).
 		 */
 		void setRolledBack() {
-			List originalNotifications = transaction.getNotifications();
-			rollbackNotifications = new java.util.ArrayList();
-			
 			Iterator children = getChildren().iterator();
-			Iterator iter = originalNotifications.iterator();
+			List rollbackNotifications = transaction.getNotifications();
+			Iterator iter = rollbackNotifications.iterator();
+			
+			notifications = new org.eclipse.emf.common.util.BasicEList.FastCompare();
 			
 			// filter out all undoable notifications, leaving only those that
 			//    indicate changes that rollback could not undo (resource-level
@@ -413,21 +428,21 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 			//    where in the notification ordering the child transactions fit
 			//    so that we retain correct linear ordering overall
 			for (int i = 0; children.hasNext();) {
-				TransactionTree child = (TransactionTree) children.next();
+				NotificationTree child = (NotificationTree) children.next();
 				int parentNotificationCount = child.parentNotificationCount;
 				
 				for (; (i < parentNotificationCount) && iter.hasNext(); i++) {
 					Notification next = (Notification) iter.next();
 					
 					if (!isUndoableObjectChange(next)) {
-						rollbackNotifications.add(next);
+						notifications.add(next);
 					}
 				}
 					
 				// we have reached the point in the original notifications
 				//    where this child transaction started.  Adjust for the
 				//    reduced list of notifications
-				child.parentNotificationCount = rollbackNotifications.size();
+				child.parentNotificationCount = notifications.size();
 			}
 			
 			// filter the remaining notifications
@@ -435,11 +450,21 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 				Notification next = (Notification) iter.next();
 				
 				if (!isUndoableObjectChange(next)) {
-					rollbackNotifications.add(next);
+					notifications.add(next);
 				}
 			}
 		}
 		
+		/**
+		 * Determines whether the specified notification indicates an undoable
+		 * change to a model element.  This filters out non-model changes such
+		 * as changes to the modification/loaded state of resources, their
+		 * URIs, etc.
+		 * 
+		 * @param notification a notification
+		 * @return <code>true</code> if it represents an undoable change to an
+		 *     object or a resource (the contents list, in particular)
+		 */
 		private boolean isUndoableObjectChange(Notification notification) {
 			return (notification.getNotifier() instanceof EObject) ||
 				((notification.getNotifier() instanceof Resource)
@@ -447,21 +472,26 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		}
 		
 		/**
-		 * Queries whether my transaction was rolled back.
-		 * 
-		 * @return whether my transaction was rolled back
-		 */
-		boolean isRolledBack() {
-			return rollbackNotifications != null;
-		}
-		
-		/**
-		 * Obtains my transaction's notifications.
+		 * Obtains my corresponding transaction's notifications.
 		 * 
 		 * @return my notifications
 		 */
 		List getNotifications() {
-			return isRolledBack()? rollbackNotifications : getTransaction().getNotifications();
+			return (notifications != null)? notifications :
+				transaction.getNotifications();
+		}
+		
+		/**
+		 * Detaches the node from its transaction.
+		 */
+		void detachTransaction() {
+			if (notifications == null) {
+				// we may already have the notifications if our transaction
+				//    rolled back and we had to filter them
+				notifications = transaction.getNotifications();
+			}
+			
+			transaction = null;
 		}
 	}
 }
