@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.7.2.2 2006/08/09 16:32:37 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.7.2.3 2006/08/30 18:16:25 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -508,8 +508,17 @@ public class TransactionalEditingDomainImpl
 		transactionLock.uiSafeAcquire(!tx.isReadOnly());
 		
 		if (!tx.isReadOnly()) {
-			// also acquire the write lock
-			writeLock.acquire(false);
+			// also acquire the write lock.  Ignore interrupts because getting
+			//    the write lock is trivial once we have the transaction lock,
+			//    because the transaction lock is always acquired first
+			for (;;) {
+				try {
+					writeLock.acquire(false);
+					break;
+				} catch (InterruptedException e) {
+					Thread.interrupted();  // clear interrupt flag
+				}
+			}
 		}
 	}
 	
