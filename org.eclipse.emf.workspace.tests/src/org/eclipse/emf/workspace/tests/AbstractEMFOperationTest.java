@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.3 2006/04/11 14:29:49 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.3.2.1 2006/08/30 16:10:15 cmcgee Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.examples.extlibrary.Book;
@@ -510,6 +511,134 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		} catch (IllegalArgumentException e) {
 			fail("Rolled back out of order: " + e.getLocalizedMessage()); //$NON-NLS-1$
 		}
+	}
+	
+	public void test_undoRedoNonEMFOperationWithEMFChanges_155268() {
+		final CompositeEMFOperation comp = new CompositeEMFOperation(domain, ""); //$NON-NLS-1$
+		
+		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		assertNotNull(book);
+		
+		final AbstractEMFOperation emfOperation = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
+			public boolean canExecute() {
+				return true;
+			}
+			
+			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+				throws ExecutionException {
+				
+				book.setTitle("155268"); //$NON-NLS-1$
+				
+				return Status.OK_STATUS;
+			}
+		};
+		
+		IUndoableOperation nonEMFOperation = new IUndoableOperation() {
+			private IUndoableOperation wrappedOperation = emfOperation;
+
+			public void addContext(IUndoContext context) {
+				wrappedOperation.addContext(context);
+			}
+
+			public boolean canExecute() {
+				return wrappedOperation.canExecute();
+			}
+
+			public boolean canRedo() {
+				return wrappedOperation.canRedo();
+			}
+
+			public boolean canUndo() {
+				return wrappedOperation.canUndo();
+			}
+
+			public void dispose() {
+				wrappedOperation.dispose();
+			}
+
+			public IStatus execute(IProgressMonitor monitor, IAdaptable info)
+				throws ExecutionException {
+				return wrappedOperation.execute(monitor, info);
+			}
+
+			public IUndoContext[] getContexts() {
+				return wrappedOperation.getContexts();
+			}
+
+			public String getLabel() {
+				return wrappedOperation.getLabel();
+			}
+
+			public boolean hasContext(IUndoContext context) {
+				return wrappedOperation.hasContext(context);
+			}
+
+			public IStatus redo(IProgressMonitor monitor, IAdaptable info)
+				throws ExecutionException {
+				return wrappedOperation.redo(monitor, info);
+			}
+
+			public void removeContext(IUndoContext context) {
+				wrappedOperation.removeContext(context);
+			}
+
+			public IStatus undo(IProgressMonitor monitor, IAdaptable info)
+				throws ExecutionException {
+				return wrappedOperation.undo(monitor, info);
+			}
+		};
+		
+		AbstractEMFOperation root = new AbstractEMFOperation(domain, "") {
+			public boolean canExecute() {
+				return true;
+			}
+			
+			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+				throws ExecutionException {
+				
+				comp.execute(monitor, info);
+				
+				return Status.OK_STATUS;
+			}
+		};
+		
+		comp.add(nonEMFOperation);
+		
+		try {
+			root.execute(new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		} catch (TestError error) {
+			// success case -- error was not masked by IllegalStateException
+		} catch (IllegalArgumentException e) {
+			fail("Rolled back out of order: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+		
+		assertEquals(book.getTitle(),"155268"); //$NON-NLS-1$
+		
+		try {
+			root.undo(new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		} catch (TestError error) {
+			// success case -- error was not masked by IllegalStateException
+		} catch (IllegalArgumentException e) {
+			fail("Rolled back out of order: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+		
+		assertFalse("155268".equals(book.getTitle())); //$NON-NLS-1$
+		
+		try {
+			root.redo(new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		} catch (TestError error) {
+			// success case -- error was not masked by IllegalStateException
+		} catch (IllegalArgumentException e) {
+			fail("Rolled back out of order: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+		
+		assertEquals(book.getTitle(),"155268"); //$NON-NLS-1$
 	}
 	
 	//

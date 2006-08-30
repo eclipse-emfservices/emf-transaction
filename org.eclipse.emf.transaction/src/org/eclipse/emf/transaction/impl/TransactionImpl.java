@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.10.2.2 2006/08/09 16:32:37 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.10.2.3 2006/08/30 16:10:13 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -43,6 +43,26 @@ import org.eclipse.emf.transaction.util.TriggerCommand;
 public class TransactionImpl
 	implements InternalTransaction {
 
+	/**
+	 * This option, when provided to a transaction that inherits from this implementation
+	 *  class and has children transactions that are using this implementation class,
+	 *  provides an optional block of the normal propagation of change descriptions
+	 *  to the parent transaction by any transaction in the child subtree of this transaction.
+	 *  The child exercises its option to negate the propagation of change descriptions by
+	 *  adding the {@link #BLOCK_CHANGE_PROPAGATION} option to its own options with
+	 *  the value of {@link Boolean#TRUE}. This option <i>IS</i> inherited by child transactions.
+	 */
+	public static final String ALLOW_CHANGE_PROPAGATION_BLOCKING = "allow_block_cd_prop"; //$NON-NLS-1$
+	
+	/**
+	 * This option blocks the propagation of change descriptions to the parent transaction. The option
+	 *  has no effect unless the parent transaction has allowed this negation to happen by having the
+	 *  {@link #ALLOW_CHANGE_PROPAGATION_BLOCKING} option added either directly or through
+	 *  option inheritance. Note that to enable this option it must be added to the options map with
+	 *  the value of {@link Boolean#TRUE}. This option is <i>NOT</i> inherited by child transactions.
+	 */
+	public static final String BLOCK_CHANGE_PROPAGATION = "block_cd_prop"; //$NON-NLS-1$
+	
 	/**
 	 * The transaction options that should be used when undoing/redoing changes
 	 * on the command stack.  Undo and redo must not perform triggers because
@@ -120,6 +140,14 @@ public class TransactionImpl
 			if (parentOptions != null) {
 				myOptions.putAll(parentOptions);
 			}
+			
+			// Do not inherit the allow block option if we have the block option applied
+			if (options != null && options.containsKey(BLOCK_CHANGE_PROPAGATION)) {
+				myOptions.remove(ALLOW_CHANGE_PROPAGATION_BLOCKING);
+			}
+			
+			// Do not inherit the block option!
+			myOptions.remove(BLOCK_CHANGE_PROPAGATION);
 			
 			// override with child transaction options
 			if (options != null) {
@@ -484,8 +512,16 @@ public class TransactionImpl
 			
 			if (parent != null) {
 				// my parent resumes recording its changes now that mine are either
-				//    committed to it or rolled back
-				parent.resume(change);
+				//  committed to it or rolled back. The parent accumulates
+				//  my changes except for certain special cases where we must
+				//  prevent the passing of our changes.
+				
+				if (getOptions().get(BLOCK_CHANGE_PROPAGATION) == Boolean.TRUE
+						&& parent.getOptions().get(ALLOW_CHANGE_PROPAGATION_BLOCKING) == Boolean.TRUE) {
+					parent.resume(null);
+				} else {
+					parent.resume(change);
+				}
 			} else {
 				// I am a root transaction.  Forget my notifications, if any
 				notifications = null;

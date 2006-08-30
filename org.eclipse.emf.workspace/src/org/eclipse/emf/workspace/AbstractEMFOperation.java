@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.11.2.1 2006/07/13 19:06:45 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.11.2.2 2006/08/30 16:10:14 cmcgee Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -39,6 +39,7 @@ import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.impl.TransactionImpl;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
@@ -97,13 +98,14 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		
 		this.domain = (InternalTransactionalEditingDomain) domain;
 		if (options == null) {
-			this.txOptions = Collections.EMPTY_MAP;
+			this.txOptions = Collections.singletonMap(TransactionImpl.BLOCK_CHANGE_PROPAGATION, Boolean.TRUE);
 		} else {
 			// make a defensive copy to
 			//  - avoid modifying client's data
 			//  - guard against client modifying my map
 			//  - avoid exceptions on immutable maps
 			this.txOptions = new java.util.HashMap(options);
+			this.txOptions.put(TransactionImpl.BLOCK_CHANGE_PROPAGATION, Boolean.TRUE);
 		}
 	}
 
