@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: UndoRedoTest.java,v 1.6 2006/04/26 13:13:37 cdamus Exp $
+ * $Id: UndoRedoTest.java,v 1.6.2.1 2006/09/05 20:04:24 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -40,6 +40,7 @@ import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.transaction.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultBookTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
+import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
 
 
 /**
@@ -474,11 +475,67 @@ public class UndoRedoTest extends AbstractTest {
 		
 		Library newLibrary = EXTLibraryFactory.eINSTANCE.createLibrary();
 		
-		// this command *is* implicitly redoable; it is the trigger that is not
-		Command cmd = AddCommand.create(
-				domain, root, EXTLibraryPackage.Literals.LIBRARY__BRANCHES,
-				newLibrary);
+		ConditionalRedoCommand.Compound cmd = new ConditionalRedoCommand.Compound();
 		
+		// this command *is* implicitly redoable; it is the trigger that is not
+		cmd.chain(AddCommand.create(
+				domain, root, EXTLibraryPackage.Literals.LIBRARY__BRANCHES,
+				newLibrary));
+		
+		newLibrary = EXTLibraryFactory.eINSTANCE.createLibrary();
+		cmd.chain(AddCommand.create(
+			domain, root, EXTLibraryPackage.Literals.LIBRARY__BRANCHES,
+			newLibrary));
+
+		getCommandStack().execute(cmd);
+		
+		assertTrue(getCommandStack().canUndo());
+		
+		getCommandStack().undo();
+		
+		assertFalse(getCommandStack().canRedo());
+	}
+	
+	/**
+	 * Tests that the transactional command stack tests trigger commands for
+	 * redoability.
+	 */
+	public void test_nonredoableTriggerCommands() {
+		// add a trigger command that is not redoable
+		domain.addResourceSetListener(new TriggerListener() {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+				return new TestCommand.Redoable() {
+					public void execute() {
+						// nothing to do
+					}
+				
+					public boolean canRedo() {
+						return false;
+					}};
+			}});
+		
+		// add a trigger command that is not redoable
+		domain.addResourceSetListener(new TriggerListener() {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+				return new TestCommand.Redoable() {
+					public void execute() {
+						// nothing to do
+					}
+				
+					public boolean canRedo() {
+						return false;
+					}};
+			}});
+		
+		Library newLibrary = EXTLibraryFactory.eINSTANCE.createLibrary();
+		
+		ConditionalRedoCommand.Compound cmd = new ConditionalRedoCommand.Compound();
+		
+		// this command *is* implicitly redoable; it is the trigger that is not
+		cmd.chain(AddCommand.create(
+				domain, root, EXTLibraryPackage.Literals.LIBRARY__BRANCHES,
+				newLibrary));
+
 		getCommandStack().execute(cmd);
 		
 		assertTrue(getCommandStack().canUndo());

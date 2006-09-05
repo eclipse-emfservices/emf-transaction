@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.10.2.3 2006/08/30 16:10:13 cmcgee Exp $
+ * $Id: TransactionImpl.java,v 1.10.2.4 2006/09/05 20:04:23 cmcgee Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -23,7 +23,6 @@ import java.util.Map;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
-import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
@@ -33,6 +32,7 @@ import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
 import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.util.CommandChangeDescription;
 import org.eclipse.emf.transaction.util.CompositeChangeDescription;
+import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
 import org.eclipse.emf.transaction.util.TriggerCommand;
 
 /**
@@ -577,7 +577,7 @@ public class TransactionImpl
 			triggerCommand = (Command) triggerCommands.get(0);
 			break;
 		default:
-			triggerCommand = new CompoundCommand(triggerCommands);
+			triggerCommand = new ConditionalRedoCommand.Compound(triggerCommands);
 			break;
 		}
 		

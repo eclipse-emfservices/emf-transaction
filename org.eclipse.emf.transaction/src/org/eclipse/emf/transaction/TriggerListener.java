@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TriggerListener.java,v 1.2 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: TriggerListener.java,v 1.2.2.1 2006/09/05 20:04:23 cmcgee Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -20,6 +20,7 @@ import java.util.Iterator;
 
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
 
 /**
  * A convenient superclass for listeners that implement "triggers" to process
@@ -65,7 +66,14 @@ public abstract class TriggerListener extends ResourceSetListenerImpl {
 				if (result == null) {
 					result = trigger;
 				} else {
-					result = result.chain(trigger);
+					if (result instanceof ConditionalRedoCommand.Compound) {
+						result = result.chain(trigger);
+					} else {
+						Command previous = result;
+						result = new ConditionalRedoCommand.Compound();
+						result.chain(previous);
+						result.chain(trigger);
+					}
 				}
 			}
 		}
