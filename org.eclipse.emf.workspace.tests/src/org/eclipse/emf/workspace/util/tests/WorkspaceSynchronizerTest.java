@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizerTest.java,v 1.2 2006/02/16 22:26:49 cdamus Exp $
+ * $Id: WorkspaceSynchronizerTest.java,v 1.2.2.1 2006/09/08 21:32:30 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.common.util.URI;
@@ -59,6 +60,39 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	 * Tests the static getFile() utility method.
 	 */
 	public void test_getFile() {
+		IFile file = WorkspaceSynchronizer.getFile(testResource);
+		
+		assertNotNull(file);
+		assertTrue(file.exists());
+		
+		URI uri = testResource.getURI();
+		assertEquals(file.getName(), uri.segment(uri.segmentCount() - 1));
+	}
+	
+	/**
+	 * Tests the getFile() with file: URI.
+	 */
+	public void test_getFile_fileURI_156772() {
+		String path = ResourcesPlugin.getWorkspace().getRoot().getLocation().append(RESOURCE_NAME).toString();
+		
+		testResource.setURI(URI.createFileURI(path));
+		IFile file = WorkspaceSynchronizer.getFile(testResource);
+		
+		assertNotNull(file);
+		assertTrue(file.exists());
+		
+		URI uri = testResource.getURI();
+		assertEquals(file.getName(), uri.segment(uri.segmentCount() - 1));
+	}
+	
+	/**
+	 * Tests the getFile() with URI that can be normalized to a platform URI.
+	 */
+	public void test_getFile_normalization_156772() {
+		testResource.getResourceSet().getURIConverter().getURIMap().put(
+				URI.createURI("pathmap://FOO"), //$NON-NLS-1$
+				testResource.getURI().trimSegments(1));
+				
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
 		
 		assertNotNull(file);

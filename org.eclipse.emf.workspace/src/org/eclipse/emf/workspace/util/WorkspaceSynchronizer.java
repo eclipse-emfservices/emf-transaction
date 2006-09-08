@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.3 2006/02/16 22:26:47 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.3.2.1 2006/09/08 21:32:31 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -37,6 +37,8 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.URIConverter;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
 import org.eclipse.emf.workspace.internal.Tracing;
@@ -197,19 +199,48 @@ public final class WorkspaceSynchronizer {
 	 *    resource's URI is not a platform-resource URI
 	 */
 	public static IFile getFile(Resource resource) {
-		IFile result = null;
-		URI uri = resource.getURI();
-		
-		if ("platform".equals(uri.scheme()) && (uri.segmentCount() > 2)) { //$NON-NLS-1$
-			if ("resource".equals(uri.segment(0))) { //$NON-NLS-1$
-				IPath path = new Path(URI.decode(uri.path())).removeFirstSegments(1);
-				
-				result = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
-			}
-		}
-		
-		return result;
+        ResourceSet rset = resource.getResourceSet();
+        
+        return getFile(
+            resource.getURI(),
+            (rset != null)? rset.getURIConverter() : null);
 	}
+    
+    /**
+     * Finds the file corresponding to the specified URI, using a URI converter
+     * if necessary (and provided) to normalize it.
+     * 
+     * @param uri a URI
+     * @param converter an optional URI converter (may be <code>null</code>)
+     * 
+     * @return the file, if available in the workspace
+     */
+    private static IFile getFile(URI uri, URIConverter converter) {
+        IFile result = null;
+        
+        if ("platform".equals(uri.scheme()) && (uri.segmentCount() > 2)) { //$NON-NLS-1$
+            if ("resource".equals(uri.segment(0))) { //$NON-NLS-1$
+                IPath path = new Path(URI.decode(uri.path())).removeFirstSegments(1);
+                
+                result = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
+            }
+        } else if (uri.isFile()) {
+            result = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(
+                new Path(uri.toFileString()));
+        } else {
+            // normalize, to see whether may we can resolve it this time
+            if (converter != null) {
+                URI normalized = converter.normalize(uri);
+                
+                if (!uri.equals(normalized)) {
+                    // recurse on the new URI
+                    result = getFile(normalized, converter);
+                }
+            }
+        }
+        
+        return result;
+    }
 	
 	/**
 	 * Starts a synchronizer listening to resource change events.
