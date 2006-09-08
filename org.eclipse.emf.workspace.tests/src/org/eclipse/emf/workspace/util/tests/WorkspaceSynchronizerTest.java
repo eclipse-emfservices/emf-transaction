@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizerTest.java,v 1.2.2.1 2006/09/08 21:32:30 cdamus Exp $
+ * $Id: WorkspaceSynchronizerTest.java,v 1.2.2.2 2006/09/08 21:41:24 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -29,7 +29,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.common.util.URI;
