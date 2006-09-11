@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.3.2.1 2006/09/08 21:32:31 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.3.2.2 2006/09/11 18:50:14 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -224,7 +224,7 @@ public final class WorkspaceSynchronizer {
                 
                 result = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
             }
-        } else if (uri.isFile()) {
+        } else if (uri.isFile() && !uri.isRelative()) {
             result = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(
                 new Path(uri.toFileString()));
         } else {
