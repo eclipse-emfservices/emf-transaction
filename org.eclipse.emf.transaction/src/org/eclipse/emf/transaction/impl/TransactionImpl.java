@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.10.2.4 2006/09/05 20:04:23 cmcgee Exp $
+ * $Id: TransactionImpl.java,v 1.10.2.5 2006/09/13 15:31:47 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -444,8 +444,12 @@ public class TransactionImpl
 	private void startRecording() {
 		TransactionChangeRecorder recorder = getInternalDomain().getChangeRecorder();
 		
-		if (isUndoEnabled(this) && !recorder.isRecording()) {
-			recorder.beginRecording();
+		if (isUndoEnabled(this)) {
+			if (!recorder.isRecording()) {
+				recorder.beginRecording();
+			} else if (recorder.isPaused()) {
+				recorder.resume();
+			}
 		}
 	}
 	
@@ -457,7 +461,16 @@ public class TransactionImpl
 		TransactionChangeRecorder recorder = getInternalDomain().getChangeRecorder();
 		
 		if (isUndoEnabled(this) && recorder.isRecording()) {
-			change.add(recorder.endRecording());
+			Transaction active = getInternalDomain().getActiveTransaction();
+			if ((active != null) && !isUndoEnabled(active)) {
+				// the child is not recording, so we just suspend our change
+				//    recording and resume it later.  This is a lightweight
+				//    alternative to cutting a change description and starting
+				//    a new one, later
+				recorder.pause();
+			} else {
+				change.add(recorder.endRecording());
+			}
 		}
 	}
 	

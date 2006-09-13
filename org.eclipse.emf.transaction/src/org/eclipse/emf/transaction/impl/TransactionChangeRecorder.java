@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorder.java,v 1.3 2006/04/21 18:03:38 cdamus Exp $
+ * $Id: TransactionChangeRecorder.java,v 1.3.2.1 2006/09/13 15:31:47 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -50,6 +50,8 @@ import org.eclipse.emf.transaction.internal.l10n.Messages;
 public class TransactionChangeRecorder
 	extends ChangeRecorder {
 	private final InternalTransactionalEditingDomain domain;
+	
+	private boolean paused;
 	
 	/**
 	 * Initializes me with the editing domain that I assist and the resource
@@ -167,14 +169,16 @@ public class TransactionChangeRecorder
 			break;
 		}
 		
-		if (record || !isRecording()) {
+		if ((record && !isPaused()) || !isRecording()) {
 			super.notifyChanged(notification);
 		} else {
+			final boolean wasRecording = recording;
+			
 			try {
 				recording = false;
 				super.notifyChanged(notification);
 			} finally {
-				recording = true;
+				recording = wasRecording;
 			}
 		}
 		
@@ -295,5 +299,46 @@ public class TransactionChangeRecorder
 			
 			throw ise;
 		}
+	}
+
+	/**
+	 * Temporarily pauses the recording of the current change description.
+	 * 
+	 * @throws IllegalStateException if I am not currently recording
+	 * 
+	 * @see ChangeRecorder#isRecording()
+	 * @see #isPaused()
+	 * @see #resume()
+	 */
+	public void pause() {
+		assert isRecording(): "Cannot pause when not recording"; //$NON-NLS-1$
+		
+		paused = true;
+	}
+
+	/**
+	 * Queries whether I am currently paused in my recording.
+	 * 
+	 * @see ChangeRecorder#isRecording()
+	 * @see #pause()
+	 * @see #resume()
+	 */
+	public boolean isPaused() {
+		return paused;
+	}
+
+	/**
+	 * Resumes the paused recording of the current change description.
+	 * 
+	 * @throws IllegalStateException if I am not currently paused
+	 * 
+	 * @see ChangeRecorder#isRecording()
+	 * @see #pause()
+	 * @see #isPaused()
+	 */
+	public void resume() {
+		assert isPaused(): "Cannot resume when not paused"; //$NON-NLS-1$
+		
+		paused = false;
 	}
 }
