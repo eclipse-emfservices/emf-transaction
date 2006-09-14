@@ -23,6 +23,8 @@
  <!-- ============================= -->
   <extension point="org.eclipse.pde.core.javadoc">
       <javadoc path="references/javadoc"> <!-- defaults to reference/api -->
+          <plugin id="org.eclipse.emf.transaction"/>
+          <plugin id="org.eclipse.emf.transaction.ui"/>
       </javadoc>
   </extension>
 </plugin>
