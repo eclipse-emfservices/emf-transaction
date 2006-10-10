@@ -12,13 +12,20 @@
  *
  * </copyright>
  *
- * $Id: MemoryLeakTest.java,v 1.1 2006/01/26 20:44:48 cdamus Exp $
+ * $Id: MemoryLeakTest.java,v 1.2 2006/10/10 14:31:40 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.util.CompositeChangeDescription;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -91,6 +98,63 @@ public class MemoryLeakTest extends AbstractTest {
 		assertSame(ref, q.poll());
 	}
 	
+	/**
+	 * Tests that a child transaction does not cause any interruption in the
+	 * recording of the parent transaction's change description if the child is
+	 * unrecorded.  The result is that we do not retain empty change
+	 * descriptions and the parent has a single, seamless change description.
+	 */
+	public void test_nonRecordingChildTransactions_153908() {
+		// report initial heap size
+		long initialUsedHeap = usedHeap();
+		
+		startWriting();
+		
+		final String oldName = root.getName();
+		 
+		// make a change in the root-level transaction
+		root.setName("foo"); //$NON-NLS-1$
+		
+		// now, create 1000 nested transactions, each doing a change, *but* unrecorded
+		Map options = Collections.singletonMap(Transaction.OPTION_UNPROTECTED, Boolean.TRUE);
+		for (int i = 0; i < 1000; i++) {
+			startWriting(options);
+			
+			root.setName("foo" + i); //$NON-NLS-1$
+			
+			commit();
+			
+			// make another change in the root-level transaction
+			root.setName("foo" + (i + 1000)); //$NON-NLS-1$
+		}
+		
+		// report the used heap
+		long currentUsedHeap = usedHeap();
+		System.out.println("Additional heap used by the transaction: " //$NON-NLS-1$
+				+ ((currentUsedHeap - initialUsedHeap) / 1024L) + " kB"); //$NON-NLS-1$
+		
+		Transaction tx = commit();
+		CompositeChangeDescription change = (CompositeChangeDescription) tx.getChangeDescription();
+		List children = getChildren(change);
+		
+		assertEquals(1, children.size());
+		
+		// let's just make sure that undo works as expected
+		startWriting(options);
+		
+		final String newName = root.getName();
+		
+		change.applyAndReverse();
+		commit();
+		assertEquals(oldName, root.getName());
+		
+		// and redo, too
+		startWriting(options);
+		change.applyAndReverse();
+		commit();
+		assertEquals(newName, root.getName());
+	}
+	
 	//
 	// Fixture methods
 	//
@@ -101,5 +165,35 @@ public class MemoryLeakTest extends AbstractTest {
 		} catch (InterruptedException e) {
 			fail(e);
 		}
+	}
+	
+	protected long usedHeap() {
+		Runtime rt = Runtime.getRuntime();
+		
+		rt.gc();
+		idle(2000);
+		rt.gc();
+		
+		long result = rt.totalMemory() - rt.freeMemory();
+		
+		System.out.println("Used Heap: " + (result / 1024L) + " kB"); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		return result;
+	}
+	
+	static List getChildren(CompositeChangeDescription compositeChange) {
+		List result = null;
+		
+		try {
+			Field children = compositeChange.getClass().getDeclaredField("changes"); //$NON-NLS-1$
+			children.setAccessible(true);
+			
+			result = (List) children.get(compositeChange);
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail(e.getLocalizedMessage());
+		}
+		
+		return result;
 	}
 }

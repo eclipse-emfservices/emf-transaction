@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.7 2006/06/09 22:10:48 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.8 2006/10/10 14:31:47 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -465,16 +465,22 @@ public class TransactionalEditingDomainImpl
 		
 		activeTransaction = (InternalTransaction) tx.getParent();
 		
-		if (activeTransaction == null) {
-			// deactivation of a root transaction generates post-commit event
-			postcommit(tx);
-			
-			// and also clears the validator
-			validator.dispose();
-			validator = TransactionValidator.NULL;
-		}
-		
-		release(tx);
+        try {
+    		if (activeTransaction == null) {
+    			// deactivation of a root transaction generates post-commit event
+    			postcommit(tx);
+    			
+    			// and also clears the validator
+    			validator.dispose();
+    			validator = TransactionValidator.NULL;
+    		} else {
+                // ensure that the validator no longer retains this transaction in
+                //     its map (if it's a read/write validator)
+                validator.remove(tx);
+            }
+        } finally {		
+            release(tx);
+        }
 	}
 	
 	/**
@@ -502,8 +508,17 @@ public class TransactionalEditingDomainImpl
 		transactionLock.uiSafeAcquire(!tx.isReadOnly());
 		
 		if (!tx.isReadOnly()) {
-			// also acquire the write lock
-			writeLock.acquire(false);
+			// also acquire the write lock.  Ignore interrupts because getting
+			//    the write lock is trivial once we have the transaction lock,
+			//    because the transaction lock is always acquired first
+			for (;;) {
+				try {
+					writeLock.acquire(false);
+					break;
+				} catch (InterruptedException e) {
+					Thread.interrupted();  // clear interrupt flag
+				}
+			}
 		}
 	}
 	

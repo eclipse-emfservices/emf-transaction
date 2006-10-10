@@ -12,10 +12,11 @@
  *
  * </copyright>
  *
- * $Id: NonEMFTransaction.java,v 1.2 2006/01/30 19:48:00 cdamus Exp $
+ * $Id: NonEMFTransaction.java,v 1.3 2006/10/10 14:31:52 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.commands.operations.IUndoableOperation;
@@ -64,12 +65,35 @@ public class NonEMFTransaction extends TransactionImpl {
 			IUndoableOperation operation,
 			IAdaptable info,
 			Map options) {
-		super(domain, false, options);
+		super(domain, false, customizeOptions(options));
 		
 		this.operation = operation;
 		this.info = info;
 	}
 	
+	/**
+	 * Customizes the provided options for this transaction.
+	 * 
+	 * @param options The options provided by the call to the constructor that
+	 *  should be customized.
+	 *  
+	 * @return A new map of options that should be passed to the superclass to
+	 *  become our official set of options.
+	 */
+	private static Map customizeOptions(Map options) {
+		// Copy the options and add the special non-change description propagation
+		//  option. We do this because if by any chance that the child operation
+		//  invokes some AbstractEMFOperation again then it will be handling the
+		//  applying and reversing of its own change description, not us. However,
+		//  transactions by default will propagate all of the change descriptions upward.
+		//  This can cause situations where the same change description object is applied
+		//  and reversed twice.
+		options = new HashMap(options);
+		options.put(TransactionImpl.ALLOW_CHANGE_PROPAGATION_BLOCKING, Boolean.TRUE);
+		
+		return options;
+	}
+
 	/**
 	 * Appends my non-EMF change and commits.
 	 */

@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.11 2006/05/19 17:19:47 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.12 2006/10/10 14:31:52 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.command.CompoundCommand;
@@ -38,6 +39,7 @@ import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.impl.TransactionImpl;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
@@ -96,13 +98,14 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		
 		this.domain = (InternalTransactionalEditingDomain) domain;
 		if (options == null) {
-			this.txOptions = Collections.EMPTY_MAP;
+			this.txOptions = Collections.singletonMap(TransactionImpl.BLOCK_CHANGE_PROPAGATION, Boolean.TRUE);
 		} else {
 			// make a defensive copy to
 			//  - avoid modifying client's data
 			//  - guard against client modifying my map
 			//  - avoid exceptions on immutable maps
 			this.txOptions = new java.util.HashMap(options);
+			this.txOptions.put(TransactionImpl.BLOCK_CHANGE_PROPAGATION, Boolean.TRUE);
 		}
 	}
 
@@ -142,6 +145,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 			
 			// rollback is a normal, anticipated condition
 			result.add(e.getStatus());
+		} catch (OperationCanceledException e) {
+			// snuff the exception, because this is expected (user asked to
+			//    cancel the model change).  We will rollback, below
+			result.add(Status.CANCEL_STATUS);
 		} finally {
 			if ((transaction != null) && transaction.isActive()) {
 				// we didn't commit it, so some RuntimeException or Error must
@@ -297,6 +304,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 			
 			// rollback is a normal, anticipated condition
 			result = e.getStatus();
+		} catch (OperationCanceledException e) {
+			// snuff the exception, because this is expected (user asked to
+			//    cancel the model change).  We will rollback, below
+			result = Status.CANCEL_STATUS;
 		} finally {
 			if ((tx != null) && tx.isActive()) {
 				// we didn't commit it, so some RuntimeException or Error must
@@ -357,6 +368,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 			
 			// rollback is a normal, anticipated condition
 			result = e.getStatus();
+		} catch (OperationCanceledException e) {
+			// snuff the exception, because this is expected (user asked to
+			//    cancel the model change).  We will rollback, below
+			result = Status.CANCEL_STATUS;
 		} finally {
 			if ((tx != null) && tx.isActive()) {
 				// we didn't commit it, so some RuntimeException or Error must

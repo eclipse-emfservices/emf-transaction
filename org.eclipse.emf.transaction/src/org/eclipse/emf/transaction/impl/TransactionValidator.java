@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionValidator.java,v 1.1 2006/01/30 19:47:55 cdamus Exp $
+ * $Id: TransactionValidator.java,v 1.2 2006/10/10 14:31:47 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -90,6 +90,12 @@ public interface TransactionValidator {
 	 * Removes a transaction that has rolled back.  Transactions must be removed
 	 * as soon as they roll back.  Removal ensures that we do not pass to the
 	 * resource set listeners any notifications of changes that were rolled back.
+	 * <p>
+	 * Note that, for efficiency, transactions that have successfully committed
+	 * should also be removed after they have been deactivated.  This ensures
+	 * that they are no longer referenced by validator and can, therefore, be
+	 * reclaimed (the validator retains the notifications, only).
+	 * </p>
 	 * 
 	 * @param transaction the transaction (root or a nested transaction) to remove
 	 */

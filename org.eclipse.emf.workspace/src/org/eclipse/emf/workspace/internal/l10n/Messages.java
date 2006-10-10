@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Messages.java,v 1.1 2006/01/30 16:18:19 cdamus Exp $
+ * $Id: Messages.java,v 1.2 2006/10/10 14:31:52 cdamus Exp $
  */
 package org.eclipse.emf.workspace.internal.l10n;
 
@@ -41,6 +41,8 @@ public class Messages
 	public static String redoRecoveryFailed;
 	public static String cannotUndo;
 	public static String rollbackFailed;
+	
+	public static String precommitFailed;
 	
 	public static String exceptionHandlerFailed;
 	

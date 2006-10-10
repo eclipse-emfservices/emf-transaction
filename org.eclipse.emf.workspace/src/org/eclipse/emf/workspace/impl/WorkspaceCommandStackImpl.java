@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.5 2006/05/17 21:19:23 cmcgee Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.6 2006/10/10 14:31:52 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -31,6 +31,7 @@ import org.eclipse.core.commands.operations.OperationHistoryEvent;
 import org.eclipse.core.commands.operations.UndoContext;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
@@ -41,10 +42,12 @@ import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
+import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.impl.EMFCommandTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalCommandStack;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.impl.TransactionalCommandStackImpl;
 import org.eclipse.emf.transaction.impl.TriggerCommandTransaction;
 import org.eclipse.emf.transaction.util.TriggerCommand;
 import org.eclipse.emf.workspace.EMFCommandOperation;
@@ -206,20 +209,47 @@ public class WorkspaceCommandStackImpl
 	 * the registered exception handler (if any).
 	 */
 	protected void handleError(Exception exception) {
-		if (exceptionHandler != null) {
-			try {
-				exceptionHandler.handleException(exception);
-			} catch (Exception e) {
-				EMFWorkspacePlugin.INSTANCE.log(new Status(
-						IStatus.WARNING,
-						EMFWorkspacePlugin.getPluginId(),
-						EMFWorkspaceStatusCodes.EXCEPTION_HANDLER_FAILED,
-						Messages.exceptionHandlerFailed,
-						e));
+		if (!isCancelException(exception)) {
+			if (exceptionHandler != null) {
+				try {
+					exceptionHandler.handleException(exception);
+				} catch (Exception e) {
+					EMFWorkspacePlugin.INSTANCE.log(new Status(
+							IStatus.WARNING,
+							EMFWorkspacePlugin.getPluginId(),
+							EMFWorkspaceStatusCodes.EXCEPTION_HANDLER_FAILED,
+							Messages.exceptionHandlerFailed,
+							e));
+				}
 			}
+			
+			super.handleError(exception); // super logs
+		}
+	}
+	
+	/**
+	 * Does the specified exception indicate that the user canceled execution,
+	 * undo, or redo of a command?
+	 * 
+	 * @param exception an exception
+	 * @return <code>true</code> if it is an {@link OperationCanceledException}
+	 *     or a {@link RollbackException} that was caused by operation cancel
+	 */
+	private boolean isCancelException(Throwable exception) {
+		boolean result;
+		
+		if (exception instanceof OperationCanceledException) {
+			result = true;
+		} else if (exception instanceof RollbackException) {
+			IStatus status = ((RollbackException) exception).getStatus();
+			result = (status != null) &&
+				((status.getSeverity() == IStatus.CANCEL)
+					|| isCancelException(status.getException()));
+		} else {
+			result = false;
 		}
 		
-		super.handleError(exception); // super logs
+		return result;
 	}
 
 	/**
@@ -366,12 +396,46 @@ public class WorkspaceCommandStackImpl
 				if (parent != null) {
 					parent.addTriggers(trigger);
 				}
+				
+				// commit the transaction now
+				tx.commit();
+			} catch (RuntimeException e) {
+				Tracing.catching(TransactionalCommandStackImpl.class, "executeTriggers", e); //$NON-NLS-1$
+				
+				IStatus status;
+				if (e instanceof OperationCanceledException) {
+					status = Status.CANCEL_STATUS;
+				} else {
+					status = new Status(
+							IStatus.ERROR,
+							EMFWorkspacePlugin.getPluginId(),
+							EMFWorkspaceStatusCodes.PRECOMMIT_FAILED,
+							Messages.precommitFailed,
+							e);
+				}
+				RollbackException rbe = new RollbackException(status);
+				Tracing.throwing(TransactionalCommandStackImpl.class, "executeTriggers", rbe); //$NON-NLS-1$
+				throw rbe;
 			} finally {
 				if ((tx != null) && (tx.isActive())) {
-					// commit the transaction now
-					tx.commit();
+					// roll back because an uncaught exception occurred
+					rollback(tx);
 				}
 			}
+		}
+	}
+	
+	/**
+	 * Ensures that the specified transaction is rolled back, first rolling
+	 * back a nested transaction (if any).
+	 * 
+	 * @param tx a transaction to roll back
+	 */
+	void rollback(Transaction tx) {
+		while (tx.isActive()) {
+			Transaction active = domain.getActiveTransaction();
+			
+			active.rollback();
 		}
 	}
 	

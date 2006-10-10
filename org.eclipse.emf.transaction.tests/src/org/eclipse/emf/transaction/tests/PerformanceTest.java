@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: PerformanceTest.java,v 1.3 2006/04/21 14:59:17 cdamus Exp $
+ * $Id: PerformanceTest.java,v 1.4 2006/10/10 14:31:40 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -30,11 +30,13 @@ import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.BookCategory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.Library;
+import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 
 import junit.framework.Test;
@@ -172,6 +174,98 @@ public class PerformanceTest extends AbstractTest {
 		}
 	}
 	
+	/**
+	 * Measures the performance of a simple deeply-nested transaction structure
+	 * with options differing by depth, to gauge the performance benefit of
+	 * optimizations done for bug 152332 in the ReadWriteValidatorImpl.
+	 */
+	public void test_validatorTransactionTreeOptimizations_152332() {
+		final Transaction[] originalTransaction = new Transaction[1];
+		final int[] totalNotifications = new int[1];
+		final int[] expectedPrecommitNotifications = new int[1];
+		final int[] expectedPostcommitNotifications = new int[1];
+		final int[] expectedValidationNotifications = new int[1];
+		final int[] receivedPrecommitNotifications = new int[1];
+		final int[] receivedPostcommitNotifications = new int[1];
+		final int[] receivedValidationNotifications = new int[1];
+		
+		ResourceSetListener prePostCommitCollector = new ResourceSetListenerImpl() {
+			public NotificationFilter getFilter() {
+				return NotificationFilter.ANY;
+			}
+			
+			public Command transactionAboutToCommit(ResourceSetChangeEvent event) throws RollbackException {
+				receivedPrecommitNotifications[0] += event.getNotifications().size();
+				return null;
+			}
+			
+			public void resourceSetChanged(ResourceSetChangeEvent event) {
+				receivedPostcommitNotifications[0] = event.getNotifications().size();
+			}};
+		domain.addResourceSetListener(prePostCommitCollector);
+		ResourceSetListener validationCollector = new ResourceSetListenerImpl() {
+			public NotificationFilter getFilter() {
+				return NotificationFilter.ANY;
+			}
+			
+			public boolean isPrecommitOnly() {
+				return true;
+			}
+			public boolean isAggregatePrecommitListener() {
+				return true;
+			}
+			
+			public Command transactionAboutToCommit(ResourceSetChangeEvent event) throws RollbackException {
+				receivedValidationNotifications[0] =
+					((InternalTransactionalEditingDomain) domain).getValidator()
+						.getNotificationsForValidation(event.getTransaction()).size();
+				return null;
+			}};
+		domain.addResourceSetListener(validationCollector);
+		
+		try {
+			for (int i = 0; i < count; i++) {
+				originalTransaction[0] = null;
+				
+				// we will report the number of events from just a single run
+				totalNotifications[0] = 0;
+				expectedPrecommitNotifications[0] = 0;
+				expectedPostcommitNotifications[0] = 0;
+				expectedValidationNotifications[0] = 0;
+				receivedPrecommitNotifications[0] = 0;
+				receivedPostcommitNotifications[0] = 0;
+				receivedValidationNotifications[0] = 0;
+				
+				startClock();
+				
+				createTreeOfMixedTransactions(5, 10,
+						totalNotifications,
+						expectedPrecommitNotifications,
+						expectedPostcommitNotifications,
+						expectedValidationNotifications);
+				
+				long timing = stopClock();
+				
+				System.out.println("Raw timing: " + timing); //$NON-NLS-1$
+			}
+
+			System.out.println("Total number of notifications: " + totalNotifications[0]); //$NON-NLS-1$
+			System.out.println("Number of pre-commit notifications sent: " + receivedPrecommitNotifications[0]); //$NON-NLS-1$
+			System.out.println("Number of post-commit notifications sent: " + receivedPostcommitNotifications[0]); //$NON-NLS-1$
+			System.out.println("Number of validation notifications sent: " + receivedValidationNotifications[0]); //$NON-NLS-1$
+			
+			assertEquals("Wrong number of pre-commit notifications", //$NON-NLS-1$
+					expectedPrecommitNotifications[0], receivedPrecommitNotifications[0]);
+			assertEquals("Wrong number of post-commit notifications", //$NON-NLS-1$
+					expectedPostcommitNotifications[0], receivedPostcommitNotifications[0]);
+			assertEquals("Wrong number of validation notifications", //$NON-NLS-1$
+					expectedValidationNotifications[0], receivedValidationNotifications[0]);
+		} finally {
+			domain.removeResourceSetListener(validationCollector);
+			domain.removeResourceSetListener(prePostCommitCollector);
+		}
+	}
+	
 	//
 	// Fixture methods
 	//
@@ -270,6 +364,120 @@ public class PerformanceTest extends AbstractTest {
 		}
 		
 		testResource.getContents().add(lib);
+	}
+	
+	/**
+	 * Creates a deeply nested tree of transactions, having the specified
+	 * <code>depth</code> and in which every non-leaf transaction has
+	 * <code>breadth</code> children.  These transactions actually make changes
+	 * at every level.
+	 */
+	protected void createTreeOfMixedTransactions(
+			int depth, int breadth,
+			final int[] totalNotifications,
+			final int[] expectedPrecommitNotifications,
+			final int[] expectedPostcommitNotifications,
+			final int[] expectedValidationNotifications) {
+		
+		createTreeOfMixedTransactions(
+				depth, breadth,
+				true, true, true,
+				totalNotifications,
+				expectedPrecommitNotifications,
+				expectedPostcommitNotifications,
+				expectedValidationNotifications);
+	}
+	
+	/**
+	 * Creates a deeply nested tree of transactions, having the specified
+	 * <code>depth</code> and in which every non-leaf transaction has
+	 * <code>breadth</code> children.  These transactions actually make changes
+	 * at every level.
+	 */
+	protected void createTreeOfMixedTransactions(
+			int depth, int breadth,
+			boolean trigger, boolean notify, boolean validate,
+			final int[] totalNotifications,
+			final int[] expectedPrecommitNotifications,
+			final int[] expectedPostcommitNotifications,
+			final int[] expectedValidationNotifications) {
+		
+		// stopping condition
+		if (depth-- > 0) {
+			startWriting(getOptions(trigger, notify, validate));
+			
+			pokeRoot();
+			totalNotifications[0]++;
+			if (trigger) {
+				expectedPrecommitNotifications[0]++;
+			}
+			if (notify) {
+				expectedPostcommitNotifications[0]++;
+			}
+			if (validate) {
+				expectedValidationNotifications[0]++;
+			}
+			
+			if (depth > 0) {
+				for (int i = 0; i < breadth; i++) {
+					createTreeOfMixedTransactions(
+							depth, breadth,
+							trigger && (depth >= 3),
+							notify && (depth >= 2),
+							validate && (depth >= 1),
+							totalNotifications,
+							expectedPrecommitNotifications,
+							expectedPostcommitNotifications,
+							expectedValidationNotifications);
+					
+					pokeRoot();
+					totalNotifications[0]++;
+					if (trigger) {
+						expectedPrecommitNotifications[0]++;
+					}
+					if (notify) {
+						expectedPostcommitNotifications[0]++;
+					}
+					if (validate) {
+						expectedValidationNotifications[0]++;
+					}
+				}
+			}
+			
+			commit();
+		}
+	}
+	
+	private void pokeRoot() {
+		root.setName(Long.toString(System.currentTimeMillis() ^ root.getName().hashCode()));
+	}
+	
+	private static Map allNotifications;
+	private static Map noTriggers;
+	private static Map validationOnly;
+	private static Map noNotifications;
+	static {
+		allNotifications = Collections.EMPTY_MAP;
+		noTriggers = Collections.singletonMap(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
+		validationOnly = new java.util.HashMap(noTriggers);
+		validationOnly.put(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE);
+		noNotifications = new java.util.HashMap(validationOnly);
+		noNotifications.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
+	}
+	private Map getOptions(boolean trigger, boolean notify, boolean validate) {
+		if (!trigger) {
+			if (!notify) {
+				if (!validate) {
+					return noNotifications;
+				}
+				
+				return validationOnly;
+			}
+			
+			return noTriggers;
+		}
+		
+		return allNotifications;
 	}
 	
 	final void startClock() {

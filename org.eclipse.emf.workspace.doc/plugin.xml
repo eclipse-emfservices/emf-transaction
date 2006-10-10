@@ -23,6 +23,8 @@
  <!-- ============================= -->
   <extension point="org.eclipse.pde.core.javadoc">
       <javadoc path="references/javadoc"> <!-- defaults to reference/api -->
+          <plugin id="org.eclipse.emf.workspace"/>
+          <plugin id="org.eclipse.emf.workspace.ui"/>
       </javadoc>
   </extension>
 </plugin>

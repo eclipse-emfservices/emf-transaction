@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.10 2006/06/08 14:26:34 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.11 2006/10/10 14:31:47 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -23,7 +23,6 @@ import java.util.Map;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
-import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
@@ -33,6 +32,7 @@ import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
 import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.util.CommandChangeDescription;
 import org.eclipse.emf.transaction.util.CompositeChangeDescription;
+import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
 import org.eclipse.emf.transaction.util.TriggerCommand;
 
 /**
@@ -43,6 +43,26 @@ import org.eclipse.emf.transaction.util.TriggerCommand;
 public class TransactionImpl
 	implements InternalTransaction {
 
+	/**
+	 * This option, when provided to a transaction that inherits from this implementation
+	 *  class and has children transactions that are using this implementation class,
+	 *  provides an optional block of the normal propagation of change descriptions
+	 *  to the parent transaction by any transaction in the child subtree of this transaction.
+	 *  The child exercises its option to negate the propagation of change descriptions by
+	 *  adding the {@link #BLOCK_CHANGE_PROPAGATION} option to its own options with
+	 *  the value of {@link Boolean#TRUE}. This option <i>IS</i> inherited by child transactions.
+	 */
+	public static final String ALLOW_CHANGE_PROPAGATION_BLOCKING = "allow_block_cd_prop"; //$NON-NLS-1$
+	
+	/**
+	 * This option blocks the propagation of change descriptions to the parent transaction. The option
+	 *  has no effect unless the parent transaction has allowed this negation to happen by having the
+	 *  {@link #ALLOW_CHANGE_PROPAGATION_BLOCKING} option added either directly or through
+	 *  option inheritance. Note that to enable this option it must be added to the options map with
+	 *  the value of {@link Boolean#TRUE}. This option is <i>NOT</i> inherited by child transactions.
+	 */
+	public static final String BLOCK_CHANGE_PROPAGATION = "block_cd_prop"; //$NON-NLS-1$
+	
 	/**
 	 * The transaction options that should be used when undoing/redoing changes
 	 * on the command stack.  Undo and redo must not perform triggers because
@@ -75,8 +95,8 @@ public class TransactionImpl
 	private boolean active;
 	private boolean closing; // prevents re-entrant commit/rollback
 	private boolean rollingBack;
+	protected List notifications;
 	protected final CompositeChangeDescription change;
-	protected final List notifications = new java.util.ArrayList();
 	
 	private boolean aborted;
 	private IStatus status = Status.OK_STATUS;
@@ -121,6 +141,14 @@ public class TransactionImpl
 				myOptions.putAll(parentOptions);
 			}
 			
+			// Do not inherit the allow block option if we have the block option applied
+			if (options != null && options.containsKey(BLOCK_CHANGE_PROPAGATION)) {
+				myOptions.remove(ALLOW_CHANGE_PROPAGATION_BLOCKING);
+			}
+			
+			// Do not inherit the block option!
+			myOptions.remove(BLOCK_CHANGE_PROPAGATION);
+			
 			// override with child transaction options
 			if (options != null) {
 				myOptions.putAll(options);
@@ -134,6 +162,13 @@ public class TransactionImpl
 		}
 		
 		change = new CompositeChangeDescription();
+		
+		if (collectsNotifications(this)) {
+			notifications = new org.eclipse.emf.common.util.BasicEList.FastCompare();
+		} else {
+			// no need to collect any notifications if we won't use them
+			notifications = null;
+		}
 	}
 
 	
@@ -362,9 +397,11 @@ public class TransactionImpl
 			if (!isReadOnly()) {
 				// ensure that validation of a nesting transaction does not
 				//   include any of my changes that I have rolled back and that
-				//   post-commit doesn't find any of my changes, either  
+				//   post-commit doesn't find any of my changes, either.  Do
+				//   this now (before deactivation) so that the validator can
+				//   see that I am rolling back
 				getInternalDomain().getValidator().remove(this);
-				notifications.clear();
+				notifications = null;
 				
 				stopRecording();
 				
@@ -407,8 +444,12 @@ public class TransactionImpl
 	private void startRecording() {
 		TransactionChangeRecorder recorder = getInternalDomain().getChangeRecorder();
 		
-		if (isUndoEnabled(this) && !recorder.isRecording()) {
-			recorder.beginRecording();
+		if (isUndoEnabled(this)) {
+			if (!recorder.isRecording()) {
+				recorder.beginRecording();
+			} else if (recorder.isPaused()) {
+				recorder.resume();
+			}
 		}
 	}
 	
@@ -420,7 +461,16 @@ public class TransactionImpl
 		TransactionChangeRecorder recorder = getInternalDomain().getChangeRecorder();
 		
 		if (isUndoEnabled(this) && recorder.isRecording()) {
-			change.add(recorder.endRecording());
+			Transaction active = getInternalDomain().getActiveTransaction();
+			if ((active != null) && !isUndoEnabled(active)) {
+				// the child is not recording, so we just suspend our change
+				//    recording and resume it later.  This is a lightweight
+				//    alternative to cutting a change description and starting
+				//    a new one, later
+				recorder.pause();
+			} else {
+				change.add(recorder.endRecording());
+			}
 		}
 	}
 	
@@ -475,8 +525,19 @@ public class TransactionImpl
 			
 			if (parent != null) {
 				// my parent resumes recording its changes now that mine are either
-				//    committed to it or rolled back
-				parent.resume(change);
+				//  committed to it or rolled back. The parent accumulates
+				//  my changes except for certain special cases where we must
+				//  prevent the passing of our changes.
+				
+				if (getOptions().get(BLOCK_CHANGE_PROPAGATION) == Boolean.TRUE
+						&& parent.getOptions().get(ALLOW_CHANGE_PROPAGATION_BLOCKING) == Boolean.TRUE) {
+					parent.resume(null);
+				} else {
+					parent.resume(change);
+				}
+			} else {
+				// I am a root transaction.  Forget my notifications, if any
+				notifications = null;
 			}
 			
 			if (Tracing.shouldTrace(EMFTransactionDebugOptions.TRANSACTIONS)) {
@@ -487,14 +548,14 @@ public class TransactionImpl
 	
 	// Documentation copied from the inherited specification
 	public void add(Notification notification) {
-		if (!rollingBack) {
+		if (!rollingBack && (notifications != null)) {
 			notifications.add(notification);
 		}
 	}
 	
 	// Documentation copied from the inherited specification
 	public List getNotifications() {
-		return notifications;
+		return (notifications == null)? Collections.EMPTY_LIST : notifications;
 	}
 	
 	/**
@@ -529,7 +590,7 @@ public class TransactionImpl
 			triggerCommand = (Command) triggerCommands.get(0);
 			break;
 		default:
-			triggerCommand = new CompoundCommand(triggerCommands);
+			triggerCommand = new ConditionalRedoCommand.Compound(triggerCommands);
 			break;
 		}
 		
@@ -659,6 +720,26 @@ public class TransactionImpl
 	protected static boolean isUnprotected(Transaction tx) {
 		return !tx.isReadOnly()
 				&& hasOption(tx, OPTION_UNPROTECTED);
+	}
+	
+	/**
+	 * Queries whether the specified transaction collects notifications for
+	 * broadcast to listeners or for validation.  This is determined by
+	 * the transaction's options.
+	 * 
+	 * @param tx a transaction
+	 * 
+	 * @return <code>true</code> any of notification, triggers, and validation
+	 *     are enabled; <code>false</code>, otherwise
+	 * 
+	 * @see #isNotificationEnabled(Transaction)
+	 * @see #isTriggerEnabled(Transaction)
+	 * @see #isValidationEnabled(Transaction)
+	 */
+	protected static boolean collectsNotifications(Transaction tx) {
+		return isNotificationEnabled(tx)
+			|| isTriggerEnabled(tx)
+			|| isValidationEnabled(tx);
 	}
 	
 	/**

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ValidationRollbackTest.java,v 1.3 2006/04/11 14:29:51 cdamus Exp $
+ * $Id: ValidationRollbackTest.java,v 1.4 2006/10/10 14:31:40 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -20,15 +20,23 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.Writer;
+import org.eclipse.emf.transaction.DemultiplexingListener;
 import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
+import org.eclipse.emf.transaction.tests.fixtures.LogCapture;
 
 
 /**
@@ -334,6 +342,158 @@ public class ValidationRollbackTest extends AbstractTest {
 			fail("Rolled back out of order: " + e.getLocalizedMessage()); //$NON-NLS-1$
 		}
 	}
+	
+    /**
+     * Test that failure in the deactivation of a transaction does not cause
+     * the lock to remain held.
+     */
+    public void test_danglingTransactionOnException_149340() {
+        final Error error = new Error();
+        
+        ResourceSetListener testListener = new DemultiplexingListener() {
+            protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
+            	throw error;
+            }};
+        
+        try {
+            domain.addResourceSetListener(testListener);
+            
+            try {
+                domain.getCommandStack().execute(new RecordingCommand(domain) {
+                    protected void doExecute() {
+                        root.getWriters().clear();
+                        root.getStock().clear();
+                        root.getBranches().clear();
+                    }});
+                fail("Should have thrown Error"); //$NON-NLS-1$
+            } catch (Error e) {
+                assertSame(error, e);
+            }
+            
+            // check that the domain has no dangling transaction
+            class TestThread implements Runnable {
+                boolean ran = false;
+                
+                public void run() {
+                    // get the transaction lock
+                    try {
+                        domain.runExclusive(new Runnable() {
+                            public void run() {/* nothing to do */}
+                        });
+                    } catch (InterruptedException ex) {
+                        fail("Interrupted"); //$NON-NLS-1$
+                    }
+                    
+                    synchronized (this) {
+                        ran = true;
+                        notifyAll();
+                    }
+                }
+            }
+            
+            TestThread testThread = new TestThread();
+            synchronized (testThread) {
+                Thread t = new Thread(testThread);
+                t.setDaemon(true);
+                t.start();
+                
+                // 2 seconds should be plenty sufficient to get the lock
+                try {
+                    testThread.wait(2000);
+                } catch (InterruptedException ex) {
+                    fail("Interrupted"); //$NON-NLS-1$
+                }
+                
+                assertTrue("Dangling transaction lock", testThread.ran); //$NON-NLS-1$
+            }
+        } finally {
+            domain.removeResourceSetListener(testListener);
+        }
+    }
+	
+    /**
+     * Test that run-time exceptions in a trigger command cause rollback of
+     * the whole transaction.
+     */
+    public void test_triggerRollback_146853() {
+        final RuntimeException error = new RuntimeException();
+        
+        ResourceSetListener testListener = new TriggerListener() {
+        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
+        			protected void doExecute() {
+        				throw error;
+        			}};
+        	}};
+        
+        LogCapture logCapture = new LogCapture(
+        		getCommandStack(), EMFTransactionPlugin.getPlugin().getBundle());
+            
+        try {
+            domain.addResourceSetListener(testListener);
+            
+            domain.getCommandStack().execute(new RecordingCommand(domain) {
+                protected void doExecute() {
+                    root.getWriters().clear();
+                    root.getStock().clear();
+                    root.getBranches().clear();
+                }});
+            
+            // verify that the exception was duly logged
+            logCapture.assertLogged(error);
+            
+            // verify that rollback occurred
+            assertFalse(root.getWriters().isEmpty());
+            assertFalse(root.getStock().isEmpty());
+            assertFalse(root.getBranches().isEmpty());
+        } finally {
+            logCapture.stop();
+            domain.removeResourceSetListener(testListener);
+        }
+    }
+	
+    /**
+     * Test that OperationCanceledException in a trigger command causes
+     * rollback of the whole transaction, without any log message (because it
+     * is a normal condition).
+     */
+    public void test_triggerRollback_cancel_146853() {
+        final RuntimeException error = new OperationCanceledException();
+        
+        ResourceSetListener testListener = new TriggerListener() {
+        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
+        			protected void doExecute() {
+        				throw error;
+        			}};
+        	}};
+        
+        LogCapture logCapture = new LogCapture(
+        		getCommandStack(), EMFTransactionPlugin.getPlugin().getBundle());
+            
+        try {
+            domain.addResourceSetListener(testListener);
+            
+            domain.getCommandStack().execute(new RecordingCommand(domain) {
+                protected void doExecute() {
+                    root.getWriters().clear();
+                    root.getStock().clear();
+                    root.getBranches().clear();
+                }});
+            
+            // verify that the exception was *not* logged
+            IStatus log = logCapture.getLastLog();
+            assertNull(log);
+            
+            // verify that rollback occurred
+            assertFalse(root.getWriters().isEmpty());
+            assertFalse(root.getStock().isEmpty());
+            assertFalse(root.getBranches().isEmpty());
+        } finally {
+            logCapture.stop();
+            domain.removeResourceSetListener(testListener);
+        }
+    }
 	
 	//
 	// Fixture methods

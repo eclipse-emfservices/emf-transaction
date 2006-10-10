@@ -5,7 +5,7 @@
  <copyright>
  </copyright>
 
- $Id: plugin.xml,v 1.2 2006/02/22 21:03:01 cmcgee Exp $
+ $Id: plugin.xml,v 1.3 2006/10/10 14:31:45 cdamus Exp $
 -->
 
 <plugin>
@@ -15,7 +15,7 @@
     <editor
         id = "org.eclipse.emf.workspace.examples.extlibrary.presentation.EXTLibraryEditorID"
         name = "%_UI_EXTLibraryEditor_label"
-        icon = "$nl$/icons/full/obj16/EXTLibraryModelFile.gif"
+        icon = "$nl$/icons/full/obj16/wksexview_obj.gif"
         extensions = "extlibrary"
         class = "org.eclipse.emf.workspace.examples.extlibrary.presentation.EXTLibraryEditor" 
         contributorClass="org.eclipse.emf.workspace.examples.extlibrary.presentation.EXTLibraryActionBarContributor" >
