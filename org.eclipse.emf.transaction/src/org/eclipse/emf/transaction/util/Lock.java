@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.5.2.1 2006/07/13 19:07:07 cdamus Exp $
+ * $Id: Lock.java,v 1.5.2.2 2006/10/30 21:42:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobManager;
+import org.eclipse.core.runtime.jobs.ILock;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
@@ -100,6 +101,16 @@ public class Lock {
 	// must use identity map because threads can override equals()
 	private final Map yielders = new java.util.IdentityHashMap();
 	
+	// every thread has its own ILock that it acquires while it owns the
+	//    transaction lock, to ensure that the thread is registered as a
+	//    "lock owner" in the lock table.  This ensures that Display.syncExec()
+	//    calls from these threads will use the work queue to communicate
+	//    runnables to a waiting UI thread
+	private ThreadLocal threadLock = new ThreadLocal() {
+		protected Object initialValue() {
+			return Platform.getJobManager().newLock();
+		}};
+		
 	/**
 	 * Initializes me.
 	 */
@@ -234,6 +245,9 @@ public class Lock {
 					depth = 1;
 					owner = current;
 					result = true;
+					
+					// ensure that the current thread has an ILock for Display.syncExec() safety
+					getThreadLock().acquire();
 				} else {
 					// add myself to the queue of waiting threads
 					node = waiting.put(timeout, exclusive);
@@ -321,116 +335,139 @@ public class Lock {
 		final Thread current = Thread.currentThread();
 		
 		final Job currentJob = jobmgr.currentJob();
+		final ISchedulingRule jobRule;
 		if ((currentJob != null) && (currentJob.getRule() != null)) {
-			// running as a job on a scheduling rule?  No UI feedback needed.
-			//    Note that when the UI is showing the Blocked dialog, it is
-			//    doing so via a delayed UI job without a scheduling rule
-			acquire(exclusive);
+			// running as a job on a scheduling rule?  Cannot use
+			//   JobManager.beginRule() to show the "UI blocked" dialog
+			jobRule = null;
 		} else {
-			// if we already are interrupted, clear the interrupt status
-			//     because we will be performing a timed wait that must not
-			//     be interrupted.  We ignore interrupts because we know that
-			//     the UI thread will often be interrupted by Display.syncExec
-			Thread.interrupted();
-			
-			if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
-				Tracing.trace("::: UI-Safe Acquire  [id=" //$NON-NLS-1$
-						+ id + ", thread=" + current.getName() + ']' //$NON-NLS-1$
-						+ " at " + Tracing.now()); //$NON-NLS-1$
-			}
-			
-			// try acquiring it just in case we can avoid scheduling a job.
-			//   Don't allow the UI thread to be interrupted during this
-			//   interval
-			acquired = uninterruptibleAcquire(250L, exclusive);
+			jobRule = new AcquireRule();
+		}
+		
+		// if we already are interrupted, clear the interrupt status
+		//     because we will be performing a timed wait that must not
+		//     be interrupted.  We ignore interrupts because we know that
+		//     the UI thread will often be interrupted by Display.syncExec
+		Thread.interrupted();
+		
+		if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
+			Tracing.trace("::: UI-Safe Acquire  [id=" //$NON-NLS-1$
+					+ id + ", thread=" + current.getName() + ']' //$NON-NLS-1$
+					+ " at " + Tracing.now()); //$NON-NLS-1$
+		}
+		
+		// try acquiring it just in case we can avoid scheduling a job.
+		//   Don't allow the UI thread to be interrupted during this
+		//   interval
+		acquired = uninterruptibleAcquire(250L, exclusive);
 
-			if (acquired) {
-				assert getOwner() == current;
-				return;
-			}
+		if (acquired) {
+			assert getOwner() == current;
+			return;
+		}
+		
+		// loop until the lock is acquired
+		AcquireJob job = new AcquireJob(current, exclusive);
+		job.setRule(jobRule);
+		while (!acquired) {
+			Object sync = job.getSync();
+			ILock jobLock = job.getILock();
 			
-			// loop until the lock is acquired
-			AcquireJob job = new AcquireJob(current, exclusive);
-			while (!acquired) {
-				Object sync = job.getSync();
-				ISchedulingRule rule = job.getRule();
-				
-				synchronized (sync) {
-					if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
-						Tracing.trace("::: Scheduling       [id=" //$NON-NLS-1$
-								+ id + ", thread=" + current.getName() + ']' //$NON-NLS-1$
-								+ " at " + Tracing.now()); //$NON-NLS-1$
-					}
-					
-					job.schedule();
-					
-					// wait for the job to tell us it's running.  Don't allow
-					//   the UI thread to be interrupted during this interval
-					uninterruptibleWait(sync);
+			synchronized (sync) {
+				if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
+					Tracing.trace("::: Scheduling       [id=" //$NON-NLS-1$
+							+ id + ", thread=" + current.getName() + ']' //$NON-NLS-1$
+							+ " at " + Tracing.now()); //$NON-NLS-1$
 				}
 				
-				// begin the job's rule. This ensures that if we are the
-				// display thread, then the job manager shows a Blocked
-				// dialog until the job finishes
-				try {
-					if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
-						Tracing.trace("::: Blocking         [id=" //$NON-NLS-1$
-								+ id + ", thread=" + current.getName() + ']' //$NON-NLS-1$
-								+ " at " + Tracing.now()); //$NON-NLS-1$
-					}
-					
-					jobmgr.beginRule(rule, null);
-					
-					if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
-						Tracing.trace("::: Unblocked        [id=" //$NON-NLS-1$
-								+ id + ", thread=" + current.getName() + ']' //$NON-NLS-1$
-								+ " at " + Tracing.now()); //$NON-NLS-1$
-					}
-					
-					if (job.getResult().getSeverity() < IStatus.WARNING) {
-						synchronized (this) {
-							// if the job finished with this warning, then it did
-							//    not actually get the lock, but it is telling us
-							//    that we already have it
-							if (job.getResult() == UI_REENTERED_STATUS) {
-								if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
-									Tracing.trace("::: Lock Recursion   [id=" //$NON-NLS-1$
-											+ id + ", thread=" + current.getName() + ']' //$NON-NLS-1$
+				job.schedule();
+				
+				// wait for the job to tell us it's running.  Don't allow
+				//   the UI thread to be interrupted during this interval
+				uninterruptibleWait(sync);
+			}
+			
+			// wait for the job's ILock. This ensures that if we are the
+			// display thread, then the job manager shows a Blocked
+			// dialog until the job finishes
+			try {
+				if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
+					Tracing.trace("::: Blocking         [id=" //$NON-NLS-1$
+							+ id + ", thread=" + current.getName() + ']' //$NON-NLS-1$
+							+ " at " + Tracing.now()); //$NON-NLS-1$
+				}
+				
+				if (jobRule == null) {
+					// can only wait on the lock, then
+					jobLock.acquire();
+				} else {
+					jobmgr.beginRule(jobRule, null);
+				}
+				
+				if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
+					Tracing.trace("::: Unblocked        [id=" //$NON-NLS-1$
+							+ id + ", thread=" + current.getName() + ']' //$NON-NLS-1$
+							+ " at " + Tracing.now()); //$NON-NLS-1$
+				}
+				
+				IStatus jobStatus = job.getAcquireStatus();
+				
+                if (jobStatus == null) {
+                    // job didn't finish:  we were broken out of a deadlock.
+                    throw new InterruptedException(
+                        "Interrupted because a deadlock was detected"); //$NON-NLS-1$
+                }
+				
+				if (jobStatus.getSeverity() < IStatus.WARNING) {
+					synchronized (this) {
+						// if the job finished with this warning, then it did
+						//    not actually get the lock, but it is telling us
+						//    that we already have it
+						if (jobStatus == UI_REENTERED_STATUS) {
+							if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
+								Tracing.trace("::: Lock Recursion   [id=" //$NON-NLS-1$
+										+ id + ", thread=" + current.getName() + ']' //$NON-NLS-1$
+										+ " at " + Tracing.now()); //$NON-NLS-1$
+							}
+							
+							// try again quickly
+							acquired = acquire(250L, exclusive);
+						} else {
+							acquired = getOwner() == current;
+							
+							// need to acquire this because we will release it, later
+							getThreadLock().acquire();
+							
+							if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
+								if (acquired) {
+									Tracing.trace("::: Taken            [id=" //$NON-NLS-1$
+											+ id + ", thread=" + current.getName() //$NON-NLS-1$
+											+ ", depth=" + depth + ']' //$NON-NLS-1$
 											+ " at " + Tracing.now()); //$NON-NLS-1$
 								}
-								
-								// try again quickly
-								acquired = acquire(250L, exclusive);
-							} else {
-								acquired = getOwner() == current;
-								
-								if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
-									if (acquired) {
-										Tracing.trace("::: Taken            [id=" //$NON-NLS-1$
-												+ id + ", thread=" + current.getName() //$NON-NLS-1$
-												+ ", depth=" + depth + ']' //$NON-NLS-1$
-												+ " at " + Tracing.now()); //$NON-NLS-1$
-									}
-								}
-							}								
-						}
-						
-						resume();
-					} else if (job.getResult().getSeverity() == IStatus.CANCEL) {
-						// user canceled.  Interrupt
-						Thread.interrupted();
-						InterruptedException exc = new InterruptedException();
-						Tracing.throwing(Lock.class, "uiSafeAcquire", exc); //$NON-NLS-1$
-						throw exc;
+							}
+						}								
 					}
-				} catch (OperationCanceledException e) {
+					
+					resume();
+				} else if (jobStatus.getSeverity() == IStatus.CANCEL) {
 					// user canceled.  Interrupt
 					Thread.interrupted();
 					InterruptedException exc = new InterruptedException();
 					Tracing.throwing(Lock.class, "uiSafeAcquire", exc); //$NON-NLS-1$
 					throw exc;
-				} finally {
-					jobmgr.endRule(rule);
+				}
+			} catch (OperationCanceledException e) {
+				// user canceled.  Interrupt
+				Thread.interrupted();
+				InterruptedException exc = new InterruptedException();
+				Tracing.throwing(Lock.class, "uiSafeAcquire", exc); //$NON-NLS-1$
+				throw exc;
+			} finally {
+				if (jobRule == null) {
+					jobLock.release();
+				} else {
+					jobmgr.endRule(jobRule);
 				}
 			}
 		}
@@ -525,6 +562,9 @@ public class Lock {
 		depth--;
 
 		if (depth == 0) {
+			// no longer need this thread's dummy ILock
+			getThreadLock().release();
+			
 			// wake up next thread that wants this lock
 			
 			boolean allowExclusive = notYielded();
@@ -600,24 +640,51 @@ public class Lock {
 	}
 	
 	/**
-	 * Transfers ownership of me to the specified <code>thread</code>.
+	 * Transfers ownership of me to the specified <code>thread</code>, if I am
+	 * currently owned.  Otherwise, does nothing.
 	 * <p>
 	 * <b>Note</b> that this should only be called by the {@link AcquireJob}
 	 * after it has acquired me, to transfer me to the thread that scheduled
-	 * it.
+	 * it, or by a privileged runnable to lend the lock from its current owner
+	 * to another thread.
 	 * </p>
 	 * 
-	 * @param thread my new owner
+	 * @param thread my new owner (must not be null)
 	 */
 	synchronized void transfer(Thread thread) {
-		if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
-			Tracing.trace("::: Transfer         [id=" //$NON-NLS-1$
-					+ id + ", src=" + Thread.currentThread().getName() //$NON-NLS-1$
-					+ ", dst=" + thread.getName() + ']' //$NON-NLS-1$
-					+ " at " + Tracing.now()); //$NON-NLS-1$
+		if (thread == null) {
+			throw new IllegalArgumentException("thread is null"); //$NON-NLS-1$
 		}
 		
-		owner = thread;
+		if (owner != null) {
+			final Thread current = Thread.currentThread();
+			
+			if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
+				Tracing.trace("::: Transfer         [id=" //$NON-NLS-1$
+						+ id + ", src=" + current.getName() //$NON-NLS-1$
+						+ ", dst=" + thread.getName() + ']' //$NON-NLS-1$
+						+ " at " + Tracing.now()); //$NON-NLS-1$
+			}
+			
+			if (current == thread) {
+				// ensure that the new owner has an ILock for Display.syncExec() safety
+				getThreadLock().acquire();
+			} else if (current == owner) {
+				// current thread no longer needs the dummy lock
+				getThreadLock().release();
+			} // else non-owner is transfering.  Shouldn't happen
+			
+			owner = thread;
+		}
+	}
+	
+	/**
+	 * Obtains the thread-private <tt>ILock</tt> for the current thread.
+	 * 
+	 * @return the current thread's thread lock
+	 */
+	private ILock getThreadLock() {
+		return (ILock) threadLock.get();
 	}
 	
 	public String toString() {
@@ -641,7 +708,8 @@ public class Lock {
 		private final Thread thread;
 		private final boolean exclusive;
 		
-		private AcquireRule rule = new AcquireRule();
+		private ILock ilock = jobmgr.newLock();
+		private IStatus acquireStatus;
 
 		AcquireJob(Thread schedulingThread, boolean exclusive) {
 			super(Messages.acquireJobLabel);
@@ -650,55 +718,64 @@ public class Lock {
 			this.exclusive = exclusive;
 			
 			setSystem(true);
-			setRule(rule);
 		}
 
 		/**
 		 * @see org.eclipse.core.runtime.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
 		 */
 		protected IStatus run(IProgressMonitor monitor) {
-			// notify the lock that scheduled me that I am now running
-			synchronized (sync) {
-				sync.notify();
-			}
-
-			// attempt to acquire the lock.  Time out so that we may check
-			//    regularly for user cancellation
 			try {
-				while (!acquire(250L, exclusive)) {
-					synchronized (Lock.this) {
-						// the UI thread can re-enter the uiSafeAcquire() method
-						//    and schedule additional AcquireJobs because it
-						//    continues to process events and synchronous runnables
-						//    on the event queue.  When this occurs, we will see
-						//    that the thread for which we are waiting to get the
-						//    lock already has it, so we stop waiting.  Not only
-						//    that, but because the UI thread will think that
-						//    we have acquired the lock, we must increase the
-						//    depth
-						if (Lock.this.getOwner() == thread) {
-							return UI_REENTERED_STATUS;
+				ilock.acquire();
+
+				// notify the lock that scheduled me that I am now running
+				synchronized (sync) {
+					sync.notifyAll();
+				}
+	
+				// attempt to acquire the lock.  Time out so that we may check
+				//    regularly for user cancellation
+				try {
+					while (!acquire(250L, exclusive)) {
+						synchronized (Lock.this) {
+							// the UI thread can re-enter the uiSafeAcquire() method
+							//    and schedule additional AcquireJobs because it
+							//    continues to process events and synchronous runnables
+							//    on the event queue.  When this occurs, we will see
+							//    that the thread for which we are waiting to get the
+							//    lock already has it, so we stop waiting.  Not only
+							//    that, but because the UI thread will think that
+							//    we have acquired the lock, we must increase the
+							//    depth
+							if (Lock.this.getOwner() == thread) {
+								acquireStatus = UI_REENTERED_STATUS;
+								return acquireStatus;
+							}
+						}
+						
+						if (monitor.isCanceled()) {
+							acquireStatus = Status.CANCEL_STATUS;
+							return acquireStatus;
 						}
 					}
-					
-					if (monitor.isCanceled()) {
-						return Status.CANCEL_STATUS;
-					}
+				} catch (InterruptedException e) {
+					// I was interrupted:  give up
+					Thread.interrupted();  // clear interrupt flag
+					acquireStatus = Status.CANCEL_STATUS;
+					return acquireStatus;
 				}
-			} catch (InterruptedException e) {
-				// I was interrupted:  give up
-				Thread.interrupted();  // clear interrupt flag
-				return Status.CANCEL_STATUS;
+	
+				// now transfer it to the thread that scheduled me
+				Lock.this.transfer(thread);
+				acquireStatus = Status.OK_STATUS;
+			} finally {
+				ilock.release();
 			}
-
-			// now transfer it to the thread that scheduled me
-			Lock.this.transfer(thread);
 			
-			return Status.OK_STATUS;
+			return acquireStatus;
 		}
 
 		/**
-		 * The symchronization object for this job.  The thread that scheduled
+		 * The synchronization object for this job.  The thread that scheduled
 		 * me must do so while it holds this monitor, and then must wait for me
 		 * to notify it before proceeding.
 		 * 
@@ -706,6 +783,19 @@ public class Lock {
 		 */
 		public final Object getSync() {
 			return sync;
+		}
+		
+		ILock getILock() {
+			return ilock;
+		}
+		
+		/**
+		 * A status indicating success or problem in acquisition of the lock.
+		 * 
+		 * @return my status
+		 */
+		IStatus getAcquireStatus() {
+			return acquireStatus;
 		}
 	}
 	
@@ -730,6 +820,45 @@ public class Lock {
 		public boolean isConflicting(ISchedulingRule rule) {
 			// conflict must be reflexive
 			return rule == this;
+		}
+	}
+	
+	/**
+	 * A class that grants special {@link Lock} manipulation privileges to its
+	 * subclasses, that it knows as particular friends.
+	 * <p>
+	 * <b>Note</b> that this class is intended for use within the EMF Transaction API
+	 * only.  It may not be extended by clients.
+	 * </p>
+	 * 
+	 * @author Christian W. Damus (cdamus)
+	 * 
+	 * @since 1.0.2
+	 */
+	public abstract class Access {
+		/**
+		 * Initializes me.
+		 */
+		protected Access() {
+			checkSubclass();
+		}
+		
+		/**
+		 * Transfers the lock's ownership to the specified thread.
+		 * 
+		 * @param thread the new owner thread
+		 */
+		public void transfer(Thread thread) {
+			Lock.this. transfer(thread);
+		}
+		
+		private void checkSubclass() {
+			String name = getClass().getName();
+			String packageName = name.substring(0, name.lastIndexOf('.') + 1);
+			
+			if (!"org.eclipse.emf.transaction.impl.".equals(packageName)) { //$NON-NLS-1$
+				throw new IllegalArgumentException("Illegal subclass"); //$NON-NLS-1$
+			}
 		}
 	}
 }
