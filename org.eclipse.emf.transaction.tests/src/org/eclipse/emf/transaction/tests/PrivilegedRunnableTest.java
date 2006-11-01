@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: PrivilegedRunnableTest.java,v 1.2 2006/06/15 13:33:34 cdamus Exp $
+ * $Id: PrivilegedRunnableTest.java,v 1.3 2006/11/01 19:14:34 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -230,6 +230,69 @@ public class PrivilegedRunnableTest extends AbstractTest {
 		assertSame(e, privileged.getStatus().getException());
 		
 		commit();
+	}
+	
+	public void test_concurrentAcquireDuringPrivilegedRunnable_162027() throws Exception {
+		final Object handshake = new Object();
+		final Exception[] shouldNotBeThrown = new Exception[1];
+		
+		startReading();
+		
+		Thread otherThread = new Thread(new Runnable() {
+			public void run() {
+				synchronized (handshake) {
+					try {
+						handshake.wait();
+					} catch (InterruptedException e) {
+						fail("Interrupted"); //$NON-NLS-1$
+					}
+					
+					handshake.notifyAll();
+				}
+				
+				try {
+					domain.runExclusive(new Runnable() {
+						public void run() {
+							try {
+								Thread.sleep(1000);
+							} catch (InterruptedException e) {
+								fail("Interrupted"); //$NON-NLS-1$
+							}
+						}});
+				} catch (InterruptedException e) {
+					fail("Interrupted"); //$NON-NLS-1$
+				} catch (IllegalArgumentException e) {
+					// this is the symptom of the bug
+					shouldNotBeThrown[0] = e;
+				}
+			}});
+		otherThread.setDaemon(true);
+		otherThread.start();
+		
+		Thread.sleep(500);
+		
+		Runnable privileged = domain.createPrivilegedRunnable(new Runnable() {
+			public void run() {
+				synchronized (handshake) {
+					handshake.notifyAll();
+					
+					try {
+						handshake.wait();
+						
+						Thread.sleep(500);
+					} catch (InterruptedException e) {
+						fail("Interrupted"); //$NON-NLS-1$
+					}
+				}
+			}});
+		
+		thread.syncExec(privileged);
+		
+		commit();
+		
+		Thread.sleep(2000);
+		
+		assertNull(shouldNotBeThrown[0]);
 	}
 
 	//

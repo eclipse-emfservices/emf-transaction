@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,16 +12,20 @@
  *
  * </copyright>
  *
- * $Id: LockTest.java,v 1.2 2006/01/06 03:42:42 cdamus Exp $
+ * $Id: LockTest.java,v 1.3 2006/11/01 19:14:34 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util.tests;
+
+import java.lang.reflect.Field;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.AbstractTest;
 import org.eclipse.emf.transaction.tests.fixtures.JobListener;
 import org.eclipse.emf.transaction.util.Lock;
@@ -546,6 +550,100 @@ public class LockTest extends TestCase {
 		}
 	}
 	
+	/**
+	 * Tests that when the UI thread attempts to acquire, liveness is maintained
+	 * even if the UI thread is running an implicit job.
+	 */
+	public void test_uiSafeWaitForAcquire_implicitJob_bug162141() {
+		if (!PlatformUI.isWorkbenchRunning()) {
+			// can only execute this test case in a workbench
+			AbstractTest.trace("*** Test skipped because not running in a workbench ***"); //$NON-NLS-1$
+			return;
+		}
+
+		// an identity rule
+		ISchedulingRule rule = new ISchedulingRule() {
+			public boolean isConflicting(ISchedulingRule rule) {
+				return rule == this;
+			}
+		
+			public boolean contains(ISchedulingRule rule) {
+				return rule == this;
+			}};
+		
+		final TransactionalEditingDomain domain =
+			TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+		
+		lock = getLock(domain);
+		
+		final int longInterval = PlatformUI.getWorkbench().getProgressService()
+				.getLongOperationTime();
+		
+		final boolean syncRunnableFinished[] = new boolean[1];
+		
+		Thread t = new Thread(new Runnable() {
+		
+			public void run() {
+				try {
+					synchronized (monitor) {
+						lock.acquire(false);
+						
+						// wake up the main thread so that it will try to acquire
+						monitor.notifyAll();
+					}
+					
+					Thread.sleep(longInterval);
+					
+					PlatformUI.getWorkbench().getDisplay().syncExec(new Runnable() {
+						public void run() {
+							syncRunnableFinished[0] = true;
+						}});
+					
+					Thread.sleep(longInterval);
+				} catch (Exception e) {
+					fail();
+				} finally {
+					if (lock != null) {
+						lock.release();
+					}
+				}
+			}});
+		
+		try {
+			long start = System.currentTimeMillis();
+			
+			synchronized (monitor) {
+				t.start();
+				
+				// wait for the other thread to acquire the lock
+				monitor.wait();
+			}
+			
+			// start an implicit job on our fake rule
+			Platform.getJobManager().beginRule(rule, null);
+			
+			try {
+				// now attempt to acquire the lock while the other thread sleeps
+				lock.uiSafeAcquire(false);
+				
+				// check that we did actually wait for the lock  :-)
+				assertTrue(System.currentTimeMillis() - start >= longInterval);
+				
+				// check that the UI processed the synchronous Runnable
+				assertTrue(syncRunnableFinished[0]);
+				
+				lock.release();
+			} finally {
+				Platform.getJobManager().endRule(rule);
+			}
+		} catch (Exception e) {
+			fail(e);
+		} finally {
+			domain.dispose();
+		}
+	}
+	
+	
 	//
 	// Fixture methods
 	//
@@ -577,5 +675,34 @@ public class LockTest extends TestCase {
 	protected void fail(Exception e) {
 		e.printStackTrace();
 		fail("Should not have thrown: " + e.getLocalizedMessage()); //$NON-NLS-1$
+	}
+	
+	/**
+	 * A reflective hack to get the transaction lock of an editing domain.
+	 * 
+	 * @param domain the editing domain
+	 * 
+	 * @return its transaction lock
+	 */
+	private Lock getLock(TransactionalEditingDomain domain) {
+		Lock result = null;
+		Field field = null;
+		
+		try {
+			Class clazz = domain.getClass();
+			
+			field = clazz.getDeclaredField("transactionLock"); //$NON-NLS-1$
+			field.setAccessible(true);
+			
+			result = (Lock) field.get(domain);
+		} catch (Exception e) {
+			fail("Could not access transactionLock field: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		} finally {
+			if (field != null) {
+				field.setAccessible(false);
+			}
+		}
+		
+		return result;
 	}
 }

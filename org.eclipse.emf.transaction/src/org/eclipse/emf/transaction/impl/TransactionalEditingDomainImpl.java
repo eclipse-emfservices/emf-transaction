@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.8 2006/10/10 14:31:47 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.9 2006/11/01 19:14:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -68,8 +68,6 @@ public class TransactionalEditingDomainImpl
 	
 	private Lock transactionLock = new Lock();
 	private Lock writeLock = new Lock();
-	private final List transactionLockStack = new java.util.ArrayList();
-	private final List writeLockStack = new java.util.ArrayList();
 	
 	private final List precommitListeners = new java.util.ArrayList();
 	private final List aggregatePrecommitListeners = new java.util.ArrayList();
@@ -790,31 +788,13 @@ public class TransactionalEditingDomainImpl
 					"runnable has no privileges on this editing domain"); //$NON-NLS-1$
 		}
 		
-		synchronized (this) {
-			// push the current locks onto the stack to restore them later
-			transactionLockStack.add(0, transactionLock);
-			writeLockStack.add(0, writeLock);
+		Thread current = Thread.currentThread();
 			
-			transactionLock = new Lock();
-			writeLock = new Lock();
+		// transfer the locks to the current thread
+		transactionLock.new Access() {}.transfer(current);
+		writeLock.new Access() {}.transfer(current);
 		}
 		
-		// should be trivially easy
-		try {
-			acquire((InternalTransaction) runnable.getTransaction());
-		} catch (InterruptedException e) {
-			// should not happen
-			Tracing.catching(TransactionalEditingDomainImpl.class, "startPrivileged", e); //$NON-NLS-1$
-			IStatus status = new Status(
-				IStatus.ERROR,
-				EMFTransactionPlugin.getPluginId(),
-				EMFTransactionStatusCodes.PRIVILEGED_RUNNABLE_FAILED,
-				Messages.privilegedRunnable,
-				e);
-			EMFTransactionPlugin.INSTANCE.log(status);
-		}
-	}
-
 	// Documentation copied from the inherited specification
 	public void endPrivileged(PrivilegedRunnable runnable) {
 		if (runnable.getTransaction().getEditingDomain() != this) {
@@ -822,16 +802,13 @@ public class TransactionalEditingDomainImpl
 					"runnable has no privileges on this editing domain"); //$NON-NLS-1$
 		}
 		
-		release((InternalTransaction) runnable.getTransaction());
+		Thread owner = runnable.getOwner();
 		
-		synchronized (this) {
-			// pop the current locks from the stack
-			transactionLock = (Lock) transactionLockStack.remove(0);
-			writeLock = (Lock) writeLockStack.remove(0);
+		// transfer the locks to their previous owner
+		transactionLock.new Access() {}.transfer(owner);
+		writeLock.new Access() {}.transfer(owner);
 		}
 		
-	}
-	
 	// Documentation copied from the inherited specification
 	public void dispose() {
 		// try this first, because it will fail if we are statically registered
