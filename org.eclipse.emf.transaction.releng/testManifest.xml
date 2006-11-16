@@ -63,15 +63,11 @@
    <logFile name="plugins/org.eclipse.emf.workspace.examples_*/*.bin.log">
       <effectedFile id="EX"></effectedFile>
    </logFile>
-   <logFile name="plugins/org.eclipse.emf.transaction.ui_*/*.bin.log">
-      <effectedFile id="SDK"></effectedFile>
-      <effectedFile id="projRUN"></effectedFile>
-   </logFile>
    <logFile name="plugins/org.eclipse.emf.transaction_*/*.bin.log">
       <effectedFile id="SDK"></effectedFile>
       <effectedFile id="projRUN"></effectedFile>
    </logFile>
-   <logFile name="plugins/org.eclipse.emf.workbench.ui_*/*.bin.log">
+   <logFile name="plugins/org.eclipse.emf.transaction.ui_*/*.bin.log">
       <effectedFile id="SDK"></effectedFile>
       <effectedFile id="projRUN"></effectedFile>
    </logFile>
@@ -79,11 +75,15 @@
       <effectedFile id="SDK"></effectedFile>
       <effectedFile id="projRUN"></effectedFile>
    </logFile>
-   <logFile name="plugins/org.eclipse.emf.workspace.ui_*/*.bin.log">
+   <logFile name="plugins/org.eclipse.emf.workbench.ui_*/*.bin.log">
       <effectedFile id="SDK"></effectedFile>
       <effectedFile id="projRUN"></effectedFile>
    </logFile>
    <logFile name="plugins/org.eclipse.emf.workspace_*/*.bin.log">
+      <effectedFile id="SDK"></effectedFile>
+      <effectedFile id="projRUN"></effectedFile>
+   </logFile>
+   <logFile name="plugins/org.eclipse.emf.workspace.ui_*/*.bin.log">
       <effectedFile id="SDK"></effectedFile>
       <effectedFile id="projRUN"></effectedFile>
    </logFile>
