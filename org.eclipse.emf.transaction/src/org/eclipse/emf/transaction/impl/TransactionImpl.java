@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.11 2006/10/10 14:31:47 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.12 2006/11/16 18:17:25 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -583,16 +583,11 @@ public class TransactionImpl
 		List triggerCommands = triggers.getTriggers();
 		Command triggerCommand;
 		
-		switch (triggerCommands.size()) {
-		case 0:
+		if (triggerCommands.isEmpty()) {
 			return;
-		case 1:
-			triggerCommand = (Command) triggerCommands.get(0);
-			break;
-		default:
-			triggerCommand = new ConditionalRedoCommand.Compound(triggerCommands);
-			break;
 		}
+		
+		triggerCommand = new ConditionalRedoCommand.Compound(triggerCommands);
 		
 		if (this.triggers == null) {
 			this.triggers = triggerCommand;
