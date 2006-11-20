@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.10.2.5 2006/09/13 15:31:47 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.10.2.6 2006/11/20 19:17:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -583,16 +583,14 @@ public class TransactionImpl
 		List triggerCommands = triggers.getTriggers();
 		Command triggerCommand;
 		
-		switch (triggerCommands.size()) {
-		case 0:
+		if (triggerCommands.isEmpty()) {
 			return;
-		case 1:
-			triggerCommand = (Command) triggerCommands.get(0);
-			break;
-		default:
-			triggerCommand = new ConditionalRedoCommand.Compound(triggerCommands);
-			break;
 		}
+		
+		// bug 165026:  Must copy the list, because it may be read-only like
+		//    GMF's NOOP_TRIGGER command
+		triggerCommand = new ConditionalRedoCommand.Compound(
+				new java.util.ArrayList(triggerCommands));
 		
 		if (this.triggers == null) {
 			this.triggers = triggerCommand;
