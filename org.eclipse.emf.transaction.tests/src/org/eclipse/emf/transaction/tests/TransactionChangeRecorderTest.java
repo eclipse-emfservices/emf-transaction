@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorderTest.java,v 1.2 2006/04/21 18:03:41 cdamus Exp $
+ * $Id: TransactionChangeRecorderTest.java,v 1.3 2006/12/01 18:38:33 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -31,8 +31,11 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.util.InternalEList;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionChangeRecorder;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 
 
 /**
@@ -151,7 +154,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 	
 	/**
 	 * Tests that the change recorder is correctly propagated to the objects in
-	 * a resource when it is loadedwhen loading in a read-write transaction
+	 * a resource when it is loaded when loading in a read-write transaction
 	 * (creating change descriptions).
 	 */
 	public void test_changeRecorderPropagatedOnLoad_writeTX() {
@@ -181,6 +184,267 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 		
 		assertTrue(nestedResource1.isLoaded());
 		assertFalse(nestedResource2.isLoaded());
+	}
+	
+	/**
+	 * Tests that disposing an editing domain (and its change recorder) removes
+	 * the change recorder from all of the current contents of the resource
+	 * set.
+	 */
+	public void test_changeRecorderDispose_161169() {
+		startWriting();
+		loadRoot();
+		
+		TransactionChangeRecorder recorder = getRecorder(rootResource);
+		
+		EClass eclass = findClass("root/A", true); //$NON-NLS-1$
+		
+		assertSame(recorder, getRecorder(eclass));
+		
+		commit();
+		
+		domain.dispose();
+		
+		try {
+			// attempt to change it without a transaction.  Should be allowed
+			eclass.setName("NewName"); //$NON-NLS-1$
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Should not have asserted the transaction protocol: " //$NON-NLS-1$
+					+ e.getLocalizedMessage());
+		}
+	}
+	
+	/**
+	 * Tests that the change recorder is implicitly removed even from model
+	 * elements that were not attached to the resource set at the time when
+	 * the editing domain was disposed.
+	 */
+	public void test_changeRecorderDispose_detachedElements_161169() {
+		startWriting();
+		loadRoot();
+		
+		TransactionChangeRecorder recorder = getRecorder(rootResource);
+		
+		EClass eclass = findClass("root/A", true); //$NON-NLS-1$
+		
+		assertSame(recorder, getRecorder(eclass));
+		
+		// detach the EClass
+		eclass.getEPackage().getEClassifiers().remove(eclass);
+		
+		commit();
+		
+		domain.dispose();
+		
+		try {
+			// attempt to change it without a transaction.  Should be allowed
+			eclass.setName("NewName"); //$NON-NLS-1$
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Should not have asserted the transaction protocol: " //$NON-NLS-1$
+					+ e.getLocalizedMessage());
+		}
+	}
+	
+	/**
+	 * Tests the new utility for "freeing" resources from the transactional
+	 * protocol of an editing domain.
+	 */
+	public void test_freeDetachedResources_161169() {
+		startWriting();
+		loadRoot();
+		
+		TransactionChangeRecorder recorder = getRecorder(rootResource);
+		
+		EClass eclass = findClass("root/A", true); //$NON-NLS-1$
+		
+		assertSame(recorder, getRecorder(eclass));
+		
+		commit();
+		
+		// no transaction protocol on this
+		domain.getResourceSet().getResources().remove(rootResource);
+		
+		// set the resource free
+		TransactionUtil.disconnectFromEditingDomain(rootResource);
+		
+		try {
+			// attempt to change it without a transaction.  Should be allowed
+			eclass.setName("NewName"); //$NON-NLS-1$
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Should not have asserted the transaction protocol: " //$NON-NLS-1$
+					+ e.getLocalizedMessage());
+		}
+	}
+	
+	/**
+	 * Tests that the new utility frees only the proper contents of the resource.
+	 */
+	public void test_freeDetachedResources_properContents_161169() {
+		startWriting();
+		loadRoot();
+		
+		TransactionChangeRecorder recorder = getRecorder(rootResource);
+		
+		EClass eclass = findClass("root/A", true); //$NON-NLS-1$
+		EClass nested = findClass("root/nested1/nested2/nested3/D", true); //$NON-NLS-1$
+		
+		assertSame(recorder, getRecorder(eclass));
+		
+		commit();
+		
+		// no transaction protocol on this
+		domain.getResourceSet().getResources().remove(rootResource);
+		
+		// set the root resource free
+		TransactionUtil.disconnectFromEditingDomain(rootResource);
+		
+		try {
+			// set the nested resource free
+			TransactionUtil.disconnectFromEditingDomain(nestedResource1);
+			
+			fail("Should have thrown IllegalArgumentException"); //$NON-NLS-1$
+		} catch (IllegalArgumentException e) {
+			// pass
+			System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+		
+		try {
+			// modify the nested element
+			nested.setName("NewName"); //$NON-NLS-1$
+			
+			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+		} catch (IllegalStateException e) {
+			// pass
+			System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+	}
+	
+	/**
+	 * Tests the new utility for "freeing" elements from the transactional
+	 * protocol of an editing domain.
+	 */
+	public void test_freeDetachedElements_161169() {
+		startWriting();
+		loadRoot();
+		
+		TransactionChangeRecorder recorder = getRecorder(rootResource);
+		
+		EClass eclass = findClass("root/A", true); //$NON-NLS-1$
+		
+		assertSame(recorder, getRecorder(eclass));
+		
+		// detach some ancestor, just for fun
+		EObject container = eclass.eContainer();
+		EcoreUtil.remove(container);
+		
+		commit();
+		
+		// set the element free
+		TransactionUtil.disconnectFromEditingDomain(container);
+		
+		try {
+			// attempt to change it without a transaction.  Should be allowed
+			eclass.setName("NewName"); //$NON-NLS-1$
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Should not have asserted the transaction protocol: " //$NON-NLS-1$
+					+ e.getLocalizedMessage());
+		}
+	}
+	
+	/**
+	 * Tests that the new utility frees only the proper contents of an element.
+	 */
+	public void test_freeDetachedElements_properContents_161169() {
+		startWriting();
+		loadRoot();
+		
+		TransactionChangeRecorder recorder = getRecorder(rootResource);
+		
+		EClass eclass = findClass("root/A", true); //$NON-NLS-1$
+		EClass nested = findClass("root/nested1/nested2/nested3/D", true); //$NON-NLS-1$
+		
+		assertSame(recorder, getRecorder(eclass));
+		
+		// detach some ancestor, just for fun
+		EObject container = eclass.eContainer();
+		EcoreUtil.remove(container);
+ 		
+		commit();
+		
+		try {
+			// set the nested element free
+			TransactionUtil.disconnectFromEditingDomain(nested);
+			
+			fail("Should have thrown IllegalArgumentException"); //$NON-NLS-1$
+		} catch (IllegalArgumentException e) {
+			// pass
+			System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+		
+		try {
+			// modify the nested element
+			nested.setName("NewName"); //$NON-NLS-1$
+			
+			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+		} catch (IllegalStateException e) {
+			// pass
+			System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+	}
+	
+	/**
+	 * Tests that the new utility correctly disconnects an element that was in
+	 * multiple editing domains from all of them.
+	 */
+	public void test_freeElements_multipleEditingDomains_161169() {
+		TransactionalEditingDomain other =
+			TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+		
+		startWriting();
+		loadRoot();
+		
+		TransactionChangeRecorder recorder = getRecorder(rootResource);
+		
+		EClass eclass = findClass("root/A", true); //$NON-NLS-1$
+		
+		assertSame(recorder, getRecorder(eclass));
+		
+		commit();
+		
+		// move the resources to the other domain's resource set.  There is
+		//    no transaction protocol on this
+		other.getResourceSet().getResources().add(rootResource);
+		
+		// first, attempt to set the resource free.  This will find that the
+		//    first change recorder's editing domain could be disconnected, but
+		//    not the second because the resource is still in its resource set
+		try {
+			TransactionUtil.disconnectFromEditingDomain(rootResource);
+			
+			fail("Should have thrown IllegalArgumentException"); //$NON-NLS-1$
+		} catch (IllegalArgumentException e) {
+			// pass
+			System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+		
+		// now, remove from the resource set (no transaction protocol on this)
+		other.getResourceSet().getResources().remove(rootResource);
+		
+		// freeing should work now
+		TransactionUtil.disconnectFromEditingDomain(rootResource);
+		
+		try {
+			// attempt to change it without a transaction.  Should be allowed
+			eclass.setName("NewName"); //$NON-NLS-1$
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Should not have asserted the transaction protocol: " //$NON-NLS-1$
+					+ e.getLocalizedMessage());
+		}
 	}
 	
 	//

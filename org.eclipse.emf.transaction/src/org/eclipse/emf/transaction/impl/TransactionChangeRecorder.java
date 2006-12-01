@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2006 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorder.java,v 1.4 2006/10/10 14:31:47 cdamus Exp $
+ * $Id: TransactionChangeRecorder.java,v 1.5 2006/12/01 18:38:35 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -28,6 +28,7 @@ import org.eclipse.emf.ecore.change.ChangeDescription;
 import org.eclipse.emf.ecore.change.util.ChangeRecorder;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.util.InternalEList;
 import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
@@ -47,11 +48,13 @@ import org.eclipse.emf.transaction.internal.l10n.Messages;
  * @see TransactionValidator
  * @see InternalTransaction#add(Notification)
  */
-public class TransactionChangeRecorder
-	extends ChangeRecorder {
-	private final InternalTransactionalEditingDomain domain;
+public class TransactionChangeRecorder extends ChangeRecorder {
+	
+	private InternalTransactionalEditingDomain domain;
 	
 	private boolean paused;
+	
+	private boolean disposed;
 	
 	/**
 	 * Initializes me with the editing domain that I assist and the resource
@@ -68,8 +71,7 @@ public class TransactionChangeRecorder
 		// super already started recording
 		endRecording();
 		
-		// TODO: Restore when API available
-		//setResolveProxies(false);
+		setResolveProxies(false);
 		
 		// tell the resource set manager about any resources that already exist
 		ResourceSetManager.getInstance().observe(rset);
@@ -86,16 +88,28 @@ public class TransactionChangeRecorder
 	
 	/**
 	 * Starts recording changes in my editing domain.
+	 * 
+	 * @throws IllegalStateException if I have been {@link #dispose() disposed}
 	 */
 	public void beginRecording() {
+		if (disposed) {
+			throw new IllegalStateException("cannot begin a disposed recorder"); //$NON-NLS-1$
+		}
+		
 		beginRecording(Collections.singleton(getEditingDomain().getResourceSet()));
 	}
 	
 	/**
 	 * Extends the inherited implementation to clear the reference to the
 	 * change description returned.
+	 * 
+	 * @throws IllegalStateException if I have been {@link #dispose() disposed}
 	 */
 	public ChangeDescription endRecording() {
+		if (disposed) {
+			throw new IllegalStateException("cannot end a disposed recorder"); //$NON-NLS-1$
+		}
+		
 		ChangeDescription result = super.endRecording();
 		
 		changeDescription = null;
@@ -119,18 +133,19 @@ public class TransactionChangeRecorder
 	 * </ul>
 	 */
 	public void setTarget(Notifier target) {
-		// TODO: Restore when API available
-		Iterator contents = target instanceof EObject ? /*resolveProxies*/false ? ((EObject) target).eContents().iterator()
-				: ((InternalEList) ((EObject) target).eContents()).basicIterator()
-				: target instanceof ResourceSet ? ((ResourceSet) target)
-						.getResources().iterator()
-						: target instanceof Resource ? ((Resource) target)
-								.getContents().iterator() : null;
-
-		if (contents != null) {
-			while (contents.hasNext()) {
-				Notifier notifier = (Notifier) contents.next();
-				addAdapter(notifier);
+		if (!disposed) {
+			Iterator contents = target instanceof EObject ? isResolveProxies() ? ((EObject) target).eContents().iterator()
+					: ((InternalEList) ((EObject) target).eContents()).basicIterator()
+					: target instanceof ResourceSet ? ((ResourceSet) target)
+							.getResources().iterator()
+							: target instanceof Resource ? ((Resource) target)
+									.getContents().iterator() : null;
+	
+			if (contents != null) {
+				while (contents.hasNext()) {
+					Notifier notifier = (Notifier) contents.next();
+					addAdapter(notifier);
+				}
 			}
 		}
 	}
@@ -143,6 +158,18 @@ public class TransactionChangeRecorder
 	 * transaction (if any).
 	 */
 	public void notifyChanged(Notification notification) {
+		if (disposed) {
+			// I am disposed, so I should no longer be responding to or even
+			//    receiving events.  Moreover, I should not propagate myself
+			//    to any elements that are later added to me!
+			Object notifier = notification.getNotifier();
+			if (notifier instanceof Notifier) {
+				removeAdapter((Notifier) notifier);
+			}
+			
+			return;
+		}
+		
 		boolean record = true;
 		
 		switch (notification.getEventType()) {
@@ -340,5 +367,30 @@ public class TransactionChangeRecorder
 		assert isPaused(): "Cannot resume when not paused"; //$NON-NLS-1$
 		
 		paused = false;
+	}
+	
+	/**
+	 * Extends the inherited implementation to remove myself from all adapters
+	 * that I can find in my editing domain.
+	 * 
+	 * @since 1.1
+	 */
+	public void dispose() {
+		if (!disposed) {
+			super.dispose();
+			
+			this.disposed = true;
+			
+			ResourceSet rset = domain.getResourceSet();
+			if (rset != null) {
+				removeAdapter(rset);
+				
+				for (Iterator iter = EcoreUtil.getAllProperContents(rset, false); iter.hasNext();) {
+					removeAdapter((Notifier) iter.next());
+				}
+			}
+			
+			this.domain = null;
+		}
 	}
 }

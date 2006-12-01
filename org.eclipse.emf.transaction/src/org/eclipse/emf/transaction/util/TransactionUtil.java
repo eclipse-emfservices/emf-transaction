@@ -12,17 +12,25 @@
  *
  * </copyright>
  *
- * $Id: TransactionUtil.java,v 1.3 2006/04/21 18:03:38 cdamus Exp $
+ * $Id: TransactionUtil.java,v 1.4 2006/12/01 18:38:35 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Set;
+
+import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.edit.domain.IEditingDomainProvider;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.impl.TransactionChangeRecorder;
 
 /**
  * Static utilities for dealing with EMF elements and resources in a
@@ -124,5 +132,122 @@ public class TransactionUtil {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * <p>
+	 * Disconnects the specified resource from its editing domain, so that it is
+	 * released from the constraints of the transactional environment.  Note
+	 * that this is only permitted if the resource is not currently attached to
+	 * the resource set of the editing domain in question.
+	 * </p><p>
+	 * This should only be done with extreme caution.  If any other resources
+	 * that are still being managed by the transactional editing domain have
+	 * dependencies on this <tt>resource</tt>, then existing undo/redo
+	 * information for these may be corrupted and future undo recording may not
+	 * be complete.  It is <b>highly recommended</b> to flush the command stack
+	 * of the editing domain in question after disconnecting a resource from it.
+	 * </p>
+	 * 
+	 * @param resource a resource to disconnect from its current editing domain,
+	 *     if any
+	 * 
+	 * @throws IllegalStateException if the specified <tt>resource</tt> is
+	 *     still in the {@link ResourceSet} managed by its current editing
+	 *     domain
+	 * 
+	 * @since 1.1
+	 */
+	public static void disconnectFromEditingDomain(Resource resource) {
+		disconnectFromEditingDomain0(resource);
+	}
+	
+	/**
+	 * <p>
+	 * Disconnects the specified element from its editing domain, so that it is
+	 * released from the constraints of the transactional environment.  Note
+	 * that this is only permitted if the element is not currently attached to
+	 * the resource set of the editing domain in question.
+	 * </p><p>
+	 * This should only be done with extreme caution.  If any other elements
+	 * that are still being managed by the transactional editing domain have
+	 * dependencies on this <tt>eobject</tt>, then existing undo/redo
+	 * information for these may be corrupted and future undo recording may not
+	 * be complete.  It is <b>highly recommended</b> to flush the command stack
+	 * of the editing domain in question after disconnecting an element from it.
+	 * </p><p>
+	 * It is probably more useful to
+	 * {@linkplain #disconnectFromEditingDomain(Resource) disconnect} an entire
+	 * {@link Resource} from the editing domain instead of just an object,
+	 * unless that object is being moved from one editing domain to another.
+	 * </p>
+	 * 
+	 * @param eobject a model element to disconnect from its current editing
+	 *     domain, if any
+	 * 
+	 * @throws IllegalStateException if the specified <tt>eobject</tt> is
+	 *     still in the {@link ResourceSet} managed by its current editing
+	 *     domain
+	 * 
+	 * @since 1.1
+	 * 
+	 * @see #disconnectFromEditingDomain(Resource)i
+	 */
+	public static void disconnectFromEditingDomain(EObject eobject) {
+		disconnectFromEditingDomain0(eobject);
+	}
+	
+	/**
+	 * Implements the disconnection of any notifier from the transactional
+	 * editing domain.
+	 * 
+	 * @param notifier the notifier to disconnect
+	 */
+	private static void disconnectFromEditingDomain0(Notifier notifier) {
+		Set recorders = getExistingChangeRecorders(notifier);
+		
+		if (!recorders.isEmpty()) {
+			// this resource is managed by a transactional editing domain
+			InternalTransactionalEditingDomain domain =
+				(InternalTransactionalEditingDomain) getEditingDomain(notifier);
+			
+			if ((domain != null) && recorders.contains(domain.getChangeRecorder())) {
+				throw new IllegalArgumentException("resource is still in the domain's resource set"); //$NON-NLS-1$
+			}
+			
+			Iterator iter = EcoreUtil.getAllProperContents(Collections.singleton(
+					notifier), false);
+			while (iter.hasNext()) {
+				((Notifier) iter.next()).eAdapters().removeAll(recorders);
+			}
+		}
+	}
+	
+	/**
+	 * Obtains the transaction change recorders currently attached to a notifier.
+	 * 
+	 * @param notifier a notifier
+	 * @return the currently attached change recorders, which may be an empty
+	 *    set if none
+	 */
+	private static Set getExistingChangeRecorders(Notifier notifier) {
+		Set result = null;
+		
+		Object[] adapters = notifier.eAdapters().toArray();
+		for (int i = 0; i < adapters.length; i++) {
+			if (adapters[i] instanceof TransactionChangeRecorder) {
+				TransactionChangeRecorder next = (TransactionChangeRecorder) adapters[i];
+				
+				if (next.getEditingDomain() != null) {
+					if (result == null) {
+						result = new java.util.HashSet();
+					}
+					
+					result.add(next);
+				}
+			}
+		}
+		
+		return (result == null)? Collections.EMPTY_SET : result;
 	}
 }
