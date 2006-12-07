@@ -12,18 +12,17 @@
  *
  * </copyright>
  *
- * $Id: UndoActionWrapper.java,v 1.1 2006/01/30 16:20:11 cdamus Exp $
+ * $Id: UndoActionWrapper.java,v 1.2 2006/12/07 23:17:11 cdamus Exp $
  */
 
 package org.eclipse.emf.workspace.ui.actions;
 
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.emf.edit.ui.action.UndoAction;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchPartSite;
+import org.eclipse.ui.operations.OperationHistoryActionHandler;
 import org.eclipse.ui.operations.UndoActionHandler;
 
 /**
@@ -33,19 +32,23 @@ import org.eclipse.ui.operations.UndoActionHandler;
  * @author Christian W. Damus (cdamus)
  */
 public class UndoActionWrapper extends UndoAction {
-	private UndoActionHandler delegate;
-	
-	private final IPropertyChangeListener listener = new IPropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent event) {
-			// propagate to my own listeners
-			firePropertyChange0(event.getProperty(), event.getOldValue(), event.getNewValue());
-		}};
+	private final ActionWrapperHelper delegate;
 	
 	/**
 	 * Initializes me.
 	 */
 	public UndoActionWrapper() {
-		super();
+		delegate = new ActionWrapperHelper(new ActionWrapperHelper.OwnerAccess() {
+		
+			public void firePropertyChange(String property, Object oldValue,
+					Object newValue) {
+				firePropertyChange0(property, oldValue, newValue);
+			}
+		
+			public OperationHistoryActionHandler createDelegate(
+					IWorkbenchPartSite site, IUndoContext context) {
+				return new UndoActionHandler(site, context);
+			}});
 	}
 
 	// method defined to give the inner listener class access to inherited protected method
@@ -59,29 +62,7 @@ public class UndoActionWrapper extends UndoAction {
 	 */
 	public void setActiveWorkbenchPart(IWorkbenchPart workbenchPart) {
 		super.setActiveWorkbenchPart(workbenchPart);
-		
-		IUndoContext context = null;
-		
-		if (workbenchPart != null) {
-			context = (IUndoContext) workbenchPart.getAdapter(IUndoContext.class);
-		}
-		
-		if (context != null) {
-			if (delegate != null) {
-				delegate.removePropertyChangeListener(listener);
-				delegate.dispose();
-			}
-			
-			delegate = new UndoActionHandler(workbenchPart.getSite(), context);
-			delegate.addPropertyChangeListener(listener);
-			
-			// force enablement update in UI
-			boolean enabled = isEnabled();
-			firePropertyChange0(
-					IAction.ENABLED,
-					Boolean.valueOf(!enabled),
-					Boolean.valueOf(enabled));
-		}
+		delegate.setActiveWorkbenchPart(workbenchPart);
 	}
 	
 	/**

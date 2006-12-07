@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Plugin.name
 Bundle-SymbolicName: org.eclipse.emf.workspace.ui
-Bundle-Version: 1.0.1.qualifier
+Bundle-Version: 1.0.100.qualifier
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.emf.workspace;bundle-version="[1.0.0,2.0.0)",
  org.eclipse.emf.edit.ui;bundle-version="[2.2.0,3.0.0)"
