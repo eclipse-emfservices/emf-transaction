@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: MemoryLeakTest.java,v 1.2 2006/10/10 14:31:40 cdamus Exp $
+ * $Id: MemoryLeakTest.java,v 1.3 2006/12/07 18:10:37 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -158,14 +158,6 @@ public class MemoryLeakTest extends AbstractTest {
 	//
 	// Fixture methods
 	//
-	
-	protected void idle(long millis) {
-		try {
-			Thread.sleep(millis);
-		} catch (InterruptedException e) {
-			fail(e);
-		}
-	}
 	
 	protected long usedHeap() {
 		Runtime rt = Runtime.getRuntime();

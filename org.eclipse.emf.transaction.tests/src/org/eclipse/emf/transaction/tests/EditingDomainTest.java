@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EditingDomainTest.java,v 1.1 2006/12/07 16:44:48 cdamus Exp $
+ * $Id: EditingDomainTest.java,v 1.2 2006/12/07 18:10:37 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -69,21 +69,5 @@ public class EditingDomainTest extends AbstractTest {
 		
 		// verify that the domain was reclaimed
 		assertSame(ref, q.poll());
-	}
-	
-	//
-	// Fixtures
-	//
-
-	private void runGC() {
-		System.gc();
-		
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			fail("Interrupted"); //$NON-NLS-1$
-		}
-		
-		System.gc();
 	}
 }

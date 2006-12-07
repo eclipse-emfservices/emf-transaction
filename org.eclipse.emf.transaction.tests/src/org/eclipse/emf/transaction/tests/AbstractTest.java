@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.4 2006/04/21 14:59:17 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.5 2006/12/07 18:10:37 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -569,5 +569,21 @@ public class AbstractTest
 		}
 		
 		return result;
+	}
+
+	protected void idle(long millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (InterruptedException e) {
+			fail(e);
+		}
+	}
+
+	protected void runGC() {
+		System.gc();
+		
+		idle(2000);
+		
+		System.gc();
 	}
 }
