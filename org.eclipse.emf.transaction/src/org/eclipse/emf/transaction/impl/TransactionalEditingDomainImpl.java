@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.9 2006/11/01 19:14:38 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.10 2006/12/07 16:44:49 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -823,6 +823,9 @@ public class TransactionalEditingDomainImpl
 		
 		getTransactionalCommandStack().dispose();
 		commandStack = null;
+		
+		// disconnect the resource set from the editing domain
+		((FactoryImpl) Factory.INSTANCE).unmapResourceSet(this);
 	}
 	
 	/**
@@ -900,7 +903,7 @@ public class TransactionalEditingDomainImpl
 			for (Iterator iter = domain.getResourceSet().eAdapters().iterator(); iter.hasNext();) {
 				Adapter next = (Adapter) iter.next();
 				
-				if (next.isAdapterForType(TransactionalEditingDomain.class)) {
+				if (next.isAdapterForType(ResourceSetDomainLink.class)) {
 					iter.remove();
 					
 					// continue processing because maybe there are multiple
