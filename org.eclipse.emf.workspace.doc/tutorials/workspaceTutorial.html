@@ -146,7 +146,7 @@ public class ResourceLoadedListener extends DemultiplexingListener {
          return;
       }
       
-      if (notification.getNewBooleanValue() && !notification.getOldBooleanValue()) {
+      if (notification.getNewBooleanValue() &amp;&amp; !notification.getOldBooleanValue()) {
          // a resource has been loaded that was not loaded before.  Open an editor
          final IFile file = WorkspaceSynchronizer.getFile(
                (Resource) notification.getNotifier());
@@ -176,7 +176,7 @@ public class ResourceLoadedListener extends DemultiplexingListener {
                   }
                }});
          }
-      } else if (!notification.getNewBooleanValue() && notification.getOldBooleanValue()) {
+      } else if (!notification.getNewBooleanValue() &amp;&amp; notification.getOldBooleanValue()) {
          // a resource has been unloaded that was  loaded before.  Close
          //    the editor, if any
          final IFile file = WorkspaceSynchronizer.getFile(
@@ -231,7 +231,7 @@ public void init(IEditorSite site, IEditorInput editorInput) {
 private WorkspaceSynchronizer.Delegate createSynchronizationDelegate() {
    return new WorkspaceSynchronizer.Delegate() {
       public boolean handleResourceDeleted(Resource resource) {
-         if ((resource == getResource()) && !isDirty()) {
+         if ((resource == getResource()) &amp;&amp; !isDirty()) {
             // just close now without prompt
             getSite().getShell().getDisplay().asyncExec
                (new Runnable() {

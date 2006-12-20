@@ -124,7 +124,7 @@ public class MyListener
       for (Iterator i = notifications.iterator(); i.hasNext();) {
          Notification n = (Notification)i.next();
          
-         if (n.getNotifier() instanceof EObject && !handledLibraries.contains(n)) {
+         if (n.getNotifier() instanceof EObject &amp;&amp; !handledLibraries.contains(n)) {
             EObject notifier = (EObject)n.getNotifier();
             if (notifier.eClass() == EXTLibraryPackage.eINSTANCE.getLibrary()) {
                final Library l = (Library)notifier;

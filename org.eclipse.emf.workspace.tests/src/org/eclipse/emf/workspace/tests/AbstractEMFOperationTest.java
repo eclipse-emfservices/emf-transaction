@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.4 2006/10/10 14:31:44 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.5 2006/12/20 17:06:32 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -588,7 +588,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 			}
 		};
 		
-		AbstractEMFOperation root = new AbstractEMFOperation(domain, "") {
+		AbstractEMFOperation root = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
 			public boolean canExecute() {
 				return true;
 			}

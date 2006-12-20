@@ -15,3 +15,4 @@ Export-Package: org.eclipse.emf.workspace.tests,
  org.eclipse.emf.workspace.util.tests
 Eclipse-LazyStart: true
 Bundle-Activator: org.eclipse.emf.workspace.tests.TestsPlugin
+Bundle-RequiredExecutionEnvironment: J2SE-1.4
