@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.5 2006/12/20 17:06:32 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.6 2007/01/30 22:17:51 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -640,6 +640,55 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		
 		assertEquals(book.getTitle(),"155268"); //$NON-NLS-1$
 	}
+    
+    /**
+     * Tests that execute/undo/redo are contented with <code>null</code> as the
+     * progress monitor.
+     */
+    public void test_nullProgressMonitors_bug150033() {
+        IUndoableOperation operation = new AbstractEMFOperation(domain, "Test") { //$NON-NLS-1$
+        
+            protected IStatus doUndo(IProgressMonitor monitor, IAdaptable info)
+                throws ExecutionException {
+                
+                monitor.isCanceled();
+                
+                return super.doUndo(monitor, info);
+            }
+        
+            protected IStatus doRedo(IProgressMonitor monitor, IAdaptable info)
+                throws ExecutionException {
+                
+                monitor.isCanceled();
+                
+                return super.doRedo(monitor, info);
+            }
+        
+            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+                throws ExecutionException {
+                
+                monitor.isCanceled();
+                return Status.OK_STATUS;
+            }};
+            
+       try {
+           operation.execute(null, null);
+       } catch (Exception e) {
+           fail("Should not have failed to execute with null monitor: " + e.getLocalizedMessage()); //$NON-NLS-1$
+       }
+       
+       try {
+           operation.undo(null, null);
+       } catch (Exception e) {
+           fail("Should not have failed to undo with null monitor: " + e.getLocalizedMessage()); //$NON-NLS-1$
+       }
+           
+       try {
+           operation.redo(null, null);
+       } catch (Exception e) {
+           fail("Should not have failed to redo with null monitor: " + e.getLocalizedMessage()); //$NON-NLS-1$
+       }
+    }
 	
 	//
 	// Fixtures

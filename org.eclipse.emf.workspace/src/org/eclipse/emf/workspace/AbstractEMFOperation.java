@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.12 2006/10/10 14:31:52 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.13 2007/01/30 22:17:52 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
@@ -119,6 +120,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	public final IStatus execute(IProgressMonitor monitor, IAdaptable info)
 		throws ExecutionException {
 		
+        if (monitor == null) {
+            monitor = new NullProgressMonitor();
+        }
+        
 		transaction = null;
 		final List result = new java.util.ArrayList(2);
 		
@@ -283,6 +288,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	public final IStatus undo(IProgressMonitor monitor, IAdaptable info)
 		throws ExecutionException {
 		
+        if (monitor == null) {
+            monitor = new NullProgressMonitor();
+        }
+        
 		Transaction tx = null;
 		IStatus result = null;
 		
@@ -347,6 +356,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	public final IStatus redo(IProgressMonitor monitor, IAdaptable info)
 		throws ExecutionException {
 		
+        if (monitor == null) {
+            monitor = new NullProgressMonitor();
+        }
+        
 		Transaction tx = null;
 		IStatus result = null;
 		
@@ -457,7 +470,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * are applied by manipulation of the EMF metamodel's API, <em>not</em>
 	 * by executing commands on the editing domain's command stack.
 	 * 
-	 * @param monitor the progress monitor provided by the operation history
+	 * @param monitor the progress monitor provided by the operation history.
+     *     Will never be <code>null</code> because the
+     *     {@link #execute(IProgressMonitor, IAdaptable)} method would substitute
+     *     a {@link NullProgressMonitor} in that case
 	 * @param info the adaptable provided by the operation history
 	 * 
 	 * @return the status of the execution
@@ -476,6 +492,9 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * </p>
 	 * 
 	 * @param monitor the progress monitor provided by the operation history
+     *     Will never be <code>null</code> because the
+     *     {@link #undo(IProgressMonitor, IAdaptable)} method would substitute
+     *     a {@link NullProgressMonitor} in that case
 	 * @param info the adaptable provided by the operation history
 	 * 
 	 * @return the status of the undo operation
@@ -513,6 +532,9 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * </p>
 	 * 
 	 * @param monitor the progress monitor provided by the operation history
+     *     Will never be <code>null</code> because the
+     *     {@link #redo(IProgressMonitor, IAdaptable)} method would substitute
+     *     a {@link NullProgressMonitor} in that case
 	 * @param info the adaptable provided by the operation history
 	 * 
 	 * @return the status of the redo operation
