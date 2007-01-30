@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.6 2006/10/10 14:31:52 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.7 2007/01/30 22:05:01 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -385,7 +385,8 @@ public class WorkspaceCommandStackImpl
 				? new TriggerCommand(triggers)
 				: new TriggerCommand(command, triggers);
 			
-			InternalTransaction tx = createTransaction(trigger, options);
+			InternalTransaction tx = createTransaction(trigger,
+                TransactionalCommandStackImpl.makeTriggerTransactionOptions(options));
 			
 			try {
 				trigger.execute();

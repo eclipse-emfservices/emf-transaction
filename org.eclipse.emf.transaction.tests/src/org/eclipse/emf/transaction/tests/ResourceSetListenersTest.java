@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListenersTest.java,v 1.6 2006/10/10 14:31:40 cdamus Exp $
+ * $Id: ResourceSetListenersTest.java,v 1.7 2007/01/30 22:05:02 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -34,6 +34,7 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.transaction.DemultiplexingListener;
+import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
@@ -1208,6 +1209,57 @@ public class ResourceSetListenersTest extends AbstractTest {
 //		assertFalse(test1.isLoaded());
 		assertTrue(listener.changed);
 	}
+    
+    /**
+     * Tests that the {@link RecordingCommand} can be used as a trigger command,
+     * that in this case it is able correctly to capture its changes for
+     * undo/redo.
+     */
+    public void test_recordingCommandsAsTriggers_bug157103() {
+        // one trigger sets default library names
+        domain.addResourceSetListener(new LibraryDefaultNameTrigger() {
+            protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+                Command result = null;
+                
+                final Library newLibrary = (Library) notification.getNewValue();
+                if ((newLibrary.getName() == null) || (newLibrary.getName().length() == 0)) {
+                    result = new RecordingCommand(domain) {
+                        protected void doExecute() {
+                            newLibrary.setName("New Library"); //$NON-NLS-1$
+                        }};
+                }
+                
+                return result;
+            }});
+        
+        final Library[] newLibrary = new Library[1];
+        
+        // add a new library.  Our trigger will set a default name
+        domain.getCommandStack().execute(new RecordingCommand(domain) {
+            protected void doExecute() {
+                newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
+                root.getBranches().add(newLibrary[0]);
+                
+                assertNull(newLibrary[0].getName());
+            }});
+        
+        startReading();
+        
+        assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
+        
+        commit();
+        
+        domain.getCommandStack().undo();
+        
+        assertFalse(root.getBranches().contains(newLibrary[0]));
+        assertNull(newLibrary[0].eResource());
+        assertNull(newLibrary[0].getName());
+        
+        domain.getCommandStack().redo();
+        
+        assertTrue(root.getBranches().contains(newLibrary[0]));
+        assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
+    }
 	
 	//
 	// Fixture methods

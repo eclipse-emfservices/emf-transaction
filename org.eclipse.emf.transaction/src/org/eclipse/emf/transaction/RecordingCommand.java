@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,13 +12,20 @@
  *
  * </copyright>
  *
- * $Id: RecordingCommand.java,v 1.4 2006/04/26 13:13:39 cdamus Exp $
+ * $Id: RecordingCommand.java,v 1.5 2007/01/30 22:05:05 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.AbstractCommand;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.impl.TransactionImpl;
+import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
+import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
+import org.eclipse.emf.transaction.internal.l10n.Messages;
 import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
 
 /**
@@ -97,11 +104,46 @@ public abstract class RecordingCommand
 	 * @see #doExecute()
 	 */
 	public final void execute() {
-		// invoke the subclass before getting the transaction, because if an
-		//    exception occurs, we don't want to be undoable
-		doExecute();
-		
-		transaction = ((InternalTransactionalEditingDomain) domain).getActiveTransaction();
+        InternalTransactionalEditingDomain internalDomain =
+            (InternalTransactionalEditingDomain) domain;
+        Transaction nested = null;
+        
+        if (isTriggerCommand() && isUndoable()) {
+            // need to create a nested transaction so that we can capture its
+            //    changes for undo/redo
+            try {
+                nested = internalDomain.startTransaction(false, null);
+            } catch (InterruptedException e) {
+                // can't proceed with non-undoable changes
+                internalDomain.getActiveTransaction().abort(new Status(
+                    IStatus.ERROR,
+                    EMFTransactionPlugin.getPluginId(),
+                    EMFTransactionStatusCodes.PRECOMMIT_INTERRUPTED,
+                    Messages.precommitInterrupted, e));
+            }
+        }
+        
+        try {
+    		// invoke the subclass before getting the transaction, because if an
+    		//    exception occurs, we don't want to be undoable
+    		doExecute();
+    		
+    		transaction = internalDomain.getActiveTransaction();
+        } finally {        
+            if (nested != null) {
+                if (transaction == null) {
+                    // failed to execute.  Roll back
+                    nested.rollback();
+                } else {
+                    try {
+                        nested.commit();
+                    } catch (RollbackException e) {
+                        // propagate the rollback
+                        ((InternalTransaction) transaction).abort(e.getStatus());
+                    }
+                }
+            }
+        }
 	}
 
 	/**
@@ -159,4 +201,42 @@ public abstract class RecordingCommand
 	public Command chain(Command command) {
 	    return new ConditionalRedoCommand.Compound().chain(this).chain(command);
 	}
+    
+    /**
+     * Queries whether I am executing in the context of a trigger transaction.
+     * That is to say, whether I am a trigger command.
+     * 
+     * @return whether the active transaction is a trigger transaction
+     */
+    private boolean isTriggerCommand() {
+        boolean result = false;
+        Transaction tx = ((InternalTransactionalEditingDomain) domain).getActiveTransaction();
+        
+        while (!result && (tx != null)) {
+            result = Boolean.TRUE.equals(tx.getOptions().get(
+                TransactionImpl.OPTION_IS_TRIGGER_TRANSACTION));
+            tx = tx.getParent();
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Queries whether I am executing in the context of a transaction that is
+     * intended to be undoable.
+     * 
+     * @return whether the active transaction is recording undo information
+     */
+    private boolean isUndoable() {
+        boolean result = true;
+        Transaction tx = ((InternalTransactionalEditingDomain) domain).getActiveTransaction();
+        
+        while (result && (tx != null)) {
+            result = !Boolean.TRUE.equals(tx.getOptions().get(Transaction.OPTION_NO_UNDO))
+                && !Boolean.TRUE.equals(tx.getOptions().get(Transaction.OPTION_UNPROTECTED));
+            tx = tx.getParent();
+        }
+        
+        return result;
+    }
 }

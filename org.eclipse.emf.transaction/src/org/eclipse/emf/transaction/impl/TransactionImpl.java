@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.13 2006/11/17 20:29:41 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.14 2007/01/30 22:05:05 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -63,6 +63,12 @@ public class TransactionImpl
 	 */
 	public static final String BLOCK_CHANGE_PROPAGATION = "block_cd_prop"; //$NON-NLS-1$
 	
+    /**
+     * An informative option that tags the transaction as a transaction that is
+     * executing trigger commands.
+     */
+    public static final String OPTION_IS_TRIGGER_TRANSACTION = "is_trigger_transaction"; //$NON-NLS-1$
+    
 	/**
 	 * The transaction options that should be used when undoing/redoing changes
 	 * on the command stack.  Undo and redo must not perform triggers because

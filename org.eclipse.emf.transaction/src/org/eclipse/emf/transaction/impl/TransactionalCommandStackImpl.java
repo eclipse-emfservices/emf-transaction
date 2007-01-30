@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,10 +12,11 @@
  *
  * </copyright>
  *
- * $Id: TransactionalCommandStackImpl.java,v 1.6 2006/10/10 14:31:47 cdamus Exp $
+ * $Id: TransactionalCommandStackImpl.java,v 1.7 2007/01/30 22:05:05 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -299,7 +300,8 @@ public class TransactionalCommandStackImpl
 				? new TriggerCommand(triggers)
 				: new TriggerCommand(command, triggers);
 			
-			InternalTransaction tx = createTransaction(trigger, options);
+			InternalTransaction tx = createTransaction(trigger,
+                makeTriggerTransactionOptions(options));
 			
 			try {
 				trigger.execute();
@@ -339,6 +341,30 @@ public class TransactionalCommandStackImpl
 			}
 		}
 	}
+    
+    /**
+     * Customizes the specified <code>options</code> for the case of a transaction
+     * that executes trigger commands.  The original map is not affected.
+     * 
+     * @param options a client-supplied options map
+     * @return a derived map of options suitable for trigger transactions
+     * 
+     * @since 1.1
+     */
+    public static final Map makeTriggerTransactionOptions(Map options) {
+        Map result;
+        
+        if ((options == null) || options.isEmpty()) {
+            result = Collections.singletonMap(
+                TransactionImpl.OPTION_IS_TRIGGER_TRANSACTION, Boolean.TRUE); 
+        } else {
+            result = new java.util.HashMap(options);
+            result.put(
+                TransactionImpl.OPTION_IS_TRIGGER_TRANSACTION, Boolean.TRUE);
+        }
+        
+        return result;
+    }
 	
 	// Documentation copied from the inherited specification
 	public void dispose() {

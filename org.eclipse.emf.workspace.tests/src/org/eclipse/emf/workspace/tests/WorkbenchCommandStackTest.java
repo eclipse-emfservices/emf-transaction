@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.6 2006/10/10 14:31:44 cdamus Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.7 2007/01/30 22:05:00 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -39,6 +39,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
+import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListener;
@@ -54,6 +55,7 @@ import org.eclipse.emf.workspace.ResourceUndoContext;
 import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.eclipse.emf.workspace.impl.WorkspaceCommandStackImpl;
 import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
+import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultNameTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LogCapture;
 import org.eclipse.emf.workspace.tests.fixtures.NullCommand;
 
@@ -503,6 +505,75 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         } finally {
             domain.removeResourceSetListener(testListener);
         }
+    }
+    
+    /**
+     * Tests that the {@link RecordingCommand} can be used as a trigger command,
+     * that in this case it is able correctly to capture its changes for
+     * undo/redo.
+     */
+    public void test_recordingCommandsAsTriggers_bug157103() {
+        // one trigger sets default library names
+        domain.addResourceSetListener(new LibraryDefaultNameTrigger() {
+            protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+                Command result = null;
+                
+                final Library newLibrary = (Library) notification.getNewValue();
+                if ((newLibrary.getName() == null) || (newLibrary.getName().length() == 0)) {
+                    result = new RecordingCommand(domain) {
+                        protected void doExecute() {
+                            newLibrary.setName("New Library"); //$NON-NLS-1$
+                        }};
+                }
+                
+                return result;
+            }});
+        
+        final Library[] newLibrary = new Library[1];
+        
+        IUndoContext ctx = new UndoContext();
+        IUndoableOperation operation = new AbstractEMFOperation(domain, "Test") {
+            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
+                newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
+                root.getBranches().add(newLibrary[0]);
+                
+                assertNull(newLibrary[0].getName());
+                
+                return Status.OK_STATUS;
+            }};
+        operation.addContext(ctx);
+        
+        try {
+            // add a new library.  Our trigger will set a default name
+            history.execute(operation, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to execute test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        
+        startReading();
+        
+        assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
+        
+        commit();
+        
+        try {
+            history.undo(ctx, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to undo test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        
+        assertFalse(root.getBranches().contains(newLibrary[0]));
+        assertNull(newLibrary[0].eResource());
+        assertNull(newLibrary[0].getName());
+        
+        try {
+            history.redo(ctx, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to redo test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        
+        assertTrue(root.getBranches().contains(newLibrary[0]));
+        assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
     }
 	
 	//
