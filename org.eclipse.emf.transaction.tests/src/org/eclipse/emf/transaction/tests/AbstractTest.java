@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.5 2006/12/07 18:10:37 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.6 2007/01/30 22:16:52 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -73,6 +73,8 @@ public class AbstractTest
 	protected static final String RESOURCE_NAME = "/" + PROJECT_NAME + "/testres.extlibrary";  //$NON-NLS-1$//$NON-NLS-2$
 
 	private final List transactionStack = new java.util.ArrayList();
+    
+    private List tearDownActions;
 	
 	public AbstractTest() {
 		super();
@@ -128,15 +130,45 @@ public class AbstractTest
 		return TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain(rset);
 	}
 
+    /**
+     * Adds an action to perform some clean-up following completion of the test.
+     * The test framework guarantees that it will at least attempt to execute
+     * this action.
+     * 
+     * @param action the tear-down action to run
+     */
+    protected final void addTearDownAction(Runnable action) {
+        if (tearDownActions == null) {
+            tearDownActions = new java.util.ArrayList();
+        }
+        
+        tearDownActions.add(action);
+    }
+    
 	protected final void tearDown()
 		throws Exception {
 		
 		try {
 			doTearDown();
 		} finally {
-			trace("===> End   : " + getName()); //$NON-NLS-1$
+            processTearDownActions();
+            trace("===> End   : " + getName()); //$NON-NLS-1$
 		}
 	}
+    
+    private void processTearDownActions() {
+        if (tearDownActions != null) {
+            for (Iterator iter = tearDownActions.iterator(); iter.hasNext();) {
+                try {
+                    Runnable action = (Runnable) iter.next();
+                    action.run();
+                } catch (Exception e) {
+                    System.err.println("Exception in tear-down action:"); //$NON-NLS-1$
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
 	protected void doTearDown()
 		throws Exception {

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.10 2006/12/07 16:44:49 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.11 2007/01/30 22:16:53 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -132,6 +132,10 @@ public class TransactionalEditingDomainImpl
 		((InternalTransactionalCommandStack) commandStack).setEditingDomain(this);
 		recorder = createChangeRecorder(resourceSet);
 		validator = TransactionValidator.NULL;
+        
+        // create a map for read-only-resource support.  Use a weak map
+        //    to avoid retaining resources in this map
+        resourceToReadOnlyMap = new java.util.WeakHashMap();
 	}
 	
 	/**
