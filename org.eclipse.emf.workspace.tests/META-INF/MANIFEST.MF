@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: EMF Workbench Tests Plug-in
 Bundle-SymbolicName: org.eclipse.emf.workspace.tests;singleton:=true
-Bundle-Version: 1.0.1.qualifier
+Bundle-Version: 1.1.0.qualifier
 Bundle-Vendor: Eclipse.org
 Bundle-Localization: plugin
 Require-Bundle: org.junit;bundle-version="[3.8.1,4.0.0)",

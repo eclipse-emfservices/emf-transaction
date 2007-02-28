@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,9 +12,11 @@
  *
  * </copyright>
  *
- * $Id: ValidationRollbackTest.java,v 1.4 2006/10/10 14:31:40 cdamus Exp $
+ * $Id: ValidationRollbackTest.java,v 1.5 2007/02/28 21:53:37 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
+
+import java.util.EventObject;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -23,8 +25,12 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.command.CommandStack;
+import org.eclipse.emf.common.command.CommandStackListener;
 import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
+import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.DemultiplexingListener;
 import org.eclipse.emf.transaction.RecordingCommand;
@@ -493,6 +499,41 @@ public class ValidationRollbackTest extends AbstractTest {
             logCapture.stop();
             domain.removeResourceSetListener(testListener);
         }
+    }
+    
+    /**
+     * Tests that, when a command execution is rolled back, the command stack
+     * listeners are notified again that the stack is changed, so that they
+     * will correctly update themselves if necessary.
+     */
+    public void test_rollbackNotifiesCommandStackListeners_175725() {
+        class TestCSL implements CommandStackListener {
+            int invocationCount = 0;
+            public void commandStackChanged(EventObject event) {
+                invocationCount++;
+            }
+        }
+        
+        TestCSL listener = new TestCSL();
+        CommandStack stack = domain.getCommandStack();
+        stack.addCommandStackListener(listener);
+        
+        final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+        assertNotNull(book);
+        Command command = SetCommand.create(
+            domain, book, EXTLibraryPackage.Literals.BOOK__TITLE, null);
+        
+        try {
+            stack.execute(command);  // validation fails on null title
+        } catch (Exception e) {
+            fail(e);
+        } finally {
+            stack.removeCommandStackListener(listener);
+        }
+        
+        assertEquals("Command-stack listener invoked wrong number of times", //$NON-NLS-1$
+            2, listener.invocationCount);
+        assertFalse("Should not have an undo command", stack.canUndo()); //$NON-NLS-1$
     }
 	
 	//

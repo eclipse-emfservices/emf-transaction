@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,9 +12,11 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.7 2007/01/30 22:05:00 cdamus Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.8 2007/02/28 21:53:36 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
+
+import java.util.EventObject;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -33,10 +35,13 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.command.CommandStack;
+import org.eclipse.emf.common.command.CommandStackListener;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.edit.command.SetCommand;
+import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
@@ -574,6 +579,43 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         
         assertTrue(root.getBranches().contains(newLibrary[0]));
         assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
+    }
+    
+    /**
+     * Tests that, when a command execution is rolled back, the command stack
+     * listeners are notified again that the stack is changed, so that they
+     * will correctly update themselves if necessary.
+     */
+    public void test_rollbackNotifiesCommandStackListeners_175725() {
+        class TestCSL implements CommandStackListener {
+            int invocationCount = 0;
+            public void commandStackChanged(EventObject event) {
+                invocationCount++;
+            }
+        }
+        
+        TestCSL listener = new TestCSL();
+        CommandStack stack = domain.getCommandStack();
+        stack.addCommandStackListener(listener);
+        
+        final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+        assertNotNull(book);
+        Command command = SetCommand.create(
+            domain, book, EXTLibraryPackage.Literals.BOOK__TITLE, null);
+        
+        try {
+            validationEnabled = true;
+            stack.execute(command);
+        } catch (Exception e) {
+            fail(e);
+        } finally {
+            validationEnabled = false;
+            stack.removeCommandStackListener(listener);
+        }
+        
+        assertEquals("Command-stack listener invoked wrong number of times", //$NON-NLS-1$
+            1, listener.invocationCount);
+        assertFalse("Should not have an undo command", stack.canUndo()); //$NON-NLS-1$
     }
 	
 	//

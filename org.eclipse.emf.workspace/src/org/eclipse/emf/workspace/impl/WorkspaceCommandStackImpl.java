@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.7 2007/01/30 22:05:01 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.8 2007/02/28 21:53:38 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -33,21 +33,17 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.transaction.ExceptionHandler;
 import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
-import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.impl.AbstractTransactionalCommandStack;
 import org.eclipse.emf.transaction.impl.EMFCommandTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
-import org.eclipse.emf.transaction.impl.InternalTransactionalCommandStack;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
-import org.eclipse.emf.transaction.impl.TransactionalCommandStackImpl;
 import org.eclipse.emf.transaction.impl.TriggerCommandTransaction;
 import org.eclipse.emf.transaction.util.TriggerCommand;
 import org.eclipse.emf.workspace.EMFCommandOperation;
@@ -70,18 +66,15 @@ import org.eclipse.emf.workspace.internal.l10n.Messages;
  * @author Christian W. Damus (cdamus)
  */
 public class WorkspaceCommandStackImpl
-		extends BasicCommandStack
-		implements IWorkspaceCommandStack, InternalTransactionalCommandStack {
+		extends AbstractTransactionalCommandStack
+		implements IWorkspaceCommandStack {
 	
-	private InternalTransactionalEditingDomain domain;
 	private final IOperationHistory history;
 	private DomainListener domainListener;
 	
 	private final IUndoContext defaultContext = new UndoContext();
 	private IUndoContext savedContext = null;
 	private Set affectedResources;
-	
-	private ExceptionHandler exceptionHandler;
 	
 	private IUndoableOperation mostRecentOperation;
 	
@@ -97,20 +90,20 @@ public class WorkspaceCommandStackImpl
 		this.history = history;
 		domainListener = new DomainListener();
 	}
-
-	// Documentation copied from the method specification
-	public InternalTransactionalEditingDomain getDomain() {
-		return domain;
-	}
-
-	// Documentation copied from the method specification
+    
+	/**
+     * Extends the superclass implementation to add/remove listeners on the
+     * editing domain.
+	 */
 	public void setEditingDomain(InternalTransactionalEditingDomain domain) {
-		if (this.domain != null) {
-			this.domain.removeResourceSetListener(domainListener);
+        InternalTransactionalEditingDomain oldDomain = getDomain();
+        
+		if (oldDomain != null) {
+            oldDomain.removeResourceSetListener(domainListener);
 			history.removeOperationHistoryListener(domainListener);
 		}
 		
-		this.domain = domain;
+		super.setEditingDomain(domain);
 		
 		if (domain != null) {
 			history.addOperationHistoryListener(domainListener);
@@ -135,8 +128,12 @@ public class WorkspaceCommandStackImpl
 		return savedContext;
 	}
 
-	// Documentation copied from the method specification
-	public void execute(Command command, Map options)
+	/**
+     * {@inheritDoc}
+     * 
+     *  @since 1.1
+	 */
+	protected void doExecute(Command command, Map options)
 			throws InterruptedException, RollbackException {
 		EMFCommandOperation oper = new EMFCommandOperation(getDomain(), command, options);
 		
@@ -175,81 +172,6 @@ public class WorkspaceCommandStackImpl
 				handleError(e);
 			}
 		}
-	}
-
-	// Documentation copied from the method specification
-	public void execute(Command command) {
-		try {
-			execute(command, null);
-		} catch (InterruptedException e) {
-			Tracing.catching(WorkspaceCommandStackImpl.class, "execute", e); //$NON-NLS-1$
-			// just log it.  Note that the transaction is already rolled back,
-			//    so handleError() will not find an active transaction
-			handleError(e);
-		} catch (RollbackException e) {
-			Tracing.catching(WorkspaceCommandStackImpl.class, "execute", e); //$NON-NLS-1$
-			// just log it.  Note that the transaction is already rolled back,
-			//    so handleError() will not find an active transaction
-			handleError(e);
-		}
-	}
-
-	// Documentation copied from the method specification
-	public void setExceptionHandler(ExceptionHandler handler) {
-		this.exceptionHandler = handler;
-	}
-	
-	// Documentation copied from the method specification
-	public ExceptionHandler getExceptionHandler() {
-		return exceptionHandler;
-	}
-	
-	/**
-	 * Extends the inherited method by first passing the exception along to
-	 * the registered exception handler (if any).
-	 */
-	protected void handleError(Exception exception) {
-		if (!isCancelException(exception)) {
-			if (exceptionHandler != null) {
-				try {
-					exceptionHandler.handleException(exception);
-				} catch (Exception e) {
-					EMFWorkspacePlugin.INSTANCE.log(new Status(
-							IStatus.WARNING,
-							EMFWorkspacePlugin.getPluginId(),
-							EMFWorkspaceStatusCodes.EXCEPTION_HANDLER_FAILED,
-							Messages.exceptionHandlerFailed,
-							e));
-				}
-			}
-			
-			super.handleError(exception); // super logs
-		}
-	}
-	
-	/**
-	 * Does the specified exception indicate that the user canceled execution,
-	 * undo, or redo of a command?
-	 * 
-	 * @param exception an exception
-	 * @return <code>true</code> if it is an {@link OperationCanceledException}
-	 *     or a {@link RollbackException} that was caused by operation cancel
-	 */
-	private boolean isCancelException(Throwable exception) {
-		boolean result;
-		
-		if (exception instanceof OperationCanceledException) {
-			result = true;
-		} else if (exception instanceof RollbackException) {
-			IStatus status = ((RollbackException) exception).getStatus();
-			result = (status != null) &&
-				((status.getSeverity() == IStatus.CANCEL)
-					|| isCancelException(status.getException()));
-		} else {
-			result = false;
-		}
-		
-		return result;
 	}
 
 	/**
@@ -386,7 +308,7 @@ public class WorkspaceCommandStackImpl
 				: new TriggerCommand(command, triggers);
 			
 			InternalTransaction tx = createTransaction(trigger,
-                TransactionalCommandStackImpl.makeTriggerTransactionOptions(options));
+                makeTriggerTransactionOptions(options));
 			
 			try {
 				trigger.execute();
@@ -401,7 +323,7 @@ public class WorkspaceCommandStackImpl
 				// commit the transaction now
 				tx.commit();
 			} catch (RuntimeException e) {
-				Tracing.catching(TransactionalCommandStackImpl.class, "executeTriggers", e); //$NON-NLS-1$
+				Tracing.catching(WorkspaceCommandStackImpl.class, "executeTriggers", e); //$NON-NLS-1$
 				
 				IStatus status;
 				if (e instanceof OperationCanceledException) {
@@ -415,7 +337,7 @@ public class WorkspaceCommandStackImpl
 							e);
 				}
 				RollbackException rbe = new RollbackException(status);
-				Tracing.throwing(TransactionalCommandStackImpl.class, "executeTriggers", rbe); //$NON-NLS-1$
+				Tracing.throwing(WorkspaceCommandStackImpl.class, "executeTriggers", rbe); //$NON-NLS-1$
 				throw rbe;
 			} finally {
 				if ((tx != null) && (tx.isActive())) {
@@ -423,20 +345,6 @@ public class WorkspaceCommandStackImpl
 					rollback(tx);
 				}
 			}
-		}
-	}
-	
-	/**
-	 * Ensures that the specified transaction is rolled back, first rolling
-	 * back a nested transaction (if any).
-	 * 
-	 * @param tx a transaction to roll back
-	 */
-	void rollback(Transaction tx) {
-		while (tx.isActive()) {
-			Transaction active = domain.getActiveTransaction();
-			
-			active.rollback();
 		}
 	}
 	
