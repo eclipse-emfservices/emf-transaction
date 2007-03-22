@@ -51,6 +51,11 @@
    	      id="org.eclipse.emf.transaction.tests.TestDomain1"
    	      factory="org.eclipse.emf.transaction.tests.fixtures.TestEditingDomain$FactoryImpl"/>
    </extension>
+   <extension point="org.eclipse.emf.transaction.editingDomains">
+   	<editingDomain
+   	      id="org.eclipse.emf.transaction.tests.TestValidationDomain1"
+   	      factory="org.eclipse.emf.transaction.tests.fixtures.TestValidationEditingDomain$FactoryImpl"/>
+   </extension>
    <extension point="org.eclipse.emf.transaction.listeners">
    	<listener class="org.eclipse.emf.transaction.tests.EditingDomainRegistryTest$TestListener1">
    	    <editingDomain id="org.eclipse.emf.transaction.tests.TestDomain3"/>

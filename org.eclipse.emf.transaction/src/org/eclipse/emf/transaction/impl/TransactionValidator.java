@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionValidator.java,v 1.2 2006/10/10 14:31:47 cdamus Exp $
+ * $Id: TransactionValidator.java,v 1.3 2007/03/22 19:11:49 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -155,4 +155,40 @@ public interface TransactionValidator {
 	 * am retaining.
 	 */
 	void dispose();
+    
+    /**
+     * Interface that clients implement to define a validator factory.
+     * 
+     * @since 1.1
+     * 
+     * @author David Cummings (dcummin)
+     */
+    interface Factory {
+        /**
+         * The shared default implementation of the validator factory interface.
+         */
+        Factory INSTANCE = new TransactionalEditingDomainImpl.ValidatorFactoryImpl();
+        
+        /**
+         * Creates and returns a <code>TransactionValidator</code> which is
+         * used to validate a read write transaction.
+         * 
+         * @since 1.1
+         *
+         * @return the transaction validator that will validate the 
+         *          read write transaction
+         */
+        public TransactionValidator createReadOnlyValidator();
+        
+        /**
+         * Creates and returns a <code>TransactionValidator</code> which is
+         * used to validate a read only transaction.
+         * 
+         * @since 1.1
+         *
+         * @return the transaction validator that will validate the 
+         *          read only transaction
+         */
+        public TransactionValidator createReadWriteValidator();
+    }
 }

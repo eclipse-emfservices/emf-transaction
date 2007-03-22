@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.6 2007/01/30 22:16:52 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.7 2007/03/22 19:11:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -44,11 +44,11 @@ import org.eclipse.emf.examples.extlibrary.Periodical;
 import org.eclipse.emf.examples.extlibrary.Person;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.examples.extlibrary.util.EXTLibrarySwitch;
+import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
-import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.validation.model.IConstraintStatus;
 import org.osgi.framework.Bundle;
 
@@ -105,8 +105,8 @@ public class AbstractTest
 		}
 		
 		project.open(null);
-	
-		ResourceSet rset = new ResourceSetImpl();
+			
+		ResourceSet rset = createResourceSet();
 	
 		try {
 			Resource originalRes = rset.getResource(
@@ -128,6 +128,11 @@ public class AbstractTest
 	/** May be overridden by subclasses to create non-default editing domains. */
 	protected TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
 		return TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain(rset);
+	}
+	
+	/** May be overridden by subclasses to create non-default resource set. */
+	protected ResourceSet createResourceSet() {
+		return new ResourceSetImpl();
 	}
 
     /**

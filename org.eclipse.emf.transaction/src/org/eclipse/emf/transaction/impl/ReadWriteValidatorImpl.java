@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteValidatorImpl.java,v 1.8 2006/10/10 14:31:47 cdamus Exp $
+ * $Id: ReadWriteValidatorImpl.java,v 1.9 2007/03/22 19:11:49 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -214,8 +214,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		IStatus result;
 		
 		try {
-			IValidator validator = ModelValidationService.getInstance().newValidator(
-				EvaluationMode.LIVE);
+			IValidator validator = createValidator();
 			
 			result = validator.validate(getNotificationsForValidation(tx));
 		} catch (Exception e) {
@@ -229,6 +228,17 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Creates a validator which will be responsible for the transaction validation
+     *
+     * @since 1.1
+     *
+	 * @return the validator
+	 */
+	protected IValidator createValidator() {
+		return ModelValidationService.getInstance().newValidator(EvaluationMode.LIVE);
 	}
 	
 	// Documentation copied from the inherited method specification

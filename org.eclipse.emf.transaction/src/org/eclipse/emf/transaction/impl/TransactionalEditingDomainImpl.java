@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.11 2007/01/30 22:16:53 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.12 2007/03/22 19:11:49 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -65,6 +65,8 @@ public class TransactionalEditingDomainImpl
 	
 	private volatile InternalTransaction activeTransaction;
 	private TransactionValidator validator;
+	
+	private TransactionValidator.Factory validatorFactory = null;
 	
 	private Lock transactionLock = new Lock();
 	private Lock writeLock = new Lock();
@@ -443,8 +445,8 @@ public class TransactionalEditingDomainImpl
 		if (activeTransaction == null) {
 			// activation of a root transaction creates a validator for it
 			validator = tx.isReadOnly()
-				? new ReadOnlyValidatorImpl()
-				: new ReadWriteValidatorImpl();
+				? getValidatorFactory().createReadOnlyValidator()
+				: getValidatorFactory().createReadWriteValidator();
 		}
 		
 		activeTransaction = tx;
@@ -795,8 +797,8 @@ public class TransactionalEditingDomainImpl
 		Thread current = Thread.currentThread();
 			
 		// transfer the locks to the current thread
-		transactionLock.new Access() {}.transfer(current);
-		writeLock.new Access() {}.transfer(current);
+		transactionLock.new Access() {/*empty block*/}.transfer(current);
+		writeLock.new Access() {/*empty block*/}.transfer(current);
 		}
 		
 	// Documentation copied from the inherited specification
@@ -809,8 +811,8 @@ public class TransactionalEditingDomainImpl
 		Thread owner = runnable.getOwner();
 		
 		// transfer the locks to their previous owner
-		transactionLock.new Access() {}.transfer(owner);
-		writeLock.new Access() {}.transfer(owner);
+		transactionLock.new Access() {/*empty block*/}.transfer(owner);
+		writeLock.new Access() {/*empty block*/}.transfer(owner);
 		}
 		
 	// Documentation copied from the inherited specification
@@ -1021,5 +1023,60 @@ public class TransactionalEditingDomainImpl
 
 	public Map getUndoRedoOptions() {
 		return TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS;
+	}
+	
+	/**
+	 * Sets the factory to use when creating validators for transaction
+	 * validation.
+	 * 
+	 * @since 1.1
+	 * 
+	 * @param validatorFactory the factory to set
+	 */
+	public void setValidatorFactory(TransactionValidator.Factory validatorFactory) {
+		this.validatorFactory = validatorFactory;
+	}
+	
+	/**
+	 * Obtains the factory that this transactional editing domain uses
+	 * to create validators for transaction validation.
+	 * <p>
+	 * If the validator factory has yet to be initialized, it is initialized
+	 * using the default validator factory.
+	 * </p>
+	 * 
+	 * @since 1.1
+	 * 
+	 * @return the requested validator factory
+	 */
+	public TransactionValidator.Factory getValidatorFactory() {
+		if (this.validatorFactory == null) {
+			return TransactionValidator.Factory.INSTANCE;
+		}
+        
+		return this.validatorFactory;
+	}
+
+	/**
+	 * Default implementation of the validator factory
+	 * 
+	 * @since 1.1
+	 * 
+	 * @author David Cummings (dcummin)
+	 */
+	public static class ValidatorFactoryImpl implements TransactionValidator.Factory {
+		/**
+	     * {@inheritDoc}
+	     */
+		public TransactionValidator createReadOnlyValidator() {
+			return new ReadOnlyValidatorImpl();
+		}
+
+		/**
+	     * {@inheritDoc}
+	     */
+		public TransactionValidator createReadWriteValidator() {
+			return new ReadWriteValidatorImpl();
+		}
 	}
 }

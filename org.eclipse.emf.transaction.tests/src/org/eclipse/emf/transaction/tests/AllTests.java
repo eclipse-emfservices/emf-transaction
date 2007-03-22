@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AllTests.java,v 1.7 2006/12/07 16:44:48 cdamus Exp $
+ * $Id: AllTests.java,v 1.8 2007/03/22 19:11:50 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -57,6 +57,7 @@ public class AllTests
 		suite.addTest(PrivilegedRunnableTest.suite());
 		suite.addTest(PerformanceTest.suite());
 		suite.addTest(MemoryLeakTest.suite());
+		suite.addTest(EditingDomainValidatorTest.suite());
 		return suite;
 	}
 
