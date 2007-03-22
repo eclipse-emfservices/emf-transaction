@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: UndoRedoTest.java,v 1.7 2006/10/10 14:31:40 cdamus Exp $
+ * $Id: UndoRedoTest.java,v 1.8 2007/03/22 17:27:10 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -32,7 +32,11 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Writer;
+import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.ResourceSetChangeEvent;
+import org.eclipse.emf.transaction.ResourceSetListener;
+import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
@@ -63,6 +67,11 @@ public class UndoRedoTest extends AbstractTest {
 	 * class.
 	 */
 	public void test_recordingCommand() {
+		UndoRedoResourceSetListener listener = new UndoRedoResourceSetListener();
+		domain.addResourceSetListener(listener);
+		
+		assertEquals(0, listener.undoCount);
+		
 		startReading();
 		
 		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
@@ -97,6 +106,8 @@ public class UndoRedoTest extends AbstractTest {
 		assertTrue(stack.canUndo());
 		stack.undo();
 		
+		assertEquals(1, listener.undoCount);
+		
 		startReading();
 		
 		// verify that the changes were undone
@@ -108,6 +119,8 @@ public class UndoRedoTest extends AbstractTest {
 		assertTrue(stack.canRedo());
 		stack.redo();
 		
+		assertEquals(2, listener.undoCount);
+		
 		startReading();
 		
 		// verify that the changes were redone
@@ -115,6 +128,8 @@ public class UndoRedoTest extends AbstractTest {
 		assertSame(newAuthor, book.getAuthor());
 		
 		commit();
+
+		domain.removeResourceSetListener(listener);
 	}
 	
 	/**
@@ -611,5 +626,39 @@ public class UndoRedoTest extends AbstractTest {
 		testResource.unload();
 		
 		return result;
+	}
+	
+	public class UndoRedoResourceSetListener implements ResourceSetListener {
+		public int undoCount = 0;
+		
+		public NotificationFilter getFilter() {
+			return null;
+		}
+
+		public boolean isAggregatePrecommitListener() {
+			return false;
+		}
+
+		public boolean isPostcommitOnly() {
+			return false;
+		}
+
+		public boolean isPrecommitOnly() {
+			return false;
+		}
+
+		public void resourceSetChanged(ResourceSetChangeEvent event) {
+			Transaction transaction = event.getTransaction();
+			
+			Object obj = transaction.getOptions().get(Transaction.OPTION_IS_UNDO_REDO_TRANSACTION);
+			if (Boolean.TRUE.equals(obj)) {
+				undoCount++;
+			}
+		}
+
+		public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+				throws RollbackException {
+			return null;
+		}
 	}
 }

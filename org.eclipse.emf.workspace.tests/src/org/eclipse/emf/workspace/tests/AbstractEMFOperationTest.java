@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.6 2007/01/30 22:17:51 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.7 2007/03/22 17:27:08 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -34,6 +34,10 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Writer;
+import org.eclipse.emf.transaction.NotificationFilter;
+import org.eclipse.emf.transaction.ResourceSetChangeEvent;
+import org.eclipse.emf.transaction.ResourceSetListener;
+import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.TriggerListener;
@@ -65,6 +69,11 @@ public class AbstractEMFOperationTest extends AbstractTest {
 	}
 	
 	public void test_execute_undo_redo() {
+        UndoRedoResourceSetListener listener = new UndoRedoResourceSetListener();
+        domain.addResourceSetListener(listener);
+        
+        assertEquals(0, listener.undoCount);
+        
 		startReading();
 		
 		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
@@ -108,6 +117,8 @@ public class AbstractEMFOperationTest extends AbstractTest {
 			fail(e);
 		}
 		
+        assertEquals(1, listener.undoCount);
+        
 		startReading();
 		
 		// verify that the changes were undone
@@ -123,6 +134,8 @@ public class AbstractEMFOperationTest extends AbstractTest {
 			fail(e);
 		}
 		
+        assertEquals(2, listener.undoCount);
+        
 		startReading();
 		
 		// verify that the changes were redone
@@ -701,4 +714,38 @@ public class AbstractEMFOperationTest extends AbstractTest {
 			super(msg);
 		}
 	}
+    
+    public class UndoRedoResourceSetListener implements ResourceSetListener {
+        public int undoCount = 0;
+        
+        public NotificationFilter getFilter() {
+            return null;
+        }
+
+        public boolean isAggregatePrecommitListener() {
+            return false;
+        }
+
+        public boolean isPostcommitOnly() {
+            return false;
+        }
+
+        public boolean isPrecommitOnly() {
+            return false;
+        }
+
+        public void resourceSetChanged(ResourceSetChangeEvent event) {
+            Transaction transaction = event.getTransaction();
+            
+            Object obj = transaction.getOptions().get(Transaction.OPTION_IS_UNDO_REDO_TRANSACTION);
+            if (Boolean.TRUE.equals(obj)) {
+                undoCount++;
+            }
+        }
+
+        public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+                throws RollbackException {
+            return null;
+        }
+    }
 }

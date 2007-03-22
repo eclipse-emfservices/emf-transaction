@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Transaction.java,v 1.3 2006/01/30 19:47:54 cdamus Exp $
+ * $Id: Transaction.java,v 1.4 2007/03/22 17:27:09 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -89,6 +89,22 @@ public interface Transaction {
 	 * </p>
 	 */
 	String OPTION_UNPROTECTED = "unprotected"; //$NON-NLS-1$
+    
+    /**
+     * An informational option that tags the transaction as a transaction that
+     * is performing the undo or redo of a command.
+     * <p>
+     * The value is a {@link Boolean}; the default is {@link Boolean#FALSE}.
+     * </p><p>
+     * <b>Note</b> that this option should not be applied by clients of the
+     * transaction API.  Clients may only check to see whether a transaction
+     * has this option, e.g., in a
+     * {@linkplain ResourceSetListener#resourceSetChanged post-commit listener}.
+     * </p>
+     * 
+     * @since 1.1
+     */
+    public static final String OPTION_IS_UNDO_REDO_TRANSACTION = "is_undo_redo_transaction";  //$NON-NLS-1$
 	
 	/**
 	 * Queries the editing domain in which I am transacting.  Note that this

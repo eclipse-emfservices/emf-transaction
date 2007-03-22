@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.14 2007/01/30 22:05:05 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.15 2007/03/22 17:27:09 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -84,6 +84,7 @@ public class TransactionImpl
 		DEFAULT_UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
 		DEFAULT_UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_UNDO, Boolean.TRUE);
 		DEFAULT_UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
+		DEFAULT_UNDO_REDO_OPTIONS.put(Transaction.OPTION_IS_UNDO_REDO_TRANSACTION, Boolean.TRUE);
 	}
 	
 	private static long nextId = 0L;
