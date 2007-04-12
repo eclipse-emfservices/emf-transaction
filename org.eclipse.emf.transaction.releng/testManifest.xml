@@ -5,28 +5,28 @@
 			<platform 
 				id="projRUN" 
 				name="All" 
-				fileName='&lt;a href="emft-transaction-runtime-@build@.zip"&gt;emft-transaction-runtime-@build@.zip&lt;/a&gt; &lt;font size="2"&gt;(size:@emft-transaction-runtime-@build@.zip.size@ - checksum:&lt;a href="emft-transaction-runtime-@build@.zip.md5"&gt;md5&lt;/a&gt;)&lt;/font&gt;'>
+				fileName='&lt;a href="emf-transaction-runtime-@build@.zip"&gt;emf-transaction-runtime-@build@.zip&lt;/a&gt; &lt;font size="2"&gt;(size:@emf-transaction-runtime-@build@.zip.size@ - checksum:&lt;a href="emf-transaction-runtime-@build@.zip.md5"&gt;md5&lt;/a&gt;)&lt;/font&gt;'>
 			</platform>
 		</zipType>
 		<zipType name="projsdk">
 			<platform 
 				id="projSRC" 
 				name="All" 
-				fileName='&lt;a href="emft-transaction-SDK-@build@.zip"&gt;emft-transaction-SDK-@build@.zip&lt;/a&gt; &lt;font size="2"&gt;(size:@emft-transaction-SDK-@build@.zip.size@ - checksum:&lt;a href="emft-transaction-SDK-@build@.zip.md5"&gt;md5&lt;/a&gt;)&lt;/font&gt;'>
+				fileName='&lt;a href="emf-transaction-SDK-@build@.zip"&gt;emf-transaction-SDK-@build@.zip&lt;/a&gt; &lt;font size="2"&gt;(size:@emf-transaction-SDK-@build@.zip.size@ - checksum:&lt;a href="emf-transaction-SDK-@build@.zip.md5"&gt;md5&lt;/a&gt;)&lt;/font&gt;'>
 			</platform>
 		</zipType>
 		<zipType name="projtests">
 			<platform 
 				id="T" 
 				name="All" 
-				fileName='&lt;a href="emft-transaction-automated-tests-@build@.zip"&gt;emft-transaction-automated-tests-@build@.zip&lt;/a&gt; &lt;font size="2"&gt;(size:@emft-transaction-automated-tests-@build@.zip.size@ - checksum:&lt;a href="emft-transaction-automated-tests-@build@.zip.md5"&gt;md5&lt;/a&gt;)&lt;/font&gt;'>
+				fileName='&lt;a href="emf-transaction-automated-tests-@build@.zip"&gt;emf-transaction-automated-tests-@build@.zip&lt;/a&gt; &lt;font size="2"&gt;(size:@emf-transaction-automated-tests-@build@.zip.size@ - checksum:&lt;a href="emf-transaction-automated-tests-@build@.zip.md5"&gt;md5&lt;/a&gt;)&lt;/font&gt;'>
 			</platform>
 		</zipType>
 		<zipType name="projexamples">
 			<platform 
 				id="EX" 
 				name="All" 
-				fileName='&lt;a href="emft-transaction-examples-@build@.zip"&gt;emft-transaction-examples-@build@.zip&lt;/a&gt; &lt;font size="2"&gt;(size:@emft-transaction-examples-@build@.zip.size@ - checksum:&lt;a href="emft-transaction-examples-@build@.zip.md5"&gt;md5&lt;/a&gt;)&lt;/font&gt;'>
+				fileName='&lt;a href="emf-transaction-examples-@build@.zip"&gt;emf-transaction-examples-@build@.zip&lt;/a&gt; &lt;font size="2"&gt;(size:@emf-transaction-examples-@build@.zip.size@ - checksum:&lt;a href="emf-transaction-examples-@build@.zip.md5"&gt;md5&lt;/a&gt;)&lt;/font&gt;'>
 			</platform>
 		</zipType>
 	</zipTypes>

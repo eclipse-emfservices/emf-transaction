@@ -1,15 +1,15 @@
-!***************  EMFT CONTRIBUTION  ******************************************************** 
+!***************  Project CONTRIBUTION  ******************************************************** 
 
 !*** Special entries from eclipse
 
-plugin@org.eclipse.test=v20070217,:pserver:anonymous@dev.eclipse.org:/cvsroot/eclipse,
+plugin@org.eclipse.test=v20070226,:pserver:anonymous@dev.eclipse.org:/cvsroot/eclipse,
 fragment@org.eclipse.ant.optional.junit=v20050226,:pserver:anonymous@dev.eclipse.org:/cvsroot/eclipse,
 
 !*** Default entries
 
-feature@org.eclipse.emf.transaction.sdk=@cvsTag@,@cvsRoot1@,,org.eclipse.emft/transaction/plugins/org.eclipse.emf.transaction-feature/org.eclipse.emf.transaction.sdk
+feature@org.eclipse.emf.transaction.sdk=@cvsTag@,@cvsRoot1@,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction-feature/org.eclipse.emf.transaction.sdk
 
-!*** EMFT plugins, features and fragments
+!*** plugins, features and fragments
 
 @entries@
 
