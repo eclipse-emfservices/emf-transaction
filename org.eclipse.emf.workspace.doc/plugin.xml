@@ -1,23 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
-<plugin
->
-   <extension
-         point="org.eclipse.help.toc">
-      <toc
-            file="toc.xml"
-            primary="true"/>
-      <index path="index"/>
-   </extension>
-   
+<plugin>
  <!-- ============================= -->
  <!-- Define TOCs                   -->
  <!-- ============================= -->
 
- <extension point="org.eclipse.help.toc">
-   <toc file="topics_Reference.xml" />
- </extension>
-
+   <extension
+         point="org.eclipse.help.toc">
+      <toc file="topics_Overviews.xml" />
+      <toc file="topics_Tutorials.xml" />
+      <toc file="topics_Examples.xml" />
+      <toc file="topics_Reference.xml" />
+   </extension>
+   
  <!-- ============================= -->
  <!-- Define Javadoc locations      -->
  <!-- ============================= -->

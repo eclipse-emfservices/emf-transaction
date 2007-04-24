@@ -7,7 +7,7 @@
 	<property name="plugin" value="org.eclipse.emf.workspace"/>
 	<property name="docPlugin" value="org.eclipse.emf.workspace.doc"/>
 	
-	<property name="filesToInclude" value="META-INF/**,about.html,about.ini,about.mappings,about.properties,modeling*.png,plugin.xml,plugin.properties,doc.zip,toc.xml,topics_*.xml,index/**,images/**,tutorials/**,references/**"/>
+	<property name="filesToInclude" value="META-INF/**,about.html,about.ini,about.mappings,about.properties,modeling*.png,plugin.xml,plugin.properties,doc.zip,topics_*.xml,index/**,images/**,tutorials/**,references/**"/>
 
 	<!-- Compiler settings. -->
 	<property name="javacFailOnError" value="false"/>

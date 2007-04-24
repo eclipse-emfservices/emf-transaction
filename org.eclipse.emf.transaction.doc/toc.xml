@@ -5,22 +5,32 @@
 	<anchor id="overviews-before" />
 	<topic label="Programmer&apos;s Guides">
 		<topic label="Transactions Programmer&apos;s Guide" href="references/overview/transactionOverview.html" />
+		<anchor id="other-overviews"/>
 	</topic>
 	<anchor id="overviews-after" />
 
 	<anchor id="tutorial-before" />
 	<topic label="Tutorials">	
 		<topic label="Transactions Tutorial" href="tutorials/transactionTutorial.html" />
+		<anchor id="other-tutorials"/>
 	</topic>
 	<anchor id="tutorial-after" />
+
+	<anchor id="examples-before" />
+	<topic label="Examples Guide">	
+		<anchor id="other-examples"/>
+	</topic>
+	<anchor id="examples-after" />
 	
 	<anchor id="reference-before" />
 	<topic label="Reference">
 		<link toc="topics_Reference.xml"/>
+		<anchor id="other-reference"/>
 		<anchor id="reference-ext-pt-before" />
 		<topic label="Extension Points Reference">
 			<topic label="org.eclipse.emf.transaction.editingDomains" href="references/extension-points/org_eclipse_emf_transaction_editingDomains.html" />
 			<topic label="org.eclipse.emf.transaction.listeners" href="references/extension-points/org_eclipse_emf_transaction_listeners.html" />
+			<anchor id="other-ext-pts"/>
 		</topic>
 		<anchor id="reference-ext-pt-after" />
 	</topic>	
