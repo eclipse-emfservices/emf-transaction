@@ -11,6 +11,7 @@
       <toc file="topics_Tutorials.xml" />
       <toc file="topics_Examples.xml" />
       <toc file="topics_Reference.xml" />
+      <index path="index"/>
    </extension>
    
  <!-- ============================= -->
