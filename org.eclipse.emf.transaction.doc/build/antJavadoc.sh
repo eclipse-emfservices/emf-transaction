@@ -6,8 +6,8 @@
 pluginName="org.eclipse.emf.transaction"; 
 
 # string labels for javadoc content
-windowTitle="EMFT Transaction Javadoc";
-groupTitle="EMFT Transaction";
+windowTitle="EMF Model Transaction Javadoc";
+groupTitle="EMF Model Transaction";
 
 # files to exclude from javadoc process - use Ant syntax
 javadocExclusions="<exclude name=\"**/internal/**\"/> <exclude name=\"**/examples/**\"/> <exclude name=\"**/tests/**\"/>";

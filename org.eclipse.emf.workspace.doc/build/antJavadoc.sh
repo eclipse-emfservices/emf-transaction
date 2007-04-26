@@ -6,8 +6,8 @@
 pluginName="org.eclipse.emf.workspace"; 
 
 # string labels for javadoc content
-windowTitle="EMFT Workbench Integration Javadoc";
-groupTitle="EMFT Workbench Integration";
+windowTitle="EMF Model Transaction Workbench Integration Javadoc";
+groupTitle="EMF Model Transaction Workbench Integration";
 
 # files to exclude from javadoc process - use Ant syntax
 javadocExclusions="<exclude name=\"**/internal/**\"/> <exclude name=\"**/examples/**\"/> <exclude name=\"**/tests/**\"/>";
