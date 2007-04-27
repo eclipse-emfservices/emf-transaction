@@ -57,6 +57,12 @@ propertyName=propertyValue
 			<equals arg1="${baseos}.${basews}" arg2="linux.motif" />
 		</condition>
 
+		<!-- Check whether we are to build the 3-in-1 QTV features -->
+		<condition property="skip-emf-qtv">
+			<not>
+				<isset property="queryURL"/>
+			</not>
+		</condition>
 	</target>
 
 	<target name="create.label.properties" unless="label.properties.exists">
@@ -138,7 +144,10 @@ propertyName=propertyValue
 		<ant antfile="build.xml" target="main">
 			<property name="component" value="builder/tests" />
 		</ant>
-
+		
+		<!-- If a Query URL was specified, build the 3-in-1 features, too -->
+		<antcall target="-build-emfqtv"/>
+		
 		<!-- doc must be the last execution -->
 
 		<ant antfile="build.xml" target="main">
@@ -173,6 +182,13 @@ propertyName=propertyValue
 		<exec executable="bash" dir="${buildDirectory}/${buildLabel}">
 			<arg line="${basedir}/../org.eclipse.modeling.common.releng/scripts/createZipCheckSum.sh" />
 		</exec>
+	</target>
+	
+	<!-- Optional target for building the 3-in-1 emf.emfqtv.all features -->
+	<target name="-build-emf-qtv" unless="skip-emf-qtv">
+		<ant antfile="build.xml" target="main" >
+			<property name="component" value="builder/emfqtv" />
+		</ant>
 	</target>
 
 	<target name="cleanUp">
