@@ -146,7 +146,7 @@ propertyName=propertyValue
 		</ant>
 		
 		<!-- If a Query URL was specified, build the 3-in-1 features, too -->
-		<antcall target="-build-emfqtv"/>
+		<antcall target="-build-emf-qtv"/>
 		
 		<!-- doc must be the last execution -->
 
