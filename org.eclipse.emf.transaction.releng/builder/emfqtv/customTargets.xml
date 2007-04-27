@@ -157,7 +157,7 @@
 		<unzip src="${buildDirectory}/${buildLabel}/${sdkZipName}" dest="${massage.dir}">
 			<patternset refid="qtv-all-zip-contents"/>
 		</unzip>
-		<zip basedir="massage.dir"
+		<zip basedir="${massage.dir}"
 			destfile="${buildDirectory}/${buildLabel}/${sdkZipName}"
 			update="false"/>
 		<delete dir="${massage.dir}"/>
@@ -166,7 +166,7 @@
 		<unzip src="${buildDirectory}/${buildLabel}/${rtZipName}" dest="${massage.dir}">
 			<patternset refid="qtv-all-zip-contents"/>
 		</unzip>
-		<zip basedir="massage.dir"
+		<zip basedir="${massage.dir}"
 			destfile="${buildDirectory}/${buildLabel}/${rtZipName}"
 			update="false"/>
 		<delete dir="${massage.dir}"/>
