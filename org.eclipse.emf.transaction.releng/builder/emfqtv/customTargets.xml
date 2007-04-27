@@ -98,6 +98,11 @@
 			<property name="file" value="${queryFile}"/>
 			<property name="isUnpackedFile" value="${buildDirectory}/plugins/org.eclipse.emf.query/META-INF/MANIFEST.MF" />
 		</ant>
+		<ant target="getDependency" antfile="${getDeps.xml}">
+			<property name="url" value="${oclURL}"/>
+			<property name="file" value="${oclFile}"/>
+			<property name="isUnpackedFile" value="${buildDirectory}/plugins/org.eclipse.ocl/plugin.xml"/>
+		</ant>
 	</target>
 
 	<!-- ===================================================================== -->
@@ -137,29 +142,6 @@
 	<!-- Steps to do after assembling-->
 	<!-- ===================================================================== -->
 	<target name="postAssemble">
-		<property name="massage.dir" value="${buildDirectory}/${buildLabel}/massageZIP"/>
-		<patternset id="qtv-all-zip-contents">
-			<include name="**/org.eclipse.emf.emfqtv.all*.jar"/>
-			<include name="**/org.eclipse.emf.emfqtv.all*/**"/>
-		</patternset>
-		
-		<!-- Strip out everything but the emf.qtv.all features from SDK zip -->
-		<unzip src="${buildDirectory}/${buildLabel}/${sdkZipName}" dest="${massage.dir}">
-			<patternset refid="qtv-all-zip-contents"/>
-		</unzip>
-		<zip basedir="massage.dir"
-			destfile="${buildDirectory}/${buildLabel}/${sdkZipName}"
-			update="false"/>
-		<delete dir="${massage.dir}"/>
-		
-		<!-- Strip out everything but the emf.qtv.all features from Runtime zip -->
-		<unzip src="${buildDirectory}/${buildLabel}/${rtZipName}" dest="${massage.dir}">
-			<patternset refid="qtv-all-zip-contents"/>
-		</unzip>
-		<zip basedir="massage.dir"
-			destfile="${buildDirectory}/${buildLabel}/${rtZipName}"
-			update="false"/>
-		<delete dir="${massage.dir}"/>
 	</target>
 
 	<!-- ===================================================================== -->

@@ -60,7 +60,10 @@ propertyName=propertyValue
 		<!-- Check whether we are to build the 3-in-1 QTV features -->
 		<condition property="skip-emf-qtv">
 			<not>
-				<isset property="queryURL"/>
+				<and>
+					<isset property="queryURL"/>
+					<isset property="oclURL"/>
+				</and>
 			</not>
 		</condition>
 	</target>
