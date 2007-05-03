@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTransactionalCommandStack.java,v 1.1 2007/02/28 21:53:38 cdamus Exp $
+ * $Id: AbstractTransactionalCommandStack.java,v 1.2 2007/05/03 13:16:55 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -97,10 +97,14 @@ public abstract class AbstractTransactionalCommandStack
      * the registered exception handler (if any).
      */
     protected void handleError(Exception exception) {
-    	Transaction active = getDomain().getActiveTransaction();
+    	InternalTransaction active = getDomain().getActiveTransaction();
     	
-    	if ((active != null) && (active.isActive())) {
-    		active.rollback();
+    	if ((active != null) && active.isActive()) {
+    	    active.abort(new Status(IStatus.ERROR,
+    	        EMFTransactionPlugin.getPluginId(),
+    	        EMFTransactionStatusCodes.TRANSACTION_ABORTED,
+    	        (exception.getMessage() == null)? "" : exception.getMessage(), //$NON-NLS-1$
+    	        exception));
     	}
     	
     	if (!isCancelException(exception)) {

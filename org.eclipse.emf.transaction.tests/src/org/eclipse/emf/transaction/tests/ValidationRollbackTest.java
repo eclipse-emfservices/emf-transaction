@@ -12,10 +12,11 @@
  *
  * </copyright>
  *
- * $Id: ValidationRollbackTest.java,v 1.5 2007/02/28 21:53:37 cdamus Exp $
+ * $Id: ValidationRollbackTest.java,v 1.6 2007/05/03 13:16:57 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
+import java.util.Collections;
 import java.util.EventObject;
 
 import junit.framework.Test;
@@ -534,6 +535,34 @@ public class ValidationRollbackTest extends AbstractTest {
         assertEquals("Command-stack listener invoked wrong number of times", //$NON-NLS-1$
             2, listener.invocationCount);
         assertFalse("Should not have an undo command", stack.canUndo()); //$NON-NLS-1$
+    }
+    
+    /**
+     * Tests that, when a command execution fails with a run-time exception,
+     * the transaction is rolled back and the stack does not attempt to commit
+     * it.
+     */
+    public void test_rollbackOnRuntimeException_185040() {
+        final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+        assertNotNull(book);
+        Command command = new RecordingCommand(domain) {
+            protected void doExecute() {
+                book.setTitle("New Title"); //$NON-NLS-1$
+                throw new NullPointerException();
+            }};
+        
+        try {
+            getCommandStack().execute(command, Collections.EMPTY_MAP);
+            fail("Should have rolled back"); //$NON-NLS-1$
+        } catch (RollbackException e) {
+            // expected
+            System.out.println("Got expected rollback"); //$NON-NLS-1$
+            
+            // check that rollback was effective
+            assertEquals("Root Book", book.getTitle()); //$NON-NLS-1$
+        } catch (InterruptedException e) {
+            fail("Interrupted"); //$NON-NLS-1$
+        }
     }
 	
 	//

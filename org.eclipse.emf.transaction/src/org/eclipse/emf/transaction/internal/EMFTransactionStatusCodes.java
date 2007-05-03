@@ -1,7 +1,7 @@
 /**
  * <copyright> 
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFTransactionStatusCodes.java,v 1.2 2006/04/12 22:09:41 cdamus Exp $
+ * $Id: EMFTransactionStatusCodes.java,v 1.3 2007/05/03 13:16:55 cdamus Exp $
  */
 package org.eclipse.emf.transaction.internal;
 
@@ -24,6 +24,8 @@ package org.eclipse.emf.transaction.internal;
  */
 public class EMFTransactionStatusCodes {
 
+    public static final int TRANSACTION_ABORTED = 10;
+    
 	public static final int FACTORY_TYPE = 20;
 	public static final int FACTORY_INITIALIZATION = 21;
 	public static final int LISTENER_TYPE = 22;
