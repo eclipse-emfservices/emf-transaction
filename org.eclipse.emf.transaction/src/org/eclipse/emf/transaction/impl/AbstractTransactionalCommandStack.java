@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTransactionalCommandStack.java,v 1.2 2007/05/03 13:16:55 cdamus Exp $
+ * $Id: AbstractTransactionalCommandStack.java,v 1.3 2007/05/03 13:17:32 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -92,7 +92,7 @@ public abstract class AbstractTransactionalCommandStack
     }
 
     /**
-     * Extends the inherited method by first rolling back the active
+     * Extends the inherited method by first aborting the active
      * transaction (if any) and passing the exception along to
      * the registered exception handler (if any).
      */
