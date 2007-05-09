@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link rel="Stylesheet" type="text/css" href="doc.css" />
+<title>Implementing Undo/Redo Actions with the Operation History</title>
+</head>
+<body>
+<h1><a name="top">Implementing Undo/Redo Actions with the Operation History</a></h1>
+<p>
+The workspace editing domain API provides convenient specializations of the
+<em class="UILabel">EMF.Edit UI</em> framework's undo and redo actions, that delegate to
+the Eclipse Operation History API's undo/redo action handlers.
+</p>
+
+<blockquote>
+	<img src="images/undoredo.png" alt=" API"/><br/>
+	<font size="-2">[<a href="images/undoredo.svg">as SVG</a>]</font>
+</blockquote>
+
+<p>
+The <a href="../javadoc/org/eclipse/emf/workspace/ui/actions/UndoActionWrapper.html"><em class="CodeName">UndoActionWrapper</em></a>
+and <a href="../javadoc/org/eclipse/emf/workspace/ui/actions/RedoActionWrapper.html"><em class="CodeName">RedoActionWrapper</em></a>
+classes provide replacements for EMF's undo/redo actions that delegate to the operation
+history API's action handlers.  These wrappers create undo/redo action handlers on the
+undo context obtained by adapting the active editor part to the <em class="CodeName">IUndoContext</em>
+type.  Usually this undo context is a <a href="undocontext.html">resource context</a>.
+</p>
+
+<hr/>
+
+<p>
+<a href="http://www.eclipse.org/legal/epl-v10.html">Copyright (c) 2006, 2007 IBM Corporation and others. All Rights Reserved.</a>
+</p>
+</body>
+</html>
