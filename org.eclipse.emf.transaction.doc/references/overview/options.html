@@ -46,7 +46,8 @@ informative.  It is applied by the transaction API, itself, to indicate to clien
 a transaction's changes result from undo or redo of a <em class="CodeName">Command</em>.
 <a href="listeners.html">Listeners</a>, on receiving notification of changes in the resource
 set, can look for this option if they need to distinguish between changes that occurred
-in the original execution of a command versus undo or redo of a command.
+in the original execution of a command versus undo or redo of a command.  It would be
+highly unual for a client of the transaction API to apply this option.
 </p>
 <pre class="Code">
 TransactionalCommandStack stack;
@@ -80,6 +81,8 @@ following options for the transactions created for undo and redo of commands:
       inappropriate</li>
   <li><em class="CodeName">OPTION_NO_VALIDATION</em>:  there is no need to validate a
       reversion to a previous state of the data</li>
+  <li><em class="CodeName">OPTION_IS_UNDO_REDO_TRANSACTION</em>:  the transaction's changes
+      are simply undoing or redoing changes made previously</li>
 </ul>
 
 <hr/>

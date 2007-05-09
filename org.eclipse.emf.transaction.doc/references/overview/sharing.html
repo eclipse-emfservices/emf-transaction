@@ -27,7 +27,7 @@ these kinds of operations, Eclipse provides such facilities as the Jobs API and 
 monitors to do work in the background and/or keep the user abreast of what is happening.
 </p><p>
 Because transactions in a <em class="CodeName">TransactionalEditingDomain</em> lock the
-resource set for exclusive access by single thread, a read-only transaction that runs for
+resource set for exclusive access by a single thread, a read-only transaction that runs for
 a long time can severely impair the responsiveness of an application's UI if refreshes
 require reading the EMF data.
 </p><p>
