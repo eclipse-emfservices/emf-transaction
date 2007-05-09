@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link rel="Stylesheet" type="text/css" href="doc.css" />
+<title>Implementing Triggers</title>
+</head>
+<body>
+<h1><a name="top">Implementing Triggers</a></h1>
+<p>
+When they attempt to commit, <em class="CodeName">Transaction</em>s use the
+EMF Validation Framework to validate the changes that have occurred during the time that
+they were active.  If this validation finds problems with <em class="CodeName">IStatus.ERROR</em>
+severity or worse, then the transaction rolls back instead of committing, and the commit
+throws a
+<a href="../javadoc/org/eclipse/emf/transaction/RollbackException.html"><em class="CodeName">RollbackException</em></a>
+to the client.
+</p><p>
+However, client applications do not like it when their transactions are rolled back in this
+way.  The assurance of data integrity is good, but a user's workflow generally is diverted.
+Given that these integrity constraints are essential to the health of the user's data, then,
+an application needs a way to be proactive in ensuring that they will be met.  This mechanism
+is the pre-commit listener, better known as a trigger for its analogy to triggers in
+relational database management systems.
+</p>
+
+<blockquote>
+	<img src="images/triggers.png" alt="Trigger API"/><br/>
+	<font size="-2">[<a href="images/triggers.svg">as SVG</a>]</font>
+</blockquote>
+
+<p>
+When a client commits a read/write transaction, the transaction first notifies pre-commit listeners that
+it is about to commit, invoking the <em class="CodeName">transactionAboutToCommit(ResourceSetChangeEvent)</em>
+call-back.  The listeners respond by returning trigger <em class="CodeName">Command</em>s,
+if necessary, that the transaction executes to perform additional changes to bring the
+resource set contents back into a consistent state.
+</p><p>
+Triggers only return commands to be executed by the transaction.  They cannot directly
+change the model because, like the <a href="listeners.html">post-commit listeners</a>, they
+are called in a read-only transaction (nested within the read/write transaction that is
+committing).  When the transaction has received all of the trigger commands from its
+listeners, it executes these commands in a <a href="nesting.html">nested</a> read/write
+transaction.  The pre-commit procedure is recursive; this transaction that executes the
+trigger commands will, itself, invoke pre-commit listeners to ensure integrity of the
+changes that the triggers effect.  Also, all of the changes performed by triggers are
+validated in the final stage of the original transaction's commit.
+</p><p>
+If, for some reason, a trigger cannot provide the commands that it needs to ensure data
+integrity, then it may throw a <em class="CodeName">RollbackException</em> to force the
+transaction to roll back.  For example, the trigger may be intended to keep the EMF
+resource set synchronized with some other data store.  If that data store should become
+inaccessible, then the trigger cannot perform its function.
+</p><p>
+For details of the <em class="CodeName">ResourceSetChangeEvent</em> and the
+<em class="CodeName">NotificationFilter</em> API and statically registering listeners
+on editing domains, see the discussion of <a href="listeners.html">resource set listeners</a>.
+</p>
+<pre class="Code">
+// trigger ensuring that all libraries have names
+class MyListener extends <b>ResourceSetListenerImpl</b> {
+    MyListener() { // only interested in changes to Library objects
+        super(NotificationFilter.createNotifierTypeFilter(
+                   EXTLibraryPackage.Literals.LIBRARY));
+    }
+
+    public Command <b>transactionAboutToCommit</b>(ResourceSetChangeEvent event)
+           throws <b>RollbackException</b> {
+           
+        List commands = new ArrayList();
+        Iterator iter = event.getNotifications().iterator();
+        
+        while (iter.hasNext()) {
+            Notification next = (Notification) iter.next();
+            Library library = (Library) next.getNotifier();
+            if (library.getName() == null)
+                <b>commands.add</b>(SetCommand.create(
+                    event.getEditingDomain(), library,
+                    EXTLibraryPackage.Literals.LIBRARY__NAME, "A library"));
+        }
+
+        return commands.isEmpty()? <b>null</b> : new <b>CompoundCommand(commands)</b>;
+    }
+}
+</pre>
+<p>
+As for <a href="listeners.html">post-commit listeners</a>, the EMF Transaction API provides
+a convenient abstract class that dispatches <em class="CodeName">Notification</em>s one
+by one to a trigger:  the
+<a href="../javadoc/org/eclipse/emf/transaction/TriggerListener.html"><em class="CodeName">TriggerListener</em></a>.
+A subclass needs only to implement the <em class="CodeName">trigger()</em> method to return
+a command in response to a notification.  The <em class="CodeName">TriggerListener</em> class
+takes care of combining the results the results into an appropriate compound command.
+</p>
+<pre class="Code">
+class MyTriggerListener extends <b>TriggerListener</b> {
+    MyListener() { // only interested in changes to Library objects
+        super(NotificationFilter.createNotifierTypeFilter(
+                   EXTLibraryPackage.Literals.LIBRARY));
+    }
+
+    protected Command <b>trigger</b>(TransactionalEditingDomain domain,
+            Notification notification) throws <b>RollbackException</b> {
+        
+        Library library = (Library) next.getNotifier();
+        if (library.getName() == null) {
+            <b>return</b> SetCommand.create(domain, library,
+                EXTLibraryPackage.Literals.LIBRARY__NAME, "A library");
+        }
+
+        return <b>null</b>;
+    }
+}
+</pre>
+
+<hr/>
+
+<p>
+<a href="http://www.eclipse.org/legal/epl-v10.html">Copyright (c) 2006, 2007 IBM Corporation and others. All Rights Reserved.</a>
+</p>
+</body>
+</html>

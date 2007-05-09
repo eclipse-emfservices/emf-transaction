@@ -1,0 +1,193 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link rel="Stylesheet" type="text/css" href="doc.css" />
+<title>Working with Transactional Editing Domains</title>
+</head>
+<body>
+<h1><a name="top">Working with Transactional Editing Domains</a></h1>
+<p>
+Transactional editing domains are specialized <em class="CodeName">EditingDomain</em>s that add
+transaction semantics to editing operations, in order to promote data integrity.  This consists of
+two primary controls:  <em class="CodeName">ResourceSet</em> locking for coordination of concurrent
+threads and automatic rollback of changes in case of violations of data integrity.
+</p>
+
+<h2>Creating Transactional Editing Domains</h2>
+<p>
+<a href="../javadoc/org/eclipse/emf/transaction/TransactionalEditingDomain.html"><em class="CodeName">TransactionalEditingDomain</em></a>s
+may be created by an application at run-time, using the static 
+<a href="../javadoc/org/eclipse/emf/transaction/TransactionalEditingDomain.Factory.html"><em class="CodeName">Factory</em></a>
+instance.  The factory can optionally create an editing domain on a <em class="CodeName">ResourceSet</em>
+provided by the client, or it can create a default resource set.  In either case, the
+<em class="CodeName">ResourceSet</em> is thenceforward managed by transactions.
+</p>
+
+<blockquote>
+	<img src="images/domains.png" alt="Transactional Editing Domain API"/><br/>
+	<font size="-2">[<a href="images/domains.svg">as SVG</a>]</font>
+</blockquote>
+
+<pre class="Code">
+ResourceSet rset = getResourceSet();  // access some hypothetical resource set
+
+TransactionalEditingDomain domain = TransactionalEditingDomain.<b>Factory</b>.INSTANCE
+        .<b>createEditingDomain(rset)</b>;
+
+// begin working with the editing domain
+</pre>
+
+<a name="registry"></a>
+<h2>Registering Editing Domains</h2>
+
+<p>
+We saw above how transactional editing domains can be created at run-time.  This is good for applications
+that only need their own editing domain to edit their own EMF resources.  However, what if an
+application or a plug-in wants to share its editing domain with other applications, so that they may
+cooperatively edit a common set of resources?  The
+<a href="../javadoc/org/eclipse/emf/transaction/TransactionalEditingDomain.Registry.html"><em class="CodeName">TransactionalEditingDomain.Registry</em></a>
+provides the means by which an application can publish its editing domain under a unique identifier for
+other to find and work with.  The static <em class="CodeName">TransactionalEditingDomain.Registry</em>
+instance is the most appropriate registry in which to do this:
+</p>
+
+<pre class="Code">
+TransactionalEditingDomain.<b>Registry</b>.INSTANCE.<b>add</b>(<b>"org.eclipse.example.MyDomain"</b>, domain);
+</pre>
+
+<p>
+Then, another application or editor can use this ID to look up the editing domain instance:
+</p>
+
+<pre class="Code">
+TransactionalEditingDomain shared = TransactionalEditingDomain.Registry.INSTANCE.<b>getEditingDomain</b>(
+        <b>"org.eclipse.example.MyDomain"</b>);
+
+// begin working with the editing domain
+</pre>
+
+<p>
+This now raises a problem that is fairly common with registries of shared objects in Eclipse:  what if
+the application that retrieves this editing domain from the registry needs to use it <em>before</em>
+the provider of the domain has registered it?  Or even before the provider has been activated?  The
+EMF Transaction API provides the
+<a href="../extension-points/org_eclipse_emf_transaction_editingDomains.html"><em class="CodeName">org.eclipse.emf.transaction.editingDomains</em></a>
+extension point on which to statically register an editing domain.  Whenever any client application (and
+this includes the one that registers the domain) wishes to access the registered editing domain, it
+simply retrieves it from the registry by ID.  On the first such access, the registry creates the editing
+domain using the factory implementation referenced on the extension point.  If no factory is specified,
+then the default static instance is used:
+</p>
+
+<pre class="Code">
+&lt;extension point="<b>org.eclipse.emf.transaction.editingDomains</b>"&gt;
+    &lt;<b>domain</b> id="<b>org.eclipse.example.MyDomain</b>"
+            <b>factory</b>="org.eclipse..example.MyCustomFactory"/&gt;
+&lt;/extension&gt;
+
+
+// the factory implementation
+public class MyCustomFactory extends TransactionalEditingDomainImpl.FactoryImpl {
+    public TransactionalEditingDomain <b>createEditingDomain</b>() {
+        TransactionalEditingDomain result = <b>super.createEditingDomain()</b>;
+        
+        // customize my editing domain in some way
+        // ...
+        
+        return result;
+    }
+}
+</pre>
+
+<p>
+The registry will invoke the zero-argument factory method to create the editing domain.  The recommended
+way to create an editing domain factory is to extend the default implementation, as above, and to
+delegate the actual domain instantiation to the superclass.  Otherwise, it is necessary to invoke the
+<em class="CodeName">FactoryImpl.mapResourceSet()</em> method to ensure that the traceability between
+the <em class="CodeName">ResourceSet</em> and the editing domain is established.
+</p>
+
+<h2>Finding an Object's Editing Domain</h2>
+
+<p>
+It will often happen that a client of the EMF Transaction API knows that an object or a
+resource is in a transactional editing domain (perhaps because it requires this), but not
+<em>which</em> editing domain.  The
+<a href="../javadoc/org/eclipse/emf/transaction/util/TransactionUtil.html"><em class="CodeName">TransactionUtil</em></a>
+class provides utility methods that obtain the editing domain that manages an
+<em class="CodeName">EObject</em>, a <em class="CodeName">Resource</em>, or a
+<em class="CodeName">ResourceSet</em>.
+</p>
+<pre class="Code">
+EObject subject = getSubject();  // some object to operate on
+
+TransactionalEditingDomain domain = TransactionUtil.<b>getEditingDomain</b>(subject);
+
+if (domain != null) {
+    // do something with the subject in a transaction
+}
+</pre>
+
+<h2>Sharing Objects and Resources with Other Resource Sets</h2>
+
+<p>
+An application that is working with multiple resource sets, some in transactional editing
+domains and others not, may occasionally find that it needs to move objects and/or
+resources from a non-transactional resource set to a transactional resource set or vice-versa.
+When a resource or an object comes into a transactional context, it because subject to that
+transactional editing domain and will continue to be even after it is removed from that
+context.  Even after it is moved into an otherwise non-transactional resource set, it will
+continue to be managed by the editing domain that formerly contained it.
+</p><p>
+The <a href="../javadoc/org/eclipse/emf/transaction/util/TransactionUtil.html"><em class="CodeName">TransactionUtil</em></a>
+class provides static utilities that will dissociate an object or a resource from a
+transactional editing domain that had managed it.  After removing an object or a resource
+from its container, the <em class="CodeName">disconnectFromEditingDomain()</em> method
+breaks its ties to the editing domain.  It is then free to be added to another transactional
+editing domain or to a non-transactional resource set.
+</p>
+<p class="Note">
+If the object or resource is not disconnected from its former transactional editing domain
+when it is added to another transactional editing domain's resource set, then it will be
+subject to both editing domains.  Such an object can only safely be accessed in
+simultaneous transactions on both editing domains.  In practice, this is not feasible.
+</p>
+<pre class="Code">
+Resource resource = getResource();  // a resource to move to another resource set
+
+TransactionalEditingDomain formerDomain = TransactionUtil.getEditingDomain(resource);
+
+ResourceSet newResourceSet = getNewResourceSet();  // resource set to move to
+
+newResourceSet.<b>getResources().add(resource)</b>;  // first, move the resource
+
+if (domain != null) {
+    // then disconnect it from the former editing domain
+    TransactionUtil.<b>disconnectFromEditingDomain</b>(resource);
+}
+</pre>
+
+<h2>Disposing of Editing Domains</h2>
+
+<p>
+When an application has finished with an editing domain, or has finished with transactional
+editing of the contents of a resource set, the editing domain can be deactivated by calling
+the <em class="CodeName">dispose()</em> method.
+</p>
+<pre class="Code">
+domain.<b>dispose()</b>;
+</pre>
+<p>
+A registered editing domain is first removed when the registry when it is disposed.  In the
+case that the editing domain is statically registered on the extension point, however, it
+cannot be unregistered and, hence, cannot be disposed.
+</p>
+
+<hr/>
+
+<p>
+<a href="http://www.eclipse.org/legal/epl-v10.html">Copyright (c) 2006, 2007 IBM Corporation and others. All Rights Reserved.</a>
+</p>
+</body>
+</html>

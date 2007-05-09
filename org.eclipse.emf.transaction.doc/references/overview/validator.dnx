@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--xtools2_universal_type_manager-->
+<?com.ibm.xtools.emf.core.signature <signature id="com.ibm.xtools.mmi.ui.signatures.diagram" version="7.0.0"><feature description="" name="Rational Modeling Platform (com.ibm.xtools.rmp)" url="" version="7.0.0"/></signature>?>
+<notation:Diagram xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:notation="http://www.eclipse.org/gmf/runtime/1.0.0/notation" xmlns:uml="http://www.eclipse.org/uml2/2.0.0/UML" xmlns:umlnotation="http://www.ibm.com/xtools/1.5.2/Umlnotation" xmi:id="_rZ5ToP5DEdu6tYsdX_IJFg" type="Class" name="validator.dnx">
+  <children xmi:id="_sgw1EP5DEdu6tYsdX_IJFg">
+    <children xmi:id="_sg27sP5DEdu6tYsdX_IJFg" type="ImageCompartment">
+      <layoutConstraint xmi:type="notation:Size" xmi:id="_sg27sf5DEdu6tYsdX_IJFg" width="530" height="530"/>
+    </children>
+    <children xmi:id="_sg27sv5DEdu6tYsdX_IJFg" type="Stereotype"/>
+    <children xmi:id="_sg27s_5DEdu6tYsdX_IJFg" type="Kind"/>
+    <children xmi:id="_sg27tP5DEdu6tYsdX_IJFg" type="Name"/>
+    <children xmi:id="_sg27tf5DEdu6tYsdX_IJFg" type="Parent"/>
+    <children xmi:id="_sg27tv5DEdu6tYsdX_IJFg" visible="false" type="AttributeCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_sg27t_5DEdu6tYsdX_IJFg"/>
+    </children>
+    <children xmi:id="_sg27uP5DEdu6tYsdX_IJFg" type="OperationCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_sg27uf5DEdu6tYsdX_IJFg" collapsed="true"/>
+    </children>
+    <styles xmi:type="umlnotation:UMLClassifierStyle" xmi:id="_sgw1Ef5DEdu6tYsdX_IJFg" useClassifierShape="true"/>
+    <element xmi:type="uml:Interface" href="mmi:///#jsrctype%5Ename=InternalTransactionalEditingDomain%5Bjcu%5Ename=InternalTransactionalEditingDomain.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D$uml.Interface"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_sgw1Ev5DEdu6tYsdX_IJFg" x="1322" y="3175"/>
+  </children>
+  <children xmi:id="_vWByAP5DEdu6tYsdX_IJFg">
+    <children xmi:id="_vWByA_5DEdu6tYsdX_IJFg" type="ImageCompartment">
+      <layoutConstraint xmi:type="notation:Size" xmi:id="_vWByBP5DEdu6tYsdX_IJFg" width="530" height="530"/>
+    </children>
+    <children xmi:id="_vWByBf5DEdu6tYsdX_IJFg" type="Stereotype"/>
+    <children xmi:id="_vWByBv5DEdu6tYsdX_IJFg" type="Kind"/>
+    <children xmi:id="_vWByB_5DEdu6tYsdX_IJFg" type="Name"/>
+    <children xmi:id="_vWByCP5DEdu6tYsdX_IJFg" type="Parent"/>
+    <children xmi:id="_vWByCf5DEdu6tYsdX_IJFg" visible="false" type="AttributeCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_vWByCv5DEdu6tYsdX_IJFg"/>
+    </children>
+    <children xmi:id="_vWByC_5DEdu6tYsdX_IJFg" type="OperationCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_vWByDP5DEdu6tYsdX_IJFg"/>
+    </children>
+    <styles xmi:type="umlnotation:UMLClassifierStyle" xmi:id="_vWByAf5DEdu6tYsdX_IJFg" useClassifierShape="true"/>
+    <element xmi:type="uml:Interface" href="mmi:///#jsrctype%5Ename=Factory%5Bjsrctype%5Ename=TransactionValidator%5Bjcu%5Ename=TransactionValidator.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Interface"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_vWByAv5DEdu6tYsdX_IJFg" x="10461" y="8559"/>
+  </children>
+  <children xmi:id="_vWByDf5DEdu6tYsdX_IJFg">
+    <children xmi:id="_vWByEP5DEdu6tYsdX_IJFg" type="ImageCompartment">
+      <layoutConstraint xmi:type="notation:Size" xmi:id="_vWByEf5DEdu6tYsdX_IJFg" width="530" height="530"/>
+    </children>
+    <children xmi:id="_vWH4oP5DEdu6tYsdX_IJFg" type="Stereotype"/>
+    <children xmi:id="_vWH4of5DEdu6tYsdX_IJFg" type="Kind"/>
+    <children xmi:id="_vWH4ov5DEdu6tYsdX_IJFg" type="Name"/>
+    <children xmi:id="_vWH4o_5DEdu6tYsdX_IJFg" type="Parent"/>
+    <children xmi:id="_vWH4pP5DEdu6tYsdX_IJFg" visible="false" type="AttributeCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_vWH4pf5DEdu6tYsdX_IJFg"/>
+    </children>
+    <children xmi:id="_vWH4pv5DEdu6tYsdX_IJFg" type="OperationCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_vWH4p_5DEdu6tYsdX_IJFg"/>
+    </children>
+    <styles xmi:type="umlnotation:UMLClassifierStyle" xmi:id="_vWByDv5DEdu6tYsdX_IJFg" useClassifierShape="true"/>
+    <element xmi:type="uml:Interface" href="mmi:///#jsrctype%5Ename=TransactionValidator%5Bjcu%5Ename=TransactionValidator.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D$uml.Interface"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_vWByD_5DEdu6tYsdX_IJFg" x="9827" y="3170"/>
+  </children>
+  <children xmi:id="_wnyU0P5DEdu6tYsdX_IJFg">
+    <children xmi:id="_wnyU0_5DEdu6tYsdX_IJFg" type="ImageCompartment">
+      <layoutConstraint xmi:type="notation:Size" xmi:id="_wnyU1P5DEdu6tYsdX_IJFg" width="1320" height="1320"/>
+    </children>
+    <children xmi:id="_wnyU1f5DEdu6tYsdX_IJFg" type="Stereotype"/>
+    <children xmi:id="_wnyU1v5DEdu6tYsdX_IJFg" type="Name"/>
+    <children xmi:id="_wnyU1_5DEdu6tYsdX_IJFg" type="Parent"/>
+    <children xmi:id="_wnyU2P5DEdu6tYsdX_IJFg" type="AttributeCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_wnyU2f5DEdu6tYsdX_IJFg" collapsed="true"/>
+    </children>
+    <children xmi:id="_wnyU2v5DEdu6tYsdX_IJFg" type="OperationCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_wnyU2_5DEdu6tYsdX_IJFg" collapsed="true"/>
+    </children>
+    <styles xmi:type="umlnotation:UMLShapeStyle" xmi:id="_wnyU0f5DEdu6tYsdX_IJFg"/>
+    <element xmi:type="uml:Class" href="mmi:///#jsrctype%5Ename=TransactionalEditingDomainImpl%5Bjcu%5Ename=TransactionalEditingDomainImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D$uml.Class"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_wnyU0v5DEdu6tYsdX_IJFg" x="1585" y="8559"/>
+  </children>
+  <children xmi:id="_81r1EP5DEdu6tYsdX_IJFg">
+    <children xmi:id="_81r1E_5DEdu6tYsdX_IJFg" type="ImageCompartment">
+      <layoutConstraint xmi:type="notation:Size" xmi:id="_81r1FP5DEdu6tYsdX_IJFg" width="1320" height="1320"/>
+    </children>
+    <children xmi:id="_81r1Ff5DEdu6tYsdX_IJFg" type="Stereotype"/>
+    <children xmi:id="_81r1Fv5DEdu6tYsdX_IJFg" type="Name"/>
+    <children xmi:id="_81x7sP5DEdu6tYsdX_IJFg" type="Parent"/>
+    <children xmi:id="_81x7sf5DEdu6tYsdX_IJFg" visible="false" type="AttributeCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_81x7sv5DEdu6tYsdX_IJFg"/>
+    </children>
+    <children xmi:id="_81x7s_5DEdu6tYsdX_IJFg" type="OperationCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_81x7tP5DEdu6tYsdX_IJFg" filtering="Manual">
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=TransactionImpl%5Esign=(QTransactionalEditingDomain;Z)V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=TransactionImpl%5Esign=(QTransactionalEditingDomain;ZQMap;)V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=start%5Esign=()V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=getEditingDomain%5Esign=()QTransactionalEditingDomain;%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=getParent%5Esign=()QTransaction;%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=setParent%5Esign=(QInternalTransaction;)V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=getRoot%5Esign=()QInternalTransaction;%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=getOwner%5Esign=()QThread;%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=isReadOnly%5Esign=()Z%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=getOptions%5Esign=()QMap;%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=isActive%5Esign=()Z%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=getStatus%5Esign=()QIStatus;%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=setStatus%5Esign=(QIStatus;)V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=abort%5Esign=(QIStatus;)V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=isAborted%5Esign=()Z%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=yield%5Esign=()V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=getChangeDescription%5Esign=()QTransactionChangeDescription;%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=getInternalDomain%5Esign=()QInternalTransactionalEditingDomain;%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=startRecording%5Esign=()V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=stopRecording%5Esign=()V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=pause%5Esign=()V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=resume%5Esign=(QTransactionChangeDescription;)V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=isRollingBack%5Esign=()Z%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=close%5Esign=()V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=add%5Esign=(QNotification;)V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=getNotifications%5Esign=()QList;%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=getTriggers%5Esign=()QCommand;%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=addTriggers%5Esign=(QTriggerCommand;)V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=startPrivileged%5Esign=(QPrivilegedRunnable;)V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=endPrivileged%5Esign=(QPrivilegedRunnable;)V%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=toString%5Esign=()QString;%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=isUndoEnabled%5Esign=(QTransaction;)Z%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=isValidationEnabled%5Esign=(QTransaction;)Z%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=isTriggerEnabled%5Esign=(QTransaction;)Z%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=isNotificationEnabled%5Esign=(QTransaction;)Z%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=isUnprotected%5Esign=(QTransaction;)Z%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=collectsNotifications%5Esign=(QTransaction;)Z%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+        <filteredObjects xmi:type="uml:Operation" href="mmi:///#jmethod%5Ename=hasOption%5Esign=(QTransaction;QString;)Z%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Operation"/>
+      </styles>
+    </children>
+    <styles xmi:type="umlnotation:UMLShapeStyle" xmi:id="_81r1Ef5DEdu6tYsdX_IJFg"/>
+    <element xmi:type="uml:Class" href="mmi:///#jsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D$uml.Class"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_81r1Ev5DEdu6tYsdX_IJFg" x="17752" y="8559"/>
+  </children>
+  <children xmi:id="_Eh0aUP5EEdu6tYsdX_IJFg">
+    <children xmi:id="_Eh0aU_5EEdu6tYsdX_IJFg" type="ImageCompartment">
+      <layoutConstraint xmi:type="notation:Size" xmi:id="_Eh0aVP5EEdu6tYsdX_IJFg" width="530" height="530"/>
+    </children>
+    <children xmi:id="_Eh0aVf5EEdu6tYsdX_IJFg" type="Stereotype"/>
+    <children xmi:id="_Eh0aVv5EEdu6tYsdX_IJFg" type="Kind"/>
+    <children xmi:id="_Eh0aV_5EEdu6tYsdX_IJFg" type="Name"/>
+    <children xmi:id="_Eh0aWP5EEdu6tYsdX_IJFg" type="Parent"/>
+    <children xmi:id="_Eh0aWf5EEdu6tYsdX_IJFg" visible="false" type="AttributeCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_Eh0aWv5EEdu6tYsdX_IJFg"/>
+    </children>
+    <children xmi:id="_Eh0aW_5EEdu6tYsdX_IJFg" type="OperationCompartment">
+      <styles xmi:type="umlnotation:UMLListCompartmentStyle" xmi:id="_Eh0aXP5EEdu6tYsdX_IJFg" collapsed="true"/>
+    </children>
+    <styles xmi:type="umlnotation:UMLClassifierStyle" xmi:id="_Eh0aUf5EEdu6tYsdX_IJFg" useClassifierShape="true"/>
+    <element xmi:type="uml:Interface" href="mmi:///#jsrctype%5Ename=InternalTransaction%5Bjcu%5Ename=InternalTransaction.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D$uml.Interface"/>
+    <layoutConstraint xmi:type="notation:Bounds" xmi:id="_Eh0aUv5EEdu6tYsdX_IJFg" x="17435" y="3170"/>
+  </children>
+  <styles xmi:type="umlnotation:UMLDiagramStyle" xmi:id="_rZ5Tof5DEdu6tYsdX_IJFg"/>
+  <element xsi:nil="true"/>
+  <edges xmi:id="_vYCkMf5DEdu6tYsdX_IJFg" type="OwnedElement" source="_vWByDf5DEdu6tYsdX_IJFg" target="_vWByAP5DEdu6tYsdX_IJFg">
+    <styles xmi:type="umlnotation:UMLConnectorStyle" xmi:id="_vYCkMv5DEdu6tYsdX_IJFg" routing="Rectilinear" showStereotype="Text"/>
+    <element xsi:nil="true"/>
+    <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_vYCkM_5DEdu6tYsdX_IJFg" points="[582, 1852, 317, -2487]$[582, 3572, 317, -767]"/>
+  </edges>
+  <edges xmi:id="_wp-tNP5DEdu6tYsdX_IJFg" source="_wnyU0P5DEdu6tYsdX_IJFg" target="_sgw1EP5DEdu6tYsdX_IJFg">
+    <children xmi:id="_wp-tN_5DEdu6tYsdX_IJFg" type="NameLabel">
+      <children xmi:id="_wp-tOf5DEdu6tYsdX_IJFg" type="Stereotype"/>
+      <children xmi:id="_wp-tOv5DEdu6tYsdX_IJFg" type="Name"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_wp-tOP5DEdu6tYsdX_IJFg" y="-186"/>
+    </children>
+    <styles xmi:type="umlnotation:UMLConnectorStyle" xmi:id="_wp-tNf5DEdu6tYsdX_IJFg" routing="Rectilinear" showStereotype="Text"/>
+    <element xmi:type="uml:InterfaceRealization" href="mmi:///#jimpl%5Bjsrctype%5Ename=TransactionalEditingDomainImpl%5Bjcu%5Ename=TransactionalEditingDomainImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D%5Bjsrctype%5Ename=InternalTransactionalEditingDomain%5Bjcu%5Ename=InternalTransactionalEditingDomain.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.InterfaceRealization"/>
+    <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_wp-tNv5DEdu6tYsdX_IJFg" points="[0, 0, 0, 0]$[0, 0, 0, 0]"/>
+  </edges>
+  <edges xmi:id="_1y_1cP5DEdu6tYsdX_IJFg" source="_wnyU0P5DEdu6tYsdX_IJFg" target="_vWByDf5DEdu6tYsdX_IJFg">
+    <children xmi:id="_1y_1c_5DEdu6tYsdX_IJFg" visible="false" type="FromMultiplicityLabel">
+      <children xmi:id="_1y_1df5DEdu6tYsdX_IJFg" type="FromMultiplicity"/>
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_1y_1dP5DEdu6tYsdX_IJFg" y="396"/>
+    </children>
+    <children xmi:id="_1y_1dv5DEdu6tYsdX_IJFg" type="FromRoleLabel">
+      <children xmi:id="_1y_1eP5DEdu6tYsdX_IJFg" type="FromRole"/>
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_1y_1d_5DEdu6tYsdX_IJFg" y="-397"/>
+    </children>
+    <children xmi:id="_1y_1ef5DEdu6tYsdX_IJFg" visible="false" type="associationTypeLabel">
+      <children xmi:id="_1y_1e_5DEdu6tYsdX_IJFg" type="associationTypeCompartment"/>
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_1y_1ev5DEdu6tYsdX_IJFg" y="-186"/>
+    </children>
+    <styles xmi:type="umlnotation:UMLConnectorStyle" xmi:id="_1y_1cf5DEdu6tYsdX_IJFg" routing="Rectilinear" showStereotype="Text"/>
+    <element xmi:type="uml:Property" href="mmi:///#jfield%5Ename=validator%5Bjsrctype%5Ename=TransactionalEditingDomainImpl%5Bjcu%5Ename=TransactionalEditingDomainImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Property"/>
+    <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_1y_1cv5DEdu6tYsdX_IJFg" points="[1957, -635, -6589, 3440]$[1957, -3466, -6589, 609]$[5688, -3466, -2858, 609]"/>
+  </edges>
+  <edges xmi:id="_2iv3YP5DEdu6tYsdX_IJFg" source="_wnyU0P5DEdu6tYsdX_IJFg" target="_vWByAP5DEdu6tYsdX_IJFg">
+    <children xmi:id="_2iv3Y_5DEdu6tYsdX_IJFg" visible="false" type="FromMultiplicityLabel">
+      <children xmi:id="_2i1-AP5DEdu6tYsdX_IJFg" type="FromMultiplicity"/>
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_2iv3ZP5DEdu6tYsdX_IJFg" y="396"/>
+    </children>
+    <children xmi:id="_2i1-Af5DEdu6tYsdX_IJFg" type="FromRoleLabel">
+      <children xmi:id="_2i1-A_5DEdu6tYsdX_IJFg" type="FromRole"/>
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_2i1-Av5DEdu6tYsdX_IJFg" x="-884" y="-714"/>
+    </children>
+    <children xmi:id="_2i1-BP5DEdu6tYsdX_IJFg" visible="false" type="associationTypeLabel">
+      <children xmi:id="_2i1-Bv5DEdu6tYsdX_IJFg" type="associationTypeCompartment"/>
+      <layoutConstraint xmi:type="notation:Location" xmi:id="_2i1-Bf5DEdu6tYsdX_IJFg" y="-186"/>
+    </children>
+    <styles xmi:type="umlnotation:UMLConnectorStyle" xmi:id="_2iv3Yf5DEdu6tYsdX_IJFg" routing="Rectilinear" showStereotype="Text"/>
+    <element xmi:type="uml:Property" href="mmi:///#jfield%5Ename=validatorFactory%5Bjsrctype%5Ename=TransactionalEditingDomainImpl%5Bjcu%5Ename=TransactionalEditingDomainImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Property"/>
+    <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_2iv3Yv5DEdu6tYsdX_IJFg" points="[162, -7, -171, 8]$[239, -11, -94, 4]"/>
+  </edges>
+  <edges xmi:id="_EifIsP5EEdu6tYsdX_IJFg" source="_vWByDf5DEdu6tYsdX_IJFg" target="_Eh0aUP5EEdu6tYsdX_IJFg">
+    <children xmi:id="_EifIs_5EEdu6tYsdX_IJFg" type="KindLabel">
+      <children xmi:id="_EifItf5EEdu6tYsdX_IJFg" type="Stereotype"/>
+      <children xmi:id="_EifIt_5EEdu6tYsdX_IJFg" type="Kind"/>
+      <children xmi:id="_EifItv5EEdu6tYsdX_IJFg" type="Name"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_EifItP5EEdu6tYsdX_IJFg" y="-186"/>
+    </children>
+    <styles xmi:type="umlnotation:UMLConnectorStyle" xmi:id="_EifIsf5EEdu6tYsdX_IJFg" routing="Rectilinear" showStereotype="Text"/>
+    <element xmi:type="uml:Usage" href="mmi:///#jdep%5Bjsrctype%5Ename=TransactionValidator%5Bjcu%5Ename=TransactionValidator.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D%5Bjsrctype%5Ename=InternalTransaction%5Bjcu%5Ename=InternalTransaction.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.Usage"/>
+    <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_EifIsv5EEdu6tYsdX_IJFg" points="[0, 0, 0, 0]$[0, 0, 0, 0]"/>
+  </edges>
+  <edges xmi:id="_EilPWP5EEdu6tYsdX_IJFg" source="_81r1EP5DEdu6tYsdX_IJFg" target="_Eh0aUP5EEdu6tYsdX_IJFg">
+    <children xmi:id="_EilPW_5EEdu6tYsdX_IJFg" type="NameLabel">
+      <children xmi:id="_EilPXf5EEdu6tYsdX_IJFg" type="Stereotype"/>
+      <children xmi:id="_EilPXv5EEdu6tYsdX_IJFg" type="Name"/>
+      <layoutConstraint xmi:type="notation:Bounds" xmi:id="_EilPXP5EEdu6tYsdX_IJFg" y="-186"/>
+    </children>
+    <styles xmi:type="umlnotation:UMLConnectorStyle" xmi:id="_EilPWf5EEdu6tYsdX_IJFg" routing="Rectilinear" showStereotype="Text"/>
+    <element xmi:type="uml:InterfaceRealization" href="mmi:///#jimpl%5Bjsrctype%5Ename=TransactionImpl%5Bjcu%5Ename=TransactionImpl.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D%5Bjsrctype%5Ename=InternalTransaction%5Bjcu%5Ename=InternalTransaction.java%5Bjpack%5Ename=org.eclipse.emf.transaction.impl%5Bjsrcroot%5Esrcfolder=src%5Bproject%5Eid=org.eclipse.emf.transaction%5D%5D%5D%5D%5D$uml.InterfaceRealization"/>
+    <bendpoints xmi:type="notation:RelativeBendpoints" xmi:id="_EilPWv5EEdu6tYsdX_IJFg" points="[0, 0, 0, 0]$[0, 0, 0, 0]"/>
+  </edges>
+</notation:Diagram>

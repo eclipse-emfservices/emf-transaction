@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link rel="Stylesheet" type="text/css" href="doc.css" />
+<title>UI Utilities</title>
+</head>
+<body>
+<h1><a name="top">UI Utilities</a></h1>
+<p>
+The <em class="CodeName">org.eclipse.emf.transaction.ui</em> plug-in provides some
+extensions of the building blocks of the EMF-generated editors that assist in adapting an
+editor to work with a <em class="CodeName">TransactionalEditingDomain</em>.  These
+ensure that content providers and the property sheet use transactions where required for
+working with the contents of the resource set.  Simply substitute the
+implementations provided by the <em class="UILabel">EMF.Edit</em> framework with these in
+the editor.
+</p>
+
+<blockquote>
+	<img src="images/uiutils.png" alt="UI Utilities"/><br/>
+	<font size="-2">[<a href="images/uiutils.svg">as SVG</a>]</font>
+</blockquote>
+
+<p>
+The <a href="../javadoc/org/eclipse/emf/transaction/ui/provider/TransactionalAdapterFactoryContentProvider.html"><em class="CodeName">TransactionalAdapterFactoryContentProvider</em></a>
+and <a href="../javadoc/org/eclipse/emf/transaction/ui/provider/TransactionalAdapterFactoryLabelProvider.html"><em class="CodeName">TransactionalAdapterFactoryLabelProvider</em></a>
+classes use read-only transactions to read the state of the resource set when updating the UI.
+The <a href="../javadoc/org/eclipse/emf/transaction/ui/view/ExtendedPropertySheetPage.html"><em class="CodeName">ExtendedPropertySheetPage</em></a>
+creates <a href="../javadoc/org/eclipse/emf/transaction/ui/provider/TransactionalPropertySource.html"><em class="CodeName">TransactionalPropertySource</em></a>s
+to use read-only transactions for refreshing the properties display.  Because EMF-based
+property sources always use <em class="CodeName">Command</em>s to perform edits, the
+<em class="CodeName">TransactionalCommandStack</em> automatically takes care of ensuring
+that the proper read/write transactions are employed.  However, the
+<em class="CodeName">TransactionalPropertySource</em> does check, before executing a command,
+that the current thread does not already have a read-only transaction open, as an attempt
+to execute a command under such circumstances would fail.  This is necessary because the
+refresh behaviour of property sheets sometimes triggers redundant updates to properties.
+</p>
+
+<hr/>
+
+<p>
+<a href="http://www.eclipse.org/legal/epl-v10.html">Copyright (c) 2006, 2007 IBM Corporation and others. All Rights Reserved.</a>
+</p>
+</body>
+</html>

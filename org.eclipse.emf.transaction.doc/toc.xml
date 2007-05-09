@@ -3,9 +3,21 @@
 
 <toc label="EMF Model Transaction Developer Guide">
 	<anchor id="overviews-before" />
-	<topic label="Programmer&apos;s Guides">
-		<topic label="Transactions Programmer&apos;s Guide" href="references/overview/transactionOverview.html" />
+	<topic label="Programmer&apos;s Guide">
+		<topic label="Transactions Overview" href="references/overview/transactionOverview.html" />
+		<topic label="Working with Transactional Editing Domains" href="references/overview/domains.html" />
+		<topic label="Creating Transactions" href="references/overview/creating.html" />
+		<topic label="Transaction Options" href="references/overview/options.html" />
+		<topic label="Sharing Transactions with Other Threads" href="references/overview/sharing.html" />
+		<topic label="Listening to Changes" href="references/overview/listeners.html" />
+		<topic label="Implementing Triggers" href="references/overview/triggers.html" />
+		<topic label="Transaction Nesting" href="references/overview/nesting.html" />
+		<topic label="UI Utilities" href="references/overview/uiutils.html" />
 		<anchor id="other-overviews"/>
+		<topic label="Advanced Topics">
+			<topic label="Extending the Transactional Editing Domain" href="references/overview/extending.html" />
+			<anchor id="other-advanced-overviews"/>
+		</topic>
 	</topic>
 	<anchor id="overviews-after" />
 
