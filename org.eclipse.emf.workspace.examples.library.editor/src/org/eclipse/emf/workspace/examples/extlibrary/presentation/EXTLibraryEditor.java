@@ -2,7 +2,7 @@
  * <copyright>
  * </copyright>
  *
- * $Id: EXTLibraryEditor.java,v 1.4 2006/05/18 21:19:26 cdamus Exp $
+ * $Id: EXTLibraryEditor.java,v 1.5 2007/05/10 16:13:28 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
 
@@ -404,7 +404,13 @@ public class EXTLibraryEditor
 			}
 			
 			public boolean handleResourceChanged(Resource resource) {
-				changedResources.add(resource);
+                // is this a resource that we just saved?  If so, then this is
+                //   notification of that save, so forget it
+                if (savedResources.contains(resource)) {
+                    savedResources.remove(resource);
+                } else {
+                    changedResources.add(resource);
+                }
 				
 				return true;
 			}
