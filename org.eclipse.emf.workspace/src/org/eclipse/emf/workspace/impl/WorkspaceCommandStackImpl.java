@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.8 2007/02/28 21:53:38 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.9 2007/05/10 15:37:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -195,7 +195,11 @@ public class WorkspaceCommandStackImpl
 			
 			// can't throw anything from this method
 			handleError(e);
-		}
+		} finally {
+            // notify even if there was an error; clients should check to see
+            //    that the command stack is flushed
+		    notifyListeners();
+        }
 	}
 
 	/**
@@ -219,6 +223,10 @@ public class WorkspaceCommandStackImpl
 			
 			// can't throw anything from this method
 			handleError(e);
+        } finally {
+            // notify even if there was an error; clients should check to see
+            //    that the command stack is flushed
+            notifyListeners();
 		}
 	}
 

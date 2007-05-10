@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.8 2007/02/28 21:53:36 cdamus Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.9 2007/05/10 15:37:58 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -618,6 +618,48 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         assertFalse("Should not have an undo command", stack.canUndo()); //$NON-NLS-1$
     }
 	
+    public void test_undoRedoNotifyListeners_173839() {
+        class TestCSL implements CommandStackListener {
+            int invocationCount = 0;
+            public void commandStackChanged(EventObject event) {
+                invocationCount++;
+            }
+        }
+        
+        TestCSL listener = new TestCSL();
+        CommandStack stack = domain.getCommandStack();
+        stack.addCommandStackListener(listener);
+        
+        final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+        assertNotNull(book);
+        Command command = SetCommand.create(
+            domain, book, EXTLibraryPackage.Literals.BOOK__TITLE, "New Title"); //$NON-NLS-1$
+        
+        Command undoCmd = null;
+        Command redoCmd = null;
+        
+        try {
+            stack.execute(command);
+            
+            listener.invocationCount = 0;  // clear state
+            
+            stack.undo();
+            redoCmd = stack.getRedoCommand();
+
+            stack.redo();
+            undoCmd = stack.getUndoCommand();
+        } catch (Exception e) {
+            fail(e);
+        } finally {
+            stack.removeCommandStackListener(listener);
+        }
+        
+        assertEquals("Command-stack listener invoked wrong number of times", //$NON-NLS-1$
+            2, listener.invocationCount);
+        assertSame(command, undoCmd);
+        assertSame(command, redoCmd);
+    }
+    
 	//
 	// Fixture methods
 	//
