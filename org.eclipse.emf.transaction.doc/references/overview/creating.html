@@ -64,7 +64,7 @@ method.  The editing waits until it can start a read-only transaction on the cur
 then runs the runnable in that context.
 </p><p>
 This API works with plain <em class="CodeName">Runnable</em>s, but when used with a
-<a href="../javadoc/org/eclipse/emf/transaction/RunnableWithResult.html">RunnableWithResult</a>,
+<a href="../javadoc/org/eclipse/emf/transaction/RunnableWithResult.html"><em class="CodeName">RunnableWithResult</em></a>,
 the <em class="CodeName">runExclusive()</em> method returns the result of the runnable.
 This is convenient for small read operations that simply need to find an object or compute
 some value and return it.  The <em class="CodeName">RunnableWithResult.Impl</em> inner class
