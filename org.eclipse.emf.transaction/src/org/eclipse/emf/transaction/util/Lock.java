@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.8 2007/05/24 23:23:53 cdamus Exp $
+ * $Id: Lock.java,v 1.9 2007/05/24 23:31:24 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -309,7 +309,7 @@ public class Lock {
 	 * will show the block dialog to inform the user of what is happening.
 	 * <p>
 	 * If this method is called from a thread that is running as a Job, then
-	 * it behaves identically to {@link #acquire(boolean))}.
+	 * it behaves identically to {@link #acquire(boolean)}.
 	 * </p>
 	 * <p>
 	 * <b>Note:</b>  The current thread must not own my monitor when it calls
