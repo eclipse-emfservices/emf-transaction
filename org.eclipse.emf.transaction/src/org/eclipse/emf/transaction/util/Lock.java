@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.7 2006/11/01 19:14:38 cdamus Exp $
+ * $Id: Lock.java,v 1.8 2007/05/24 23:23:53 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -309,7 +309,7 @@ public class Lock {
 	 * will show the block dialog to inform the user of what is happening.
 	 * <p>
 	 * If this method is called from a thread that is running as a Job, then
-	 * it behaves identically to {@link #acquire()}.
+	 * it behaves identically to {@link #acquire(boolean))}.
 	 * </p>
 	 * <p>
 	 * <b>Note:</b>  The current thread must not own my monitor when it calls
@@ -600,7 +600,8 @@ public class Lock {
 	/**
 	 * Temporarily yields the lock to another thread that does not require
 	 * exclusive access, if any such thread exists.  Note that, if this method
-	 * returns <code>true</code>, then the caller must actually {@link release}
+	 * returns <code>true</code>, then the caller must actually
+     * {@linkplain #release() release}
 	 * me before another thread can take me.  It then resumes by acquiring me
 	 * again, layer.
 	 * 

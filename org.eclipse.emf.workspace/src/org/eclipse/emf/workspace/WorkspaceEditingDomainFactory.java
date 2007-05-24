@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceEditingDomainFactory.java,v 1.1 2006/01/30 19:48:00 cdamus Exp $
+ * $Id: WorkspaceEditingDomainFactory.java,v 1.2 2007/05/24 23:23:51 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -59,7 +59,7 @@ public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImp
 	 * Creates a new editing domain using the given resource set
 	 * and the Workbench's shared operation history.
 	 * 
-	 * @param the resource set on which to create the editing domain
+	 * @param rset the resource set on which to create the editing domain
 	 * 
 	 * @return the new editing domain
 	 */

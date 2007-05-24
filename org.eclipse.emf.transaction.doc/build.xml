@@ -68,9 +68,9 @@
 			<arg value="${eclipse.home}/../eclipse"/>
 		</exec>
 		
-		<antcall target="build.index"/>
-		
 		<antcall target="convertSchemaToHtml"/>
+		
+		<antcall target="build.index"/>
 	</target>
 
 	<target name="build.index" depends="init" description="Builds search index for the plug-in" if="eclipse.running">

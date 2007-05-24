@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CommandChangeDescription.java,v 1.3 2006/04/26 13:13:39 cdamus Exp $
+ * $Id: CommandChangeDescription.java,v 1.4 2007/05/24 23:23:53 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -60,14 +60,14 @@ public class CommandChangeDescription
 	}
 	
 	/**
-	 * I can apply if my wrapped operation can undo or redo, according to whether
+	 * I can apply if my wrapped command can undo or redo, according to whether
 	 * it was last undone or redone.
 	 * 
-	 * @return <code>true</code> if my operation can undo/redo;
+	 * @return <code>true</code> if my command can undo/redo;
 	 *    <code>false</code>, otherwise
 	 *    
-	 * @see IUndoableOperation#canUndo()
-	 * @see IUndoableOperation#canRedo()
+	 * @see Command#canUndo()
+	 * @see ConditionalRedoCommand#canRedo()
 	 */
 	public boolean canApply() {
 		return (command != null)

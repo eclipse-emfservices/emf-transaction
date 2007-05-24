@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTransactionalCommandStack.java,v 1.3 2007/05/03 13:17:32 cdamus Exp $
+ * $Id: AbstractTransactionalCommandStack.java,v 1.4 2007/05/24 23:23:53 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -28,7 +28,6 @@ import org.eclipse.emf.transaction.ExceptionHandler;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
-import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.internal.Tracing;
@@ -209,8 +208,8 @@ public abstract class AbstractTransactionalCommandStack
     
     /**
      * Redefines the inherited method by forwarding to the
-     * {@link TransactionalEditingDomain#execute(Command, Map)} method.  Any checked
-     * exception thrown by that method is handled by
+     * {@link TransactionalCommandStack#execute(Command, Map)} method. Any
+     * checked exception thrown by that method is handled by
      * {@link #handleError(Exception)} but is not propagated.
      */
     public void execute(Command command) {

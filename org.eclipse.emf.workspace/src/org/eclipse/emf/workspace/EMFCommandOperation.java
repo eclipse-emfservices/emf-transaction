@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFCommandOperation.java,v 1.5 2006/04/26 13:13:34 cdamus Exp $
+ * $Id: EMFCommandOperation.java,v 1.6 2007/05/24 23:23:51 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -81,7 +81,7 @@ public class EMFCommandOperation
 	 * 
 	 * @param domain my domain
 	 * @param command my command
-	 * @param transaction options, or <code>null</code> for the defaults
+	 * @param options transaction options, or <code>null</code> for the defaults
 	 */
 	public EMFCommandOperation(TransactionalEditingDomain domain, Command command, Map options) {
 		super(domain, command.getLabel(), options);

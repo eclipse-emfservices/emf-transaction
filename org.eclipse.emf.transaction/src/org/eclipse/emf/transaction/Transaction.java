@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Transaction.java,v 1.4 2007/03/22 17:27:09 cdamus Exp $
+ * $Id: Transaction.java,v 1.5 2007/05/24 23:23:53 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -134,7 +134,7 @@ public interface Transaction {
 	 *   <li>read/write transactions can only be nested in read/write
 	 *       transactions</li>
 	 * </ul>
-	 * @return
+	 * @return my parent transaction
 	 */
 	Transaction getParent();
 

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.13 2007/01/30 22:17:52 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.14 2007/05/24 23:23:51 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -335,7 +335,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * has been successfully undone and, if necessary, to extract information
 	 * from it.
 	 * 
-	 * @param transaction a transaction that has been undone.
+	 * @param tx a transaction that has been undone.
 	 */
 	protected void didUndo(Transaction tx) {
 		// Method can be overriden by subclasses.
@@ -403,7 +403,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * has been successfully redone and, if necessary, to extract information
 	 * from it.
 	 * 
-	 * @param transaction a transaction that has been redone.
+	 * @param tx a transaction that has been redone.
 	 */
 	protected void didRedo(Transaction tx) {
 		// Subclasses may override this

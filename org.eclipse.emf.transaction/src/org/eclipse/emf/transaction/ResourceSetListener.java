@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListener.java,v 1.4 2006/02/22 22:02:36 cdamus Exp $
+ * $Id: ResourceSetListener.java,v 1.5 2007/05/24 23:23:53 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -22,7 +22,7 @@ import org.eclipse.emf.common.command.Command;
 
 /**
  * Listener interface for batched notification of changes to a resource set.
- * Unlike EMF {@link org.eclispse.emf.common.notify.Adapter}s, resource-set
+ * Unlike EMF {@link org.eclipse.emf.common.notify.Adapter}s, resource-set
  * listeners receive notifications at the close of a transaction and, in the
  * case of the {@link #resourceSetChanged post-commit} call-back, only in
  * the case that the transaction committed (did not roll back).

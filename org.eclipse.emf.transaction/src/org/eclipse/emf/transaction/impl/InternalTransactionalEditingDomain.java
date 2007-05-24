@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: InternalTransactionalEditingDomain.java,v 1.3 2006/04/12 22:09:41 cdamus Exp $
+ * $Id: InternalTransactionalEditingDomain.java,v 1.4 2007/05/24 23:23:53 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -68,13 +68,13 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	/**
 	 * Activates (starts) the specified transaction.  The current thread is
 	 * blocked until the transaction is activated, at which point it will be
-	 * my {@link #getActiveTransaction() active transaction} until it either
+	 * my {@linkplain #getActiveTransaction() active transaction} until it either
 	 * yields (in the case of a read-only transaction) or closes.
 	 * <p>
 	 * Note that only the thread that owns a transaction may activate it.  Also,
 	 * a nested read-write transaction cannot be activated if its parent
 	 * transaction is read-only, unless the read-write transaction has the
-	 * {@link TransactionalCommandStack#OPTION_UNPROTECTED 'unprotected' option}.
+	 * {@linkplain Transaction#OPTION_UNPROTECTED 'unprotected' option}.
 	 * </p>
 	 * 
 	 * @param tx the transaction to activate
@@ -82,11 +82,11 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	 * @throws InterruptedException if the current thread is interrupted while
 	 *     waiting for me to activate its transaction
 	 * @throws IllegalArgumentException if the current thread does not
-	 *     {@link Transaction#getOwner() own} the transaction that it wants
+	 *     {@linkplain Transaction#getOwner() own} the transaction that it wants
 	 *     to activate or if it is attempting to activate a transaction in an
 	 *     inappropriate context
 	 * 
-	 * @see {@link #getActiveTransaction() }
+	 * @see #getActiveTransaction()
 	 * @see TransactionalEditingDomain#yield()
 	 * @see #startTransaction(boolean, Map)
 	 * @see #deactivate(InternalTransaction)
@@ -96,15 +96,15 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	/**
 	 * Performs the pre-commit notifications and processing of trigger comamnds.
 	 * This method must be called at the beginning of the
-	 * {@link Transaction#commit() commit} of a read/write transaction (not a
+	 * {@linkplain Transaction#commit() commit} of a read/write transaction (not a
 	 * read-only transaction), unless it has the
-	 * {@link TransactionalCommandStack#OPTION_NO_TRIGGERS 'no triggers' option}.
+	 * {@linkplain Transaction#OPTION_NO_TRIGGERS 'no triggers' option}.
 	 * 
 	 * @param tx the transaction that is being committed
 	 * 
 	 * @throws RollbackException if any of the pre-commit listeners forces
 	 *     rollback of the transaction.  The caller must honour this rollback
-	 *     request by actually {@link Transaction#rollback() rolling back}
+	 *     request by actually {@linkplain Transaction#rollback() rolling back}
 	 *     the transaction
 	 * 
 	 * @see Transaction#commit()
@@ -142,13 +142,13 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	 * set.  Transactions are expected to use this change recorder as follows:
 	 * <ul>
 	 *   <li>Start recording a fresh change description on 
-	 *       {@link InternalTransaction#start() starting} and
-	 *       {@link InternalTransaction#resume(org.eclipse.emf.ecore.change.ChangeDescription) resuming}</li>
+	 *       {@linkplain InternalTransaction#start() starting} and
+	 *       {@linkplain InternalTransaction#resume(org.eclipse.emf.transaction.TransactionChangeDescription) resuming}</li>
 	 *   <li>End recording (storing the change description) on
-	 *       {@link Transaction#commit() committing} and
-	 *       {@link InternalTransaction#pause() pausing}</li>
+	 *       {@linkplain Transaction#commit() committing} and
+	 *       {@linkplain InternalTransaction#pause() pausing}</li>
 	 *   <li>End recording (applying the change description) on
-	 *       {@link Transaction#rollback() rolling back}</li>
+	 *       {@linkplain Transaction#rollback() rolling back}</li>
 	 * </ul>
 	 * 
 	 * @return my change recorder
@@ -159,7 +159,7 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	 * Gets the validator that transactions should use to validate themselves
 	 * upon committing.  A transaction must ask the validator to validate after
 	 * performing the pre-commit phase (if needed), unless it has the
-	 * {@link TransactionalCommandStack#OPTION_NO_VALIDATION 'no validation' option}.
+	 * {@linkplain Transaction#OPTION_NO_VALIDATION 'no validation' option}.
 	 * 
 	 * @return my transaction validator
 	 */
@@ -169,11 +169,11 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	 * Broadcasts the specified notification to listeners as a singleton list,
 	 * in a situation where batching is not possible because events are
 	 * occurring outside of any transaction context.  This can only occur in
-	 * the case of {@link NotificationFilter#READ read notifications}.
+	 * the case of {@linkplain NotificationFilter#READ read notifications}.
 	 * 
 	 * @param notification the notification to send to resource set listeners
 	 * 
-	 * @see TransactionFilter#READ
+	 * @see NotificationFilter#READ
 	 * @see ResourceSetListener
 	 * @see FilterManager#selectUnbatched(java.util.List, NotificationFilter)
 	 */
