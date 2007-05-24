@@ -134,6 +134,7 @@ if [ $debug -gt 1 ]; then echo "[antJd] Replace @sourcepath@ in the template ...
 sourcepath=`echo $sourcepath | sed -e 's/\//\\\\\\//g' | sed -e 's/\./\\\\\./g'`;
 sed -e "s/\@sourcepath\@/${sourcepath}/g" $antScript.template.tmp3 > $antScript;
 	echo "[antJd] sourcepath:";		echo $sourcepath;
+	echo "[antJd] script:";			cat $antScript;
 
 #run ant to do javadoc build
 ant -f $antScript \
