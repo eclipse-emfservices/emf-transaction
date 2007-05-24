@@ -76,9 +76,11 @@ fi
 # All the jars in the plugins directory
 classpath="."`find $eclipseDir/plugins -name "*.jar" -printf ":%p"`; if [ $debug -gt 0 ]; then echo "[antJd] classpath: "$classpath; fi
 
-# Calculates the packagesets and the calls to copyDocFiles
+# Calculates the packagesets and the calls to copyDocFiles.  Also, the sourcepath
 packagesets="";
 copydocfiles="";
+sourcepath="<pathelement location=\"\${eclipseDir}/plugins/org.eclipse.emf.transaction/src/\"/>"
+sourcepath=$sourcepath"<pathelement location=\"\${eclipseDir}/plugins/org.eclipse.emf.transaction.ui/src/\"/>"
 for pluginDir in $pluginDirs; do
 	pluginDir=`echo $pluginDir | sed -e 's/\/runtime$//g'`;
 	srcDir=$pluginDir/src;
@@ -90,15 +92,27 @@ for pluginDir in $pluginDirs; do
 		packagesets=$packagesets""$javadocExclusions;
 		packagesets=$packagesets"</packageset>";
 		copydocfiles=$copydocfiles"<copyDocFiles pluginDir=\"$pluginDir\"/>";
+		sourcepath=$sourcepath"<pathelement location=\"$pluginDir/src/\"/>"
 	fi
 done
 if [ $debug -gt 0 ]; then 
 	echo "[antJd] packagesets:";	echo $packagesets;
 	echo "[antJd] copydocfiles:";	echo $copydocfiles;
+	echo "[antJd] sourcepath:";		echo $sourcepath;
 fi
 
 # Finds the proper org.eclipse.platform.doc.isv jar
-docjar=`find $eclipseDir/plugins/ -name "org.eclipse.platform.doc.isv*.jar" -printf "%f"`; if [ $debug -gt 1 ]; then echo "[antJd] docjar: "$docjar; fi
+platformDocJar=`find $eclipseDir/plugins/ -name "org.eclipse.platform.doc.isv*.jar" -printf "%f"`; if [ $debug -gt 1 ]; then echo "[antJd] platformDocJar: "$platformDocJar; fi
+
+# Finds the proper org.eclipse.emf.doc jar
+emfDocJar=`find $eclipseDir/plugins/ -name "org.eclipse.emf.doc*.jar" -printf "%f"`; if [ $debug -gt 1 ]; then echo "[antJd] emfDocJar: "$emfDocJar; fi
+if [ "x"$emfDocJar = "x" ]; then
+	# *** NOTE: EMF docs are still a directory plug-in ***
+	emfDocJar=`find $eclipseDir/plugins/ -type d -name "org.eclipse.emf.doc*" -printf "%f/doc.zip"`; if [ $debug -gt 1 ]; then echo "[antJd] emfDocJar: "$emfDocJar; fi
+fi
+
+# Finds the proper org.eclipse.emf.validation.doc jar
+validationDocJar=`find $eclipseDir/plugins/ -name "org.eclipse.emf.validation.doc*.jar" -printf "%f"`; if [ $debug -gt 1 ]; then echo "[antJd] validationDocJar: "$validationDocJar; fi
 
 if [ -f $antScript.template ]; then
 	true;
@@ -113,20 +127,25 @@ sed -e "s/\@packagesets\@/${packagesets}/g" $antScript.template.tmp > $antScript
 
 if [ $debug -gt 1 ]; then echo "[antJd] Replace @copydocfiles@ in the template ..."; fi
 copydocfiles=`echo $copydocfiles | sed -e 's/\//\\\\\\//g' | sed -e 's/\./\\\\\./g'`;
-sed -e "s/\@copydocfiles\@/${copydocfiles}/g" $antScript.template.tmp2 > $antScript;
+sed -e "s/\@copydocfiles\@/${copydocfiles}/g" $antScript.template.tmp2 > $antScript.template.tmp3;
+
+if [ $debug -gt 1 ]; then echo "[antJd] Replace @sourcepath@ in the template ..."; fi
+sed -e "s/\@sourcepath\@/${sourcepath}/g" $antScript.template.tmp3 > $antScript;
 
 #run ant to do javadoc build
 ant -f $antScript \
 	-DdestDir="$destDir" \
 	-Dclasspath="$classpath" \
 	-DeclipseDir="$eclipseDir" \
-	-Ddocjar="$docjar" \
+	-DplatformDocJar="$eclipseDir/plugins/$platformDocJar" \
+	-DemfDocJar="$eclipseDir/plugins/$emfDocJar" \
+	-DvalidationDocJar="$eclipseDir/plugins/$validationDocJar" \
 	-DwindowTitle="$windowTitle" \
 	-DgroupTitle="$groupTitle" \
 	-Doverview="$currentPath/overview.html";
 
 # Clean up templates
-rm -f $antScript $antScript.template.tmp $antScript.template.tmp2;
+rm -f $antScript $antScript.template.tmp*;
 
 # Generate topics_Reference.xml (replacement for doclet). 
 trXML=$currentPath"/../topics_Reference.xml";
