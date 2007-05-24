@@ -79,8 +79,8 @@ classpath="."`find $eclipseDir/plugins -name "*.jar" -printf ":%p"`; if [ $debug
 # Calculates the packagesets and the calls to copyDocFiles.  Also, the sourcepath
 packagesets="";
 copydocfiles="";
-sourcepath="<pathelement location=\"\${eclipseDir}/plugins/org.eclipse.emf.transaction/src/\"/>"
-sourcepath=$sourcepath"<pathelement location=\"\${eclipseDir}/plugins/org.eclipse.emf.transaction.ui/src/\"/>"
+sourcepath="<pathelement location=\"$eclipseDir/plugins/org.eclipse.emf.transaction/src/\"/>"
+sourcepath=$sourcepath"<pathelement location=\"$eclipseDir/plugins/org.eclipse.emf.transaction.ui/src/\"/>"
 for pluginDir in $pluginDirs; do
 	pluginDir=`echo $pluginDir | sed -e 's/\/runtime$//g'`;
 	srcDir=$pluginDir/src;
