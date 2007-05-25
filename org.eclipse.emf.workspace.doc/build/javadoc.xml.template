@@ -16,10 +16,6 @@
 	<property environment="env"/>
 	<property name="javaHome" value="${env.JAVA_HOME}"/>
 	
-	<path id="javadoc.source.path">
-		@sourcepath@
-	</path>
-	
 	<property name="jdk.link.location" value="javadoc/jdk"/>
 	<available property="jdkJavadocExists" file="${jdk.link.location}/package-list"/>
 	
@@ -58,6 +54,9 @@
 		</unzip>
 	</target>
 
+	<!-- The Workspace API makes reference to the core Transaction API. -->
+	<property name="transaction.link.location" value="${eclipseDir}/plugins/org.eclipse.emf.transaction.doc"/>
+
 	<target name="getPackageLists"
 	    depends="extractJDKJavadoc,extractPlatformJavadoc,extractEMFJavadoc,extractValidationJavadoc">
 	</target>
@@ -66,7 +65,6 @@
 		<javadoc 
 			destdir="${destDir}" 
 			classpath="${classpath}"
-			sourcepathref="javadoc.source.path"
 			overview="${overview}"
 
 			windowtitle="${windowTitle}"
@@ -97,6 +95,8 @@
 				    packagelistLoc="${emf.link.location}/references/javadoc/"/>
 				<link offline="true" href="/help/topic/org.eclipse.emf.validation.doc/references/javadoc/"
 				    packagelistLoc="${validation.link.location}/references/javadoc/"/>
+				<link offline="true" href="/help/topic/org.eclipse.emf.transaction.doc/references/javadoc/"
+				    packagelistLoc="${transaction.link.location}/references/javadoc/"/>
 				
 				<tag name="ignore"     description="ignore" enabled="false"/>
 				<tag name="generated"  description="ignore" enabled="false"/>
