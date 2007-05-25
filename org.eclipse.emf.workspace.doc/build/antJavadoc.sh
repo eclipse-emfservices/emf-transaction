@@ -131,10 +131,8 @@ copydocfiles=`echo $copydocfiles | sed -e 's/\//\\\\\\//g' | sed -e 's/\./\\\\\.
 sed -e "s/\@copydocfiles\@/${copydocfiles}/g" $antScript.template.tmp2 > $antScript.template.tmp3;
 
 if [ $debug -gt 1 ]; then echo "[antJd] Replace @sourcepath@ in the template ..."; fi
-sourcepath=`echo $sourcepath | sed -e 's/\//\\\\\\//g' | sed -e 's/\./\\\\\./g'`;
 sed -e "s/\@sourcepath\@/${sourcepath}/g" $antScript.template.tmp3 > $antScript;
-	echo "[antJd] sourcepath:";		echo $sourcepath;
-	echo "[antJd] script:";			cat $antScript;
+	ls -F $eclipseDir/plugins
 
 #run ant to do javadoc build
 ant -f $antScript \
