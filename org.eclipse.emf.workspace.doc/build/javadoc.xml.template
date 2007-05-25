@@ -16,6 +16,10 @@
 	<property environment="env"/>
 	<property name="javaHome" value="${env.JAVA_HOME}"/>
 	
+	<path id="javadoc.source.path">
+		@sourcepath@
+	</path>
+	
 	<property name="jdk.link.location" value="javadoc/jdk"/>
 	<available property="jdkJavadocExists" file="${jdk.link.location}/package-list"/>
 	
@@ -65,6 +69,7 @@
 		<javadoc 
 			destdir="${destDir}" 
 			classpath="${classpath}"
+			sourcepathref="javadoc.source.path"
 			overview="${overview}"
 
 			windowtitle="${windowTitle}"

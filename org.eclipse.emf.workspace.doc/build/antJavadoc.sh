@@ -76,9 +76,11 @@ fi
 # All the jars in the plugins directory
 classpath="."`find $eclipseDir/plugins -name "*.jar" -printf ":%p"`; if [ $debug -gt 0 ]; then echo "[antJd] classpath: "$classpath; fi
 
-# Calculates the packagesets and the calls to copyDocFiles
+# Calculates the packagesets and the calls to copyDocFiles.  Also, the sourcepath
 packagesets="";
 copydocfiles="";
+sourcepath="<pathelement location=\"$eclipseDir/plugins/org.eclipse.emf.transaction/src/\"/>"
+sourcepath=$sourcepath"<pathelement location=\"$eclipseDir/plugins/org.eclipse.emf.transaction.ui/src/\"/>"
 for pluginDir in $pluginDirs; do
 	pluginDir=`echo $pluginDir | sed -e 's/\/runtime$//g'`;
 	srcDir=$pluginDir/src;
@@ -90,11 +92,13 @@ for pluginDir in $pluginDirs; do
 		packagesets=$packagesets""$javadocExclusions;
 		packagesets=$packagesets"</packageset>";
 		copydocfiles=$copydocfiles"<copyDocFiles pluginDir=\"$pluginDir\"/>";
+		sourcepath=$sourcepath"<pathelement location=\"$pluginDir/src/\"/>"
 	fi
 done
 if [ $debug -gt 0 ]; then 
 	echo "[antJd] packagesets:";	echo $packagesets;
 	echo "[antJd] copydocfiles:";	echo $copydocfiles;
+	echo "[antJd] sourcepath:";		echo $sourcepath;
 fi
 
 # Finds the proper org.eclipse.platform.doc.isv jar
@@ -123,7 +127,11 @@ sed -e "s/\@packagesets\@/${packagesets}/g" $antScript.template.tmp > $antScript
 
 if [ $debug -gt 1 ]; then echo "[antJd] Replace @copydocfiles@ in the template ..."; fi
 copydocfiles=`echo $copydocfiles | sed -e 's/\//\\\\\\//g' | sed -e 's/\./\\\\\./g'`;
-sed -e "s/\@copydocfiles\@/${copydocfiles}/g" $antScript.template.tmp2 > $antScript;
+sed -e "s/\@copydocfiles\@/${copydocfiles}/g" $antScript.template.tmp2 > $antScript.template.tmp3;
+
+if [ $debug -gt 1 ]; then echo "[antJd] Replace @sourcepath@ in the template ..."; fi
+sourcepath=`echo $sourcepath | sed -e 's/\//\\\\\\//g' | sed -e 's/\./\\\\\./g'`;
+sed -e "s/\@sourcepath\@/${sourcepath}/g" $antScript.template.tmp3 > $antScript;
 
 #run ant to do javadoc build
 ant -f $antScript \
