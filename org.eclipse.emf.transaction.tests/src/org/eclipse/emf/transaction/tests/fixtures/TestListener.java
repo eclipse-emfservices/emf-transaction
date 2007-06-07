@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TestListener.java,v 1.2 2006/02/21 22:16:40 cmcgee Exp $
+ * $Id: TestListener.java,v 1.3 2007/06/07 14:26:18 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests.fixtures;
 

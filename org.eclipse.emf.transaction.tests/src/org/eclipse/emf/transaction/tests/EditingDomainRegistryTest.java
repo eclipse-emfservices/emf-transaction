@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EditingDomainRegistryTest.java,v 1.4 2006/04/25 20:04:27 cdamus Exp $
+ * $Id: EditingDomainRegistryTest.java,v 1.5 2007/06/07 14:26:17 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
