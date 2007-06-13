@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionUtil.java,v 1.4 2006/12/01 18:38:35 cdamus Exp $
+ * $Id: TransactionUtil.java,v 1.5 2007/06/13 12:27:32 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.eclipse.emf.common.notify.Notifier;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.change.ChangeDescription;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EcoreUtil;
@@ -250,4 +251,24 @@ public class TransactionUtil {
 		
 		return (result == null)? Collections.EMPTY_SET : result;
 	}
+    
+    /**
+     * Disposes a change description.  Currently, this just clears the adapters
+     * list of all objects in the change description.
+     * 
+     * @param change a change description to dispose
+     * 
+     * @since 1.1
+     */
+    public static void dispose(ChangeDescription change) {
+        if (change instanceof CompositeChangeDescription) {
+            ((CompositeChangeDescription) change).dispose();
+        } else if (change instanceof CommandChangeDescription) {
+            ((CommandChangeDescription) change).dispose();
+        } else {
+            for (Iterator iter = change.eAllContents(); iter.hasNext();) {
+                ((EObject) iter.next()).eAdapters().clear();
+            }
+        }
+    }
 }

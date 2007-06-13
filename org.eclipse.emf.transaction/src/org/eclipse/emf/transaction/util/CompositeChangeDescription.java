@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeChangeDescription.java,v 1.5 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: CompositeChangeDescription.java,v 1.6 2007/06/13 12:27:32 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -61,6 +61,15 @@ public class CompositeChangeDescription
 	public final void clear() {
 		changes.clear();
 	}
+    
+    /**
+     * Disposes my children, recursively.
+     */
+    void dispose() {
+        for (Iterator iter = changes.iterator(); iter.hasNext();) {
+            TransactionUtil.dispose((ChangeDescription) iter.next());
+        }
+    }
 	
 	/**
 	 * I can apply myself if all of my composed changes can apply themselves.

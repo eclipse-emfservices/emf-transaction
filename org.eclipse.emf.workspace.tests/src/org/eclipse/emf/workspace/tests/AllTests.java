@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AllTests.java,v 1.2 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: AllTests.java,v 1.3 2007/06/13 12:27:33 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -49,6 +49,7 @@ public class AllTests
 		suite.addTest(org.eclipse.emf.workspace.util.tests.AllTests.suite());
 		suite.addTest(UndoContextTest.suite());
 		suite.addTest(WorkbenchCommandStackTest.suite());
+        suite.addTest(MemoryLeakTest.suite());
 
 		return suite;
 	}

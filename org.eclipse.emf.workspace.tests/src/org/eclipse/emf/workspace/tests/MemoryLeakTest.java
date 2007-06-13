@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,19 +12,24 @@
  *
  * </copyright>
  *
- * $Id: MemoryLeakTest.java,v 1.4 2007/06/13 12:27:27 cdamus Exp $
+ * $Id: MemoryLeakTest.java,v 1.1 2007/06/13 12:27:33 cdamus Exp $
  */
-package org.eclipse.emf.transaction.tests;
+package org.eclipse.emf.workspace.tests;
 
-import java.lang.ref.Reference;
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
+import junit.framework.Test;
+import junit.framework.TestSuite;
+
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.IUndoContext;
+import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.commands.operations.UndoContext;
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.util.BasicEList;
@@ -42,10 +47,9 @@ import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.TriggerListener;
-import org.eclipse.emf.transaction.util.CompositeChangeDescription;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.eclipse.emf.workspace.AbstractEMFOperation;
+import org.eclipse.emf.workspace.EMFOperationCommand;
+import org.eclipse.emf.workspace.ResourceUndoContext;
 
 
 /**
@@ -54,122 +58,13 @@ import junit.framework.TestSuite;
  * @author Christian W. Damus (cdamus)
  */
 public class MemoryLeakTest extends AbstractTest {
+
 	public MemoryLeakTest(String name) {
 		super(name);
 	}
-
+	
 	public static Test suite() {
 		return new TestSuite(MemoryLeakTest.class, "Memory Leak (GC) Tests"); //$NON-NLS-1$
-	}
-
-	/**
-	 * Tests that unloading a resource allows its root(s) to be reclaimed.
-	 */
-	public void test_unloadResource() {
-		ReferenceQueue q = new ReferenceQueue();
-		Reference ref = new WeakReference(root, q);
-		
-		// make some change, causing a transaction to record a change description
-		startWriting();
-		root.setName("foo"); //$NON-NLS-1$
-		commit();
-		
-		startReading();
-		testResource.unload();
-		commit();
-		
-		root = null; // forget our only other reference to this object
-
-		System.gc();
-		
-		idle(2000);
-		
-		System.gc();
-		
-		assertSame(ref, q.poll());
-	}
-
-	/**
-	 * Tests that an editing domain can be reclaimed if we forget all references
-	 * to it and its resource set's contents.
-	 */
-	public void test_reclaimEditingDomain() {
-		ReferenceQueue q = new ReferenceQueue();
-		Reference ref = new WeakReference(domain, q);
-		
-		// make some change, causing a transaction to record a change description
-		startWriting();
-		root.setName("foo"); //$NON-NLS-1$
-		commit();
-		
-		domain = null;        // forget the domain
-		testResource = null;  // forget a resource in the domain
-		root = null;          // forget an object in the domain
-		
-		System.gc();
-		
-		idle(2000);
-		
-		System.gc();
-		
-		assertSame(ref, q.poll());
-	}
-	
-	/**
-	 * Tests that a child transaction does not cause any interruption in the
-	 * recording of the parent transaction's change description if the child is
-	 * unrecorded.  The result is that we do not retain empty change
-	 * descriptions and the parent has a single, seamless change description.
-	 */
-	public void test_nonRecordingChildTransactions_153908() {
-		// report initial heap size
-		long initialUsedHeap = usedHeap();
-		
-		startWriting();
-		
-		final String oldName = root.getName();
-		 
-		// make a change in the root-level transaction
-		root.setName("foo"); //$NON-NLS-1$
-		
-		// now, create 1000 nested transactions, each doing a change, *but* unrecorded
-		Map options = Collections.singletonMap(Transaction.OPTION_UNPROTECTED, Boolean.TRUE);
-		for (int i = 0; i < 1000; i++) {
-			startWriting(options);
-			
-			root.setName("foo" + i); //$NON-NLS-1$
-			
-			commit();
-			
-			// make another change in the root-level transaction
-			root.setName("foo" + (i + 1000)); //$NON-NLS-1$
-		}
-		
-		// report the used heap
-		long currentUsedHeap = usedHeap();
-		System.out.println("Additional heap used by the transaction: " //$NON-NLS-1$
-				+ ((currentUsedHeap - initialUsedHeap) / 1024L) + " kB"); //$NON-NLS-1$
-		
-		Transaction tx = commit();
-		CompositeChangeDescription change = (CompositeChangeDescription) tx.getChangeDescription();
-		List children = getChildren(change);
-		
-		assertEquals(1, children.size());
-		
-		// let's just make sure that undo works as expected
-		startWriting(options);
-		
-		final String newName = root.getName();
-		
-		change.applyAndReverse();
-		commit();
-		assertEquals(oldName, root.getName());
-		
-		// and redo, too
-		startWriting(options);
-		change.applyAndReverse();
-		commit();
-		assertEquals(newName, root.getName());
 	}
     
     /**
@@ -182,6 +77,9 @@ public class MemoryLeakTest extends AbstractTest {
      * This is a control test, using a normal EMF <code>RemoveCommand</code>
      * that has been instrumented to clear the adapters of the removed
      * element(s) upon disposal.
+     * </p><p>
+     * This test exercises the workspace command stack, not the operation
+     * history directly.
      * </p>
      */
     public void test_crossReferenceAdapter_undoredo_normalCommands() {
@@ -214,6 +112,10 @@ public class MemoryLeakTest extends AbstractTest {
         
         getCommandStack().execute(cmd);
         
+        // remove the resource undo context so that flush will dispose
+        ResourceUndoContext resctx = new ResourceUndoContext(domain, testResource);
+        history.getUndoOperation(resctx).removeContext(resctx);
+        
         // the adapter is still attached, of course
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
@@ -238,6 +140,9 @@ public class MemoryLeakTest extends AbstractTest {
      * attached do not leak that adapter after the command stack has been
      * flushed.  This tests the disposal of <code>RecordingCommand</code>s,
      * that it clears the adapters of the change description and its contents.
+     * </p><p>
+     * This test exercises the workspace command stack, not the operation
+     * history directly.
      * </p>
      */
     public void test_crossReferenceAdapter_undoredo_recordingCommands() {
@@ -258,6 +163,10 @@ public class MemoryLeakTest extends AbstractTest {
             }};
         
         getCommandStack().execute(cmd);
+        
+        // remove the resource undo context so that flush will dispose
+        ResourceUndoContext resctx = new ResourceUndoContext(domain, testResource);
+        history.getUndoOperation(resctx).removeContext(resctx);
         
         // the adapter is still attached, of course
         assertTrue(level1.eAdapters().contains(xrefAdapter));
@@ -286,6 +195,9 @@ public class MemoryLeakTest extends AbstractTest {
      * This is a control test, using a normal EMF <code>RemoveCommand</code>
      * that has been instrumented to clear the adapters of the removed
      * element(s) upon disposal.
+     * </p><p>
+     * This test exercises the workspace command stack, not the operation
+     * history directly.
      * </p>
      */
     public void test_crossReferenceAdapter_undoredo_normalTriggerCommands() {
@@ -332,6 +244,10 @@ public class MemoryLeakTest extends AbstractTest {
         
         getCommandStack().execute(cmd);
         
+        // remove the resource undo context so that flush will dispose
+        ResourceUndoContext resctx = new ResourceUndoContext(domain, testResource);
+        history.getUndoOperation(resctx).removeContext(resctx);
+        
         // the adapter is still attached, of course
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
@@ -357,6 +273,9 @@ public class MemoryLeakTest extends AbstractTest {
      * command stack has been flushed.  This tests the disposal of
      * <code>RecordingCommand</code>s, that it clears the adapters of the
      * change description and its contents.
+     * </p><p>
+     * This test exercises the workspace command stack, not the operation
+     * history directly.
      * </p>
      */
     public void test_crossReferenceAdapter_undoredo_recordingTriggerCommands() {
@@ -392,6 +311,10 @@ public class MemoryLeakTest extends AbstractTest {
         
         getCommandStack().execute(cmd);
         
+        // remove the resource undo context so that flush will dispose
+        ResourceUndoContext resctx = new ResourceUndoContext(domain, testResource);
+        history.getUndoOperation(resctx).removeContext(resctx);
+        
         // the adapter is still attached, of course
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
@@ -408,40 +331,252 @@ public class MemoryLeakTest extends AbstractTest {
         // and the change descriptions are clean
         sniffer.assertChangesDisposed();
     }
-	
-	//
-	// Fixture methods
-	//
-	
-	protected long usedHeap() {
-		Runtime rt = Runtime.getRuntime();
-		
-		rt.gc();
-		idle(2000);
-		rt.gc();
-		
-		long result = rt.totalMemory() - rt.freeMemory();
-		
-		System.out.println("Used Heap: " + (result / 1024L) + " kB"); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		return result;
-	}
-	
-	static List getChildren(CompositeChangeDescription compositeChange) {
-		List result = null;
-		
-		try {
-			Field children = compositeChange.getClass().getDeclaredField("changes"); //$NON-NLS-1$
-			children.setAccessible(true);
-			
-			result = (List) children.get(compositeChange);
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail(e.getLocalizedMessage());
-		}
-		
-		return result;
-	}
+    
+    /**
+     * <p>
+     * Tests that the change descriptions that recorded execution, undo, and
+     * redo of the removal of an element that has an ECrossReferenceAdapter
+     * attached do not leak that adapter after the operation history has been
+     * flushed.
+     * </p>
+     */
+    public void test_crossReferenceAdapter_undoredo_operations() {
+        // attach a cross-reference adapter to the resource set
+        ECrossReferenceAdapter xrefAdapter = new ECrossReferenceAdapter();
+        domain.getResourceSet().eAdapters().add(xrefAdapter);
+        
+        // and a transaction-sniffer to the domain
+        TransactionSniffer sniffer = new TransactionSniffer(domain);
+        
+        final EObject level1 = find(root, "level1"); //$NON-NLS-1$
+        
+        assertTrue(level1.eAdapters().contains(xrefAdapter));
+        
+        IUndoableOperation oper = new AbstractEMFOperation(domain, "Remove Branch") { //$NON-NLS-1$
+            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+                throws ExecutionException {
+                
+                root.getBranches().remove(level1);
+                
+                return Status.OK_STATUS;
+            }};
+        
+        IUndoContext ctx = new UndoContext();
+        oper.addContext(ctx);
+        
+        try {
+            history.execute(oper, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to execute operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        
+        // remove the resource undo context so that flush will dispose
+        ResourceUndoContext resctx = new ResourceUndoContext(domain, testResource);
+        history.getUndoOperation(resctx).removeContext(resctx);
+        
+        // the adapter is still attached, of course
+        assertTrue(level1.eAdapters().contains(xrefAdapter));
+        
+        // undo/redo should not change the adapter attachment
+        try {
+            history.undo(ctx, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to undo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        try {
+            history.redo(ctx, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to redo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        assertTrue(level1.eAdapters().contains(xrefAdapter));
+        
+        // flushing the context should dispose the operation, which should
+        //   remove adapters from the change description and its contents
+        history.dispose(ctx, true, true, true);
+        assertFalse(level1.eAdapters().contains(xrefAdapter));
+        
+        // and the change descriptions are clean
+        sniffer.assertChangesDisposed();
+    }
+    
+    /**
+     * <p>
+     * Tests that the change descriptions that recorded execution, undo, and
+     * redo of a <b>trigger command</b> that removes an element that has an
+     * ECrossReferenceAdapter attached do not leak that adapter after the
+     * operation history has been flushed.  This tests the disposal of
+     * <code>RecordingCommand</code>s, that it clears the adapters of the
+     * change description and its contents.
+     * </p>
+     */
+    public void test_crossReferenceAdapter_undoredo_operationTriggerCommands() {
+        // attach a cross-reference adapter to the resource set
+        ECrossReferenceAdapter xrefAdapter = new ECrossReferenceAdapter();
+        domain.getResourceSet().eAdapters().add(xrefAdapter);
+        
+        // and a transaction-sniffer to the domain
+        TransactionSniffer sniffer = new TransactionSniffer(domain);
+        
+        final EObject level1 = find(root, "level1"); //$NON-NLS-1$
+        
+        assertTrue(level1.eAdapters().contains(xrefAdapter));
+        
+        final Command trigger = new RecordingCommand(domain, "Remove Branch") { //$NON-NLS-1$
+            protected void doExecute() {
+                root.getBranches().remove(level1);        
+            }};
+        
+        domain.addResourceSetListener(new TriggerListener() {
+            protected Command trigger(TransactionalEditingDomain domain,
+                    Notification notification) {
+                // trigger on the name change only
+                if (notification.getFeature() == EXTLibraryPackage.Literals.LIBRARY__NAME) {
+                    return trigger;
+                }
+                
+                return null;
+            }});
+        
+        IUndoableOperation oper = new AbstractEMFOperation(domain, "Rename Library") { //$NON-NLS-1$
+            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+                throws ExecutionException {
+                
+                root.setName("newname"); //$NON-NLS-1$
+                
+                return Status.OK_STATUS;
+            }};
+        
+        IUndoContext ctx = new UndoContext();
+        oper.addContext(ctx);
+        
+        try {
+            history.execute(oper, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to execute operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        
+        // remove the resource undo context so that flush will dispose
+        ResourceUndoContext resctx = new ResourceUndoContext(domain, testResource);
+        history.getUndoOperation(resctx).removeContext(resctx);
+        
+        // the adapter is still attached, of course
+        assertTrue(level1.eAdapters().contains(xrefAdapter));
+        
+        // undo/redo should not change the adapter attachment
+        try {
+            history.undo(ctx, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to undo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        try {
+            history.redo(ctx, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to redo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        assertTrue(level1.eAdapters().contains(xrefAdapter));
+        
+        // flushing the context should dispose the operation, which should
+        //   remove adapters from the change description and its contents
+        history.dispose(ctx, true, true, true);
+        assertFalse(level1.eAdapters().contains(xrefAdapter));
+        
+        // and the change descriptions are clean
+        sniffer.assertChangesDisposed();
+    }
+    
+    /**
+     * <p>
+     * Tests that the change descriptions that recorded execution, undo, and
+     * redo of a <b>trigger operation</b> that removes an element that has an
+     * ECrossReferenceAdapter attached do not leak that adapter after the
+     * operation history has been flushed.  This tests the disposal of
+     * <code>RecordingCommand</code>s, that it clears the adapters of the
+     * change description and its contents.
+     * </p>
+     */
+    public void test_crossReferenceAdapter_undoredo_operationTriggerOperations() {
+        // attach a cross-reference adapter to the resource set
+        ECrossReferenceAdapter xrefAdapter = new ECrossReferenceAdapter();
+        domain.getResourceSet().eAdapters().add(xrefAdapter);
+        
+        // and a transaction-sniffer to the domain
+        TransactionSniffer sniffer = new TransactionSniffer(domain);
+        
+        final EObject level1 = find(root, "level1"); //$NON-NLS-1$
+        
+        assertTrue(level1.eAdapters().contains(xrefAdapter));
+        
+        IUndoableOperation triggerOper = new AbstractEMFOperation(domain, "Remove Branch") { //$NON-NLS-1$
+            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+                throws ExecutionException {
+                
+                root.getBranches().remove(level1);  
+                
+                return Status.OK_STATUS;
+            }};
+        final Command trigger = new EMFOperationCommand(domain, triggerOper);
+        
+        domain.addResourceSetListener(new TriggerListener() {
+            protected Command trigger(TransactionalEditingDomain domain,
+                    Notification notification) {
+                // trigger on the name change only
+                if (notification.getFeature() == EXTLibraryPackage.Literals.LIBRARY__NAME) {
+                    return trigger;
+                }
+                
+                return null;
+            }});
+        
+        IUndoableOperation oper = new AbstractEMFOperation(domain, "Rename Library") { //$NON-NLS-1$
+            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+                throws ExecutionException {
+                
+                root.setName("newname"); //$NON-NLS-1$
+                
+                return Status.OK_STATUS;
+            }};
+        
+        IUndoContext ctx = new UndoContext();
+        oper.addContext(ctx);
+        
+        try {
+            history.execute(oper, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to execute operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        
+        // remove the resource undo context so that flush will dispose
+        ResourceUndoContext resctx = new ResourceUndoContext(domain, testResource);
+        history.getUndoOperation(resctx).removeContext(resctx);
+        
+        // the adapter is still attached, of course
+        assertTrue(level1.eAdapters().contains(xrefAdapter));
+        
+        // undo/redo should not change the adapter attachment
+        try {
+            history.undo(ctx, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to undo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        try {
+            history.redo(ctx, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to redo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        assertTrue(level1.eAdapters().contains(xrefAdapter));
+        
+        // flushing the context should dispose the operation, which should
+        //   remove adapters from the change description and its contents
+        history.dispose(ctx, true, true, true);
+        assertFalse(level1.eAdapters().contains(xrefAdapter));
+        
+        // and the change descriptions are clean
+        sniffer.assertChangesDisposed();
+    }
+    
+    //
+    // Framework methods
+    //
     
     private static class TransactionSniffer extends ResourceSetListenerImpl {
         private TransactionalEditingDomain domain;

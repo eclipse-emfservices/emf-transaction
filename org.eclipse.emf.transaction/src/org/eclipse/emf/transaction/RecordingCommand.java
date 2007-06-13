@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: RecordingCommand.java,v 1.5 2007/01/30 22:05:05 cdamus Exp $
+ * $Id: RecordingCommand.java,v 1.6 2007/06/13 12:27:32 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -27,6 +27,7 @@ import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.internal.l10n.Messages;
 import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 
 /**
  * A partial {@link org.eclipse.emf.common.command.Command} implementation that
@@ -238,5 +239,17 @@ public abstract class RecordingCommand
         }
         
         return result;
+    }
+    
+    /**
+     * Extends the inherited implementation by disposing my change description,
+     * if any.
+     */
+    public void dispose() {
+        super.dispose();
+        
+        if (change != null) {
+            TransactionUtil.dispose(change);
+        }
     }
 }

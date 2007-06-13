@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFCommandOperation.java,v 1.7 2007/06/07 14:25:44 cdamus Exp $
+ * $Id: EMFCommandOperation.java,v 1.8 2007/06/13 12:27:26 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -175,6 +175,22 @@ public class EMFCommandOperation
 		
 		return Status.OK_STATUS;
 	}
+    
+    /**
+     * Extends the inherited implementation to additionally dispose my command
+     * and my trigger command (if any).
+     */
+    public void dispose() {
+        super.dispose();
+        
+        if (command != null) {
+            command.dispose();
+        }
+        
+        if (triggerCommand != null) {
+            triggerCommand.dispose();
+        }
+    }
 
 	/**
 	 * Creates a different kind of transaction that knows about this operation.

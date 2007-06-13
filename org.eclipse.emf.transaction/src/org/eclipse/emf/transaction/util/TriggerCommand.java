@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TriggerCommand.java,v 1.4 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: TriggerCommand.java,v 1.5 2007/06/13 12:27:32 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -152,4 +152,16 @@ public class TriggerCommand extends ConditionalRedoCommand.Compound {
 			commandList.addAll(triggers);
 		}
 	}
+    
+    /**
+     * Extends the inherited implementation by disposing my triggering command,
+     * also (if any).
+     */
+    public void dispose() {
+        super.dispose();
+        
+        if (triggeringCommand != null) {
+            triggeringCommand.dispose();
+        }
+    }
 }

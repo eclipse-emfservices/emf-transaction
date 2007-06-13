@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.14 2007/05/24 23:23:51 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.15 2007/06/13 12:27:26 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -41,6 +41,7 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionImpl;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
@@ -74,6 +75,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	private TransactionChangeDescription change;
 	
 	private boolean reuseParentTransaction;
+    boolean shouldDisposeChange;
 	
 	/**
 	 * Initializes me with the editing domain in which I am making model changes
@@ -137,7 +139,10 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 			if (transaction != null) {
 				transaction.commit();
 				change = transaction.getChangeDescription();
-				
+                
+                // ordinarily, we recursively dispose the root tx's change
+                shouldDisposeChange = transaction.getParent() == null;
+                
 				didCommit(transaction);
 			}
 		} catch (InterruptedException e) {
@@ -556,10 +561,26 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	public void dispose() {
 		super.dispose();
 		
-		transaction = null;
-		change = null;
+        disposeChange(false);
+        
+		transaction = null;  // just in case we didn't manage to forget, sooner
 	}
-	
+    
+    /**
+     * Disposes my change description.
+     * 
+     * @param force whether to force disposal of the change
+     */
+    void disposeChange(boolean force) {
+        // only dispose the root transaction's change, because it is a
+        //   composite that will dispose all nested changes
+        if ((change != null) && (shouldDisposeChange || force)) {
+            TransactionUtil.dispose(change);
+        }
+        
+        change = null;
+    }
+    
 	/**
 	 * Queries whether I reuse an existing read/write transaction when possible.
 	 * It is not possible when either there is not currently any active
