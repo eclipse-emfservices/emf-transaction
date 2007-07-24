@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.5 2007/06/07 14:25:44 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.5.2.1 2007/07/24 15:45:30 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -163,18 +163,41 @@ public final class WorkspaceSynchronizer {
 	 * @param synchRequests accumulates synch requests for the deltas
 	 */
 	void processDelta(IResourceDelta delta, List synchRequests) {
-		Resource resource = getEditingDomain().getResourceSet().getResource(
-				URI.createPlatformResourceURI(delta.getFullPath().toString()), false);
+	    String fullPath = delta.getFullPath().toString();
+	    URI uri = URI.createPlatformResourceURI(fullPath, false);
+	    ResourceSet rset = getEditingDomain().getResourceSet();
+	    
+	    // try the unencoded URI first, in case the client doesn't encode
+		Resource resource = rset.getResource(uri, false);
+		if (resource == null) {
+		    URI encodedURI = URI.createPlatformResourceURI(fullPath, true);
+		    if (!encodedURI.equals(uri)) {
+		        // the URI needs to be encoded.  Try it, then
+		        uri = encodedURI;
+		        resource = rset.getResource(uri, false);
+		    }
+		}
 		
 		if ((resource != null) && resource.isLoaded()) {
 			switch (delta.getKind()) {
 			case IResourceDelta.REMOVED:
 				if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
+				    // first, see whether a resource with the new URI already
+				    //   exists.  If so, then we will use the same URI (whether
+				    //   encoded or not) because that seems to be what the
+				    //   client prefers.  Otherwise, always encode
+				    String newPath = delta.getMovedToPath().toString();
+				    URI newURI = URI.createPlatformResourceURI(newPath, false);
+				    if (rset.getResource(newURI, false) == null) {
+				        // this may be the same, depending on absence of
+				        //    special characters
+				        newURI = URI.createPlatformResourceURI(newPath, true);
+				    }
+				    
 					synchRequests.add(new MovedSynchRequest(
 							this,
 							resource,
-							URI.createPlatformResourceURI(
-									delta.getMovedToPath().toString())));
+							newURI));
 				} else {
 					synchRequests.add(new DeletedSynchRequest(this, resource));
 				}

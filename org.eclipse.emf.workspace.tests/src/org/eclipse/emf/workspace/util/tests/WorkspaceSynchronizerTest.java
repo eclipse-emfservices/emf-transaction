@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizerTest.java,v 1.4 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: WorkspaceSynchronizerTest.java,v 1.4.2.1 2007/07/24 15:45:16 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -34,6 +34,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
+import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.workspace.tests.AbstractTest;
 import org.eclipse.emf.workspace.util.WorkspaceSynchronizer;
 
@@ -165,7 +166,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		assertFalse(delegate.deletedResources.contains(testResource));
 		assertTrue(delegate.movedResources.containsKey(testResource));
 		assertEquals(
-				URI.createPlatformResourceURI(newPath.toString()),
+				URI.createPlatformResourceURI(newPath.toString(), true),
 				delegate.movedResources.get(testResource));
 	}
 	
@@ -207,9 +208,9 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		
 		// load the copies
 		Resource testResource2 = domain.getResourceSet().getResource(
-				URI.createPlatformResourceURI(copy1.toString()), true);
+				URI.createPlatformResourceURI(copy1.toString(), true), true);
 		Resource testResource3 = domain.getResourceSet().getResource(
-				URI.createPlatformResourceURI(copy2.toString()), true);
+				URI.createPlatformResourceURI(copy2.toString(), true), true);
 		
 		assertNotNull(testResource2);
 		assertTrue(testResource2.isLoaded());
@@ -245,7 +246,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		assertTrue(delegate.changedResources.contains(testResource2));
 		assertTrue(delegate.movedResources.containsKey(testResource3));
 		assertEquals(
-				URI.createPlatformResourceURI(newPath.toString()),
+				URI.createPlatformResourceURI(newPath.toString(), true),
 				delegate.movedResources.get(testResource3));
 	}
 	
@@ -274,7 +275,8 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	}
 	
 	/**
-	 * Tests the default response to resource change.
+	 * Tests the default response to resource change.  Note that the default
+	 * test resource URI does not require any URI-encoding.
 	 */
 	public void test_defaultChangeBehaviour() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
@@ -344,6 +346,74 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		
 		assertEquals(filePath, file.getFullPath().toString());
 	}
+	
+	/**
+	 * Tests synchronization of an in-memory <code>Resource</code> with a change
+	 * in the workspace <code>IResource</code> when the <code>Resource</code>'s
+	 * URI is not encoded but should have been.
+	 */
+	public void test_synchResourceWithUnencodedURI_197291() {
+	    // don't encode the URI
+	    Resource res = createTestResource(TEST_RESOURCE_NAME,
+            "name with spaces.extlibrary", false); //$NON-NLS-1$
+	    root = (Library) res.getContents().get(0);
+	    
+        IFile file = WorkspaceSynchronizer.getFile(res);
+        
+        delegate.defaultBehaviour = true;
+        
+        assertTrue(testResource.isLoaded());
+        
+        try {
+            synchronized (delegate) {
+                file.touch(null);
+                delegate.wait(100000L);
+            }
+        } catch (Exception e) {
+            fail(e);
+        }
+
+        waitForWorkspaceChanges();
+        
+        // check that the resource is loaded but has different contents than
+        //    it had before
+        assertTrue(res.isLoaded());
+        assertFalse(res.getContents().contains(root));
+	}
+    
+    /**
+     * Tests synchronization of an in-memory <code>Resource</code> with a change
+     * in the workspace <code>IResource</code> when the <code>Resource</code>'s
+     * URI is encoded (and needed to be).
+     */
+    public void test_synchResourceWithEncodedURI_197291() {
+        // *do* encode the URI
+        Resource res = createTestResource(TEST_RESOURCE_NAME,
+            "name with spaces.extlibrary", true); //$NON-NLS-1$
+        root = (Library) res.getContents().get(0);
+        
+        IFile file = WorkspaceSynchronizer.getFile(res);
+        
+        delegate.defaultBehaviour = true;
+        
+        assertTrue(testResource.isLoaded());
+        
+        try {
+            synchronized (delegate) {
+                file.touch(null);
+                delegate.wait(10000L);
+            }
+        } catch (Exception e) {
+            fail(e);
+        }
+
+        waitForWorkspaceChanges();
+        
+        // check that the resource is loaded but has different contents than
+        //    it had before
+        assertTrue(res.isLoaded());
+        assertFalse(res.getContents().contains(root));
+    }
 	
 	//
 	// Fixture methods
