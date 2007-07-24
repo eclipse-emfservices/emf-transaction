@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.2 2006/01/30 19:47:57 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.3 2007/07/24 16:16:45 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -76,6 +76,8 @@ public class AbstractTest
 	protected static final String PROJECT_NAME = "emfwbtests"; //$NON-NLS-1$
 	protected static final String RESOURCE_NAME = "/" + PROJECT_NAME + "/testres.extlibrary";  //$NON-NLS-1$//$NON-NLS-2$
 
+	protected static final String TEST_RESOURCE_NAME = "test_model.extlibrary"; //$NON-NLS-1$
+	
 	private final List transactionStack = new java.util.ArrayList();
 	
 	public AbstractTest() {
@@ -115,7 +117,7 @@ public class AbstractTest
 				URI.createURI(EmfWorkbenchTestsBundle.getEntry(
 					"/test_models/test_model.extlibrary").toString()), //$NON-NLS-1$
 					true);
-			originalRes.setURI(URI.createPlatformResourceURI(RESOURCE_NAME));
+			originalRes.setURI(URI.createPlatformResourceURI(RESOURCE_NAME, true));
 			originalRes.save(Collections.EMPTY_MAP);
 			testResource = originalRes;
 			root = (Library) find("root"); //$NON-NLS-1$
@@ -211,6 +213,39 @@ public class AbstractTest
 		
 		return result;
 	}
+    
+	/**
+	 * Creates a resource with the specified <tt>name</tt> from the given
+	 * source resource in this test bundle.  The caller has to option to
+	 * encode the EMF <code>Resource</code>'s URI or not.
+	 * 
+	 * @param sourceName the tes resource name (in this bundle) to load
+	 * @param name the name to apply to the workspace resource
+	 * @param encode whether to encode the URI
+	 * @return
+	 */
+    protected Resource createTestResource(String sourceName, String name,
+            boolean encode) {
+        Resource result = null;
+        
+        try {
+            InputStream input = EmfWorkbenchTestsBundle.getEntry(
+                "/test_models/" + sourceName).openStream(); //$NON-NLS-1$
+            
+            IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(
+                new Path(PROJECT_NAME + '/' + name));
+            file.create(input, true, null);
+            
+            result = domain.createResource(
+                URI.createPlatformResourceURI(file.getFullPath().toString(), encode).toString());
+            result.load(Collections.EMPTY_MAP);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Exception creating test resource: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        
+        return result;
+    }
 	
 	/**
 	 * Records a failure due to an exception that should not have been thrown.
