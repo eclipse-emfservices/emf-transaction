@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizerTest.java,v 1.5 2007/07/24 16:16:45 cdamus Exp $
+ * $Id: WorkspaceSynchronizerTest.java,v 1.6 2007/07/24 17:29:55 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -413,6 +413,84 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
         //    it had before
         assertTrue(res.isLoaded());
         assertFalse(res.getContents().contains(root));
+    }
+    
+    /**
+     * Tests synchronization of an in-memory <code>Resource</code> with a change
+     * in the workspace <code>IResource</code> when the <code>Resource</code>'s
+     * URI is not encoded but should have been.
+     */
+    public void test_synchMovedResourceWithUnencodedURI_197291() {
+        // don't encode the URI
+        Resource res = createTestResource(TEST_RESOURCE_NAME,
+            "name with spaces.extlibrary", false); //$NON-NLS-1$
+        root = (Library) res.getContents().get(0);
+        
+        IFile file = WorkspaceSynchronizer.getFile(res);
+        
+        IPath path = file.getFullPath().removeLastSegments(1).append(
+            "new name.extlibrary"); //$NON-NLS-1$
+        Resource newRes = domain.createResource(
+            URI.createPlatformResourceURI(path.toString(), false).toString());
+        
+        delegate.defaultBehaviour = true;
+        
+        assertTrue(testResource.isLoaded());
+        
+        try {
+            synchronized (delegate) {
+                file.move(path, true, null);
+                delegate.wait(100000L);
+            }
+        } catch (Exception e) {
+            fail(e);
+        }
+
+        waitForWorkspaceChanges();
+        
+        assertFalse(delegate.changedResources.contains(res));
+        assertFalse(delegate.deletedResources.contains(res));
+        assertTrue(delegate.movedResources.containsKey(res));
+        assertEquals(newRes.getURI(), delegate.movedResources.get(res));
+    }
+    
+    /**
+     * Tests synchronization of an in-memory <code>Resource</code> with a change
+     * in the workspace <code>IResource</code> when the <code>Resource</code>'s
+     * URI is encoded (and needed to be).
+     */
+    public void test_synchMoveResourceWithEncodedURI_197291() {
+        // do encode the URI
+        Resource res = createTestResource(TEST_RESOURCE_NAME,
+            "name with spaces.extlibrary", false); //$NON-NLS-1$
+        root = (Library) res.getContents().get(0);
+        
+        IFile file = WorkspaceSynchronizer.getFile(res);
+        
+        IPath path = file.getFullPath().removeLastSegments(1).append(
+            "new name.extlibrary"); //$NON-NLS-1$
+        Resource newRes = domain.createResource(
+            URI.createPlatformResourceURI(path.toString(), true).toString());
+        
+        delegate.defaultBehaviour = true;
+        
+        assertTrue(testResource.isLoaded());
+        
+        try {
+            synchronized (delegate) {
+                file.move(path, true, null);
+                delegate.wait(100000L);
+            }
+        } catch (Exception e) {
+            fail(e);
+        }
+
+        waitForWorkspaceChanges();
+        
+        assertFalse(delegate.changedResources.contains(res));
+        assertFalse(delegate.deletedResources.contains(res));
+        assertTrue(delegate.movedResources.containsKey(res));
+        assertEquals(newRes.getURI(), delegate.movedResources.get(res));
     }
 	
 	//
