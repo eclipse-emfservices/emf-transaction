@@ -12,11 +12,12 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.15 2007/03/22 17:27:09 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.15.2.1 2007/08/23 19:40:30 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -95,6 +96,7 @@ public class TransactionImpl
 	private Thread owner;
 	private final boolean readOnly;
 	private final Map options;
+	private final Map mutableOptions;
 	
 	private InternalTransaction parent;
 	private InternalTransaction root;
@@ -135,33 +137,11 @@ public class TransactionImpl
 		this.readOnly = readOnly;
 		this.owner = Thread.currentThread();
 		
-		Transaction activeTx = ((InternalTransactionalEditingDomain) domain).getActiveTransaction();
-		Map parentOptions = (activeTx == null)? null : activeTx.getOptions();
+		this.mutableOptions = new java.util.HashMap();
+		this.options = Collections.unmodifiableMap(mutableOptions);
 		
-		if ((parentOptions == null) && (options == null)) {
-			this.options = Collections.EMPTY_MAP;
-		} else {
-			Map myOptions = new java.util.HashMap();
-			
-			// inherit my parent transaction's options
-			if (parentOptions != null) {
-				myOptions.putAll(parentOptions);
-			}
-			
-			// Do not inherit the allow block option if we have the block option applied
-			if (options != null && options.containsKey(BLOCK_CHANGE_PROPAGATION)) {
-				myOptions.remove(ALLOW_CHANGE_PROPAGATION_BLOCKING);
-			}
-			
-			// Do not inherit the block option!
-			myOptions.remove(BLOCK_CHANGE_PROPAGATION);
-			
-			// override with child transaction options
-			if (options != null) {
-				myOptions.putAll(options);
-			}
-			
-			this.options = Collections.unmodifiableMap(myOptions);
+		if (options != null) {
+			mutableOptions.putAll(options);
 		}
 		
 		synchronized (TransactionImpl.class) {
@@ -238,7 +218,13 @@ public class TransactionImpl
 	// Documentation copied from the inherited specification
 	public final void setParent(InternalTransaction parent) {
 		this.parent = parent;
-		this.root = (parent != null) ? parent.getRoot() : this;
+		
+		if (parent == null) {
+		    this.root = this;
+		} else {
+		    this.root = parent.getRoot();
+		    inheritOptions(parent);
+		}
 	}
 	
 	// Documentation copied from the inherited specification
@@ -648,6 +634,31 @@ public class TransactionImpl
 		owner = runnable.getOwner();
 		
 		internalDomain.endPrivileged(runnable);
+	}
+	
+	private void inheritOptions(Transaction parent) {
+        
+        Map parentOptions = (parent == null)? null : parent.getOptions();
+        
+        if (parentOptions != null) {
+            for (Iterator iter = parentOptions.entrySet().iterator(); iter.hasNext();) {
+                Map.Entry next = (Map.Entry) iter.next();
+                Object option = next.getKey();
+                
+                if (ALLOW_CHANGE_PROPAGATION_BLOCKING.equals(option)) {
+                    // Do not inherit the allow block option if we have the
+                    // block option applied
+                    if (!mutableOptions.containsKey(BLOCK_CHANGE_PROPAGATION)) {
+                        mutableOptions.put(option, next.getValue());
+                    }
+                } else if (BLOCK_CHANGE_PROPAGATION.equals(option)) {
+                    // don't inherit the block option!
+                } else if (!mutableOptions.containsKey(option)) {
+                    // overridden by child transaction options
+                    mutableOptions.put(option, next.getValue());
+                }
+            }            
+        }
 	}
 	
 	public String toString() {
