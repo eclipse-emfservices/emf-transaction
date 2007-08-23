@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionOptionsTest.java,v 1.7 2007/06/07 14:26:17 cdamus Exp $
+ * $Id: TransactionOptionsTest.java,v 1.8 2007/08/23 20:14:14 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -33,6 +33,7 @@ import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
+import org.eclipse.emf.transaction.impl.TransactionImpl;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
 
 
@@ -533,6 +534,62 @@ public class TransactionOptionsTest extends AbstractTest {
         assertEquals(1, listener.postcommitNotifications.size());
         Notification notification = (Notification) listener.postcommitNotifications.get(0);
         assertSame(EXTLibraryPackage.Literals.BOOK__TITLE, notification.getFeature());
+    }
+    
+    public void test_optionsInheritedAtActivationTime_() {
+        final Object sync = new Object();
+        final String bogusOption = "**bogus**option**"; //$NON-NLS-1$
+        
+        Runnable run = new Runnable() {
+            public void run() {
+                synchronized (sync) {
+                    startWriting(bogusOption);
+                    
+                    sync.notifyAll();
+                    
+                    try {
+                        sync.wait();
+                    } catch (Exception e) {
+                        fail("Wait failed in thread"); //$NON-NLS-1$
+                    }
+                    
+                    commit();
+                    
+                    try {
+                        sync.notifyAll();
+                    } catch (Exception e) {
+                        fail("Wait failed in thread"); //$NON-NLS-1$
+                    }
+                    
+                }
+            }};
+        
+        synchronized (sync) {
+            Thread t = new Thread(run);
+            t.setDaemon(true);
+            t.start();
+            
+            try {
+                sync.wait();
+            } catch (Exception e) {
+                fail("Wait failed on main"); //$NON-NLS-1$
+            }
+        }
+        
+        Transaction tx = new TransactionImpl(domain, false, null);
+        
+        assertFalse(tx.getOptions().containsKey(bogusOption));
+        
+        synchronized (sync) {
+            // let the thread commit and die
+            sync.notifyAll();
+            
+            try {
+                sync.wait();
+            } catch (Exception e) {
+                fail("Wait failed on main"); //$NON-NLS-1$
+            }
+        }
     }
 	
 	//
