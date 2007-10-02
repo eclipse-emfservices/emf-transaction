@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.12 2007/03/22 19:11:49 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.13 2007/10/02 17:27:25 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -34,6 +34,8 @@ import org.eclipse.emf.common.notify.impl.AdapterImpl;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
+import org.eclipse.emf.edit.domain.EditingDomain;
+import org.eclipse.emf.edit.domain.IEditingDomainProvider;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListener;
@@ -924,7 +926,7 @@ public class TransactionalEditingDomainImpl
 		 *
 		 * @author Christian W. Damus (cdamus)
 		 */
-		private static class ResourceSetDomainLink extends AdapterImpl {
+		private static class ResourceSetDomainLink extends AdapterImpl implements IEditingDomainProvider {
 			private final Reference domain;
 			
 			ResourceSetDomainLink(TransactionalEditingDomain domain) {
@@ -944,6 +946,10 @@ public class TransactionalEditingDomainImpl
 				}
 				
 				return result;
+			}
+
+			public final EditingDomain getEditingDomain() {
+				return getDomain();
 			}
 		}
 	}
