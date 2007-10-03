@@ -2,7 +2,7 @@
  * <copyright>
  * </copyright>
  *
- * $Id: EXTLibraryEditor.java,v 1.5 2007/05/10 16:13:28 cdamus Exp $
+ * $Id: EXTLibraryEditor.java,v 1.6 2007/10/03 20:17:42 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
 
@@ -693,7 +693,11 @@ public class EXTLibraryEditor
 		try {
 			// Load the resource through the editing domain.
 			//
-			resource = editingDomain.loadResource(URI.createPlatformResourceURI(modelFile.getFile().getFullPath().toString()).toString());
+			resource = editingDomain.loadResource(URI
+                .createPlatformResourceURI(
+                    modelFile.getFile().getFullPath().toString(), true)
+                .toString());
+            resource.setTrackingModification(true);
 		}
 		catch (Exception exception) {
 			EXTLibraryEditorPlugin.INSTANCE.log(exception);
@@ -962,7 +966,8 @@ public class EXTLibraryEditor
 		if (path != null) {
 			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
 			if (file != null) {
-				doSaveAs(URI.createPlatformResourceURI(file.getFullPath().toString()), new FileEditorInput(file));
+				doSaveAs(URI.createPlatformResourceURI(file.getFullPath()
+                    .toString(), true), new FileEditorInput(file));
 			}
 		}
 	}

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionUtil.java,v 1.5 2007/06/13 12:27:32 cdamus Exp $
+ * $Id: TransactionUtil.java,v 1.6 2007/10/03 20:17:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -270,5 +270,26 @@ public class TransactionUtil {
                 ((EObject) iter.next()).eAdapters().clear();
             }
         }
+    }
+    
+    /**
+     * Obtains an instance of the specified adapter type for an editing domain.
+     * 
+     * @param domain an editing domain to adapt
+     * @param adapterType the required interface
+     * 
+     * @return an instance of the required interface that adapts the
+     *    <tt>domain</tt>, or <code>null</code> if it does not supply this interface
+     */
+    public static Object getAdapter(TransactionalEditingDomain domain, Class adapterType) {
+        Object result;
+        
+        if (domain instanceof Adaptable) {
+            result = ((Adaptable) domain).getAdapter(adapterType);
+        } else {
+            result = null;
+        }
+        
+        return result;
     }
 }

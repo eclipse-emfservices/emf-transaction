@@ -12,14 +12,18 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomain.java,v 1.3 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: TransactionalEditingDomain.java,v 1.4 2007/10/03 20:17:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
 
+import java.util.Map;
+
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.edit.domain.EditingDomain;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
+import org.eclipse.emf.transaction.util.Adaptable;
 
 /**
  * An extension of the {@link EditingDomain} API that applies transactional
@@ -62,6 +66,12 @@ import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
  * <p>
  * See the {@link org.eclipse.emf.transaction package documentation} for further
  * details of editing domain usage.
+ * </p>
+ * <p>
+ * As of the EMF Transaction 1.2 release, editing domains may optionally be
+ * {@link Adaptable} to a variety of optional extension interfaces or "facets."
+ * It is recommended to implement the <tt>Adaptable</tt> interface and support
+ * adaptation to these interfaces to benefit from the services that they offer.
  * </p>
  * 
  * @author Christian W. Damus (cdamus)
@@ -347,5 +357,53 @@ public interface TransactionalEditingDomain
 		 *    statically on the extension point
 		 */
 		TransactionalEditingDomain remove(String id);
+	}
+	
+	/**
+	 * <p>
+	 * Adapter interface provided by {@link TransactionalEditingDomain}s that
+	 * support the notion of default transaction options.  This allows clients,
+	 * usually when initializing an editing domain, to specify options that
+	 * will be applied to any read/write {@link Transaction} for which explicit
+	 * values are not provided when they are created.
+	 * </p><p>
+	 * There are no default-defaults:  by default, an editing domain has no
+	 * default transaction options.  Default options are only applied to
+	 * root-level transactions.  Nested transactions are expected to inherit
+	 * them (or not) as appropriate to the implementation of the options,
+	 * as usual.
+	 * </p><p>
+	 * Note that these are applied also to undo/redo transactions and may be
+	 * overridden by the options returned by the
+	 * {@link InternalTransactionalEditingDomain#getUndoRedoOptions()} method.
+	 * Thus, it may be important for an editing domain to use the undo/redo
+	 * options to explicitly disable options that may have defaults.
+     * </p><p>
+     * The {@linkplain TransactionalEditingDomainImpl default editing domain
+     * implementation} provides this adapter interface.
+	 * </p>
+	 * 
+	 * @author Christian W. Damus (cdamus)
+	 * 
+	 * @since 1.2
+	 */
+	interface DefaultOptions {
+	    /**
+	     * Obtains a read-only view of the editing domain's default transaction
+	     * options.
+	     * 
+	     * @return my read-only transaction options
+	     */
+	    Map getDefaultTransactionOptions();
+	    
+	    /**
+	     * Sets the default transaction options.  It is probably best to do this
+	     * only when configuring a new editing domain, as inconsistent behaviour
+	     * may result from changing the options while editing transactions are
+	     * in progress.
+	     * 
+	     * @param options the new options.  The options are copied from the map
+	     */
+	    void setDefaultTransactionOptions(Map options);
 	}
 }

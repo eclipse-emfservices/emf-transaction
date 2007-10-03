@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorder.java,v 1.5 2006/12/01 18:38:35 cdamus Exp $
+ * $Id: TransactionChangeRecorder.java,v 1.6 2007/10/03 20:17:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -35,6 +35,7 @@ import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.internal.l10n.Messages;
+import org.eclipse.emf.transaction.util.ValidateEditSupport;
 
 /**
  * The change recorder for a {@link org.eclipse.emf.transaction.TransactionalEditingDomain},
@@ -55,6 +56,8 @@ public class TransactionChangeRecorder extends ChangeRecorder {
 	private boolean paused;
 	
 	private boolean disposed;
+	
+	private ValidateEditSupport validateEdit;
 	
 	/**
 	 * Initializes me with the editing domain that I assist and the resource
@@ -188,9 +191,16 @@ public class TransactionChangeRecorder extends ChangeRecorder {
 				sourceRes = ((EObject) notifier).eResource();
 			}
 			
-			if ((sourceRes != null) && !ResourceSetManager.getInstance().isLoaded(sourceRes)) {
-				// resource load and unload are not undoable changes
-				record = false;
+			if (sourceRes != null) {
+			    if (!ResourceSetManager.getInstance().isLoaded(sourceRes)) {
+    				// resource load and unload are not undoable changes
+    				record = false;
+			    }
+			    
+			    if (!notification.isTouch() && (getValidateEditSupport() != null)) {
+			        getValidateEditSupport().handleResourceChange(sourceRes,
+			            notification);
+			    }
 			}
 			
 			break;
@@ -392,5 +402,21 @@ public class TransactionChangeRecorder extends ChangeRecorder {
 			
 			this.domain = null;
 		}
+	}
+	
+	public ValidateEditSupport getValidateEditSupport() {
+	    return validateEdit;
+	}
+	
+	/**
+	 * Sets my validate-edit support, if applicable, for the duration of a
+	 * root transaction.
+	 * 
+	 * @param validateEdit my validate-edit support, or <code>null</code>
+	 * 
+	 * @since 1.2
+	 */
+	public void setValidateEditSupport(ValidateEditSupport validateEdit) {
+	    this.validateEdit = validateEdit;
 	}
 }

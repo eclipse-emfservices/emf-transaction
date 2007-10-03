@@ -12,11 +12,12 @@
  *
  * </copyright>
  *
- * $Id: TransactionOptionsTest.java,v 1.8 2007/08/23 20:14:14 cdamus Exp $
+ * $Id: TransactionOptionsTest.java,v 1.9 2007/10/03 20:17:27 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import junit.framework.Test;
@@ -25,16 +26,20 @@ import junit.framework.TestSuite;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.edit.command.AddCommand;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
+import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.TransactionImpl;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 
 
 /**
@@ -590,6 +595,26 @@ public class TransactionOptionsTest extends AbstractTest {
                 fail("Wait failed on main"); //$NON-NLS-1$
             }
         }
+    }
+    
+    /**
+     * Tests that default transaction options are applied to new transactions.
+     */
+    public void test_defaultTransactionOptions() {
+        TransactionalEditingDomain.DefaultOptions defaults = (TransactionalEditingDomain.DefaultOptions) TransactionUtil
+            .getAdapter(domain, TransactionalEditingDomain.DefaultOptions.class);
+        
+        defaults.setDefaultTransactionOptions(Collections.singletonMap(
+            Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE));
+        
+        TestListener l = new TestListener();
+        domain.addResourceSetListener(l);
+        
+        getCommandStack().execute(new AddCommand(
+            domain, root, EXTLibraryPackage.Literals.LIBRARY__WRITERS,
+            EXTLibraryFactory.eINSTANCE.createWriter()));
+        
+        assertNull("Shouldn't have received notifications", l.postcommit); //$NON-NLS-1$
     }
 	
 	//

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AllTests.java,v 1.2 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: AllTests.java,v 1.3 2007/10/03 20:17:34 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -44,6 +44,7 @@ public class AllTests
 		suite.addTest(ResourceUndoContextTest.suite());
 		suite.addTest(OperationChangeDescriptionTest.suite());
 		suite.addTest(WorkspaceSynchronizerTest.suite());
+        suite.addTest(ValidateEditTest.suite());
 		return suite;
 	}
 

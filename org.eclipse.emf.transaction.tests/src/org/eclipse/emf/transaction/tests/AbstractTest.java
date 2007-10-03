@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.8 2007/06/07 14:26:17 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.9 2007/10/03 20:17:27 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -65,6 +65,7 @@ public class AbstractTest
 	static final Bundle EmfTransactionTestsBundle =	TestsPlugin.instance.getBundle();
 
 	protected IProject project;
+	protected IFile file;
 	protected TransactionalEditingDomain domain;
 	protected Resource testResource;
 	protected Library root;
@@ -105,7 +106,8 @@ public class AbstractTest
 		}
 		
 		project.open(null);
-			
+		file = project.getParent().getFile(new Path(RESOURCE_NAME));
+		
 		ResourceSet rset = createResourceSet();
 	
 		try {

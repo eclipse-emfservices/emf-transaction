@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Messages.java,v 1.5 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: Messages.java,v 1.6 2007/10/03 20:17:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction.internal.l10n;
 
@@ -36,6 +36,7 @@ public class Messages
 	public static String removeStaticDomain;
 
 	public static String validationFailure;
+	public static String modifyReadOnlyResource;
 	
 	public static String noWriteTx;
 	public static String concurrentWrite;

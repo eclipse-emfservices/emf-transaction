@@ -12,13 +12,14 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.13 2007/10/02 17:27:25 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.14 2007/10/03 20:17:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -49,17 +50,26 @@ import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.internal.l10n.Messages;
+import org.eclipse.emf.transaction.util.Adaptable;
 import org.eclipse.emf.transaction.util.Lock;
 import org.eclipse.osgi.util.NLS;
 
 /**
  * The default implementation of the transactional editing domain. 
+ * <p>
+ * Since 1.2, this class implements the {@link Adaptable} interface to adapt
+ * to the following optional API:
+ * </p>
+ * <ul>
+ *   <li>{@link TransactionalEditingDomain.DefaultOptions</li>
+ * </ul>
  *
  * @author Christian W. Damus (cdamus)
  */
 public class TransactionalEditingDomainImpl
 	extends AdapterFactoryEditingDomain
-	implements InternalTransactionalEditingDomain {
+    implements InternalTransactionalEditingDomain, Adaptable,
+    TransactionalEditingDomain.DefaultOptions {
 	
 	private String id;
 	
@@ -69,6 +79,10 @@ public class TransactionalEditingDomainImpl
 	private TransactionValidator validator;
 	
 	private TransactionValidator.Factory validatorFactory = null;
+	
+	private final Map defaultTransactionOptions = new java.util.HashMap();
+	private final Map defaultTransactionOptionsRO = Collections
+        .unmodifiableMap(defaultTransactionOptions);
 	
 	private Lock transactionLock = new Lock();
 	private Lock writeLock = new Lock();
@@ -1029,6 +1043,27 @@ public class TransactionalEditingDomainImpl
 
 	public Map getUndoRedoOptions() {
 		return TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS;
+	}
+	
+	public Object getAdapter(Class adapterType) {
+	    Object result;
+	    
+	    if (adapterType == DefaultOptions.class) {
+	        result = this;
+	    } else {
+	        result = null;
+	    }
+	    
+	    return result;
+	}
+	
+	public Map getDefaultTransactionOptions() {
+	    return defaultTransactionOptionsRO;  // return the read-only view
+	}
+	
+	public void setDefaultTransactionOptions(Map options) {
+	    defaultTransactionOptions.clear();
+	    defaultTransactionOptions.putAll(options);
 	}
 	
 	/**

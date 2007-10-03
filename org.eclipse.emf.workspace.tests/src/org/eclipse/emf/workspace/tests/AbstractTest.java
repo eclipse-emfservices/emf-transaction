@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.3 2007/07/24 16:16:45 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.4 2007/10/03 20:17:34 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -68,6 +68,8 @@ public class AbstractTest
 	static final Bundle EmfWorkbenchTestsBundle =	TestsPlugin.instance.getBundle();
 
 	protected IProject project;
+	protected IFile file;
+	
 	protected TransactionalEditingDomain domain;
 	protected IOperationHistory history;
 	protected Resource testResource;
@@ -109,6 +111,7 @@ public class AbstractTest
 		}
 		
 		project.open(null);
+		file = project.getParent().getFile(new Path(RESOURCE_NAME));
 	
 		ResourceSet rset = new ResourceSetImpl();
 	

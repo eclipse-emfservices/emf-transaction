@@ -12,13 +12,14 @@
  *
  * </copyright>
  *
- * $Id: Transaction.java,v 1.5 2007/05/24 23:23:53 cdamus Exp $
+ * $Id: Transaction.java,v 1.6 2007/10/03 20:17:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
 import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.emf.transaction.util.ValidateEditSupport;
 
 
 /**
@@ -104,8 +105,37 @@ public interface Transaction {
      * 
      * @since 1.1
      */
-    public static final String OPTION_IS_UNDO_REDO_TRANSACTION = "is_undo_redo_transaction";  //$NON-NLS-1$
+    String OPTION_IS_UNDO_REDO_TRANSACTION = "is_undo_redo_transaction";  //$NON-NLS-1$
 	
+    /**
+     * <p>
+     * Option indicating that a transaction is to validate-edit the resource
+     * that it has modified when it commits, and to roll back if any resources
+     * are not modifiable.
+     * </p><p>
+     * The value is either a {@link Boolean} indicating whether to validate or
+     * not, or an instance of the {@link ValidateEditSupport} interface that
+     * provides a custom validate-edit implementation.
+     * </p>
+     * 
+     * @see ValidateEditSupport
+     * @see #OPTION_VALIDATE_EDIT_CONTEXT
+     * 
+     * @since 1.2
+     */
+    String OPTION_VALIDATE_EDIT = "validate_edit";  //$NON-NLS-1$
+    
+    /**
+     * The context object to use when validating edit.  This is usually a
+     * <tt>org.eclipse.swt.widgets.Shell</tt> providing a UI context for
+     * interaction with the user.
+     * 
+     * @see #OPTION_VALIDATE_EDIT
+     * 
+     * @since 1.2
+     */
+    String OPTION_VALIDATE_EDIT_CONTEXT = "validate_edit_context";  //$NON-NLS-1$
+    
 	/**
 	 * Queries the editing domain in which I am transacting.  Note that this
 	 * is available also before I start and after I close.

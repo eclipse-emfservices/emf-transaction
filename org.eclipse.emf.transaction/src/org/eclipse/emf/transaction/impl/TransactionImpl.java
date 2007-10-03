@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.16 2007/08/23 20:14:15 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.17 2007/10/03 20:17:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Notification;
@@ -30,11 +31,14 @@ import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
+import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.util.CommandChangeDescription;
 import org.eclipse.emf.transaction.util.CompositeChangeDescription;
 import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.emf.transaction.util.TriggerCommand;
+import org.eclipse.emf.transaction.util.ValidateEditSupport;
 
 /**
  * The default transaction implementation.
@@ -184,7 +188,9 @@ public class TransactionImpl
 		
 		if (Tracing.shouldTrace(EMFTransactionDebugOptions.TRANSACTIONS)) {
 			int depth = 1;
-			for (Transaction tx = getParent(); tx != null; tx = tx.getParent()) depth++;
+			for (Transaction tx = getParent(); tx != null; tx = tx.getParent()) {
+                depth++;
+            }
 				
 			Tracing.trace("*** Started " + TransactionalEditingDomainImpl.getDebugID(this) //$NON-NLS-1$
 				+ " read-only=" + isReadOnly() //$NON-NLS-1$
@@ -200,6 +206,21 @@ public class TransactionImpl
 			// the parent stops recording here; I record for myself to implement
 			//    support rollback of my changes only
 			parent.pause();
+		}
+		
+		if (getRoot() == this) {
+		    // root transaction sets up validate-edit support
+    		
+    		Object validateEdit = getOptions().get(OPTION_VALIDATE_EDIT);
+    		if (Boolean.TRUE.equals(validateEdit)) {
+    		    // default implementation
+    		    validateEdit = new ValidateEditSupport.Default();
+    		}
+    		
+    		if (validateEdit instanceof ValidateEditSupport) {
+    		    getInternalDomain().getChangeRecorder().setValidateEditSupport(
+    		        (ValidateEditSupport) validateEdit);
+    		}
 		}
 		
 		startRecording();
@@ -219,12 +240,9 @@ public class TransactionImpl
 	public final void setParent(InternalTransaction parent) {
 		this.parent = parent;
 		
-		if (parent == null) {
-		    this.root = this;
-		} else {
-		    this.root = parent.getRoot();
-		    inheritOptions(parent);
-		}
+		this.root = (parent == null)? this : parent.getRoot();
+		
+        inheritOptions(parent);
 	}
 	
 	// Documentation copied from the inherited specification
@@ -338,25 +356,100 @@ public class TransactionImpl
 				}
 			}
 			
-			if ((getRoot() == this) && isValidationEnabled(this)) {
-				// only the root validates
-				IStatus validationStatus = validate();
-				setStatus(validationStatus);
-				
-				if (validationStatus.getSeverity() >= IStatus.ERROR) {
-					closing = false;  // rollback checks this flag
-					rollback();
-					RollbackException exc = new RollbackException(validationStatus);
-					Tracing.throwing(TransactionImpl.class, "commit", exc); //$NON-NLS-1$
-					throw exc;
-				}
+			if (getRoot() == this) {
+                // only the root validates.  Do validation before validate-edit
+			    // because its results are generally more interesting
+			    IStatus validationStatus = null;
+			    
+			    if (isValidationEnabled(this)) {
+    				validationStatus = validate();
+			    }
+
+			    // now do validate-edit if validation status is not roll-back
+			    if ((validationStatus == null)
+			            || (validationStatus.getSeverity() < IStatus.ERROR)) {
+			        
+	                ValidateEditSupport validateEdit = getInternalDomain()
+	                    .getChangeRecorder().getValidateEditSupport();
+	                
+	                if (validateEdit != null) {
+	                    Object context = getOptions().get(OPTION_VALIDATE_EDIT_CONTEXT);
+	                    IStatus editStatus = validateEdit.validateEdit(this, context);
+	                    
+	                    validationStatus = combine(validationStatus, editStatus);
+	                }
+			    }
+			    
+			    if (validationStatus != null) {
+    				setStatus(validationStatus);
+    				
+    				if (validationStatus.getSeverity() >= IStatus.ERROR) {
+    					closing = false;  // rollback checks this flag
+    					rollback();
+    					RollbackException exc = new RollbackException(validationStatus);
+    					Tracing.throwing(TransactionImpl.class, "commit", exc); //$NON-NLS-1$
+    					throw exc;
+    				}
+			    }
+	            
+	            ValidateEditSupport validateEdit = getInternalDomain()
+	                .getChangeRecorder().getValidateEditSupport();
+	            
+	            if (validateEdit != null) {
+	                validateEdit.finalizeForCommit();
+	            }
 			}
 		} finally {
 			// in case of exception, rollback() already stopped recording
 			stopRecording();
 			
+			if (getRoot() == this) {
+			    // clear the validate-edit tracking
+			    getInternalDomain().getChangeRecorder().setValidateEditSupport(null);
+			}
+			
 			close();
 		}
+	}
+	
+	/**
+	 * Produces a status object combining live-validation status with
+	 * validate-edit status.
+	 * 
+	 * @param validationStatus a live-validation status, or <code>null</code>
+	 *    if validation is disabled
+	 * @param editStatus a validate-edit status, or <code>null</code> if it is
+	 *    not enabled
+	 *    
+	 * @return an appropriate status, which may even by OK just because both
+	 *    inputs are <code>null</code>
+	 */
+	private IStatus combine(IStatus validationStatus, IStatus editStatus) {
+	    IStatus result;
+	    
+	    if ((validationStatus == null) || validationStatus.isOK()) {
+	        if ((editStatus == null) || editStatus.isOK()) {
+	            result = Status.OK_STATUS;
+	        } else {
+	            result = editStatus;
+	        }
+	    } else if ((editStatus == null) || editStatus.isOK()) {
+	        result = validationStatus;
+	    } else if (editStatus.getSeverity() > validationStatus.getSeverity()) {
+            // validate-edit status has priority
+            result = new MultiStatus(EMFTransactionPlugin.getPluginId(),
+                editStatus.getCode(),
+                new IStatus[] {editStatus, validationStatus},
+                editStatus.getMessage(), null);
+        } else {
+            // live-validation status has priority
+            result = new MultiStatus(EMFTransactionPlugin.getPluginId(),
+                validationStatus.getCode(),
+                new IStatus[] {validationStatus, editStatus},
+                validationStatus.getMessage(), null);
+        }
+	    
+	    return result;
 	}
 
 	// Documentation copied from the inherited specification
@@ -404,6 +497,15 @@ public class TransactionImpl
 					// forget the description.  The changes are reverted
 					change.clear();
 				}
+			}
+			
+			if (getRoot() == this) {
+                ValidateEditSupport validateEdit = getInternalDomain()
+                    .getChangeRecorder().getValidateEditSupport();
+                
+                if (validateEdit != null) {
+        			validateEdit.finalizeForRollback();
+                }
 			}
 		} finally {
 			rollingBack = false;
@@ -638,7 +740,10 @@ public class TransactionImpl
 	
 	private void inheritOptions(Transaction parent) {
         
-        Map parentOptions = (parent == null)? null : parent.getOptions();
+	    // if we have no parent transaction, then we are a root and we "inherit"
+	    // the editing domain's default transaction options
+        Map parentOptions = (parent == null) ? getDefaultOptions(getEditingDomain())
+            : parent.getOptions();
         
         if (parentOptions != null) {
             for (Iterator iter = parentOptions.entrySet().iterator(); iter.hasNext();) {
@@ -769,4 +874,21 @@ public class TransactionImpl
 	protected static boolean hasOption(Transaction tx, String option) {
 		return Boolean.TRUE.equals(tx.getOptions().get(option));
 	}
+	
+	/**
+	 * Obtains the default transaction options, if any, of the specified editing
+	 * domain.
+	 * 
+	 * @param domain an editing domain
+	 * @return its default transaction options, or an empty map if none are
+	 *     defined
+	 * 
+	 * @since 1.2
+	 */
+	protected static Map getDefaultOptions(TransactionalEditingDomain domain) {
+        TransactionalEditingDomain.DefaultOptions defaults = (TransactionalEditingDomain.DefaultOptions) TransactionUtil
+            .getAdapter(domain, TransactionalEditingDomain.DefaultOptions.class);
+        
+        return (defaults == null)? Collections.EMPTY_MAP : defaults.getDefaultTransactionOptions();
+    }
 }
