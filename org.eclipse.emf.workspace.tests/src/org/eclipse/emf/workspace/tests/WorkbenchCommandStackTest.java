@@ -12,17 +12,20 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.9 2007/05/10 15:37:58 cdamus Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.10 2007/10/03 20:16:31 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
+import java.util.Arrays;
 import java.util.EventObject;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.AbstractOperation;
+import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.core.commands.operations.OperationHistoryFactory;
@@ -63,6 +66,7 @@ import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
 import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultNameTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LogCapture;
 import org.eclipse.emf.workspace.tests.fixtures.NullCommand;
+import org.eclipse.emf.workspace.tests.fixtures.SelfOpeningEMFCompositeOperation;
 
 
 /**
@@ -259,7 +263,8 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		});
 		
 		final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml")); //$NON-NLS-1$
-		
+		IUndoContext resCtx = new ResourceUndoContext(domain, r);
+        
 		AbstractEMFOperation op = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
 			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
 				throws ExecutionException {
@@ -281,10 +286,12 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		}
 		
 		assertNotNull(op.getContexts());
-		assertTrue(op.getContexts().length > 0);
-		assertTrue(op.getContexts()[0] == undoContext);
+        List opContexts = Arrays.asList(op.getContexts());
+		assertTrue(opContexts.contains(resCtx));
+        assertTrue(opContexts.contains(undoContext));
 		
 		op.removeContext(undoContext);
+        op.removeContext(resCtx);
 		
 		try {
 			OperationHistoryFactory.getOperationHistory().execute(op, new NullProgressMonitor(), null);
@@ -293,9 +300,13 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 			fail();
 		}
 		
-		assertNotNull(op.getContexts());
-		assertTrue(op.getContexts().length > 0);
-		assertTrue(op.getContexts()[0] == undoContext);
+        assertNotNull(op.getContexts());
+        opContexts = Arrays.asList(op.getContexts());
+        assertTrue(opContexts.contains(resCtx));
+        assertTrue(opContexts.contains(undoContext));
+        
+        op.removeContext(undoContext);
+        op.removeContext(resCtx);
 	}
 	
 	public void testSaveIsDoneAPIs() {
@@ -537,7 +548,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         final Library[] newLibrary = new Library[1];
         
         IUndoContext ctx = new UndoContext();
-        IUndoableOperation operation = new AbstractEMFOperation(domain, "Test") {
+        IUndoableOperation operation = new AbstractEMFOperation(domain, "Test") { //$NON-NLS-1$
             protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
                 newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
                 root.getBranches().add(newLibrary[0]);
@@ -658,6 +669,42 @@ public class WorkbenchCommandStackTest extends AbstractTest {
             2, listener.invocationCount);
         assertSame(command, undoCmd);
         assertSame(command, redoCmd);
+    }
+    
+    /**
+     * Tests that we do not lose track of affected resources when executing
+     * operations within open composites (nested operation execution).
+     */
+    public void test_nestedExecutionInOpenComposite_203352() {
+        SelfOpeningEMFCompositeOperation operation = new SelfOpeningEMFCompositeOperation(
+            domain) {
+
+            protected IStatus doExecute(IOperationHistory history,
+                    IProgressMonitor monitor, IAdaptable info)
+                throws ExecutionException {
+
+                return history.execute(
+                    new AbstractEMFOperation(domain, "Test") { //$NON-NLS-1$
+
+                        protected IStatus doExecute(IProgressMonitor monitor,
+                                IAdaptable info) {
+                            root.getBranches().add(
+                                EXTLibraryFactory.eINSTANCE.createLibrary());
+
+                            return Status.OK_STATUS;
+                        }
+                    }, monitor, info);
+            }
+        };
+
+        try {
+            history.execute(operation, null, null);
+        } catch (ExecutionException e) {
+            fail("Failed to execute test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+
+        IUndoContext expected = new ResourceUndoContext(domain, testResource);
+        assertTrue(operation.hasContext(expected));
     }
     
 	//

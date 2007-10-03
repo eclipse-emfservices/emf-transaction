@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.9 2007/05/10 15:37:57 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.10 2007/10/03 20:16:28 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -40,6 +40,7 @@ import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
+import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.impl.AbstractTransactionalCommandStack;
 import org.eclipse.emf.transaction.impl.EMFCommandTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
@@ -74,7 +75,6 @@ public class WorkspaceCommandStackImpl
 	
 	private final IUndoContext defaultContext = new UndoContext();
 	private IUndoContext savedContext = null;
-	private Set affectedResources;
 	
 	private IUndoableOperation mostRecentOperation;
 	
@@ -360,7 +360,6 @@ public class WorkspaceCommandStackImpl
 	public void dispose() {
 		setEditingDomain(null);  // remove listeners
 		domainListener = null;
-		affectedResources = null;
 		mostRecentOperation = null;
 	}
 
@@ -376,32 +375,7 @@ public class WorkspaceCommandStackImpl
 			final IUndoableOperation operation = event.getOperation();
 			
 			switch (event.getEventType()) {
-			case OperationHistoryEvent.ABOUT_TO_EXECUTE:
-				// set up a resource undo context in case we make EMF changes
-				affectedResources = new java.util.HashSet();
-				break;
 			case OperationHistoryEvent.DONE:
-				if ((affectedResources != null) && !affectedResources.isEmpty()) {
-					// add my undo context to the operation that has completed, but
-					//    only if the operation actually changed any of my resources
-					//    (in case this history is shared with other domains)
-					for (Iterator iter = affectedResources.iterator(); iter.hasNext();) {
-						operation.addContext(new ResourceUndoContext(
-								getDomain(),
-								(Resource) iter.next()));
-					}
-				}
-				
-				affectedResources = null;
-				
-				if (operation.hasContext(getDefaultUndoContext())) {
-					mostRecentOperation = operation;
-				}
-				break;
-			case OperationHistoryEvent.OPERATION_NOT_OK:
-				// just forget about the context because this operation failed
-				affectedResources = null;
-				break;
 			case OperationHistoryEvent.UNDONE:
 			case OperationHistoryEvent.REDONE:
 				if (operation.hasContext(getDefaultUndoContext())) {
@@ -417,21 +391,23 @@ public class WorkspaceCommandStackImpl
 		}
 		
 		public void resourceSetChanged(ResourceSetChangeEvent event) {
-			if (affectedResources != null) {
-				// there is an operation executing on our history that is affecting
-				//    my editing domain.  Populate the resource undo context
-				affectedResources.addAll(
-						ResourceUndoContext.getAffectedResources(
-								event.getNotifications()));
-			}
-			
+            IUndoableOperation operation = null;
+            
+            Transaction tx = event.getTransaction();
+            if (tx != null) {
+                operation = (IUndoableOperation) tx.getOptions().get(
+                    EMFWorkspacePlugin.OPTION_OWNING_OPERATION);
+            }
+            
+            Set affectedResources = ResourceUndoContext.getAffectedResources(
+                event.getNotifications());
+            
 			Set unloaded = getUnloadedResources(event.getNotifications());
 			if (unloaded != null) {
-				if (affectedResources != null) {
-					// don't add these resources to the operation
-					affectedResources.removeAll(unloaded);
-				}
+				// don't add these resources to the operation
+				affectedResources.removeAll(unloaded);
 				
+                // dispose their undo contexts
 				for (Iterator iter = unloaded.iterator(); iter.hasNext();) {
 					getOperationHistory().dispose(
 							new ResourceUndoContext(
@@ -440,6 +416,20 @@ public class WorkspaceCommandStackImpl
 							true, true, true);
 				}
 			}
+            
+            if ((operation != null) && !affectedResources.isEmpty()) {
+                // add any resource undo contexts to this operation that are
+                //   not already applied
+                for (Iterator iter = affectedResources.iterator(); iter.hasNext();) {
+                    ResourceUndoContext ctx = new ResourceUndoContext(
+                        getDomain(),
+                        (Resource) iter.next());
+                    
+                    if (!operation.hasContext(ctx)) {
+                        operation.addContext(ctx);
+                    }
+                }
+            }
 		}
 		
 		/**

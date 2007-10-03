@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFWorkspacePlugin.java,v 1.2 2007/06/07 14:25:44 cdamus Exp $
+ * $Id: EMFWorkspacePlugin.java,v 1.3 2007/10/03 20:16:28 cdamus Exp $
  */
 package org.eclipse.emf.workspace.internal;
 
@@ -25,6 +25,9 @@ import org.osgi.framework.BundleContext;
  */
 public class EMFWorkspacePlugin extends EMFPlugin {
 
+    /** Transaction option that references the AbstractEMFOperation that created it. */
+    public static final String OPTION_OWNING_OPERATION = "_owning_operation"; //$NON-NLS-1$
+    
 	public static final EMFWorkspacePlugin INSTANCE =
 		new EMFWorkspacePlugin();
 

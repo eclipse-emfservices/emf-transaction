@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.15 2007/06/13 12:27:26 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.16 2007/10/03 20:16:28 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -42,6 +42,7 @@ import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionImpl;
 import org.eclipse.emf.transaction.util.TransactionUtil;
+import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
@@ -130,8 +131,20 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		final List result = new java.util.ArrayList(2);
 		
 		try {
-			if (!isReuseParentTransaction() || optionsDiffer()) {
-				transaction = createTransaction(getOptions());
+            // add to the transaction a reference to myself for the
+            //   command stack's benefit, unless I would be inheriting
+            //   a reference to a nesting operation
+            Map options = new java.util.HashMap(getOptions());
+            Map inherited = inheritedOptions();
+            if (inherited.containsKey(EMFWorkspacePlugin.OPTION_OWNING_OPERATION)) {
+                options.put(EMFWorkspacePlugin.OPTION_OWNING_OPERATION,
+                    inherited.get(EMFWorkspacePlugin.OPTION_OWNING_OPERATION));
+            } else {
+                options.put(EMFWorkspacePlugin.OPTION_OWNING_OPERATION, this);
+            }
+            
+			if (!isReuseParentTransaction() || optionsDiffer(options)) {
+				transaction = createTransaction(options);
 			}
 			
 			result.add(doExecute(monitor, info));
@@ -175,23 +188,43 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	}
 	
 	/**
-	 * Queries whether my options differ from the currently active transaction,
-	 * if there is one.
+	 * Queries whether the specified options differ from the currently active
+     * transaction, if there is one.
 	 * 
+     * @param options the options to compare against the active transaction
 	 * @return <code>false</code> if either there is an active transaction and it
-	 *     has the same options as I; <code>true</code>, otherwise
+	 *     has the same options as specified; <code>true</code>, otherwise
 	 */
-	private boolean optionsDiffer() {
+	private boolean optionsDiffer(Map options) {
 		boolean result = true;
 		
 		Transaction active =
 			((InternalTransactionalEditingDomain) getEditingDomain()).getActiveTransaction();
 		if ((active != null) && !active.isReadOnly()) {
-			result = !active.getOptions().equals(getOptions());
+			result = !active.getOptions().equals(options);
 		}
 		
 		return result;
 	}
+    
+    /**
+     * Obtains the options of the currently active transaction, or an empty map
+     * if there is no active transaction.
+     * 
+     * @return options currently in effect that would be inherited by a new
+     *     transaction that I might create
+     */
+    private Map inheritedOptions() {
+        Map result = Collections.EMPTY_MAP;
+        
+        Transaction active =
+            ((InternalTransactionalEditingDomain) getEditingDomain()).getActiveTransaction();
+        if ((active != null) && !active.isReadOnly()) {
+            result = active.getOptions();
+        }
+        
+        return result;
+    }
 	
 	/**
 	 * Creates a suitable aggregate from these statuses.  If there are no
