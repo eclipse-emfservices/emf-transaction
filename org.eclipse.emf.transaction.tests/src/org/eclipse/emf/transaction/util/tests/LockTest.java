@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: LockTest.java,v 1.3 2006/11/01 19:14:34 cdamus Exp $
+ * $Id: LockTest.java,v 1.4 2007/10/15 16:20:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util.tests;
 
@@ -22,6 +22,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
@@ -642,6 +643,83 @@ public class LockTest extends TestCase {
 			domain.dispose();
 		}
 	}
+    
+    /**
+     * Tests that when IJobManager::beginRule() method fails, we don't end up
+     * with an AcquireJob getting and transfering the lock after we've already
+     * given up.
+     */
+    public void test_uiSafeWaitForAcquire_beginRuleThrows_bug205857() {
+        final ISchedulingRule rule = ResourcesPlugin.getWorkspace().getRoot();
+        
+        final TransactionalEditingDomain domain =
+            TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+        
+        lock = getLock(domain);
+        
+        Thread t = new Thread(new Runnable() {
+        
+            public void run() {
+                try {
+                    synchronized (monitor) {
+                        // wake up the main thread to give us a sched rule
+                        monitor.notifyAll();
+                    }
+                    
+                    lock.uiSafeAcquire(false);
+                    fail("Should have thrown InterruptedException"); //$NON-NLS-1$
+                } catch (InterruptedException e) {
+                    // success
+                    System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+                } catch (Exception e) {
+                    // success
+                    fail(e);
+                } finally {
+                    // we were given this rule, so we must end it
+                    Job.getJobManager().endRule(rule);
+                }
+            }});
+        
+        try {
+            Job.getJobManager().beginRule(rule, null);
+            lock.acquire(false);
+            
+            synchronized (monitor) {
+                t.start();
+                
+                // wait for the other thread to start
+                monitor.wait();
+            }
+            
+            // sleep just a bit to let the other thread start waiting for
+            // the lock on its initial 250-millis hard wait
+            Thread.sleep(50L);
+            
+            // hand over the scheduling rule before the other thread starts
+            // the AcquireJob-based wait
+            Job.getJobManager().transferRule(rule, t);
+            
+            // now, wait long enough for the other thread to start its
+            // AcquireJob-based-wait and then release the lock
+            Thread.sleep(250L);
+            lock.release();
+            
+            // now, wait for the other thread to finish
+            t.join();
+            
+            // sleep a bit
+            Thread.sleep(250L);
+            
+            Thread owner = lock.getOwner();
+            if (owner != null) {
+                fail("Lock still owned by thread " + owner.getName()); //$NON-NLS-1$
+            }
+        } catch (Exception e) {
+            fail(e);
+        } finally {
+            domain.dispose();
+        }
+    }
 	
 	
 	//
