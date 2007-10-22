@@ -12,12 +12,13 @@
  *
  * </copyright>
  *
- * $Id: ValidationRollbackTest.java,v 1.6 2007/05/03 13:16:57 cdamus Exp $
+ * $Id: ValidationRollbackTest.java,v 1.7 2007/10/22 21:27:15 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
 import java.util.Collections;
 import java.util.EventObject;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -34,6 +35,7 @@ import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.DemultiplexingListener;
+import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
@@ -44,6 +46,7 @@ import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.tests.fixtures.LogCapture;
+import org.eclipse.emf.transaction.tests.fixtures.TestListener;
 
 
 /**
@@ -562,6 +565,137 @@ public class ValidationRollbackTest extends AbstractTest {
             assertEquals("Root Book", book.getTitle()); //$NON-NLS-1$
         } catch (InterruptedException e) {
             fail("Interrupted"); //$NON-NLS-1$
+        }
+    }
+
+    /**
+     * Tests that rollback of a nesting transaction does not result in listeners
+     * being notified of the changes committed by its nested children, that were
+     * subsequently rolled back by it.
+     */
+    public void test_rollback_nesting_noNotifications_206819() {
+        TestListener l = new TestListener(NotificationFilter.NOT_TOUCH);
+        domain.addResourceSetListener(l);
+        
+        try {
+            // get old values
+            startReading();
+            final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+            assertNotNull(book);
+            final String oldTitle = book.getTitle();
+            final Writer oldAuthor = book.getAuthor();
+            commit();
+            
+            l.reset();
+            
+            Transaction xa = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+            
+            // in the outer transaction, make some changes
+            book.setTitle("Intermediate Title"); //$NON-NLS-1$
+            Writer writer = (Writer) find("root/level1/level2/Level2 Writer"); //$NON-NLS-1$
+            assertNotNull(writer);
+            book.setAuthor(writer);
+            
+            // start an inner read/write transaction
+            Transaction inner = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+            
+            String newTitle = "New Title"; //$NON-NLS-1$
+            Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+            assertNotNull(newAuthor);
+            
+            book.setTitle(newTitle);
+            newAuthor.getBooks().add(book);  // change the inverse just for fun
+            
+            inner.commit();
+            
+            xa.rollback();
+            
+            List notifications = l.postcommitNotifications;
+            
+            // check that rollback worked
+            startReading();
+            assertSame(oldTitle, book.getTitle());
+            assertSame(oldAuthor, book.getAuthor());
+            commit();
+            
+            if (notifications != null) {
+                fail("Got " + notifications.size() + " post-commit notifications");  //$NON-NLS-1$//$NON-NLS-2$
+            }
+        } catch (Exception e) {
+            fail(e);
+        } finally {
+            domain.removeResourceSetListener(l);
+        }
+    }
+
+    /**
+     * Tests that rollback of a nesting transaction does not result in
+     * concurrent modification exceptions when processing trailing notifications
+     * (those that occurred in a parent transaction after the last child
+     * committed).
+     */
+    public void test_rollback_nesting_trailingNotifications_206819() {
+        TestListener l = new TestListener(NotificationFilter.NOT_TOUCH);
+        domain.addResourceSetListener(l);
+        
+        try {
+            // get old values
+            startReading();
+            final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+            assertNotNull(book);
+            final String oldTitle = book.getTitle();
+            final Writer oldAuthor = book.getAuthor();
+            commit();
+            
+            l.reset();
+            
+            Transaction xa = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+            
+            // in the outer transaction, make some changes
+            book.setTitle("Intermediate Title"); //$NON-NLS-1$
+            Writer writer = (Writer) find("root/level1/level2/Level2 Writer"); //$NON-NLS-1$
+            assertNotNull(writer);
+            book.setAuthor(writer);
+            
+            // start an inner read/write transaction
+            Transaction inner = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+            
+            String newTitle = "New Title"; //$NON-NLS-1$
+            Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+            assertNotNull(newAuthor);
+            
+            book.setTitle(newTitle);
+            newAuthor.getBooks().add(book);  // change the inverse just for fun
+            
+            Transaction inner2 = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+            
+            book.setTitle("Something else"); //$NON-NLS-1$
+            
+            inner2.commit();
+            
+            book.setTitle("Something else again"); //$NON-NLS-1$
+            
+            inner.commit();
+            
+            book.setTitle("Yet another something"); //$NON-NLS-1$
+            
+            xa.rollback();
+            
+            List notifications = l.postcommitNotifications;
+            
+            // check that rollback worked
+            startReading();
+            assertSame(oldTitle, book.getTitle());
+            assertSame(oldAuthor, book.getAuthor());
+            commit();
+            
+            if (notifications != null) {
+                fail("Got " + notifications.size() + " post-commit notifications");  //$NON-NLS-1$//$NON-NLS-2$
+            }
+        } catch (Exception e) {
+            fail(e);
+        } finally {
+            domain.removeResourceSetListener(l);
         }
     }
 	
