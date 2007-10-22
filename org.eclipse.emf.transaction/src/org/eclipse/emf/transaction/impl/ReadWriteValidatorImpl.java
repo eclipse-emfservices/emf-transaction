@@ -12,13 +12,14 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteValidatorImpl.java,v 1.9 2007/03/22 19:11:49 cdamus Exp $
+ * $Id: ReadWriteValidatorImpl.java,v 1.9.2.1 2007/10/22 21:25:20 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
@@ -427,10 +428,17 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 */
 		void setRolledBack() {
 			Iterator children = getChildren().iterator();
-			List rollbackNotifications = transaction.getNotifications();
-			Iterator iter = rollbackNotifications.iterator();
+			boolean inPlace = transaction == null;
 			
-			notifications = new org.eclipse.emf.common.util.BasicEList.FastCompare();
+            ListIterator iter;
+			if (inPlace) {
+			    // already committed?  Some ancestor transaction is rolling back
+			    iter = notifications.listIterator();
+			} else {
+			    // transaction has the notifications
+			    iter = transaction.getNotifications().listIterator();
+	            notifications = new org.eclipse.emf.common.util.BasicEList.FastCompare();
+			}
 			
 			// filter out all undoable notifications, leaving only those that
 			//    indicate changes that rollback could not undo (resource-level
@@ -441,27 +449,55 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 				NotificationTree child = (NotificationTree) children.next();
 				int parentNotificationCount = child.parentNotificationCount;
 				
-				for (; (i < parentNotificationCount) && iter.hasNext(); i++) {
-					Notification next = (Notification) iter.next();
-					
-					if (!isUndoableObjectChange(next)) {
-						notifications.add(next);
+				if (inPlace) {
+	                for (; (i < parentNotificationCount) && iter.hasNext(); i++) {
+	                    Notification next = (Notification) iter.next();
+	                    
+					    if (isUndoableObjectChange(next)) {
+					        iter.remove();
+					    }
+	                }
+                    
+	                // we have reached the point in the original notifications
+	                //    where this child transaction started.  Adjust for the
+	                //    reduced list of notifications
+	                child.parentNotificationCount = iter.nextIndex();
+				} else {
+                    for (; (i < parentNotificationCount) && iter.hasNext(); i++) {
+                        Notification next = (Notification) iter.next();
+                        
+    					if (!isUndoableObjectChange(next)) {
+    						notifications.add(next);
+    					}
 					}
+                    
+                    // we have reached the point in the original notifications
+                    //    where this child transaction started.  Adjust for the
+                    //    reduced list of notifications
+                    child.parentNotificationCount = notifications.size();
 				}
-					
-				// we have reached the point in the original notifications
-				//    where this child transaction started.  Adjust for the
-				//    reduced list of notifications
-				child.parentNotificationCount = notifications.size();
+				
+				// recurse onto its children
+				child.setRolledBack();
 			}
 			
 			// filter the remaining notifications
-			while (iter.hasNext()) {
-				Notification next = (Notification) iter.next();
-				
-				if (!isUndoableObjectChange(next)) {
-					notifications.add(next);
-				}
+			if (inPlace) {
+    			while (iter.hasNext()) {
+    				Notification next = (Notification) iter.next();
+    				
+    				if (isUndoableObjectChange(next)) {
+    					iter.remove();
+    				}
+    			}
+			} else {
+                while (iter.hasNext()) {
+                    Notification next = (Notification) iter.next();
+                    
+                    if (!isUndoableObjectChange(next)) {
+                        notifications.add(next);
+                    }
+                }
 			}
 		}
 		
