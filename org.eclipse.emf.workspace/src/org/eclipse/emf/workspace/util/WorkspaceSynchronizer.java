@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Geoff Martin - Fix deletion of resource that has markers
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.6 2007/07/24 16:16:44 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.7 2007/10/25 04:00:13 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -391,10 +392,12 @@ public final class WorkspaceSynchronizer {
 				
 				delta.accept(new IResourceDeltaVisitor() {
 					public boolean visit(IResourceDelta delta) {
-						if ((delta.getFlags() != IResourceDelta.MARKERS) &&
-						      (delta.getResource().getType() == IResource.FILE)) {
+						if (delta.getResource().getType() == IResource.FILE) {
 							switch (delta.getKind()) {
 							case IResourceDelta.CHANGED:
+							    if (delta.getFlags() == IResourceDelta.MARKERS) {
+							        break;
+							    }
 							case IResourceDelta.REMOVED:
 								processDelta(delta, synchRequests);
 								break;
