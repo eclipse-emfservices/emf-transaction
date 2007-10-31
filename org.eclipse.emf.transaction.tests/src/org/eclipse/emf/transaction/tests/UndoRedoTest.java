@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: UndoRedoTest.java,v 1.8 2007/03/22 17:27:10 cdamus Exp $
+ * $Id: UndoRedoTest.java,v 1.9 2007/10/31 19:59:57 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -41,6 +41,8 @@ import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.TriggerListener;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.impl.TransactionImpl;
 import org.eclipse.emf.transaction.tests.fixtures.ItemDefaultPublicationDateTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultBookTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
@@ -597,6 +599,35 @@ public class UndoRedoTest extends AbstractTest {
 		
 		assertFalse(getCommandStack().canRedo());
 	}
+	
+	public void test_undoRedoOptionsNotSharedbyDomains_bug207986() {
+	    InternalTransactionalEditingDomain otherDomain =
+	        (InternalTransactionalEditingDomain) TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+	    
+	    final String BOGUS_OPTION = "**bogus_option**"; //$NON-NLS-1$
+	    
+	    otherDomain.getUndoRedoOptions().put(BOGUS_OPTION, Boolean.TRUE);
+	    
+	    assertFalse(((InternalTransactionalEditingDomain) domain)
+	        .getUndoRedoOptions().containsKey(BOGUS_OPTION));
+	}
+    
+    public void test_defaultUndoRedoOptionsMapReadOnly_bug207986() {
+        final String BOGUS_OPTION = "**bogus_option**"; //$NON-NLS-1$
+        
+        try {
+            TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS.put(BOGUS_OPTION, Boolean.TRUE);
+            
+            fail("Should not have been permitted to add the bogus option"); //$NON-NLS-1$
+        } catch (RuntimeException e) {
+            // success
+            System.out.println("Got expected runtime exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+        
+        assertFalse(((InternalTransactionalEditingDomain) domain)
+            .getUndoRedoOptions().containsKey(BOGUS_OPTION));
+        assertFalse(TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS.containsKey(BOGUS_OPTION));
+    }
 	
 	//
 	// Fixture methods

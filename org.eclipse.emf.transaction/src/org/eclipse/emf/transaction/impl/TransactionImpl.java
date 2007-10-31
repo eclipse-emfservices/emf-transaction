@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.17 2007/10/03 20:17:38 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.18 2007/10/31 19:59:58 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -82,14 +82,18 @@ public class TransactionImpl
 	 * only return the model from a valid state to another valid state if the
 	 * original execution did so.  Finally, it is not necessary to record
 	 * undo information when we are undoing or redoing.
+	 * <p>
+	 * As of the 1.2 release, this map is immutable.
+	 * </p>
 	 */
 	public static final Map DEFAULT_UNDO_REDO_OPTIONS;
 	static {
-		DEFAULT_UNDO_REDO_OPTIONS = new java.util.HashMap();
-		DEFAULT_UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
-		DEFAULT_UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_UNDO, Boolean.TRUE);
-		DEFAULT_UNDO_REDO_OPTIONS.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
-		DEFAULT_UNDO_REDO_OPTIONS.put(Transaction.OPTION_IS_UNDO_REDO_TRANSACTION, Boolean.TRUE);
+		Map map = new java.util.HashMap();
+		map.put(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
+		map.put(Transaction.OPTION_NO_UNDO, Boolean.TRUE);
+		map.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
+		map.put(Transaction.OPTION_IS_UNDO_REDO_TRANSACTION, Boolean.TRUE);
+		DEFAULT_UNDO_REDO_OPTIONS = Collections.unmodifiableMap(map);
 	}
 	
 	private static long nextId = 0L;

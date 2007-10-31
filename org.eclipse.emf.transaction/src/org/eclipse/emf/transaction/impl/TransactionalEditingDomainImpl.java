@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.14 2007/10/03 20:17:38 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.15 2007/10/31 19:59:58 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -95,6 +95,10 @@ public class TransactionalEditingDomainImpl
 	private final List unbatchedNotifications = new java.util.ArrayList(1);
 	private final ResourceSetChangeEvent unbatchedChangeEvent =
 		new ResourceSetChangeEvent(this, null, unbatchedNotifications);
+	
+	// this is editable by clients for backwards compatibility with 1.1
+	private Map undoRedoOptions = new java.util.HashMap(
+	    TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS);
 	
 	/**
 	 * Initializes me with my adapter factory, command stack, and resource set.
@@ -1042,7 +1046,7 @@ public class TransactionalEditingDomainImpl
 	}
 
 	public Map getUndoRedoOptions() {
-		return TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS;
+		return undoRedoOptions;
 	}
 	
 	public Object getAdapter(Class adapterType) {
