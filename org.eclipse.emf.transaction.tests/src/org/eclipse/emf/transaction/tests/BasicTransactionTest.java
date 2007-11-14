@@ -12,12 +12,11 @@
  *
  * </copyright>
  *
- * $Id: BasicTransactionTest.java,v 1.5 2007/06/07 14:26:17 cdamus Exp $
+ * $Id: BasicTransactionTest.java,v 1.6 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.Test;
@@ -36,8 +35,8 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.RunnableWithResult;
-import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
@@ -354,7 +353,7 @@ public class BasicTransactionTest extends AbstractTest {
 		
 		// check that we got the expected events
 		assertNotNull(listener.postcommit);
-		List notifications = listener.postcommitNotifications;
+		List<Notification> notifications = listener.postcommitNotifications;
 		assertFalse(notifications.isEmpty());
 		
 		// look for an event indicating resource was loaded and one indicating
@@ -362,9 +361,7 @@ public class BasicTransactionTest extends AbstractTest {
 		Notification rootAdded = null;
 		Notification resLoaded = null;
 		
-		for (Iterator iter = notifications.iterator(); iter.hasNext();) {
-			Notification next = (Notification) iter.next();
-			
+		for (Notification next : notifications) {
 			if (next.getNotifier() == res) {
 				if (next.getFeatureID(null) == Resource.RESOURCE__IS_LOADED) {
 					if (next.getNewBooleanValue()) {
@@ -400,9 +397,7 @@ public class BasicTransactionTest extends AbstractTest {
 		Notification rootRemoved = null;
 		Notification resUnloaded = null;
 		
-		for (Iterator iter = notifications.iterator(); iter.hasNext();) {
-			Notification next = (Notification) iter.next();
-			
+		for (Notification next : notifications) {
 			if (next.getNotifier() == res) {
 				if (next.getFeatureID(null) == Resource.RESOURCE__IS_LOADED) {
 					if (!next.getNewBooleanValue()) {
@@ -525,7 +520,7 @@ public class BasicTransactionTest extends AbstractTest {
 			}});
 		
 		try {
-			RunnableWithResult rwr = new RunnableWithResult.Impl() {
+			RunnableWithResult<?> rwr = new RunnableWithResult.Impl<Object>() {
 				public void run() {
 					synchronized (monitor) {
 						t.start();

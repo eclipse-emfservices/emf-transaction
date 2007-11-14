@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.4 2007/10/03 20:17:34 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.5 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -44,11 +44,11 @@ import org.eclipse.emf.examples.extlibrary.Periodical;
 import org.eclipse.emf.examples.extlibrary.Person;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.examples.extlibrary.util.EXTLibrarySwitch;
+import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
-import org.eclipse.emf.transaction.Transaction;
-import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
+import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.validation.model.IConstraintStatus;
 import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.osgi.framework.Bundle;
@@ -80,7 +80,8 @@ public class AbstractTest
 
 	protected static final String TEST_RESOURCE_NAME = "test_model.extlibrary"; //$NON-NLS-1$
 	
-	private final List transactionStack = new java.util.ArrayList();
+	private final List<InternalTransaction> transactionStack =
+		new java.util.ArrayList<InternalTransaction>();
 	
 	public AbstractTest() {
 		super();
@@ -94,6 +95,7 @@ public class AbstractTest
 	// Test configuration methods
 	//
 	
+	@Override
 	protected final void setUp()
 		throws Exception {
 		
@@ -141,6 +143,7 @@ public class AbstractTest
 				history);
 	}
 
+	@Override
 	protected final void tearDown()
 		throws Exception {
 		
@@ -208,7 +211,7 @@ public class AbstractTest
 			file.create(input, true, null);
 			
 			result = domain.createResource(
-				URI.createPlatformResourceURI(file.getFullPath().toString()).toString());
+				URI.createPlatformResourceURI(file.getFullPath().toString(), true).toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail("Exception creating test resource: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -341,8 +344,8 @@ public class AbstractTest
 			String name = names[i];
 			result = null;
 			
-			for (Iterator iter = getContents(current).iterator(); iter.hasNext();) {
-				EObject child = (EObject) iter.next();
+			for (Iterator<EObject> iter = getContents(current).iterator(); iter.hasNext();) {
+				EObject child = iter.next();
 				
 				if (name.equals(getName(child))) {
 					result = child;
@@ -363,7 +366,7 @@ public class AbstractTest
 	 * @return its name
 	 */
 	private String getName(EObject object) {
-		return (String) GetName.INSTANCE.doSwitch(object);
+		return GetName.INSTANCE.doSwitch(object);
 	}
 	
 	/**
@@ -372,13 +375,13 @@ public class AbstractTest
 	 * @param object an object, which may be a resource or an element
 	 * @return its immediate contents (children)
 	 */
-	private List getContents(Object object) {
+	private List<EObject> getContents(Object object) {
 		if (object instanceof EObject) {
 			return ((EObject) object).eContents();
 		} else if (object instanceof Resource) {
 			return ((Resource) object).getContents();
 		} else {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 	}
 	
@@ -397,7 +400,7 @@ public class AbstractTest
 	 *
 	 * @author Christian W. Damus (cdamus)
 	 */
-	private static final class GetName extends EXTLibrarySwitch {
+	private static final class GetName extends EXTLibrarySwitch<String> {
 		static final GetName INSTANCE = new GetName();
 		
 		private GetName() {
@@ -408,23 +411,28 @@ public class AbstractTest
 			return object.getTitle();
 		}
 
-		public Object caseBook(Book object) {
+		@Override
+		public String caseBook(Book object) {
 			return object.getTitle();
 		}
 
-		public Object caseLibrary(Library object) {
+		@Override
+		public String caseLibrary(Library object) {
 			return object.getName();
 		}
 
-		public Object casePeriodical(Periodical object) {
+		@Override
+		public String casePeriodical(Periodical object) {
 			return object.getTitle();
 		}
 		
-		public Object caseWriter(Writer object) {
+		@Override
+		public String caseWriter(Writer object) {
 			return object.getName();
 		}
 
-		public Object casePerson(Person object) {
+		@Override
+		public String casePerson(Person object) {
 			if (object.getFirstName() == null) {
 				if (object.getLastName() == null) {
 					return ""; //$NON-NLS-1$
@@ -443,7 +451,8 @@ public class AbstractTest
 			}
 		}
 
-		public Object defaultCase(EObject object) {
+		@Override
+		public String defaultCase(EObject object) {
 			return ""; //$NON-NLS-1$
 		}
 	}
@@ -483,7 +492,7 @@ public class AbstractTest
 	 * 
 	 * @param options the options
 	 */
-	protected void startWriting(Map options) {
+	protected void startWriting(Map<?, ?> options) {
 		try {
 			transactionStack.add(
 					((InternalTransactionalEditingDomain) domain).startTransaction(false, options));
@@ -518,7 +527,7 @@ public class AbstractTest
 	 * 
 	 * @param options the options
 	 */
-	protected void startReading(Map options) {
+	protected void startReading(Map<?, ?> options) {
 		try {
 			transactionStack.add(
 					((InternalTransactionalEditingDomain) domain).startTransaction(true, options));
@@ -567,8 +576,8 @@ public class AbstractTest
 	 * 
 	 * @return the map
 	 */
-	protected Map makeOptions(String option) {
-		return makeOptions(option, Boolean.TRUE);
+	protected Map<?, ?> makeOptions(String option) {
+		return makeOptions(option, true);
 	}
 	
 	/**
@@ -579,7 +588,7 @@ public class AbstractTest
 	 * 
 	 * @return the map
 	 */
-	protected Map makeOptions(String option, Object value) {
+	protected Map<?, ?> makeOptions(String option, Object value) {
 		if (value == null) {
 			return Collections.EMPTY_MAP;
 		}
@@ -590,21 +599,19 @@ public class AbstractTest
 	/**
 	 * Makes a map from multiple options, as key-value pairs.
 	 * 
-	 * @param options a pairwise list of keys and values
+	 * @param option an option
+	 * @param value the <tt>option</tt> value
+	 * @param options a pairwise list of additional options and values
 	 * 
 	 * @return the map
 	 */
-	protected Map makeOptions(Object[] options) {
-		Map result;
+	protected Map<?, ?> makeOptions(Object option, Object value, Object... options) {
+		Map<Object, Object> result = new java.util.HashMap<Object, Object>();
 		
-		if (options == null) {
-			result = Collections.EMPTY_MAP;
-		} else {
-			result = new java.util.HashMap();
-			
-			for (int i = 0; i < options.length - 1; i += 2) {
-				result.put(options[i], options[i + 1]);
-			}
+		result.put(option, value);
+		
+		for (int i = 0; i < options.length - 1; i += 2) {
+			result.put(options[i], options[i + 1]);
 		}
 		
 		return result;

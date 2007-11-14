@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: UndoActionWrapper.java,v 1.3 2007/06/07 14:25:41 cdamus Exp $
+ * $Id: UndoActionWrapper.java,v 1.4 2007/11/14 18:14:04 cdamus Exp $
  */
 
 package org.eclipse.emf.workspace.ui.actions;
@@ -22,7 +22,6 @@ import org.eclipse.emf.edit.ui.action.UndoAction;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartSite;
-import org.eclipse.ui.operations.OperationHistoryActionHandler;
 import org.eclipse.ui.operations.UndoActionHandler;
 
 /**
@@ -32,20 +31,21 @@ import org.eclipse.ui.operations.UndoActionHandler;
  * @author Christian W. Damus (cdamus)
  */
 public class UndoActionWrapper extends UndoAction {
-	private final ActionWrapperHelper delegate;
+	private final ActionWrapperHelper<UndoActionHandler> delegate;
 	
 	/**
 	 * Initializes me.
 	 */
 	public UndoActionWrapper() {
-		delegate = new ActionWrapperHelper(new ActionWrapperHelper.OwnerAccess() {
+		delegate = new ActionWrapperHelper<UndoActionHandler>(
+				new ActionWrapperHelper.OwnerAccess<UndoActionHandler>() {
 		
 			public void firePropertyChange(String property, Object oldValue,
 					Object newValue) {
 				firePropertyChange0(property, oldValue, newValue);
 			}
 		
-			public OperationHistoryActionHandler createDelegate(
+			public UndoActionHandler createDelegate(
 					IWorkbenchPartSite site, IUndoContext context) {
 				return new UndoActionHandler(site, context);
 			}});
@@ -60,6 +60,7 @@ public class UndoActionWrapper extends UndoAction {
 	 * Extends the superclass implementation to update the operation history
 	 * undo action handler to which I delegate.
 	 */
+	@Override
 	public void setActiveWorkbenchPart(IWorkbenchPart workbenchPart) {
 		super.setActiveWorkbenchPart(workbenchPart);
 		delegate.setActiveWorkbenchPart(workbenchPart);
@@ -68,6 +69,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void update() {
 		if (delegate != null) {
 			delegate.update();
@@ -77,6 +79,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public String getDescription() {
 		if (delegate != null) {
 			return delegate.getDescription();
@@ -88,6 +91,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public String getText() {
 		if (delegate != null) {
 			return delegate.getText();
@@ -99,6 +103,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public String getToolTipText() {
 		if (delegate != null) {
 			return delegate.getToolTipText();
@@ -110,6 +115,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public boolean isEnabled() {
 		if (delegate != null) {
 			return delegate.isEnabled();
@@ -121,6 +127,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public boolean isHandled() {
 		if (delegate != null) {
 			return delegate.isHandled();
@@ -132,6 +139,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void run() {
 		if (delegate != null) {
 			delegate.run();
@@ -141,6 +149,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void runWithEvent(Event event) {
 		if (delegate != null) {
 			delegate.runWithEvent(event);
@@ -150,6 +159,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void setChecked(boolean checked) {
 		if (delegate != null) {
 			delegate.setChecked(checked);
@@ -159,6 +169,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void setDescription(String text) {
 		if (delegate != null) {
 			delegate.setDescription(text);
@@ -168,6 +179,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void setEnabled(boolean enabled) {
 		if (delegate != null) {
 			delegate.setEnabled(enabled);
@@ -177,6 +189,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void setText(String text) {
 		if (delegate != null) {
 			delegate.setText(text);
@@ -186,6 +199,7 @@ public class UndoActionWrapper extends UndoAction {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void setToolTipText(String toolTipText) {
 		if (delegate != null) {
 			delegate.setToolTipText(toolTipText);

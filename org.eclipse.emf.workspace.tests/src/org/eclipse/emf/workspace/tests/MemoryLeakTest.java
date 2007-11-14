@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: MemoryLeakTest.java,v 1.1 2007/06/13 12:27:33 cdamus Exp $
+ * $Id: MemoryLeakTest.java,v 1.2 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -32,9 +32,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Notification;
-import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.change.ChangeDescription;
 import org.eclipse.emf.ecore.util.ECrossReferenceAdapter;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.command.CommandParameter;
@@ -95,10 +95,11 @@ public class MemoryLeakTest extends AbstractTest {
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
         Command cmd = new RemoveCommand(domain, root, EXTLibraryPackage.Literals.LIBRARY__BRANCHES, level1) {
-            public void doDispose() {
+            @Override
+			public void doDispose() {
                 if (feature instanceof EReference && ((EReference) feature).isContainment()) {
-                    for (Iterator iter = collection.iterator(); iter.hasNext();) {
-                        EObject next = (EObject) iter.next();
+                    for (Object o : collection) {
+                        EObject next = (EObject) o;
                         
                         // clear adapters on the removed object if it is still removed
                         if (next.eContainer() != owner) {
@@ -158,7 +159,8 @@ public class MemoryLeakTest extends AbstractTest {
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
         Command cmd = new RecordingCommand(domain, "Remove Branch") { //$NON-NLS-1$
-            protected void doExecute() {
+            @Override
+			protected void doExecute() {
                 root.getBranches().remove(level1);        
             }};
         
@@ -213,10 +215,11 @@ public class MemoryLeakTest extends AbstractTest {
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
         final Command trigger = new RemoveCommand(domain, root, EXTLibraryPackage.Literals.LIBRARY__BRANCHES, level1) {
-            public void doDispose() {
+            @Override
+			public void doDispose() {
                 if (feature instanceof EReference && ((EReference) feature).isContainment()) {
-                    for (Iterator iter = collection.iterator(); iter.hasNext();) {
-                        EObject next = (EObject) iter.next();
+                    for (Object o : collection) {
+                        EObject next = (EObject) o;
                         
                         // clear adapters on the removed object if it is still removed
                         if (next.eContainer() != owner) {
@@ -229,7 +232,8 @@ public class MemoryLeakTest extends AbstractTest {
             }};
         
         domain.addResourceSetListener(new TriggerListener() {
-            protected Command trigger(TransactionalEditingDomain domain,
+            @Override
+			protected Command trigger(TransactionalEditingDomain domain,
                     Notification notification) {
                 // trigger on the name change only
                 if (notification.getFeature() == EXTLibraryPackage.Literals.LIBRARY__NAME) {
@@ -291,12 +295,14 @@ public class MemoryLeakTest extends AbstractTest {
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
         final Command trigger = new RecordingCommand(domain, "Remove Branch") { //$NON-NLS-1$
-            protected void doExecute() {
+            @Override
+			protected void doExecute() {
                 root.getBranches().remove(level1);        
             }};
         
         domain.addResourceSetListener(new TriggerListener() {
-            protected Command trigger(TransactionalEditingDomain domain,
+            @Override
+			protected Command trigger(TransactionalEditingDomain domain,
                     Notification notification) {
                 // trigger on the name change only
                 if (notification.getFeature() == EXTLibraryPackage.Literals.LIBRARY__NAME) {
@@ -353,7 +359,8 @@ public class MemoryLeakTest extends AbstractTest {
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
         IUndoableOperation oper = new AbstractEMFOperation(domain, "Remove Branch") { //$NON-NLS-1$
-            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+            @Override
+			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
                 throws ExecutionException {
                 
                 root.getBranches().remove(level1);
@@ -422,12 +429,14 @@ public class MemoryLeakTest extends AbstractTest {
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
         final Command trigger = new RecordingCommand(domain, "Remove Branch") { //$NON-NLS-1$
-            protected void doExecute() {
+            @Override
+			protected void doExecute() {
                 root.getBranches().remove(level1);        
             }};
         
         domain.addResourceSetListener(new TriggerListener() {
-            protected Command trigger(TransactionalEditingDomain domain,
+            @Override
+			protected Command trigger(TransactionalEditingDomain domain,
                     Notification notification) {
                 // trigger on the name change only
                 if (notification.getFeature() == EXTLibraryPackage.Literals.LIBRARY__NAME) {
@@ -438,7 +447,8 @@ public class MemoryLeakTest extends AbstractTest {
             }});
         
         IUndoableOperation oper = new AbstractEMFOperation(domain, "Rename Library") { //$NON-NLS-1$
-            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+            @Override
+			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
                 throws ExecutionException {
                 
                 root.setName("newname"); //$NON-NLS-1$
@@ -507,7 +517,8 @@ public class MemoryLeakTest extends AbstractTest {
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
         IUndoableOperation triggerOper = new AbstractEMFOperation(domain, "Remove Branch") { //$NON-NLS-1$
-            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+            @Override
+			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
                 throws ExecutionException {
                 
                 root.getBranches().remove(level1);  
@@ -517,7 +528,8 @@ public class MemoryLeakTest extends AbstractTest {
         final Command trigger = new EMFOperationCommand(domain, triggerOper);
         
         domain.addResourceSetListener(new TriggerListener() {
-            protected Command trigger(TransactionalEditingDomain domain,
+            @Override
+			protected Command trigger(TransactionalEditingDomain domain,
                     Notification notification) {
                 // trigger on the name change only
                 if (notification.getFeature() == EXTLibraryPackage.Literals.LIBRARY__NAME) {
@@ -528,7 +540,8 @@ public class MemoryLeakTest extends AbstractTest {
             }});
         
         IUndoableOperation oper = new AbstractEMFOperation(domain, "Rename Library") { //$NON-NLS-1$
-            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+            @Override
+			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
                 throws ExecutionException {
                 
                 root.setName("newname"); //$NON-NLS-1$
@@ -579,19 +592,22 @@ public class MemoryLeakTest extends AbstractTest {
     //
     
     private static class TransactionSniffer extends ResourceSetListenerImpl {
-        private TransactionalEditingDomain domain;
-        private List changes = new BasicEList.FastCompare();
+        private final TransactionalEditingDomain domain;
+        private final List<ChangeDescription> changes =
+        	new java.util.ArrayList<ChangeDescription>();
         
         TransactionSniffer(TransactionalEditingDomain domain) {
             this.domain = domain;
             domain.addResourceSetListener(this);
         }
         
-        public boolean isPostcommitOnly() {
+        @Override
+		public boolean isPostcommitOnly() {
             return true;
         }
         
-        public void resourceSetChanged(ResourceSetChangeEvent event) {
+        @Override
+		public void resourceSetChanged(ResourceSetChangeEvent event) {
             Transaction tx = event.getTransaction();
             
             if ((tx != null) && (tx.getChangeDescription()) != null) {
@@ -603,8 +619,8 @@ public class MemoryLeakTest extends AbstractTest {
             // stop listening, now
             domain.removeResourceSetListener(this);
             
-            for (Iterator iter = EcoreUtil.getAllContents(changes); iter.hasNext();) {
-                EObject next = (EObject) iter.next();
+            for (Iterator<EObject> iter = EcoreUtil.getAllContents(changes); iter.hasNext();) {
+                EObject next = iter.next();
                 assertEquals("Adapters not cleared.", 0, next.eAdapters().size()); //$NON-NLS-1$
             }
         }

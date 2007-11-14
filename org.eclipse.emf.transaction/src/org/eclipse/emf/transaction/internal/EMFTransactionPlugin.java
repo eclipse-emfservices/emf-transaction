@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFTransactionPlugin.java,v 1.2 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: EMFTransactionPlugin.java,v 1.3 2007/11/14 18:14:01 cdamus Exp $
  */
 package org.eclipse.emf.transaction.internal;
 
@@ -39,6 +39,7 @@ public class EMFTransactionPlugin extends EMFPlugin {
 	}
 
 	// implements the inherited method
+	@Override
 	public ResourceLocator getPluginResourceLocator() {
 		return plugin;
 	}
@@ -81,6 +82,7 @@ public class EMFTransactionPlugin extends EMFPlugin {
 		/**
 		 * This method is called upon plug-in activation
 		 */
+		@Override
 		public void start(BundleContext context) throws Exception {
 			super.start(context);
 		}
@@ -88,6 +90,7 @@ public class EMFTransactionPlugin extends EMFPlugin {
 		/**
 		 * This method is called when the plug-in is stopped
 		 */
+		@Override
 		public void stop(BundleContext context) throws Exception {
 			super.stop(context);
 			EMFTransactionPlugin.plugin = null;

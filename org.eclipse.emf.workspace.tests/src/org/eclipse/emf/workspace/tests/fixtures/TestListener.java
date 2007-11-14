@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TestListener.java,v 1.2 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: TestListener.java,v 1.3 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
@@ -43,6 +43,7 @@ public class TestListener extends ResourceSetListenerImpl {
 		super(filter);
 	}
 	
+	@Override
 	public Command transactionAboutToCommit(ResourceSetChangeEvent event)
 		throws RollbackException {
 		
@@ -51,6 +52,7 @@ public class TestListener extends ResourceSetListenerImpl {
 		return null;
 	}
 	
+	@Override
 	public void resourceSetChanged(ResourceSetChangeEvent event) {
 		postcommit = event;
 	}

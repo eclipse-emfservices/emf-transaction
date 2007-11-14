@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ExternalDataCommand.java,v 1.2 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: ExternalDataCommand.java,v 1.3 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
@@ -36,6 +36,7 @@ public class ExternalDataCommand extends AbstractCommand {
 		this.newValue = newValue;
 	}
 	
+	@Override
 	protected boolean prepare() {
 		return true;
 	}
@@ -46,6 +47,7 @@ public class ExternalDataCommand extends AbstractCommand {
 		externalData[0] = newValue;
 	}
 	
+	@Override
 	public void undo() {
 		externalData[0] = oldValue;
 	}

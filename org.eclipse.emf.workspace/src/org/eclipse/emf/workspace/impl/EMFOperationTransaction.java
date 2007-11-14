@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFOperationTransaction.java,v 1.3 2007/06/07 14:25:44 cdamus Exp $
+ * $Id: EMFOperationTransaction.java,v 1.4 2007/11/14 18:14:07 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -41,7 +41,8 @@ public class EMFOperationTransaction extends EMFCommandTransaction {
 	 * @param domain my editing domain
 	 * @param options my options
 	 */
-	public EMFOperationTransaction(Command command, InternalTransactionalEditingDomain domain, Map options) {
+	public EMFOperationTransaction(Command command,
+			InternalTransactionalEditingDomain domain, Map<?, ?> options) {
 		super(command, domain, options);
 	}
 

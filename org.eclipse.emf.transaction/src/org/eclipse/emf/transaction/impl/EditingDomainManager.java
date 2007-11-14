@@ -12,13 +12,13 @@
  *
  * </copyright>
  *
- * $Id: EditingDomainManager.java,v 1.4 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: EditingDomainManager.java,v 1.5 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
+import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
@@ -55,8 +55,9 @@ public class EditingDomainManager {
 
 	private static final EditingDomainManager INSTANCE = new EditingDomainManager();
 	
-	private Collection universalListeners;
-	private final Map listeners = new java.util.HashMap();
+	private Collection<IConfigurationElement> universalListeners;
+	private final Map<String, Reference<ResourceSetListener>> listeners =
+		new java.util.HashMap<String, Reference<ResourceSetListener>>();
 	
 	/**
 	 * Not instantiable by clients.
@@ -152,12 +153,10 @@ public class EditingDomainManager {
 	 * @param domain the editing domain to which to add the listeners
 	 */
 	public void configureListeners(String id, TransactionalEditingDomain domain) {
-		Collection configs = getListenerConfigs(id);
+		Collection<IConfigurationElement> configs = getListenerConfigs(id);
 		
-		for (Iterator iter = configs.iterator(); iter.hasNext();) {
-			ResourceSetListener listener = getListener(
-					(IConfigurationElement) iter.next(),
-					true);
+		for (IConfigurationElement next : configs) {
+			ResourceSetListener listener = getListener(next, true);
 			
 			if (listener != null) {
 				domain.addResourceSetListener(listener);
@@ -174,12 +173,10 @@ public class EditingDomainManager {
 	 * @param domain the editing domain from which to remove the listeners
 	 */
 	public void deconfigureListeners(String id, TransactionalEditingDomain domain) {
-		Collection configs = getListenerConfigs(id);
+		Collection<IConfigurationElement> configs = getListenerConfigs(id);
 		
-		for (Iterator iter = configs.iterator(); iter.hasNext();) {
-			ResourceSetListener listener = getListener(
-					(IConfigurationElement) iter.next(),
-					false);
+		for (IConfigurationElement next : configs) {
+			ResourceSetListener listener = getListener(next, false);
 			
 			if (listener != null) {
 				domain.removeResourceSetListener(listener);
@@ -219,20 +216,21 @@ public class EditingDomainManager {
 	 * @param id the domain ID to retrieve
 	 * @return the configuration elements for listeners registered to this ID
 	 */
-	private Collection getListenerConfigs(String id) {
-		Collection result = new java.util.ArrayList();
+	private Collection<IConfigurationElement> getListenerConfigs(String id) {
+		Collection<IConfigurationElement> result =
+			new java.util.ArrayList<IConfigurationElement>();
 		
 		IConfigurationElement[] configs = Platform.getExtensionRegistry().getConfigurationElementsFor(
 				EMFTransactionPlugin.getPluginId(),
 				EXT_POINT_LISTENERS);
 		
-		for (int i = 0; i < configs.length; i++) {
-			if (E_LISTENER.equals(configs[i].getName())) {
-				IConfigurationElement[] domains = configs[i].getChildren(E_DOMAIN);
+		for (IConfigurationElement element : configs) {
+			if (E_LISTENER.equals(element.getName())) {
+				IConfigurationElement[] domains = element.getChildren(E_DOMAIN);
 				
-				for (int j = 0; j < domains.length; j++) {
-					if (id.equals(domains[j].getAttribute(A_ID))) {
-						result.add(configs[i]);
+				for (IConfigurationElement element2 : domains) {
+					if (id.equals(element2.getAttribute(A_ID))) {
+						result.add(element);
 						break;
 					}
 				}
@@ -250,20 +248,20 @@ public class EditingDomainManager {
 	 * 
 	 * @return the configuration elements for universal listeners
 	 */
-	private Collection getUniversalListenerConfigs() {
+	private Collection<IConfigurationElement> getUniversalListenerConfigs() {
 		if (universalListeners == null) {
-			universalListeners = new java.util.ArrayList();
+			universalListeners = new java.util.ArrayList<IConfigurationElement>();
 			
 			IConfigurationElement[] configs = Platform.getExtensionRegistry().getConfigurationElementsFor(
 					EMFTransactionPlugin.getPluginId(),
 					EXT_POINT_LISTENERS);
 			
-			for (int i = 0; i < configs.length; i++) {
-				if (E_LISTENER.equals(configs[i].getName())) {
-					IConfigurationElement[] domains = configs[i].getChildren(E_DOMAIN);
+			for (IConfigurationElement element : configs) {
+				if (E_LISTENER.equals(element.getName())) {
+					IConfigurationElement[] domains = element.getChildren(E_DOMAIN);
 					
 					if (domains.length == 0) {
-						universalListeners.add(configs[i]);
+						universalListeners.add(element);
 					}
 				}
 			}
@@ -286,9 +284,9 @@ public class EditingDomainManager {
 	private ResourceSetListener getListener(IConfigurationElement config, boolean create) {
 		ResourceSetListener result = null;
 		
-		WeakReference ref = (WeakReference) listeners.get(config.getAttribute(A_CLASS));
+		Reference<ResourceSetListener> ref = listeners.get(config.getAttribute(A_CLASS));
 		if (ref != null) {
-			result = (ResourceSetListener) ref.get();
+			result = ref.get();
 		}
 		
 		if ((result == null) && create) {
@@ -298,7 +296,7 @@ public class EditingDomainManager {
 				
 				if (listener instanceof ResourceSetListener) {
 					result = (ResourceSetListener) listener;
-					ref = new WeakReference(result);
+					ref = new WeakReference<ResourceSetListener>(result);
 					listeners.put(result.getClass().getName(), ref);
 				} else {
 					EMFTransactionPlugin.getPlugin().log(

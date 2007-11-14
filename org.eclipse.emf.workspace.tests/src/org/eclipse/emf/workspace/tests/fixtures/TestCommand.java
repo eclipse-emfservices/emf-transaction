@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TestCommand.java,v 1.2 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: TestCommand.java,v 1.3 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
@@ -29,10 +29,12 @@ import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
 public abstract class TestCommand
 	extends AbstractCommand {
 
+	@Override
 	protected boolean prepare() {
 		return true;
 	}
 	
+	@Override
 	public void undo() {
 		// do nothing
 	}

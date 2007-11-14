@@ -12,11 +12,10 @@
  *
  * </copyright>
  *
- * $Id: SelfOpeningEMFCompositeOperation.java,v 1.1 2007/10/03 20:16:31 cdamus Exp $
+ * $Id: SelfOpeningEMFCompositeOperation.java,v 1.2 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -44,13 +43,14 @@ public class SelfOpeningEMFCompositeOperation
     extends AbstractEMFOperation
     implements ICompositeOperation {
 
-    private List children = new java.util.ArrayList();
+    private final List<IUndoableOperation> children = new java.util.ArrayList<IUndoableOperation>();
 
     public SelfOpeningEMFCompositeOperation(TransactionalEditingDomain domain) {
         super(domain, "EMF Composite"); //$NON-NLS-1$
     }
 
-    protected final IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+    @Override
+	protected final IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
         throws ExecutionException {
 
         IStatus result;
@@ -110,7 +110,7 @@ public class SelfOpeningEMFCompositeOperation
      * 
      * @return my children
      */
-    public List getChildren() {
+    public List<IUndoableOperation> getChildren() {
         return children;
     }
 
@@ -120,12 +120,12 @@ public class SelfOpeningEMFCompositeOperation
             removeContext(current[i]);
         }
         
-        Set newContexts = new java.util.HashSet();
-        for (Iterator iter = children.iterator(); iter.hasNext();) {
-            IUndoContext[] next = ((IUndoableOperation) iter.next()).getContexts();
-            for (int i = 0; i < next.length; i++) {
-                if (!newContexts.add(next[i])) {
-                    addContext(next[i]);
+        Set<IUndoContext> newContexts = new java.util.HashSet<IUndoContext>();
+        for (IUndoableOperation child : children) {
+            IUndoContext[] next = child.getContexts();
+            for (IUndoContext ctx : next) {
+                if (!newContexts.add(ctx)) {
+                    addContext(ctx);
                 }
             }
         }

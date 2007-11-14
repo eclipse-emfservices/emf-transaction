@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EditingDomainValidatorTest.java,v 1.1 2007/03/22 19:11:50 cdamus Exp $
+ * $Id: EditingDomainValidatorTest.java,v 1.2 2007/11/14 18:14:12 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -44,10 +44,12 @@ public class EditingDomainValidatorTest extends AbstractTest {
 	}
 	
 	/** May be overridden by subclasses to create non-default editing domains. */
+	@Override
 	protected TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
 		return myDomain;
 	}
 	
+	@Override
 	protected ResourceSet createResourceSet() {
 		return myDomain.getResourceSet();
 	}

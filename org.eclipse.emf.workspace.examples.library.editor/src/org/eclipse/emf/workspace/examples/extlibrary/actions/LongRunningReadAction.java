@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: LongRunningReadAction.java,v 1.3 2007/06/07 14:25:36 cdamus Exp $
+ * $Id: LongRunningReadAction.java,v 1.4 2007/11/14 18:13:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.actions;
 
@@ -23,6 +23,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.edit.domain.IEditingDomainProvider;
 import org.eclipse.emf.transaction.RunnableWithResult;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.emf.workspace.examples.extlibrary.console.ConsoleUtil;
 import org.eclipse.emf.workspace.examples.extlibrary.internal.l10n.Messages;
 import org.eclipse.jface.action.Action;
@@ -50,6 +51,7 @@ public class LongRunningReadAction extends Action {
 		super(Messages.readJob_title);
 	}
 
+	@Override
 	public void run() {
 		if (domain != null) {
 			ConsoleUtil.showConsole(CONSOLE);
@@ -92,10 +94,11 @@ public class LongRunningReadAction extends Action {
 			setPriority(Job.LONG);
 		}
 		
+		@Override
 		protected IStatus run(final IProgressMonitor monitor) {
 			try {
-				return (IStatus) domain.runExclusive(
-					new RunnableWithResult.Impl() {
+				return TransactionUtil.runExclusive(domain,
+					new RunnableWithResult.Impl<IStatus>() {
 						public void run() {
 							setResult(longRunningRead(monitor));
 						}});

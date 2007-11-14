@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ValidateEditTest.java,v 1.1 2007/10/03 20:17:27 cdamus Exp $
+ * $Id: ValidateEditTest.java,v 1.2 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
@@ -47,8 +48,9 @@ public class ValidateEditTest extends AbstractTest {
     
     private Book book;
     
-    private Command setTitle = new TestCommand() {
-        public boolean canExecute() {
+    private final Command setTitle = new TestCommand() {
+        @Override
+		public boolean canExecute() {
             // command isn't executable if owner's resource is read-only
             return true; 
         }
@@ -61,8 +63,9 @@ public class ValidateEditTest extends AbstractTest {
             }
         }};
     
-    private Command clearTitle = new TestCommand() {
-        public boolean canExecute() {
+    private final Command clearTitle = new TestCommand() {
+        @Override
+		public boolean canExecute() {
             // command isn't executable if owner's resource is read-only
             return true; 
         }
@@ -126,8 +129,9 @@ public class ValidateEditTest extends AbstractTest {
         final boolean[] token = new boolean[1];
         
         setValidateEdit(new ValidateEditSupport.Default() {
-            protected IStatus doValidateEdit(Transaction transaction,
-                    Collection resources, Object context) {
+            @Override
+			protected IStatus doValidateEdit(Transaction transaction,
+                    Collection<? extends Resource> resources, Object context) {
                 token[0] = true;
                 return Status.CANCEL_STATUS;
             }});
@@ -190,6 +194,7 @@ public class ValidateEditTest extends AbstractTest {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void doSetUp()
 		throws Exception {
 		
@@ -209,6 +214,7 @@ public class ValidateEditTest extends AbstractTest {
         assertNotNull(book);
 	}
 	
+	@Override
 	protected void doTearDown()
 		throws Exception {
 		
@@ -232,7 +238,7 @@ public class ValidateEditTest extends AbstractTest {
 	}
 	
 	void setValidateEdit(Object optionValue) {
-        TransactionalEditingDomain.DefaultOptions defaults = (TransactionalEditingDomain.DefaultOptions) TransactionUtil
+        TransactionalEditingDomain.DefaultOptions defaults = TransactionUtil
             .getAdapter(domain, TransactionalEditingDomain.DefaultOptions.class);
         
         defaults.setDefaultTransactionOptions(Collections.singletonMap(

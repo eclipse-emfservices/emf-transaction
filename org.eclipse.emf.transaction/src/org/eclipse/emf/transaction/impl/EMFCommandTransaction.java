@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFCommandTransaction.java,v 1.3 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: EMFCommandTransaction.java,v 1.4 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -40,7 +40,8 @@ public class EMFCommandTransaction
 	 * @param domain the editing domain in which I am active
 	 * @param options my options
 	 */
-	public EMFCommandTransaction(Command command, InternalTransactionalEditingDomain domain, Map options) {
+	public EMFCommandTransaction(Command command, InternalTransactionalEditingDomain domain,
+			Map<?, ?> options) {
 		super(domain, false, options);
 		
 		this.command = command;

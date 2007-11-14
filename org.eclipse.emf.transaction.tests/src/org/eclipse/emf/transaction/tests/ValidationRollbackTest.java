@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ValidationRollbackTest.java,v 1.7 2007/10/22 21:27:15 cdamus Exp $
+ * $Id: ValidationRollbackTest.java,v 1.8 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -331,7 +331,9 @@ public class ValidationRollbackTest extends AbstractTest {
 	 */
 	public void test_rollbackNestingTransactionOnException_135673() {
 		Command command = new RecordingCommand(domain, "") { //$NON-NLS-1$
+			@Override
 			public boolean canUndo() { return true; }
+			@Override
 			protected void doExecute() {
 				// start some nested transactions
 				try {
@@ -361,7 +363,8 @@ public class ValidationRollbackTest extends AbstractTest {
         final Error error = new Error();
         
         ResourceSetListener testListener = new DemultiplexingListener() {
-            protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
+            @Override
+			protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
             	throw error;
             }};
         
@@ -370,7 +373,8 @@ public class ValidationRollbackTest extends AbstractTest {
             
             try {
                 domain.getCommandStack().execute(new RecordingCommand(domain) {
-                    protected void doExecute() {
+                    @Override
+					protected void doExecute() {
                         root.getWriters().clear();
                         root.getStock().clear();
                         root.getBranches().clear();
@@ -429,9 +433,11 @@ public class ValidationRollbackTest extends AbstractTest {
         final RuntimeException error = new RuntimeException();
         
         ResourceSetListener testListener = new TriggerListener() {
-        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        	@Override
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
         		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
-        			protected void doExecute() {
+        			@Override
+					protected void doExecute() {
         				throw error;
         			}};
         	}};
@@ -443,7 +449,8 @@ public class ValidationRollbackTest extends AbstractTest {
             domain.addResourceSetListener(testListener);
             
             domain.getCommandStack().execute(new RecordingCommand(domain) {
-                protected void doExecute() {
+                @Override
+				protected void doExecute() {
                     root.getWriters().clear();
                     root.getStock().clear();
                     root.getBranches().clear();
@@ -471,9 +478,11 @@ public class ValidationRollbackTest extends AbstractTest {
         final RuntimeException error = new OperationCanceledException();
         
         ResourceSetListener testListener = new TriggerListener() {
-        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        	@Override
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
         		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
-        			protected void doExecute() {
+        			@Override
+					protected void doExecute() {
         				throw error;
         			}};
         	}};
@@ -485,7 +494,8 @@ public class ValidationRollbackTest extends AbstractTest {
             domain.addResourceSetListener(testListener);
             
             domain.getCommandStack().execute(new RecordingCommand(domain) {
-                protected void doExecute() {
+                @Override
+				protected void doExecute() {
                     root.getWriters().clear();
                     root.getStock().clear();
                     root.getBranches().clear();
@@ -549,7 +559,8 @@ public class ValidationRollbackTest extends AbstractTest {
         final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
         assertNotNull(book);
         Command command = new RecordingCommand(domain) {
-            protected void doExecute() {
+            @Override
+			protected void doExecute() {
                 book.setTitle("New Title"); //$NON-NLS-1$
                 throw new NullPointerException();
             }};
@@ -610,7 +621,7 @@ public class ValidationRollbackTest extends AbstractTest {
             
             xa.rollback();
             
-            List notifications = l.postcommitNotifications;
+            List<Notification> notifications = l.postcommitNotifications;
             
             // check that rollback worked
             startReading();
@@ -681,7 +692,7 @@ public class ValidationRollbackTest extends AbstractTest {
             
             xa.rollback();
             
-            List notifications = l.postcommitNotifications;
+            List<Notification> notifications = l.postcommitNotifications;
             
             // check that rollback worked
             startReading();
@@ -703,6 +714,7 @@ public class ValidationRollbackTest extends AbstractTest {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void doSetUp()
 		throws Exception {
 		
@@ -712,6 +724,7 @@ public class ValidationRollbackTest extends AbstractTest {
 		validationEnabled = true;
 	}
 	
+	@Override
 	protected void doTearDown()
 		throws Exception {
 		

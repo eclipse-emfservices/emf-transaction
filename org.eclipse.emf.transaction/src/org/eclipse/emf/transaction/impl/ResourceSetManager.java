@@ -12,12 +12,11 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetManager.java,v 1.2 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: ResourceSetManager.java,v 1.3 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.eclipse.emf.common.notify.Notification;
@@ -43,9 +42,9 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 public final class ResourceSetManager {
 	private static final ResourceSetManager INSTANCE = new ResourceSetManager();
 	
-	private final Map loadingResources = new java.util.WeakHashMap();
-	private final Map loadedResources = new java.util.WeakHashMap();
-	private final Map unloadingResources = new java.util.WeakHashMap();
+	private final Map<Resource, Boolean> loadingResources = new java.util.WeakHashMap<Resource, Boolean>();
+	private final Map<Resource, Boolean> loadedResources = new java.util.WeakHashMap<Resource, Boolean>();
+	private final Map<Resource, Boolean> unloadingResources = new java.util.WeakHashMap<Resource, Boolean>();
 	
 	/**
 	 * Not instantiable by clients.
@@ -72,8 +71,8 @@ public final class ResourceSetManager {
 	 * @param rset a resource set
 	 */
 	public synchronized void observe(ResourceSet rset) {
-		for (Iterator iter = rset.getResources().iterator(); iter.hasNext();) {
-			observe((Resource) iter.next());
+		for (Resource next : rset.getResources()) {
+			observe(next);
 		}
 	}
 	
@@ -112,9 +111,11 @@ public final class ResourceSetManager {
 				break;
 			case Notification.ADD_MANY:
 				if (newValue != null) {
-					for (Iterator iter = ((Collection) newValue).iterator(); iter.hasNext();) {
+					@SuppressWarnings("unchecked")
+					Collection<Resource> resources = (Collection<Resource>) newValue;
+					for (Resource next : resources) {
 						// observe the new resource
-						observe((Resource) iter.next());
+						observe(next);
 					}
 				}
 				break;
@@ -127,10 +128,12 @@ public final class ResourceSetManager {
 				break;
 			case Notification.REMOVE_MANY:
 				if (oldValue != null) {
-					for (Iterator iter = ((Collection) oldValue).iterator(); iter.hasNext();) {
+					@SuppressWarnings("unchecked")
+					Collection<Resource> resources = (Collection<Resource>) oldValue;
+					for (Resource next : resources) {
 						// the old resource is effectively unloaded as far as we are
 						//    concerned because it is no longer in this resource set
-						setUnloaded((Resource) iter.next());
+						setUnloaded(next);
 					}
 				}
 				break;

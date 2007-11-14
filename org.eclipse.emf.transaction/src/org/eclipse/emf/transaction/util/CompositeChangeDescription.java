@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeChangeDescription.java,v 1.6 2007/06/13 12:27:32 cdamus Exp $
+ * $Id: CompositeChangeDescription.java,v 1.7 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -25,7 +25,10 @@ import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.BasicEMap;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.EMap;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.change.ChangeDescription;
+import org.eclipse.emf.ecore.change.FeatureChange;
+import org.eclipse.emf.ecore.change.ResourceChange;
 import org.eclipse.emf.ecore.change.impl.ChangeDescriptionImpl;
 import org.eclipse.emf.transaction.TransactionChangeDescription;
 
@@ -43,7 +46,8 @@ public class CompositeChangeDescription
 	extends ChangeDescriptionImpl
 	implements TransactionChangeDescription {
 
-	private final List changes = new java.util.ArrayList();
+	private final List<ChangeDescription> changes =
+		new java.util.ArrayList<ChangeDescription>();
 	
 	/**
 	 * Queries whether I have no composed change descriptions.
@@ -66,8 +70,8 @@ public class CompositeChangeDescription
      * Disposes my children, recursively.
      */
     void dispose() {
-        for (Iterator iter = changes.iterator(); iter.hasNext();) {
-            TransactionUtil.dispose((ChangeDescription) iter.next());
+        for (ChangeDescription next : changes) {
+            TransactionUtil.dispose(next);
         }
     }
 	
@@ -77,7 +81,9 @@ public class CompositeChangeDescription
 	public boolean canApply() {
 		boolean result = true;
 		
-		for (Iterator iter = changes.iterator(); result && iter.hasNext();) {
+		for (Iterator<ChangeDescription> iter = changes.iterator();
+				result && iter.hasNext();) {
+			
 			Object next = iter.next();
 			
 			if (next instanceof TransactionChangeDescription) {
@@ -89,20 +95,26 @@ public class CompositeChangeDescription
 	}
 	
 	// Documentation copied from the inherited method
+	@Override
 	public void apply() {
 		// must apply changes in the reverse order that they were added
-		for (ListIterator iter = changes.listIterator(changes.size()); iter.hasPrevious();) {
-			((ChangeDescription) iter.previous()).apply();
+		for (ListIterator<ChangeDescription> iter = changes.listIterator(changes.size());
+				iter.hasPrevious();) {
+			
+			iter.previous().apply();
 		}
 		
 		changes.clear();
 	}
 
 	// Documentation copied from the inherited method
+	@Override
 	public void applyAndReverse() {
 		// must apply changes in the reverse order that they were added
-		for (ListIterator iter = changes.listIterator(changes.size()); iter.hasPrevious();) {
-			((ChangeDescription) iter.previous()).applyAndReverse();
+		for (ListIterator<ChangeDescription> iter = changes.listIterator(changes.size());
+				iter.hasPrevious();) {
+			
+			iter.previous().applyAndReverse();
 		}
 		
 		// invert the order of the changes for next apply-and-reverse
@@ -120,8 +132,8 @@ public class CompositeChangeDescription
 			if (change instanceof CompositeChangeDescription) {
 				CompositeChangeDescription other = ((CompositeChangeDescription) change);
 				
-				for (Iterator iter = other.changes.iterator(); iter.hasNext();) {
-					add((ChangeDescription) iter.next());
+				for (ChangeDescription next : other.changes) {
+					add(next);
 				}
 			} else {
 				changes.add(change);
@@ -177,12 +189,13 @@ public class CompositeChangeDescription
 	 * My object changes are the concatenation of the changes in my composed
 	 * descriptions.
 	 */
-	public EMap getObjectChanges() {
+	@Override
+	public EMap<EObject, EList<FeatureChange>> getObjectChanges() {
 		if (objectChanges == null) {
-			objectChanges = new BasicEMap();
+			objectChanges = new BasicEMap<EObject, EList<FeatureChange>>();
 			
-			for (Iterator iter = changes.iterator(); iter.hasNext();) {
-				objectChanges.addAll(((ChangeDescription) iter.next()).getObjectChanges());
+			for (ChangeDescription next : changes) {
+				objectChanges.addAll(next.getObjectChanges());
 			}
 		}
 		
@@ -193,12 +206,13 @@ public class CompositeChangeDescription
 	 * My objects to attach are the concatenation of the changes in my composed
 	 * descriptions.
 	 */
-	public EList getObjectsToDetach() {
+	@Override
+	public EList<EObject> getObjectsToDetach() {
 		if (objectsToDetach == null) {
-			objectsToDetach = new BasicEList();
+			objectsToDetach = new BasicEList<EObject>();
 			
-			for (Iterator iter = changes.iterator(); iter.hasNext();) {
-				objectsToDetach.addAll(((ChangeDescription) iter.next()).getObjectsToDetach());
+			for (ChangeDescription next : changes) {
+				objectsToDetach.addAll(next.getObjectsToDetach());
 			}
 		}
 		
@@ -209,12 +223,13 @@ public class CompositeChangeDescription
 	 * My objects to detach are the concatenation of the changes in my composed
 	 * descriptions.
 	 */
-	public EList getObjectsToAttach() {
+	@Override
+	public EList<EObject> getObjectsToAttach() {
 		if (objectsToAttach == null) {
-			objectsToAttach = new BasicEList();
+			objectsToAttach = new BasicEList<EObject>();
 			
-			for (Iterator iter = changes.iterator(); iter.hasNext();) {
-				objectsToAttach.addAll(((ChangeDescription) iter.next()).getObjectsToAttach());
+			for (ChangeDescription next : changes) {
+				objectsToAttach.addAll(next.getObjectsToAttach());
 			}
 		}
 		
@@ -225,18 +240,20 @@ public class CompositeChangeDescription
 	 * My resource changes are the concatenation of the changes in my composed
 	 * descriptions.
 	 */
-	public EList getResourceChanges() {
+	@Override
+	public EList<ResourceChange> getResourceChanges() {
 		if (resourceChanges == null) {
-			resourceChanges = new BasicEList();
+			resourceChanges = new BasicEList<ResourceChange>();
 			
-			for (Iterator iter = changes.iterator(); iter.hasNext();) {
-				resourceChanges.addAll(((ChangeDescription) iter.next()).getResourceChanges());
+			for (ChangeDescription next : changes) {
+				resourceChanges.addAll(next.getResourceChanges());
 			}
 		}
 		
 		return resourceChanges;
 	}
 	
+	@Override
 	public String toString() {
 		StringBuffer result = new StringBuffer("CompositeChangeDescription["); //$NON-NLS-1$
 		result.append(getObjectChanges().size()).append(", "); //$NON-NLS-1$

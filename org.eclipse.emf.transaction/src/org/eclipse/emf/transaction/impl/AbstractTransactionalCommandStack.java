@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTransactionalCommandStack.java,v 1.4 2007/05/24 23:23:53 cdamus Exp $
+ * $Id: AbstractTransactionalCommandStack.java,v 1.5 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -95,7 +95,8 @@ public abstract class AbstractTransactionalCommandStack
      * transaction (if any) and passing the exception along to
      * the registered exception handler (if any).
      */
-    protected void handleError(Exception exception) {
+    @Override
+	protected void handleError(Exception exception) {
     	InternalTransaction active = getDomain().getActiveTransaction();
     	
     	if ((active != null) && active.isActive()) {
@@ -156,7 +157,7 @@ public abstract class AbstractTransactionalCommandStack
      * command is rolled back.  Note that <code>doExecute()</code> is only
      * called if the command is {@linkplain Command#canExecute() executable}.
      */
-    public void execute(Command command, Map options)
+    public void execute(Command command, Map<?, ?> options)
             throws InterruptedException, RollbackException {
         
         if ((command != null) && command.canExecute()) {
@@ -184,7 +185,7 @@ public abstract class AbstractTransactionalCommandStack
      *     waiting to start the transaction
      * @throws RollbackException if the execution of the command is rolled back
      */
-    protected abstract void doExecute(Command command, Map options)
+    protected abstract void doExecute(Command command, Map<?, ?> options)
             throws InterruptedException, RollbackException;
 
     /**
@@ -212,7 +213,8 @@ public abstract class AbstractTransactionalCommandStack
      * checked exception thrown by that method is handled by
      * {@link #handleError(Exception)} but is not propagated.
      */
-    public void execute(Command command) {
+    @Override
+	public void execute(Command command) {
     	try {
     		execute(command, null);
     	} catch (InterruptedException e) {
@@ -244,7 +246,7 @@ public abstract class AbstractTransactionalCommandStack
      * 
      * @return my editing domain's transaction options for undo/redo
      */
-    protected Map getUndoRedoOptions() {
+    protected Map<?, ?> getUndoRedoOptions() {
     	return domain.getUndoRedoOptions();
     }
     
@@ -255,14 +257,14 @@ public abstract class AbstractTransactionalCommandStack
      * @param options a client-supplied options map
      * @return a derived map of options suitable for trigger transactions
      */
-    public static final Map makeTriggerTransactionOptions(Map options) {
-        Map result;
+    public static final Map<Object, Object> makeTriggerTransactionOptions(Map<?, ?> options) {
+        Map<Object, Object> result;
         
         if ((options == null) || options.isEmpty()) {
-            result = Collections.singletonMap(
+            result = Collections.<Object, Object>singletonMap(
                 TransactionImpl.OPTION_IS_TRIGGER_TRANSACTION, Boolean.TRUE); 
         } else {
-            result = new java.util.HashMap(options);
+            result = new java.util.HashMap<Object, Object>(options);
             result.put(
                 TransactionImpl.OPTION_IS_TRIGGER_TRANSACTION, Boolean.TRUE);
         }

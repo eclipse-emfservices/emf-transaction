@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: OperationChangeDescriptionTest.java,v 1.2 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: OperationChangeDescriptionTest.java,v 1.3 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -103,6 +103,7 @@ public class OperationChangeDescriptionTest extends TestCase {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void setUp()
 		throws Exception {
 		
@@ -116,6 +117,7 @@ public class OperationChangeDescriptionTest extends TestCase {
 		assertEquals(newValue, externalData[0]);
 	}
 	
+	@Override
 	protected void tearDown()
 		throws Exception {
 		

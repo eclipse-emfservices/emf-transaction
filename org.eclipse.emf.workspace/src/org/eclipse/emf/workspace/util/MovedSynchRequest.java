@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: MovedSynchRequest.java,v 1.2 2007/06/07 14:25:44 cdamus Exp $
+ * $Id: MovedSynchRequest.java,v 1.3 2007/11/14 18:14:08 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -41,6 +41,7 @@ class MovedSynchRequest extends SynchRequest {
 		this.newURI = newURI;
 	}
 	
+	@Override
 	protected void doPerform() {
 		if (!synch.getDelegate().handleResourceMoved(resource, newURI)) {
 			// note that if our delegate is the default, it

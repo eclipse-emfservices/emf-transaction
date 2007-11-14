@@ -12,11 +12,10 @@
  *
  * </copyright>
  *
- * $Id: NonEMFCompositeOperation.java,v 1.2 2007/06/07 14:26:02 cdamus Exp $
+ * $Id: NonEMFCompositeOperation.java,v 1.3 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -40,23 +39,22 @@ public class NonEMFCompositeOperation
 		extends AbstractOperation
 		implements ICompositeOperation {
 	
-	private List children = new java.util.ArrayList();
+	private final List<IUndoableOperation> children = new java.util.ArrayList<IUndoableOperation>();
 	
 	public NonEMFCompositeOperation() {
 		super("Non-EMF Composite"); //$NON-NLS-1$
 	}
 	
 	// Documentation copied from the inherited specification
+	@Override
 	public IStatus execute(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 		
 		monitor.beginTask(getLabel(), children.size());
 		
 		try {
-			for (Iterator iter = children.iterator(); iter.hasNext();) {
-				((IUndoableOperation) iter.next()).execute(
-						new SubProgressMonitor(monitor, 1),
-						info);
+			for (IUndoableOperation next : children) {
+				next.execute(new SubProgressMonitor(monitor, 1), info);
 			}
 		} finally {
 			monitor.done();
@@ -66,16 +64,15 @@ public class NonEMFCompositeOperation
 	}
 
 	// Documentation copied from the inherited specification
+	@Override
 	public IStatus redo(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 		
 		monitor.beginTask(getLabel(), children.size());
 		
 		try {
-			for (Iterator iter = children.iterator(); iter.hasNext();) {
-				((IUndoableOperation) iter.next()).redo(
-						new SubProgressMonitor(monitor, 1),
-						info);
+			for (IUndoableOperation next : children) {
+				next.redo(new SubProgressMonitor(monitor, 1), info);
 			}
 		} finally {
 			monitor.done();
@@ -85,16 +82,16 @@ public class NonEMFCompositeOperation
 	}
 
 	// Documentation copied from the inherited specification
+	@Override
 	public IStatus undo(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 		
 		monitor.beginTask(getLabel(), children.size());
 		
 		try {
-			for (ListIterator iter = children.listIterator(children.size()); iter.hasPrevious();) {
-				((IUndoableOperation) iter.previous()).undo(
-						new SubProgressMonitor(monitor, 1),
-						info);
+			for (ListIterator<IUndoableOperation> iter = children.listIterator(children.size());
+					iter.hasPrevious();) {
+				iter.previous().undo(new SubProgressMonitor(monitor, 1), info);
 			}
 		} finally {
 			monitor.done();

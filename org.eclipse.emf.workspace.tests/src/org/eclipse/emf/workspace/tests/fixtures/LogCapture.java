@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,13 +12,13 @@
  *
  * </copyright>
  *
- * $Id: LogCapture.java,v 1.2 2006/10/10 14:31:44 cdamus Exp $
+ * $Id: LogCapture.java,v 1.3 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
 import java.util.List;
 
-import junit.framework.TestCase;
+import junit.framework.Assert;
 
 import org.eclipse.core.runtime.ILogListener;
 import org.eclipse.core.runtime.IStatus;
@@ -46,7 +46,7 @@ public class LogCapture {
 		}};
 	private final TransactionalCommandStack stack;
 	
-	private final List logs = new java.util.ArrayList();
+	private final List<IStatus> logs = new java.util.ArrayList<IStatus>();
 	private IStatus lastLog;
 	
 	/**
@@ -123,7 +123,7 @@ public class LogCapture {
 	 * 
 	 * @return a list (possibly empty) of {@link IStatus}es
 	 */
-	public List getLogs() {
+	public List<IStatus> getLogs() {
 		return logs;
 	}
 	
@@ -134,9 +134,9 @@ public class LogCapture {
 	 */
 	public void assertLogged(Throwable throwable) {
         IStatus log = getLastLog();
-        TestCase.assertNotNull(log);
+        Assert.assertNotNull(log);
         log = findStatus(log, throwable);
-        TestCase.assertNotNull(log);
+        Assert.assertNotNull(log);
 	}
 	
 	private void record(IStatus log) {

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadThread.java,v 1.3 2007/06/07 14:26:17 cdamus Exp $
+ * $Id: ReadThread.java,v 1.4 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
@@ -44,6 +44,7 @@ class ReadThread extends SimpleOperationThread {
 	/**
 	 * @see java.lang.Runnable#run()
 	 */
+	@Override
 	public void run() {
 		try {
 			if(notifyObject != null) {

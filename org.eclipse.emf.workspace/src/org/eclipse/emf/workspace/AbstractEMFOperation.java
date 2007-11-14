@@ -12,12 +12,11 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.16 2007/10/03 20:16:28 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.17 2007/11/14 18:14:08 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -70,7 +69,7 @@ import org.eclipse.emf.workspace.internal.l10n.Messages;
  */
 public abstract class AbstractEMFOperation extends AbstractOperation {
 	private final InternalTransactionalEditingDomain domain;
-	private final Map txOptions;
+	private final Map<Object, Object> txOptions;
 	
 	private Transaction transaction;
 	private TransactionChangeDescription change;
@@ -97,19 +96,25 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * @param options for the transaction in which I execute myself, or
 	 *     <code>null</code> for the default options
 	 */
-	public AbstractEMFOperation(TransactionalEditingDomain domain, String label, Map options) {
+	public AbstractEMFOperation(TransactionalEditingDomain domain, String label,
+			Map<?, ?> options) {
+		
 		super(label);
 		
 		this.domain = (InternalTransactionalEditingDomain) domain;
+		
 		if (options == null) {
-			this.txOptions = Collections.singletonMap(TransactionImpl.BLOCK_CHANGE_PROPAGATION, Boolean.TRUE);
+			this.txOptions = Collections.<Object, Object>singletonMap(
+				TransactionImpl.BLOCK_CHANGE_PROPAGATION, Boolean.TRUE);
 		} else {
 			// make a defensive copy to
 			//  - avoid modifying client's data
 			//  - guard against client modifying my map
 			//  - avoid exceptions on immutable maps
-			this.txOptions = new java.util.HashMap(options);
-			this.txOptions.put(TransactionImpl.BLOCK_CHANGE_PROPAGATION, Boolean.TRUE);
+	        Map<Object, Object> myOptions = new java.util.HashMap<Object, Object>(
+	                options);
+			myOptions.put(TransactionImpl.BLOCK_CHANGE_PROPAGATION, Boolean.TRUE);
+			this.txOptions = Collections.unmodifiableMap(myOptions);
 		}
 	}
 
@@ -120,6 +125,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * 
 	 * @see #doExecute(IProgressMonitor, IAdaptable)
 	 */
+	@Override
 	public final IStatus execute(IProgressMonitor monitor, IAdaptable info)
 		throws ExecutionException {
 		
@@ -128,14 +134,15 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
         }
         
 		transaction = null;
-		final List result = new java.util.ArrayList(2);
+		final List<IStatus> result = new java.util.ArrayList<IStatus>(2);
 		
 		try {
             // add to the transaction a reference to myself for the
             //   command stack's benefit, unless I would be inheriting
             //   a reference to a nesting operation
-            Map options = new java.util.HashMap(getOptions());
-            Map inherited = inheritedOptions();
+            Map<Object, Object> options = new java.util.HashMap<Object, Object>(
+                    getOptions());
+            Map<?, ?> inherited = inheritedOptions();
             if (inherited.containsKey(EMFWorkspacePlugin.OPTION_OWNING_OPERATION)) {
                 options.put(EMFWorkspacePlugin.OPTION_OWNING_OPERATION,
                     inherited.get(EMFWorkspacePlugin.OPTION_OWNING_OPERATION));
@@ -195,7 +202,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * @return <code>false</code> if either there is an active transaction and it
 	 *     has the same options as specified; <code>true</code>, otherwise
 	 */
-	private boolean optionsDiffer(Map options) {
+	private boolean optionsDiffer(Map<?, ?> options) {
 		boolean result = true;
 		
 		Transaction active =
@@ -214,8 +221,8 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
      * @return options currently in effect that would be inherited by a new
      *     transaction that I might create
      */
-    private Map inheritedOptions() {
-        Map result = Collections.EMPTY_MAP;
+    private Map<?, ?> inheritedOptions() {
+        Map<?, ?> result = Collections.EMPTY_MAP;
         
         Transaction active =
             ((InternalTransactionalEditingDomain) getEditingDomain()).getActiveTransaction();
@@ -237,17 +244,16 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * 
 	 * @return the multi-status
 	 */
-	protected IStatus aggregateStatuses(List statuses) {
+	protected IStatus aggregateStatuses(List<? extends IStatus> statuses) {
 		final IStatus result;
 		
 		if (statuses.isEmpty()) {
 			result = Status.OK_STATUS;
 		} else if (statuses.size() == 1) {
-			result = ((IStatus) statuses.get(0));
+			result = statuses.get(0);
 		} else {
 			// find the most severe status, to use its plug-in, code, and message
-			IStatus[] children = (IStatus[]) statuses.toArray(
-					new IStatus[statuses.size()]);
+			IStatus[] children = statuses.toArray(new IStatus[statuses.size()]);
 			
 			IStatus worst = children[0];
 			for (int i = 1; i < children.length; i++) {
@@ -297,9 +303,8 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	
 	private void gatherUndoContextsFromTrigger(Command trigger) {
 		if (trigger instanceof CompoundCommand) {
-			for (Iterator i = ((CompoundCommand) trigger).getCommandList()
-				.iterator(); i.hasNext();) {
-				gatherUndoContextsFromTrigger((Command)i.next());
+			for (Command next : ((CompoundCommand) trigger).getCommandList()) {
+				gatherUndoContextsFromTrigger(next);
 			}
 		} else if (trigger instanceof EMFOperationCommand) {
 			IUndoContext[] undoContextsToAdd = ((EMFOperationCommand)trigger).getOperation().getContexts();
@@ -316,6 +321,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * successfully executed.  Subclasses would not usually need to override
 	 * this method.
 	 */
+	@Override
 	public boolean canUndo() {
 		return (getChange() == null) || getChange().canApply();
 	}
@@ -323,6 +329,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	/**
 	 * Undoes me by inverting my recorded changes in a transaction.
 	 */
+	@Override
 	public final IStatus undo(IProgressMonitor monitor, IAdaptable info)
 		throws ExecutionException {
 		
@@ -384,6 +391,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * successfully executed.  Subclasses would not usually need to override
 	 * this method.
 	 */
+	@Override
 	public boolean canRedo() {
 		return (getChange() == null) || getChange().canApply();
 	}
@@ -391,6 +399,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	/**
 	 * Redoes me by replaying my recorded changes in a transaction.
 	 */
+	@Override
 	public final IStatus redo(IProgressMonitor monitor, IAdaptable info)
 		throws ExecutionException {
 		
@@ -461,7 +470,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * 
 	 * @return my options, or an empty map if none
 	 */
-	public final Map getOptions() {
+	public final Map<?, ?> getOptions() {
 		return txOptions;
 	}
 	
@@ -476,7 +485,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 * @throws InterruptedException if the current thread was interrupted while
 	 *     waiting for the transaction to start
 	 */
-	Transaction createTransaction(Map options) throws InterruptedException {
+	Transaction createTransaction(Map<?, ?> options) throws InterruptedException {
 		return domain.startTransaction(false, options);
 	}
 	
@@ -591,6 +600,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	/**
 	 * Forgets my transaction and its change description.
 	 */
+	@Override
 	public void dispose() {
 		super.dispose();
 		

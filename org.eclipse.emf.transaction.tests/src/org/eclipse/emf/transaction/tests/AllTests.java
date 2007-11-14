@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AllTests.java,v 1.10 2007/10/03 20:17:27 cdamus Exp $
+ * $Id: AllTests.java,v 1.11 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -23,9 +23,10 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
-import org.eclipse.core.runtime.IPlatformRunnable;
 import org.eclipse.emf.transaction.multithread.tests.AbstractMultithreadTest;
 import org.eclipse.emf.transaction.util.tests.InternalUtilTests;
+import org.eclipse.equinox.app.IApplication;
+import org.eclipse.equinox.app.IApplicationContext;
 
 /**
  * Master JUnit test suite for the <em>EMF-TX API</em>.
@@ -34,7 +35,7 @@ import org.eclipse.emf.transaction.util.tests.InternalUtilTests;
  */
 public class AllTests
 	extends TestCase
-	implements IPlatformRunnable {
+	implements IApplication {
 
 	public AllTests() {
 		super(""); //$NON-NLS-1$
@@ -62,11 +63,16 @@ public class AllTests
 		return suite;
 	}
 
-	public Object run(Object args)
+	public Object start(IApplicationContext context)
 		throws Exception {
-
+		
 		TestRunner.run(suite());
-		return Arrays
-			.asList(new String[] {"Please see raw test suite output for details."}); //$NON-NLS-1$
+		
+		return Arrays.asList(new String[] {
+			"Please see raw test suite output for details."}); //$NON-NLS-1$
+	}
+
+	public void stop() {
+		// nothing to do
 	}
 }

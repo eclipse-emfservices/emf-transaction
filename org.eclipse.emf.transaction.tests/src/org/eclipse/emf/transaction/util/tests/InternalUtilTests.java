@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,18 +12,13 @@
  *
  * </copyright>
  *
- * $Id: InternalUtilTests.java,v 1.2 2006/01/30 21:40:51 cdamus Exp $
+ * $Id: InternalUtilTests.java,v 1.3 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util.tests;
-
-import java.util.Arrays;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import junit.textui.TestRunner;
-
-import org.eclipse.core.runtime.IPlatformRunnable;
 
 /**
  * Suite of tests for the utility classes in the EMF-TX API implementation.
@@ -31,8 +26,7 @@ import org.eclipse.core.runtime.IPlatformRunnable;
  * @author Christian W. Damus (cdamus)
  */
 public class InternalUtilTests
-	extends TestCase
-	implements IPlatformRunnable {
+	extends TestCase {
 
 	public InternalUtilTests() {
 		super(""); //$NON-NLS-1$
@@ -46,13 +40,5 @@ public class InternalUtilTests
 		suite.addTest(TransactionUtilTests.suite());
 
 		return suite;
-	}
-
-	public Object run(Object args)
-		throws Exception {
-
-		TestRunner.run(suite());
-		return Arrays
-			.asList(new String[] {"Please see raw test suite output for details."}); //$NON-NLS-1$
 	}
 }

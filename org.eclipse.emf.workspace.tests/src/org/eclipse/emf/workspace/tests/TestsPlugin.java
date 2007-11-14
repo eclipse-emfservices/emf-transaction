@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TestsPlugin.java,v 1.2 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: TestsPlugin.java,v 1.3 2007/11/14 18:13:53 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -27,12 +27,14 @@ import org.osgi.framework.BundleContext;
 public class TestsPlugin extends Plugin {
 	public static TestsPlugin instance;
 	
+	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		
 		instance = this;
 	}
 	
+	@Override
 	public void stop(BundleContext context) throws Exception {
 		instance = null;
 		

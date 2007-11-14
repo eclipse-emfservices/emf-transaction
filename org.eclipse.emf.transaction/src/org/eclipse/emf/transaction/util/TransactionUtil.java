@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionUtil.java,v 1.6 2007/10/03 20:17:38 cdamus Exp $
+ * $Id: TransactionUtil.java,v 1.7 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -28,6 +28,7 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.edit.domain.IEditingDomainProvider;
+import org.eclipse.emf.transaction.RunnableWithResult;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
@@ -205,7 +206,7 @@ public class TransactionUtil {
 	 * @param notifier the notifier to disconnect
 	 */
 	private static void disconnectFromEditingDomain0(Notifier notifier) {
-		Set recorders = getExistingChangeRecorders(notifier);
+		Set<TransactionChangeRecorder> recorders = getExistingChangeRecorders(notifier);
 		
 		if (!recorders.isEmpty()) {
 			// this resource is managed by a transactional editing domain
@@ -216,7 +217,7 @@ public class TransactionUtil {
 				throw new IllegalArgumentException("resource is still in the domain's resource set"); //$NON-NLS-1$
 			}
 			
-			Iterator iter = EcoreUtil.getAllProperContents(Collections.singleton(
+			Iterator<?> iter = EcoreUtil.getAllProperContents(Collections.singleton(
 					notifier), false);
 			while (iter.hasNext()) {
 				((Notifier) iter.next()).eAdapters().removeAll(recorders);
@@ -231,17 +232,19 @@ public class TransactionUtil {
 	 * @return the currently attached change recorders, which may be an empty
 	 *    set if none
 	 */
-	private static Set getExistingChangeRecorders(Notifier notifier) {
-		Set result = null;
+	private static Set<TransactionChangeRecorder> getExistingChangeRecorders(
+			Notifier notifier) {
+		
+		Set<TransactionChangeRecorder> result = null;
 		
 		Object[] adapters = notifier.eAdapters().toArray();
-		for (int i = 0; i < adapters.length; i++) {
-			if (adapters[i] instanceof TransactionChangeRecorder) {
-				TransactionChangeRecorder next = (TransactionChangeRecorder) adapters[i];
+		for (Object element : adapters) {
+			if (element instanceof TransactionChangeRecorder) {
+				TransactionChangeRecorder next = (TransactionChangeRecorder) element;
 				
 				if (next.getEditingDomain() != null) {
 					if (result == null) {
-						result = new java.util.HashSet();
+						result = new java.util.HashSet<TransactionChangeRecorder>();
 					}
 					
 					result.add(next);
@@ -249,7 +252,8 @@ public class TransactionUtil {
 			}
 		}
 		
-		return (result == null)? Collections.EMPTY_SET : result;
+		return (result == null)? Collections.<TransactionChangeRecorder>emptySet()
+			: result;
 	}
     
     /**
@@ -266,8 +270,8 @@ public class TransactionUtil {
         } else if (change instanceof CommandChangeDescription) {
             ((CommandChangeDescription) change).dispose();
         } else {
-            for (Iterator iter = change.eAllContents(); iter.hasNext();) {
-                ((EObject) iter.next()).eAdapters().clear();
+            for (Iterator<EObject> iter = change.eAllContents(); iter.hasNext();) {
+                iter.next().eAdapters().clear();
             }
         }
     }
@@ -275,14 +279,19 @@ public class TransactionUtil {
     /**
      * Obtains an instance of the specified adapter type for an editing domain.
      * 
+     * @param <T> the adapter interface that is required
+     * 
      * @param domain an editing domain to adapt
      * @param adapterType the required interface
      * 
      * @return an instance of the required interface that adapts the
      *    <tt>domain</tt>, or <code>null</code> if it does not supply this interface
+     * 
+     * @since 1.2
      */
-    public static Object getAdapter(TransactionalEditingDomain domain, Class adapterType) {
-        Object result;
+    public static <T> T getAdapter(TransactionalEditingDomain domain,
+    		Class<? extends T> adapterType) {
+        T result;
         
         if (domain instanceof Adaptable) {
             result = ((Adaptable) domain).getAdapter(adapterType);
@@ -291,5 +300,56 @@ public class TransactionUtil {
         }
         
         return result;
+    }
+    
+    /**
+     * Utility method for executing exclusive runnables that
+     * {@linkplain RunnableWithResult return values}.  The advantage of this
+     * method over {@link TransactionalEditingDomain#runExclusive(Runnable)} is
+     * that it provides compile-time type safety.
+     * 
+     * @param <T> the result type of the runnable
+     * 
+     * @param domain the editing domain in which to run
+     * @param runnable the runnable to execute
+     * 
+     * @return the result of the runnable
+     * 
+     * @throws InterruptedException if the current thread is interrupted while
+	 *    waiting for access to the resource set
+     * 
+     * @since 1.2
+     */
+    @SuppressWarnings("unchecked")
+	public static <T> T runExclusive(TransactionalEditingDomain domain,
+    		RunnableWithResult<? extends T> runnable) throws InterruptedException {
+    	
+    	return (T) domain.runExclusive(runnable);
+    }
+    
+    /**
+     * Utility method for providing privileged access to runnables that
+     * {@linkplain RunnableWithResult return values}.  The advantage of this
+     * method over {@link TransactionalEditingDomain#createPrivilegedRunnable(Runnable)} is
+     * that it provides compile-time type safety.
+     * 
+     * @param <T> the result type of the runnable
+     * 
+     * @param domain the editing domain in which to grant privileged access
+     * @param runnable the runnable to execute
+     * 
+     * @return the result of the runnable
+     * 
+     * @throws InterruptedException if the current thread is interrupted while
+	 *    waiting for access to the resource set
+     * 
+     * @since 1.2
+     */
+    @SuppressWarnings("unchecked")
+	public static <T> RunnableWithResult<T> createPrivilegedRunnable(
+			TransactionalEditingDomain domain,
+    		RunnableWithResult<? extends T> runnable) throws InterruptedException {
+    	
+    	return (RunnableWithResult<T>) domain.createPrivilegedRunnable(runnable);
     }
 }

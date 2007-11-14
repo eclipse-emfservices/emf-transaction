@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AllTests.java,v 1.3 2007/10/03 20:17:34 cdamus Exp $
+ * $Id: AllTests.java,v 1.4 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -23,7 +23,8 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
-import org.eclipse.core.runtime.IPlatformRunnable;
+import org.eclipse.equinox.app.IApplication;
+import org.eclipse.equinox.app.IApplicationContext;
 
 /**
  * JUnit suite for the <code>org.eclipse.emf.workspace.util</code> package.
@@ -32,7 +33,7 @@ import org.eclipse.core.runtime.IPlatformRunnable;
  */
 public class AllTests
 	extends TestCase
-	implements IPlatformRunnable {
+	implements IApplication {
 
 	public AllTests() {
 		super(""); //$NON-NLS-1$
@@ -48,11 +49,15 @@ public class AllTests
 		return suite;
 	}
 
-	public Object run(Object args)
+	public Object start(IApplicationContext context)
 		throws Exception {
 
 		TestRunner.run(suite());
 		return Arrays
 			.asList(new String[] {"Please see raw test suite output for details."}); //$NON-NLS-1$
+	}
+	
+	public void stop() {
+		// nothing to do
 	}
 }

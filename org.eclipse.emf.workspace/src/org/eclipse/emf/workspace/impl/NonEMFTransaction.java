@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: NonEMFTransaction.java,v 1.4 2007/06/07 14:25:44 cdamus Exp $
+ * $Id: NonEMFTransaction.java,v 1.5 2007/11/14 18:14:07 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -64,7 +64,7 @@ public class NonEMFTransaction extends TransactionImpl {
 	public NonEMFTransaction(TransactionalEditingDomain domain,
 			IUndoableOperation operation,
 			IAdaptable info,
-			Map options) {
+			Map<?, ?> options) {
 		super(domain, false, customizeOptions(options));
 		
 		this.operation = operation;
@@ -80,7 +80,7 @@ public class NonEMFTransaction extends TransactionImpl {
 	 * @return A new map of options that should be passed to the superclass to
 	 *  become our official set of options.
 	 */
-	private static Map customizeOptions(Map options) {
+	private static Map<?, ?> customizeOptions(Map<?, ?> options) {
 		// Copy the options and add the special non-change description propagation
 		//  option. We do this because if by any chance that the child operation
 		//  invokes some AbstractEMFOperation again then it will be handling the
@@ -88,15 +88,16 @@ public class NonEMFTransaction extends TransactionImpl {
 		//  transactions by default will propagate all of the change descriptions upward.
 		//  This can cause situations where the same change description object is applied
 		//  and reversed twice.
-		options = new HashMap(options);
-		options.put(TransactionImpl.ALLOW_CHANGE_PROPAGATION_BLOCKING, Boolean.TRUE);
+		Map<Object, Object> result = new HashMap<Object, Object>(options);
+		result.put(TransactionImpl.ALLOW_CHANGE_PROPAGATION_BLOCKING, Boolean.TRUE);
 		
-		return options;
+		return result;
 	}
 
 	/**
 	 * Appends my non-EMF change and commits.
 	 */
+	@Override
 	public void commit() throws RollbackException {
 		change.add(new OperationChangeDescription(operation, info));
 		

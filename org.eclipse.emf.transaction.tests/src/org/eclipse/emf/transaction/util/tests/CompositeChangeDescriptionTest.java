@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeChangeDescriptionTest.java,v 1.4 2007/06/07 14:26:18 cdamus Exp $
+ * $Id: CompositeChangeDescriptionTest.java,v 1.5 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util.tests;
 
@@ -249,6 +249,7 @@ public class CompositeChangeDescriptionTest extends AbstractTest {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void doSetUp()
 		throws Exception {
 		
@@ -263,8 +264,10 @@ public class CompositeChangeDescriptionTest extends AbstractTest {
 		commit();
 		
 		// brute-force remove the TransactionChangeRecorder
-		for (Iterator iter = testResource.getAllContents(); iter.hasNext();) {
-			((Notifier) iter.next()).eAdapters().clear();  
+		for (Iterator<? extends Notifier> iter = testResource.getAllContents();
+				iter.hasNext();) {
+			
+			iter.next().eAdapters().clear();  
 		}
 		testResource.eAdapters().clear();
 		
@@ -272,6 +275,7 @@ public class CompositeChangeDescriptionTest extends AbstractTest {
 		change = new CompositeChangeDescription();
 	}
 	
+	@Override
 	protected void doTearDown()
 		throws Exception {
 		

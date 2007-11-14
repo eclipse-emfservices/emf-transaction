@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EditingDomainRegistryTest.java,v 1.5 2007/06/07 14:26:17 cdamus Exp $
+ * $Id: EditingDomainRegistryTest.java,v 1.6 2007/11/14 18:14:12 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -216,10 +216,10 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		
 		// should have gotten events from the read transaction, above
 		assertNotNull(TestListener1.getInstance().postcommit);
-		List notifications = TestListener1.getInstance().postcommit.getNotifications();
+		List<Notification> notifications = TestListener1.getInstance().postcommit.getNotifications();
 		assertFalse(notifications == null);
 		assertEquals(1, notifications.size());
-		Notification notification = (Notification) notifications.get(0);
+		Notification notification = notifications.get(0);
 		assertSame(domain3.getResourceSet(), notification.getNotifier());
 		assertEquals(ResourceSet.RESOURCE_SET__RESOURCES, notification.getFeatureID(null));
 		assertEquals(Notification.ADD, notification.getEventType());
@@ -282,10 +282,10 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		
 		// should have gotten events from the read transaction, above
 		assertNotNull(TestListener2.getInstance().postcommit);
-		List notifications = TestListener2.getInstance().postcommitNotifications;
+		List<Notification> notifications = TestListener2.getInstance().postcommitNotifications;
 		assertFalse(notifications == null);
 		assertEquals(1, notifications.size());
-		Notification notification = (Notification) notifications.get(0);
+		Notification notification = notifications.get(0);
 		assertSame(domain3.getResourceSet(), notification.getNotifier());
 		assertEquals(ResourceSet.RESOURCE_SET__RESOURCES, notification.getFeatureID(null));
 		assertEquals(Notification.ADD, notification.getEventType());
@@ -308,7 +308,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		notifications = TestListener2.getInstance().postcommitNotifications;
 		assertFalse(notifications == null);
 		assertEquals(1, notifications.size());
-		notification = (Notification) notifications.get(0);
+		notification = notifications.get(0);
 		assertSame(domain4.getResourceSet(), notification.getNotifier());
 		assertEquals(ResourceSet.RESOURCE_SET__RESOURCES, notification.getFeatureID(null));
 		assertEquals(Notification.ADD, notification.getEventType());
@@ -365,10 +365,10 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		
 		// should have gotten events from the read transaction, above
 		assertNotNull(TestListener3.getInstance().postcommit);
-		List notifications = TestListener3.getInstance().postcommitNotifications;
+		List<Notification> notifications = TestListener3.getInstance().postcommitNotifications;
 		assertFalse(notifications == null);
 		assertEquals(1, notifications.size());
-		Notification notification = (Notification) notifications.get(0);
+		Notification notification = notifications.get(0);
 		assertSame(domain3.getResourceSet(), notification.getNotifier());
 		assertEquals(ResourceSet.RESOURCE_SET__RESOURCES, notification.getFeatureID(null));
 		assertEquals(Notification.ADD, notification.getEventType());
@@ -391,7 +391,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		notifications = TestListener3.getInstance().postcommitNotifications;
 		assertFalse(notifications == null);
 		assertEquals(1, notifications.size());
-		notification = (Notification) notifications.get(0);
+		notification = notifications.get(0);
 		assertSame(domain4.getResourceSet(), notification.getNotifier());
 		assertEquals(ResourceSet.RESOURCE_SET__RESOURCES, notification.getFeatureID(null));
 		assertEquals(Notification.ADD, notification.getEventType());
@@ -421,40 +421,40 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	
 	/** Test listener registered against TestDomain3. */
 	public static class TestListener1 extends TestListener {
-		private static WeakReference instance;
+		private static WeakReference<TestListener1> instance;
 		
 		public TestListener1() {
-			instance = new WeakReference(this);
+			instance = new WeakReference<TestListener1>(this);
 		}
 		
 		public static TestListener1 getInstance() {
-			return instance == null ? null : (TestListener1) instance.get();
+			return instance == null ? null : instance.get();
 		}
 	}
 	
 	/** Test listener registered against TestDomain3. */
 	public static class TestListener2 extends TestListener {
-		private static WeakReference instance;
+		private static WeakReference<TestListener2> instance;
 		
 		public TestListener2() {
-			instance = new WeakReference(this);
+			instance = new WeakReference<TestListener2>(this);
 		}
 		
 		public static TestListener2 getInstance() {
-			return instance == null ? null : (TestListener2) instance.get();
+			return instance == null ? null : instance.get();
 		}
 	}
 	
 	/** Test listener registered against all domains. */
 	public static class TestListener3 extends TestListener {
-		private static WeakReference instance;
+		private static WeakReference<TestListener3> instance;
 		
 		public TestListener3() {
-			instance = new WeakReference(this);
+			instance = new WeakReference<TestListener3>(this);
 		}
 		
 		public static TestListener3 getInstance() {
-			return instance == null ? null : (TestListener3) instance.get();
+			return instance == null ? null : instance.get();
 		}
 	}
 	

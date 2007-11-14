@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Transaction.java,v 1.6 2007/10/03 20:17:38 cdamus Exp $
+ * $Id: Transaction.java,v 1.7 2007/11/14 18:14:01 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -23,9 +23,9 @@ import org.eclipse.emf.transaction.util.ValidateEditSupport;
 
 
 /**
- * Specification of a transaction in a {@link TransactionalEditingDomain}.  All reading and
- * writing of data in a <code>TransactionalEditingDomain</code> is performed in the context
- * of a transaction.
+ * Specification of a transaction in a {@link TransactionalEditingDomain}.  All
+ * reading and writing of data in a <code>TransactionalEditingDomain</code> is
+ * performed in the context of a transaction.
  * <p>
  * This interface is not intended to be implemented by clients.  It is used
  * internally and by frameworks extending this API.  It is mostly of use to
@@ -191,7 +191,7 @@ public interface Transaction {
 	 * 
 	 * @return an unmodifiable view of my options
 	 */
-	Map getOptions();
+	Map<?, ?> getOptions();
 
 	/**
 	 * Queries whether I am active.  I am active after I have started and

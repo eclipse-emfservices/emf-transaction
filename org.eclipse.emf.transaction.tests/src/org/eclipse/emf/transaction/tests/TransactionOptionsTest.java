@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionOptionsTest.java,v 1.9 2007/10/03 20:17:27 cdamus Exp $
+ * $Id: TransactionOptionsTest.java,v 1.10 2007/11/14 18:14:12 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -166,6 +166,7 @@ public class TransactionOptionsTest extends AbstractTest {
 	 */
 	public void test_noUndo_recordingCommand() {
 		Command cmd = new RecordingCommand(domain) {
+			@Override
 			protected void doExecute() {
 				final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 				assertNotNull(book);
@@ -358,7 +359,7 @@ public class TransactionOptionsTest extends AbstractTest {
 			fail("Should have rolled back because of outer transaction validation"); //$NON-NLS-1$
 		} catch (RollbackException e) {
 			// expected exception
-			Collection errors = findValidationStatuses(
+			Collection<IStatus> errors = findValidationStatuses(
 					e.getStatus(), IStatus.ERROR);
 			
 			// the inner transaction's error was not detected
@@ -367,8 +368,8 @@ public class TransactionOptionsTest extends AbstractTest {
 	}
 	
 	public void test_transactionOptionInheritance_135569() {
-		Map options = new java.util.HashMap();
-		Map active;
+		Map<Object, Object> options = new java.util.HashMap<Object, Object>();
+		Map<?, ?> active;
 		
 		// test the inheritance of empty options
 		startWriting();
@@ -465,7 +466,7 @@ public class TransactionOptionsTest extends AbstractTest {
      * notifications, since they are not needed for anything.
      */
     public void test_noNotificationsInSilentUnprotected_152335() {
-        Map options = new java.util.HashMap();
+        Map<Object, Object> options = new java.util.HashMap<Object, Object>();
         options.put(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE);
         options.put(Transaction.OPTION_UNPROTECTED, Boolean.TRUE);
         
@@ -508,7 +509,7 @@ public class TransactionOptionsTest extends AbstractTest {
         final String newTitle = "New Title"; //$NON-NLS-1$
         book.setTitle(newTitle);
         
-        Map options = new java.util.HashMap();
+        Map<Object, Object> options = new java.util.HashMap<Object, Object>();
         options.put(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE);
         options.put(Transaction.OPTION_UNPROTECTED, Boolean.TRUE);
         
@@ -537,7 +538,7 @@ public class TransactionOptionsTest extends AbstractTest {
         //    and only that notification
         assertNotNull(listener.postcommitNotifications);
         assertEquals(1, listener.postcommitNotifications.size());
-        Notification notification = (Notification) listener.postcommitNotifications.get(0);
+        Notification notification = listener.postcommitNotifications.get(0);
         assertSame(EXTLibraryPackage.Literals.BOOK__TITLE, notification.getFeature());
     }
     
@@ -601,7 +602,7 @@ public class TransactionOptionsTest extends AbstractTest {
      * Tests that default transaction options are applied to new transactions.
      */
     public void test_defaultTransactionOptions() {
-        TransactionalEditingDomain.DefaultOptions defaults = (TransactionalEditingDomain.DefaultOptions) TransactionUtil
+        TransactionalEditingDomain.DefaultOptions defaults = TransactionUtil
             .getAdapter(domain, TransactionalEditingDomain.DefaultOptions.class);
         
         defaults.setDefaultTransactionOptions(Collections.singletonMap(
@@ -621,6 +622,7 @@ public class TransactionOptionsTest extends AbstractTest {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void doSetUp()
 		throws Exception {
 		
@@ -636,6 +638,7 @@ public class TransactionOptionsTest extends AbstractTest {
 		ValidationRollbackTest.validationEnabled = true;
 	}
 	
+	@Override
 	protected void doTearDown()
 		throws Exception {
 		

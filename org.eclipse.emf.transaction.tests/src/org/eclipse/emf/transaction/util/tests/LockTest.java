@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: LockTest.java,v 1.4 2007/10/15 16:20:42 cdamus Exp $
+ * $Id: LockTest.java,v 1.5 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util.tests;
 
@@ -23,7 +23,6 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
@@ -456,7 +455,7 @@ public class LockTest extends TestCase {
 		try {
 			lock.acquire(false);
 			
-			Platform.getJobManager().addJobChangeListener(jl);
+			Job.getJobManager().addJobChangeListener(jl);
 			
 			synchronized (monitor) {
 				t.start();
@@ -488,7 +487,7 @@ public class LockTest extends TestCase {
 		} catch (Exception e) {
 			fail(e);
 		} finally {
-			Platform.getJobManager().removeJobChangeListener(jl);
+			Job.getJobManager().removeJobChangeListener(jl);
 		}
 	}
 	
@@ -519,7 +518,7 @@ public class LockTest extends TestCase {
 		try {
 			lock.acquire(false);
 			
-			Platform.getJobManager().addJobChangeListener(jl);
+			Job.getJobManager().addJobChangeListener(jl);
 			
 			synchronized (monitor) {
 				t.start();
@@ -547,7 +546,7 @@ public class LockTest extends TestCase {
 		} catch (Exception e) {
 			fail(e);
 		} finally {
-			Platform.getJobManager().removeJobChangeListener(jl);
+			Job.getJobManager().removeJobChangeListener(jl);
 		}
 	}
 	
@@ -621,7 +620,7 @@ public class LockTest extends TestCase {
 			}
 			
 			// start an implicit job on our fake rule
-			Platform.getJobManager().beginRule(rule, null);
+			Job.getJobManager().beginRule(rule, null);
 			
 			try {
 				// now attempt to acquire the lock while the other thread sleeps
@@ -635,7 +634,7 @@ public class LockTest extends TestCase {
 				
 				lock.release();
 			} finally {
-				Platform.getJobManager().endRule(rule);
+				Job.getJobManager().endRule(rule);
 			}
 		} catch (Exception e) {
 			fail(e);
@@ -726,6 +725,7 @@ public class LockTest extends TestCase {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void setUp()
 		throws Exception {
 		
@@ -735,6 +735,7 @@ public class LockTest extends TestCase {
 		monitor = new Object();
 	}
 	
+	@Override
 	protected void tearDown()
 		throws Exception {
 		
@@ -767,7 +768,7 @@ public class LockTest extends TestCase {
 		Field field = null;
 		
 		try {
-			Class clazz = domain.getClass();
+			Class<?> clazz = domain.getClass();
 			
 			field = clazz.getDeclaredField("transactionLock"); //$NON-NLS-1$
 			field.setAccessible(true);

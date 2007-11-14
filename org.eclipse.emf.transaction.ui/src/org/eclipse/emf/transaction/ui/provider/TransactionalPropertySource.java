@@ -12,20 +12,21 @@
  *
  * </copyright>
  *
- * $Id: TransactionalPropertySource.java,v 1.1 2006/01/30 19:47:45 cdamus Exp $
+ * $Id: TransactionalPropertySource.java,v 1.2 2007/11/14 18:14:06 cdamus Exp $
  */
 package org.eclipse.emf.transaction.ui.provider;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.transaction.RunnableWithResult;
-import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIPlugin;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIStatusCodes;
 import org.eclipse.emf.transaction.ui.internal.Tracing;
 import org.eclipse.emf.transaction.ui.internal.l10n.Messages;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.IPropertySource2;
@@ -66,13 +67,15 @@ public class TransactionalPropertySource
 	 * Runs the specified runnable in the editing domain, with interrupt
 	 * handling.
 	 * 
+	 * @param <T> the result type of the runnable
+	 * 
 	 * @param run the runnable to run
 	 * 
 	 * @return its result, or <code>null</code> on interrupt
 	 */
-	protected Object run(RunnableWithResult run) {
+	protected <T> T run(RunnableWithResult<? extends T> run) {
 		try {
-			return domain.runExclusive(run);
+			return TransactionUtil.runExclusive(domain, run);
 		} catch (InterruptedException e) {
 			Tracing.catching(TransactionalPropertySource.class, "run", e); //$NON-NLS-1$
 			
@@ -102,20 +105,17 @@ public class TransactionalPropertySource
 	 * Delegates the my wrapped property source in the appropriate transaction.
 	 */
 	public boolean isPropertySet(final Object id) {
-		Boolean result = (Boolean) run(new RunnableWithResult.Impl() {
+		return run(new RunnableWithResult.Impl<Boolean>() {
 			public void run() {
-				setResult(propertySource.isPropertySet(id)
-						? Boolean.TRUE : Boolean.FALSE);
+				setResult(propertySource.isPropertySet(id));
 			}});
-		
-		return (result == null) ? false : result.booleanValue();
 	}
 
 	/**
 	 * Delegates the my wrapped property source in the appropriate transaction.
 	 */
 	public Object getEditableValue() {
-		return run(new RunnableWithResult.Impl() {
+		return run(new RunnableWithResult.Impl<Object>() {
 			public void run() {
 				setResult(propertySource.getEditableValue());
 			}});
@@ -132,7 +132,7 @@ public class TransactionalPropertySource
 	 * Delegates the my wrapped property source in the appropriate transaction.
 	 */
 	public Object getPropertyValue(final Object id) {
-		return run(new RunnableWithResult.Impl() {
+		return run(new RunnableWithResult.Impl<Object>() {
 			public void run() {
 				setResult(propertySource.getPropertyValue(id));
 			}});

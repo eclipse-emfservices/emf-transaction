@@ -7,13 +7,13 @@ Bundle-Activator: org.eclipse.emf.transaction.internal.EMFTransactionPlugin$Impl
 Bundle-Vendor: %Plugin.providerName
 Bundle-Localization: plugin
 Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.2.0,4.0.0)";visibility:=reexport,
- org.eclipse.emf.edit;bundle-version="[2.2.0,3.0.0)";visibility:=reexport,
- org.eclipse.emf.ecore.change;bundle-version="[2.2.0,3.0.0)";visibility:=reexport,
- org.eclipse.emf.validation;bundle-version="[1.0.0,2.0.0)";visibility:=reexport
+ org.eclipse.emf.edit;bundle-version="[2.3.0,3.0.0)";visibility:=reexport,
+ org.eclipse.emf.ecore.change;bundle-version="[2.3.0,3.0.0)";visibility:=reexport,
+ org.eclipse.emf.validation;bundle-version="[1.2.0,2.0.0)";visibility:=reexport
 Eclipse-LazyStart: true
 Export-Package: org.eclipse.emf.transaction,
  org.eclipse.emf.transaction.impl,
  org.eclipse.emf.transaction.internal;x-friends:="org.eclipse.emf.transaction.tests",
  org.eclipse.emf.transaction.internal.l10n;x-friends:="org.eclipse.emf.transaction.tests",
  org.eclipse.emf.transaction.util
-Bundle-RequiredExecutionEnvironment: J2SE-1.4
+Bundle-RequiredExecutionEnvironment: J2SE-1.5

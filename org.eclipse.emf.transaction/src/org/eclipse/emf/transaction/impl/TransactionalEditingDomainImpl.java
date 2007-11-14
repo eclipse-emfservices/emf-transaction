@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.15 2007/10/31 19:59:58 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.16 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -32,6 +32,7 @@ import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.notify.impl.AdapterImpl;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
@@ -52,6 +53,7 @@ import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.internal.l10n.Messages;
 import org.eclipse.emf.transaction.util.Adaptable;
 import org.eclipse.emf.transaction.util.Lock;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.osgi.util.NLS;
 
 /**
@@ -80,24 +82,29 @@ public class TransactionalEditingDomainImpl
 	
 	private TransactionValidator.Factory validatorFactory = null;
 	
-	private final Map defaultTransactionOptions = new java.util.HashMap();
-	private final Map defaultTransactionOptionsRO = Collections
+	private final Map<Object, Object> defaultTransactionOptions =
+		new java.util.HashMap<Object, Object>();
+	private final Map<Object, Object> defaultTransactionOptionsRO = Collections
         .unmodifiableMap(defaultTransactionOptions);
 	
-	private Lock transactionLock = new Lock();
-	private Lock writeLock = new Lock();
+	private final Lock transactionLock = new Lock();
+	private final Lock writeLock = new Lock();
 	
-	private final List precommitListeners = new java.util.ArrayList();
-	private final List aggregatePrecommitListeners = new java.util.ArrayList();
-	private final List postcommitListeners = new java.util.ArrayList();
+	private final List<ResourceSetListener> precommitListeners =
+		new java.util.ArrayList<ResourceSetListener>();
+	private final List<ResourceSetListener> aggregatePrecommitListeners =
+		new java.util.ArrayList<ResourceSetListener>();
+	private final List<ResourceSetListener> postcommitListeners =
+		new java.util.ArrayList<ResourceSetListener>();
 	
 	// reusable notification list and event for unbatched change events
-	private final List unbatchedNotifications = new java.util.ArrayList(1);
+	private final List<Notification> unbatchedNotifications =
+		new java.util.ArrayList<Notification>(1);
 	private final ResourceSetChangeEvent unbatchedChangeEvent =
 		new ResourceSetChangeEvent(this, null, unbatchedNotifications);
 	
 	// this is editable by clients for backwards compatibility with 1.1
-	private Map undoRedoOptions = new java.util.HashMap(
+	private final Map<Object, Object> undoRedoOptions = new java.util.HashMap<Object, Object>(
 	    TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS);
 	
 	/**
@@ -157,7 +164,7 @@ public class TransactionalEditingDomainImpl
         
         // create a map for read-only-resource support.  Use a weak map
         //    to avoid retaining resources in this map
-        resourceToReadOnlyMap = new java.util.WeakHashMap();
+        resourceToReadOnlyMap = new java.util.WeakHashMap<Resource, Boolean>();
 	}
 	
 	/**
@@ -275,8 +282,8 @@ public class TransactionalEditingDomainImpl
 			tx = startTransaction(true, null);
 		}
 		
-		final RunnableWithResult rwr = (read instanceof RunnableWithResult)?
-			(RunnableWithResult) read : null;
+		final RunnableWithResult<?> rwr = (read instanceof RunnableWithResult)?
+			(RunnableWithResult<?>) read : null;
 		
 		try {
 			read.run();
@@ -369,7 +376,9 @@ public class TransactionalEditingDomainImpl
 	}
 
 	// Documentation copied from the inherited specification
-	public InternalTransaction startTransaction(boolean readOnly, Map options) throws InterruptedException {
+	public InternalTransaction startTransaction(boolean readOnly, Map<?, ?> options)
+			throws InterruptedException {
+		
 		InternalTransaction result;
 		
 		result = new TransactionImpl(this, readOnly, options);
@@ -412,7 +421,7 @@ public class TransactionalEditingDomainImpl
 	 */
 	protected final ResourceSetListener[] getPrecommitListeners() {
 		synchronized (precommitListeners) {
-			return (ResourceSetListener[]) precommitListeners.toArray(
+			return precommitListeners.toArray(
 				new ResourceSetListener[precommitListeners.size()]);
 		}
 	}
@@ -426,7 +435,7 @@ public class TransactionalEditingDomainImpl
 	 */
 	protected final ResourceSetListener[] getAggregatePrecommitListeners() {
 		synchronized (aggregatePrecommitListeners) {
-			return (ResourceSetListener[]) aggregatePrecommitListeners.toArray(
+			return aggregatePrecommitListeners.toArray(
 				new ResourceSetListener[aggregatePrecommitListeners.size()]);
 		}
 	}
@@ -439,7 +448,7 @@ public class TransactionalEditingDomainImpl
 	 */
 	protected final ResourceSetListener[] getPostcommitListeners() {
 		synchronized (postcommitListeners) {
-			return (ResourceSetListener[]) postcommitListeners.toArray(
+			return postcommitListeners.toArray(
 				new ResourceSetListener[postcommitListeners.size()]);
 		}
 	}
@@ -561,20 +570,24 @@ public class TransactionalEditingDomainImpl
 	
 	// Documentation copied from the inherited specification
 	public void precommit(final InternalTransaction tx) throws RollbackException {
-		class PrecommitRunnable implements Runnable {
-			private final List notifications;
+		class PrecommitRunnable extends RunnableWithResult.Impl<List<Command>> {
+			private final List<Notification> notifications;
 			private final ResourceSetListener[] listeners;
-			private final List triggers = new java.util.ArrayList();
 			private RollbackException rollback;
 			
-			PrecommitRunnable(ResourceSetListener[] listeners, List notifications) {
+			PrecommitRunnable(ResourceSetListener[] listeners,
+					List<Notification> notifications) {
+				
 				this.listeners = listeners;
 				this.notifications = notifications;
 			}
 			
-			void runExclusive() throws InterruptedException {
+			List<Command> runExclusive() throws InterruptedException {
 				if ((listeners.length > 0) && !notifications.isEmpty()) {
-					TransactionalEditingDomainImpl.this.runExclusive(this);
+					return TransactionUtil.runExclusive(
+						TransactionalEditingDomainImpl.this, this);
+				} else {
+					return Collections.emptyList();
 				}
 			}
 			
@@ -582,21 +595,22 @@ public class TransactionalEditingDomainImpl
 				return rollback;
 			}
 			
-			List getTriggers() {
-				return triggers;
-			}
-			
 			public void run() {
-				ArrayList cache = new ArrayList(notifications.size());
-				for (int i = 0; i < listeners.length; i++) {
+				List<Command> triggers = new java.util.ArrayList<Command>();
+				setResult(triggers);
+				
+				ArrayList<Notification> cache = new ArrayList<Notification>(
+						notifications.size());
+				
+				for (ResourceSetListener element : listeners) {
 					try {
-						List filtered = FilterManager.getInstance().select(
+						List<Notification> filtered = FilterManager.getInstance().select(
 								notifications,
-								listeners[i].getFilter(),
+								element.getFilter(),
 								cache);
 						
 						if (!filtered.isEmpty()) {
-							Command cmd = listeners[i].transactionAboutToCommit(
+							Command cmd = element.transactionAboutToCommit(
 									new ResourceSetChangeEvent(
 											TransactionalEditingDomainImpl.this,
 											tx,
@@ -640,7 +654,7 @@ public class TransactionalEditingDomainImpl
 		//    are no more notifications to send to them
 		while (runnable != null) {
 			try {
-				runnable.runExclusive();
+				List<Command> triggers = runnable.runExclusive();
 				
 				if (runnable.getRollback() != null) {
 					Tracing.throwing(TransactionalEditingDomainImpl.class,
@@ -655,10 +669,13 @@ public class TransactionalEditingDomainImpl
 					command = null;
 				}
 				
-				getTransactionalCommandStack().executeTriggers(
-					command, runnable.getTriggers(), tx.getOptions());
+				if (!triggers.isEmpty()) {
+					getTransactionalCommandStack().executeTriggers(
+						command, triggers, tx.getOptions());
+				}
 				
-				List notifications = validator.getNotificationsForPrecommit(tx);
+				List<Notification> notifications = validator.getNotificationsForPrecommit(
+					tx);
 				
 				if ((notifications == null) || notifications.isEmpty()) {
 					runnable = null;
@@ -697,11 +714,13 @@ public class TransactionalEditingDomainImpl
 			Tracing.trace(">>> Postcommitting " + getDebugID(tx) + " at " + Tracing.now()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-		final List notifications = validator.getNotificationsForPostcommit(tx);
+		final List<Notification> notifications = validator.getNotificationsForPostcommit(
+			tx);
 		if ((notifications == null) || notifications.isEmpty()) {
 			return;
 		}
-		final ArrayList cache = new ArrayList(notifications.size());
+		final ArrayList<Notification> cache = new ArrayList<Notification>(
+				notifications.size());
 		
 		// dispose the validator now because starting the read-only transaction
 		//    below will replace it with a new validator
@@ -712,15 +731,15 @@ public class TransactionalEditingDomainImpl
 		try {
 			runExclusive(new Runnable() {
 				public void run() {
-					for (int i = 0; i < listeners.length; i++) {
+					for (ResourceSetListener element : listeners) {
 						try {
-							List filtered = FilterManager.getInstance().select(
+							List<Notification> filtered = FilterManager.getInstance().select(
 									notifications,
-									listeners[i].getFilter(),
+									element.getFilter(),
 									cache);
 							
 							if (!filtered.isEmpty()) {
-								listeners[i].resourceSetChanged(
+								element.resourceSetChanged(
 										new ResourceSetChangeEvent(
 												TransactionalEditingDomainImpl.this,
 												tx,
@@ -759,14 +778,14 @@ public class TransactionalEditingDomainImpl
 		try {
 			runExclusive(new Runnable() {
 				public void run() {
-					for (int i = 0; i < listeners.length; i++) {
+					for (ResourceSetListener element : listeners) {
 						try {
-							List filtered = FilterManager.getInstance().selectUnbatched(
+							List<Notification> filtered = FilterManager.getInstance().selectUnbatched(
 									unbatchedNotifications,
-									listeners[i].getFilter());
+									element.getFilter());
 							
 							if (!filtered.isEmpty()) {
-								listeners[i].resourceSetChanged(unbatchedChangeEvent);
+								element.resourceSetChanged(unbatchedChangeEvent);
 							}
 						} catch (Exception e) {
 							Tracing.catching(TransactionalEditingDomainImpl.class, "broadcastUnbatched", e); //$NON-NLS-1$
@@ -796,7 +815,7 @@ public class TransactionalEditingDomainImpl
 	}
 	
 	// Documentation copied from the inherited specification
-	public final RunnableWithResult createPrivilegedRunnable(Runnable runnable) {
+	public final RunnableWithResult<Object> createPrivilegedRunnable(Runnable runnable) {
 		InternalTransaction tx = getActiveTransaction();
 		
 		if ((tx == null) || (tx.getOwner() != Thread.currentThread())) {
@@ -804,11 +823,11 @@ public class TransactionalEditingDomainImpl
 					"active transaction not owned by caller"); //$NON-NLS-1$
 		}
 		
-		return new PrivilegedRunnable(tx, runnable);
+		return new PrivilegedRunnable<Object>(tx, runnable);
 	}
 	
 	// Documentation copied from the inherited specification
-	public void startPrivileged(PrivilegedRunnable runnable) {
+	public void startPrivileged(PrivilegedRunnable<?> runnable) {
 		if (runnable.getTransaction().getEditingDomain() != this) {
 			throw new IllegalArgumentException(
 					"runnable has no privileges on this editing domain"); //$NON-NLS-1$
@@ -822,7 +841,7 @@ public class TransactionalEditingDomainImpl
 		}
 		
 	// Documentation copied from the inherited specification
-	public void endPrivileged(PrivilegedRunnable runnable) {
+	public void endPrivileged(PrivilegedRunnable<?> runnable) {
 		if (runnable.getTransaction().getEditingDomain() != this) {
 			throw new IllegalArgumentException(
 					"runnable has no privileges on this editing domain"); //$NON-NLS-1$
@@ -852,6 +871,89 @@ public class TransactionalEditingDomainImpl
 		
 		// disconnect the resource set from the editing domain
 		((FactoryImpl) Factory.INSTANCE).unmapResourceSet(this);
+	}
+
+	public Map<Object, Object> getUndoRedoOptions() {
+		return undoRedoOptions;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> T getAdapter(Class<? extends T> adapterType) {
+	    T result;
+	    
+	    if (adapterType == DefaultOptions.class) {
+	        result = (T) this;
+	    } else {
+	        result = null;
+	    }
+	    
+	    return result;
+	}
+	
+	public Map<?, ?> getDefaultTransactionOptions() {
+	    return defaultTransactionOptionsRO;  // return the read-only view
+	}
+	
+	public void setDefaultTransactionOptions(Map<?, ?> options) {
+	    synchronized (defaultTransactionOptions) {
+    	    defaultTransactionOptions.clear();
+    	    defaultTransactionOptions.putAll(options);
+	    }
+	}
+	
+	/**
+	 * Sets the factory to use when creating validators for transaction
+	 * validation.
+	 * 
+	 * @since 1.1
+	 * 
+	 * @param validatorFactory the factory to set
+	 */
+	public void setValidatorFactory(TransactionValidator.Factory validatorFactory) {
+		this.validatorFactory = validatorFactory;
+	}
+	
+	/**
+	 * Obtains the factory that this transactional editing domain uses
+	 * to create validators for transaction validation.
+	 * <p>
+	 * If the validator factory has yet to be initialized, it is initialized
+	 * using the default validator factory.
+	 * </p>
+	 * 
+	 * @since 1.1
+	 * 
+	 * @return the requested validator factory
+	 */
+	public TransactionValidator.Factory getValidatorFactory() {
+		if (this.validatorFactory == null) {
+			return TransactionValidator.Factory.INSTANCE;
+		}
+        
+		return this.validatorFactory;
+	}
+
+	/**
+	 * Default implementation of the validator factory
+	 * 
+	 * @since 1.1
+	 * 
+	 * @author David Cummings (dcummin)
+	 */
+	public static class ValidatorFactoryImpl implements TransactionValidator.Factory {
+		/**
+	     * {@inheritDoc}
+	     */
+		public TransactionValidator createReadOnlyValidator() {
+			return new ReadOnlyValidatorImpl();
+		}
+
+		/**
+	     * {@inheritDoc}
+	     */
+		public TransactionValidator createReadWriteValidator() {
+			return new ReadWriteValidatorImpl();
+		}
 	}
 	
 	/**
@@ -926,8 +1028,10 @@ public class TransactionalEditingDomainImpl
 		 * @param domain the editing domain to remove from the resource set mapping
 		 */
 		public synchronized void unmapResourceSet(TransactionalEditingDomain domain) {
-			for (Iterator iter = domain.getResourceSet().eAdapters().iterator(); iter.hasNext();) {
-				Adapter next = (Adapter) iter.next();
+			for (Iterator<Adapter> iter = domain.getResourceSet().eAdapters().iterator();
+					iter.hasNext();) {
+				
+				Adapter next = iter.next();
 				
 				if (next.isAdapterForType(ResourceSetDomainLink.class)) {
 					iter.remove();
@@ -944,19 +1048,22 @@ public class TransactionalEditingDomainImpl
 		 *
 		 * @author Christian W. Damus (cdamus)
 		 */
-		private static class ResourceSetDomainLink extends AdapterImpl implements IEditingDomainProvider {
-			private final Reference domain;
+		private static class ResourceSetDomainLink extends AdapterImpl
+				implements IEditingDomainProvider {
+			
+			private final Reference<TransactionalEditingDomain> domain;
 			
 			ResourceSetDomainLink(TransactionalEditingDomain domain) {
-				this.domain = new WeakReference(domain);
+				this.domain = new WeakReference<TransactionalEditingDomain>(domain);
 			}
 			
+			@Override
 			public boolean isAdapterForType(Object type) {
 				return type == ResourceSetDomainLink.class;
 			}
 			
 			final TransactionalEditingDomain getDomain() {
-				TransactionalEditingDomain result = (TransactionalEditingDomain) domain.get();
+				TransactionalEditingDomain result = domain.get();
 				
 				if (result == null) {
 					// no longer need the adapter
@@ -981,11 +1088,12 @@ public class TransactionalEditingDomainImpl
 	 * @author Christian W. Damus (cdamus)
 	 */
 	public final static class RegistryImpl implements TransactionalEditingDomain.Registry {
-		private final Map domains = new java.util.HashMap();
+		private final Map<String, TransactionalEditingDomain> domains =
+			new java.util.HashMap<String, TransactionalEditingDomain>();
 		
 		// Documentation copied from the inherited specification
 		public synchronized TransactionalEditingDomain getEditingDomain(String id) {
-			TransactionalEditingDomain result = (TransactionalEditingDomain) domains.get(id);
+			TransactionalEditingDomain result = domains.get(id);
 			
 			if (result == null) {
 				result = EditingDomainManager.getInstance().createEditingDomain(id);
@@ -1034,7 +1142,7 @@ public class TransactionalEditingDomainImpl
 				throw exc;
 			}
 			
-			TransactionalEditingDomain result = (TransactionalEditingDomain) domains.remove(id);
+			TransactionalEditingDomain result = domains.remove(id);
 			
 			if (result != null) {
 				EditingDomainManager.getInstance().deconfigureListeners(id, result);
@@ -1043,85 +1151,5 @@ public class TransactionalEditingDomainImpl
 			return result;
 		}
 		
-	}
-
-	public Map getUndoRedoOptions() {
-		return undoRedoOptions;
-	}
-	
-	public Object getAdapter(Class adapterType) {
-	    Object result;
-	    
-	    if (adapterType == DefaultOptions.class) {
-	        result = this;
-	    } else {
-	        result = null;
-	    }
-	    
-	    return result;
-	}
-	
-	public Map getDefaultTransactionOptions() {
-	    return defaultTransactionOptionsRO;  // return the read-only view
-	}
-	
-	public void setDefaultTransactionOptions(Map options) {
-	    defaultTransactionOptions.clear();
-	    defaultTransactionOptions.putAll(options);
-	}
-	
-	/**
-	 * Sets the factory to use when creating validators for transaction
-	 * validation.
-	 * 
-	 * @since 1.1
-	 * 
-	 * @param validatorFactory the factory to set
-	 */
-	public void setValidatorFactory(TransactionValidator.Factory validatorFactory) {
-		this.validatorFactory = validatorFactory;
-	}
-	
-	/**
-	 * Obtains the factory that this transactional editing domain uses
-	 * to create validators for transaction validation.
-	 * <p>
-	 * If the validator factory has yet to be initialized, it is initialized
-	 * using the default validator factory.
-	 * </p>
-	 * 
-	 * @since 1.1
-	 * 
-	 * @return the requested validator factory
-	 */
-	public TransactionValidator.Factory getValidatorFactory() {
-		if (this.validatorFactory == null) {
-			return TransactionValidator.Factory.INSTANCE;
-		}
-        
-		return this.validatorFactory;
-	}
-
-	/**
-	 * Default implementation of the validator factory
-	 * 
-	 * @since 1.1
-	 * 
-	 * @author David Cummings (dcummin)
-	 */
-	public static class ValidatorFactoryImpl implements TransactionValidator.Factory {
-		/**
-	     * {@inheritDoc}
-	     */
-		public TransactionValidator createReadOnlyValidator() {
-			return new ReadOnlyValidatorImpl();
-		}
-
-		/**
-	     * {@inheritDoc}
-	     */
-		public TransactionValidator createReadWriteValidator() {
-			return new ReadWriteValidatorImpl();
-		}
 	}
 }

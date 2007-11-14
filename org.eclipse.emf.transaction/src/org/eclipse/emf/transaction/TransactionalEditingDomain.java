@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomain.java,v 1.4 2007/10/03 20:17:38 cdamus Exp $
+ * $Id: TransactionalEditingDomain.java,v 1.5 2007/11/14 18:14:01 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -24,6 +24,7 @@ import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
 import org.eclipse.emf.transaction.util.Adaptable;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 
 /**
  * An extension of the {@link EditingDomain} API that applies transactional
@@ -149,6 +150,11 @@ public interface TransactionalEditingDomain
 	 * safe to call this method on the Eclipse UI thread because special
 	 * precaution is taken to ensure that liveness is maintained (using
 	 * mechanisms built into the Job Manager).
+	 * </p><p>
+	 * <b>Note</b>: Since the 1.2 release, the
+	 * {@link TransactionUtil#runExclusive(TransactionalEditingDomain, RunnableWithResult)}
+	 * utility provides type-safe execution of runnables returning results and
+	 * should be preferred over this API.
 	 * </p>
 	 * 
 	 * @param read a read-only operation to execute
@@ -159,7 +165,8 @@ public interface TransactionalEditingDomain
 	 *    
 	 * @throws InterruptedException if the current thread is interrupted while
 	 *    waiting for access to the resource set
-	 *    
+	 * 
+	 * @see TransactionUtil#runExclusive(RunnableWithResult)
 	 * @see Transaction#commit()
 	 */
 	Object runExclusive(Runnable read) throws InterruptedException;
@@ -221,7 +228,15 @@ public interface TransactionalEditingDomain
 	 * active transaction remains active.  Any attempt to execute the runnable
 	 * after this transaction has committed or while a nested transaction is
 	 * active will result in an {@link IllegalStateException}.
+	 * </p><p>
+	 * <b>Note</b>: Since the 1.2 release, the
+	 * {@link TransactionUtil#createPrivilegedRunnable(TransactionalEditingDomain, RunnableWithResult)}
+	 * utility provides type-safe privileged access for runnables returning
+	 * results and should be preferred over this API.
 	 * </p>
+	 * 
+	 * @param <T> the result type of the {@link RunnableWithResult} if such
+	 *    is the <tt>read</tt> argument
 	 * 
 	 * @param runnable a runnable to execute in the context of the active
 	 *     transaction, on any thread
@@ -235,8 +250,10 @@ public interface TransactionalEditingDomain
 	 *     prevents "theft" of transactions by malicious code.  Note also
 	 *     that this implies an exception if there is no active transaction at
 	 *     the time of this call
+	 *     
+	 * @see TransactionUtil#createPrivilegedRunnable(TransactionalEditingDomain, RunnableWithResult)
 	 */
-	RunnableWithResult createPrivilegedRunnable(Runnable runnable);
+	RunnableWithResult<?> createPrivilegedRunnable(Runnable runnable);
 	
 	/**
 	 * Disposes of this editing domain and any resources that it has allocated.
@@ -392,9 +409,9 @@ public interface TransactionalEditingDomain
 	     * Obtains a read-only view of the editing domain's default transaction
 	     * options.
 	     * 
-	     * @return my read-only transaction options
+	     * @return my read-only map of transaction options
 	     */
-	    Map getDefaultTransactionOptions();
+	    Map<?, ?> getDefaultTransactionOptions();
 	    
 	    /**
 	     * Sets the default transaction options.  It is probably best to do this
@@ -404,6 +421,6 @@ public interface TransactionalEditingDomain
 	     * 
 	     * @param options the new options.  The options are copied from the map
 	     */
-	    void setDefaultTransactionOptions(Map options);
+	    void setDefaultTransactionOptions(Map<?, ?> options);
 	}
 }

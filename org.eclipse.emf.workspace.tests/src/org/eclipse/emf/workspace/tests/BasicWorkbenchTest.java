@@ -12,12 +12,11 @@
  *
  * </copyright>
  *
- * $Id: BasicWorkbenchTest.java,v 1.3 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: BasicWorkbenchTest.java,v 1.4 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.Test;
@@ -33,9 +32,9 @@ import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
+import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
-import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.workspace.tests.fixtures.TestListener;
 
@@ -301,7 +300,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 		
 		// check that we got the expected events
 		assertNotNull(listener.postcommit);
-		List notifications = listener.postcommit.getNotifications();
+		List<Notification> notifications = listener.postcommit.getNotifications();
 		assertFalse(notifications.isEmpty());
 		
 		// look for an event indicating resource was loaded and one indicating
@@ -309,9 +308,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 		Notification rootAdded = null;
 		Notification resLoaded = null;
 		
-		for (Iterator iter = notifications.iterator(); iter.hasNext();) {
-			Notification next = (Notification) iter.next();
-			
+		for (Notification next : notifications) {
 			if (next.getNotifier() == res) {
 				if (next.getFeatureID(null) == Resource.RESOURCE__IS_LOADED) {
 					if (next.getNewBooleanValue()) {
@@ -347,9 +344,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 		Notification rootRemoved = null;
 		Notification resUnloaded = null;
 		
-		for (Iterator iter = notifications.iterator(); iter.hasNext();) {
-			Notification next = (Notification) iter.next();
-			
+		for (Notification next : notifications) {
 			if (next.getNotifier() == res) {
 				if (next.getFeatureID(null) == Resource.RESOURCE__IS_LOADED) {
 					if (!next.getNewBooleanValue()) {

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFOperationCommandTest.java,v 1.4 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: EMFOperationCommandTest.java,v 1.5 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -161,6 +161,7 @@ public class EMFOperationCommandTest extends AbstractTest {
 		
 		domain.addResourceSetListener(new TriggerListener() {
 		
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				Command result = null;
 				
@@ -252,6 +253,7 @@ public class EMFOperationCommandTest extends AbstractTest {
 		
 		domain.addResourceSetListener(new TriggerListener() {
 		
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				Command result = null;
 				
@@ -315,12 +317,14 @@ public class EMFOperationCommandTest extends AbstractTest {
 		
 		Command cmd = new RecordingCommand(domain, "Testing") { //$NON-NLS-1$
 		
+			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 			}};
 		
 		domain.addResourceSetListener(new TriggerListener() {
 		
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				Command result = null;
 				
@@ -391,10 +395,12 @@ public class EMFOperationCommandTest extends AbstractTest {
 	 */
 	public void test_nonredoableOperation_138287() {
 		IUndoableOperation operation = new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// nothing to do
 			}
 			
+			@Override
 			public boolean canRedo() {
 				return false;
 			}};
@@ -412,6 +418,7 @@ public class EMFOperationCommandTest extends AbstractTest {
 	// Test fixtures
 	//
 	
+	@Override
 	protected void doSetUp()
 		throws Exception {
 		
@@ -421,6 +428,7 @@ public class EMFOperationCommandTest extends AbstractTest {
 		validationEnabled = true;
 	}
 	
+	@Override
 	protected void doTearDown()
 		throws Exception {
 		

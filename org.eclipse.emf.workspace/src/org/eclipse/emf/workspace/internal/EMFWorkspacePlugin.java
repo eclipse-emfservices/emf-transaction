@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFWorkspacePlugin.java,v 1.3 2007/10/03 20:16:28 cdamus Exp $
+ * $Id: EMFWorkspacePlugin.java,v 1.4 2007/11/14 18:14:08 cdamus Exp $
  */
 package org.eclipse.emf.workspace.internal;
 
@@ -42,6 +42,7 @@ public class EMFWorkspacePlugin extends EMFPlugin {
 	}
 
 	// implements the inherited method
+	@Override
 	public ResourceLocator getPluginResourceLocator() {
 		return plugin;
 	}
@@ -84,6 +85,7 @@ public class EMFWorkspacePlugin extends EMFPlugin {
 		/**
 		 * This method is called upon plug-in activation
 		 */
+		@Override
 		public void start(BundleContext context) throws Exception {
 			super.start(context);
 		}
@@ -91,6 +93,7 @@ public class EMFWorkspacePlugin extends EMFPlugin {
 		/**
 		 * This method is called when the plug-in is stopped
 		 */
+		@Override
 		public void stop(BundleContext context) throws Exception {
 			super.stop(context);
 			EMFWorkspacePlugin.plugin = null;

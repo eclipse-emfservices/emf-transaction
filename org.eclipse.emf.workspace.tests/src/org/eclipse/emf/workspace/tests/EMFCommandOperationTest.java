@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFCommandOperationTest.java,v 1.3 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: EMFCommandOperationTest.java,v 1.4 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -167,7 +167,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 		
 		assertEquals("New Library", newLibrary.getName()); //$NON-NLS-1$
 		assertEquals(1, newLibrary.getBooks().size());
-		assertEquals("New Book", ((Book) newLibrary.getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle()); //$NON-NLS-1$
 		
 		commit();
 
@@ -198,7 +198,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 		assertTrue(root.getBranches().contains(newLibrary));
 		assertEquals("New Library", newLibrary.getName()); //$NON-NLS-1$
 		assertEquals(1, newLibrary.getBooks().size());
-		assertEquals("New Book", ((Book) newLibrary.getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle()); //$NON-NLS-1$
 		
 		commit();
 	}
@@ -237,7 +237,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 		
 		// the book is created by the first trigger
 		assertEquals(1, newLibrary.getBooks().size());
-		Book book = (Book) newLibrary.getBooks().get(0);
+		Book book = newLibrary.getBooks().get(0);
 		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
 		
 		// the publication date is created by the cascaded trigger
@@ -271,7 +271,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 		// verify that the changes were redone
 		assertTrue(root.getBranches().contains(newLibrary));
 		assertEquals(1, newLibrary.getBooks().size());
-		book = (Book) newLibrary.getBooks().get(0);
+		book = newLibrary.getBooks().get(0);
 		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
 		assertNotNull(book.getPublicationDate());
 		
@@ -298,6 +298,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 		IUndoContext ctx = new TestUndoContext();
 		
 		Command cmd = new RecordingCommand(domain) {
+			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 				newAuthor.getBooks().add(book);
@@ -368,6 +369,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 		
 		// add a new library.  Our triggers will set a default name and book
 		Command cmd = new RecordingCommand(domain) {
+			@Override
 			protected void doExecute() {
 				root.getBranches().add(newLibrary);
 			}};
@@ -385,7 +387,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 		
 		assertEquals("New Library", newLibrary.getName()); //$NON-NLS-1$
 		assertEquals(1, newLibrary.getBooks().size());
-		assertEquals("New Book", ((Book) newLibrary.getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle()); //$NON-NLS-1$
 		
 		commit();
 
@@ -416,7 +418,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 		assertTrue(root.getBranches().contains(newLibrary));
 		assertEquals("New Library", newLibrary.getName()); //$NON-NLS-1$
 		assertEquals(1, newLibrary.getBooks().size());
-		assertEquals("New Book", ((Book) newLibrary.getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle()); //$NON-NLS-1$
 		
 		commit();
 	}
@@ -489,6 +491,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 				// nothing to do
 			}
 		
+			@Override
 			public boolean canRedo() {
 				return false;
 			}};
@@ -509,12 +512,14 @@ public class EMFCommandOperationTest extends AbstractTest {
 	public void test_nonredoableTriggerCommand_138287() {
 		// add a trigger command that is not redoable
 		domain.addResourceSetListener(new TriggerListener() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new TestCommand.Redoable() {
 					public void execute() {
 						// nothing to do
 					}
 				
+					@Override
 					public boolean canRedo() {
 						return false;
 					}};

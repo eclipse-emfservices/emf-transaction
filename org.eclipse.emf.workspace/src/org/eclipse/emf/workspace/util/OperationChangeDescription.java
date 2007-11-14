@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: OperationChangeDescription.java,v 1.3 2007/06/07 14:25:44 cdamus Exp $
+ * $Id: OperationChangeDescription.java,v 1.4 2007/11/14 18:14:08 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -48,7 +48,7 @@ public class OperationChangeDescription
 		implements TransactionChangeDescription {
 	private boolean isRedone = true;
 	private IUndoableOperation operation;
-	private Reference info;
+	private Reference<IAdaptable> info;
 
 	/**
 	 * Initializes me with the undoable operation that I encapsulate and the
@@ -60,7 +60,7 @@ public class OperationChangeDescription
 	public OperationChangeDescription(IUndoableOperation operation, IAdaptable info) {
 		this.operation = operation;
 		
-		this.info = new WeakReference(info);
+		this.info = new WeakReference<IAdaptable>(info);
 	}
 	
 	/**
@@ -82,9 +82,10 @@ public class OperationChangeDescription
 	 * I apply my change by undoing the encapsulated operation.  After it is
 	 * undone, I dispose myself.
 	 */
+	@Override
 	public void apply() {
 		try {
-			operation.undo(new NullProgressMonitor(), (IAdaptable) info.get());
+			operation.undo(new NullProgressMonitor(), info.get());
 		} catch (ExecutionException e) {
 			EMFWorkspacePlugin.INSTANCE.log(new Status(
 				IStatus.ERROR,
@@ -101,13 +102,14 @@ public class OperationChangeDescription
 	 * I apply-and-reverse by alternately undoing and redoing the encapsulated
 	 * operation.
 	 */
+	@Override
 	public void applyAndReverse() {
 		try {
 			if (isRedone) {
-				operation.undo(new NullProgressMonitor(), (IAdaptable) info.get());
+				operation.undo(new NullProgressMonitor(), info.get());
 				isRedone = false;
 			} else {
-				operation.redo(new NullProgressMonitor(), (IAdaptable) info.get());
+				operation.redo(new NullProgressMonitor(), info.get());
 				isRedone = true;
 			}
 		} catch (ExecutionException e) {

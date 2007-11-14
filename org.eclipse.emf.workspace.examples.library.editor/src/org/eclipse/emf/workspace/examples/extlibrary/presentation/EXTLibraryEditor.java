@@ -1,8 +1,18 @@
 /**
  * <copyright>
+ *
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * All rights reserved.   This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   IBM - Initial API and implementation
+ *
  * </copyright>
  *
- * $Id: EXTLibraryEditor.java,v 1.6 2007/10/03 20:17:42 cdamus Exp $
+ * $Id: EXTLibraryEditor.java,v 1.7 2007/11/14 18:13:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
 
@@ -214,7 +224,8 @@ public class EXTLibraryEditor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	protected Collection selectionChangedListeners = new ArrayList();
+	protected Collection<ISelectionChangedListener> selectionChangedListeners =
+		new ArrayList<ISelectionChangedListener>();
 
 	/**
 	 * This keeps track of the selection of the editor as a whole.
@@ -251,12 +262,16 @@ public class EXTLibraryEditor
 				}
 			}
 			public void partBroughtToTop(IWorkbenchPart p) {
+				// nothing to do
 			}
 			public void partClosed(IWorkbenchPart p) {
+				// nothing to do
 			}
 			public void partDeactivated(IWorkbenchPart p) {
+				// nothing to do
 			}
 			public void partOpened(IWorkbenchPart p) {
+				// nothing to do
 			}
 		};
 
@@ -264,32 +279,32 @@ public class EXTLibraryEditor
 	 * Resources that have been removed since last activation.
 	 * @generated
 	 */
-	Collection removedResources = new ArrayList();
+	Collection<Resource> removedResources = new ArrayList<Resource>();
 
 	/**
 	 * Resources that have been changed since last activation.
 	 * @generated
 	 */
-	Collection changedResources = new ArrayList();
+	Collection<Resource> changedResources = new ArrayList<Resource>();
 
 	/**
 	 * Resources that have been moved since last activation.
 	 * Maps {@link Resource resource} to {@link URI new URI}
 	 */
-	Map movedResources = new HashMap();
+	Map<Resource, URI> movedResources = new HashMap<Resource, URI>();
 
 	/**
 	 * Resources that have been saved.
 	 * @generated
 	 */
-	Collection savedResources = new ArrayList();
+	Collection<Resource> savedResources = new ArrayList<Resource>();
 	
 	private boolean dirty;
 
-	private IOperationHistoryListener historyListener = new IOperationHistoryListener() {
+	private final IOperationHistoryListener historyListener = new IOperationHistoryListener() {
 		public void historyNotification(final OperationHistoryEvent event) {
 			if (event.getEventType() == OperationHistoryEvent.DONE) {
-				Set affectedResources = ResourceUndoContext.getAffectedResources(
+				Set<Resource> affectedResources = ResourceUndoContext.getAffectedResources(
 						event.getOperation());
 				
 				if (affectedResources.contains(getResource())) {
@@ -362,7 +377,7 @@ public class EXTLibraryEditor
 					getOperationHistory().dispose(undoContext, true, true, true);
 					
 					// change saved resource's URI and remove from map
-					res.setURI((URI) movedResources.remove(res));
+					res.setURI(movedResources.remove(res));
 						
 					// must change my editor input
 					IEditorInput newInput = new FileEditorInput(
@@ -467,7 +482,7 @@ public class EXTLibraryEditor
 	protected void handleMovedResource() {
 		if (!isDirty() || handleDirtyConflict()) {
 			Resource res = getResource();
-			URI newURI = (URI) movedResources.get(res);
+			URI newURI = movedResources.get(res);
 			
 			if (newURI != null) {
 				if (res.isLoaded()) {
@@ -504,7 +519,7 @@ public class EXTLibraryEditor
 
 		// Create an adapter factory that yields item providers.
 		//
-		List factories = new ArrayList();
+		List<AdapterFactory> factories = new ArrayList<AdapterFactory>();
 		factories.add(new ResourceItemProviderAdapterFactory());
 		factories.add(new EXTLibraryItemProviderAdapterFactory());
 		factories.add(new ReflectiveItemProviderAdapterFactory());
@@ -527,6 +542,7 @@ public class EXTLibraryEditor
 	 * 
 	 * @generated
 	 */
+	@Override
 	protected void firePropertyChange(int action) {
 		super.firePropertyChange(action);
 	}
@@ -537,8 +553,8 @@ public class EXTLibraryEditor
 	 * 
 	 * @generated
 	 */
-	public void setSelectionToViewer(Collection collection) {
-		final Collection theSelection = collection;
+	public void setSelectionToViewer(Collection<?> collection) {
+		final Collection<?> theSelection = collection;
 		// Make sure it's okay.
 		//
 		if (theSelection != null && !theSelection.isEmpty()) {
@@ -582,21 +598,25 @@ public class EXTLibraryEditor
 			super((TransactionalEditingDomain) getEditingDomain(), adapterFactory);
 		}
 
+		@Override
 		public Object [] getElements(Object object) {
 			Object parent = super.getParent(object);
 			return (parent == null ? Collections.EMPTY_SET : Collections.singleton(parent)).toArray();
 		}
 
+		@Override
 		public Object [] getChildren(Object object) {
 			Object parent = super.getParent(object);
 			return (parent == null ? Collections.EMPTY_SET : Collections.singleton(parent)).toArray();
 		}
 
+		@Override
 		public boolean hasChildren(Object object) {
 			Object parent = super.getParent(object);
 			return parent != null;
 		}
 
+		@Override
 		public Object getParent(Object object) {
 			return null;
 		}
@@ -718,6 +738,7 @@ public class EXTLibraryEditor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
+	@Override
 	public void createPartControl(Composite parent) {
 		// Creates the model from the editor input
 		//
@@ -743,6 +764,8 @@ public class EXTLibraryEditor
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public Object getAdapter(Class key) {
 		if (key.equals(IContentOutlinePage.class)) {
 			return getContentOutlinePage();
@@ -772,6 +795,7 @@ public class EXTLibraryEditor
 			// The content outline is just a tree.
 			//
 			class MyContentOutlinePage extends ContentOutlinePage {
+				@Override
 				public void createControl(Composite parent) {
 					super.createControl(parent);
 					contentOutlineViewer = getTreeViewer();
@@ -796,17 +820,19 @@ public class EXTLibraryEditor
 					if (!editingDomain.getResourceSet().getResources().isEmpty()) {
 					  // Select the root object in the view.
 					  //
-					  ArrayList selection = new ArrayList();
+					  ArrayList<Object> selection = new ArrayList<Object>();
 					  selection.add(getResource());
 					  contentOutlineViewer.setSelection(new StructuredSelection(selection), true);
 					}
 				}
 
+				@Override
 				public void makeContributions(IMenuManager menuManager, IToolBarManager toolBarManager, IStatusLineManager statusLineManager) {
 					super.makeContributions(menuManager, toolBarManager, statusLineManager);
 					contentOutlineStatusLineManager = statusLineManager;
 				}
 
+				@Override
 				public void setActionBars(IActionBars actionBars) {
 					super.setActionBars(actionBars);
 					getActionBarContributor().shareGlobalActions(this, actionBars);
@@ -839,11 +865,13 @@ public class EXTLibraryEditor
 		if (propertySheetPage == null) {
 			propertySheetPage =
 				new ExtendedPropertySheetPage(editingDomain) {
-					public void setSelectionToViewer(List selection) {
+					@Override
+					public void setSelectionToViewer(List<?> selection) {
 						EXTLibraryEditor.this.setSelectionToViewer(selection);
 						EXTLibraryEditor.this.setFocus();
 					}
 
+					@Override
 					public void setActionBars(IActionBars actionBars) {
 						super.setActionBars(actionBars);
 						getActionBarContributor().shareGlobalActions(this, actionBars);
@@ -862,13 +890,13 @@ public class EXTLibraryEditor
 	 */
 	public void handleContentOutlineSelection(ISelection selection) {
 		if (!selection.isEmpty() && selection instanceof IStructuredSelection) {
-			Iterator selectedElements = ((IStructuredSelection)selection).iterator();
+			Iterator<?> selectedElements = ((IStructuredSelection)selection).iterator();
 			if (selectedElements.hasNext()) {
 				// Get the first selected element.
 				//
 				Object selectedElement = selectedElements.next();
 
-				ArrayList selectionList = new ArrayList();
+				ArrayList<Object> selectionList = new ArrayList<Object>();
 				selectionList.add(selectedElement);
 				while (selectedElements.hasNext()) {
 					selectionList.add(selectedElements.next());
@@ -886,6 +914,7 @@ public class EXTLibraryEditor
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 */
+	@Override
 	public boolean isDirty() {
 		return dirty;
 	}
@@ -895,6 +924,7 @@ public class EXTLibraryEditor
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 */
+	@Override
 	public void doSave(IProgressMonitor progressMonitor) {
 		// Do the work within an operation because this is a long running activity
 		// that modifies the workbench.  Moreover, we must do this in a read-only
@@ -904,6 +934,7 @@ public class EXTLibraryEditor
 			new WorkspaceModifyOperation() {
 				// This is the method that gets invoked when the operation runs.
 				//
+				@Override
 				public void execute(IProgressMonitor monitor) {
 					try {
 						((TransactionalEditingDomain) getEditingDomain()).runExclusive(new Runnable() {
@@ -949,6 +980,7 @@ public class EXTLibraryEditor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
+	@Override
 	public boolean isSaveAsAllowed() {
 		return true;
 	}
@@ -959,6 +991,7 @@ public class EXTLibraryEditor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
+	@Override
 	public void doSaveAs() {
 		SaveAsDialog saveAsDialog= new SaveAsDialog(getSite().getShell());
 		saveAsDialog.open();
@@ -1038,6 +1071,7 @@ public class EXTLibraryEditor
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 */
+	@Override
 	public void init(IEditorSite site, IEditorInput editorInput) {
 		setSite(site);
 		setInputWithNotify(editorInput);
@@ -1054,6 +1088,7 @@ public class EXTLibraryEditor
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 */
+	@Override
 	public void setFocus() {
 		selectionViewer.getControl().setFocus();
 	}
@@ -1098,8 +1133,7 @@ public class EXTLibraryEditor
 	public void setSelection(ISelection selection) {
 		editorSelection = selection;
 
-		for (Iterator listeners = selectionChangedListeners.iterator(); listeners.hasNext(); ) {
-			ISelectionChangedListener listener = (ISelectionChangedListener)listeners.next();
+		for (ISelectionChangedListener listener : selectionChangedListeners) {
 			listener.selectionChanged(new SelectionChangedEvent(this, selection));
 		}
 		setStatusLineManager(selection);
@@ -1116,7 +1150,7 @@ public class EXTLibraryEditor
 	
 		if (statusLineManager != null) {
 			if (selection instanceof IStructuredSelection) {
-				Collection collection = ((IStructuredSelection)selection).toList();
+				Collection<?> collection = ((IStructuredSelection)selection).toList();
 				switch (collection.size()) {
 					case 0: {
 						statusLineManager.setMessage(getString("_UI_NoObjectSelected")); //$NON-NLS-1$
@@ -1204,6 +1238,7 @@ public class EXTLibraryEditor
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 */
+	@Override
 	public void dispose() {
 		workspaceSynchronizer.dispose();
 		getOperationHistory().removeOperationHistoryListener(historyListener);

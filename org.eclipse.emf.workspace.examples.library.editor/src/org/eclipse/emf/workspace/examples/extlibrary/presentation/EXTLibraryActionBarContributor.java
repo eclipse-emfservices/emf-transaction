@@ -1,14 +1,23 @@
 /**
  * <copyright>
+ *
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * All rights reserved.   This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   IBM - Initial API and implementation
+ *
  * </copyright>
  *
- * $Id: EXTLibraryActionBarContributor.java,v 1.2 2006/02/22 15:17:44 cmcgee Exp $
+ * $Id: EXTLibraryActionBarContributor.java,v 1.3 2007/11/14 18:13:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 
 import org.eclipse.emf.common.ui.viewer.IViewerProvider;
 import org.eclipse.emf.edit.domain.EditingDomain;
@@ -84,6 +93,7 @@ public class EXTLibraryActionBarContributor
 	protected IAction showPropertiesViewAction =
 		new Action(EXTLibraryEditorPlugin.INSTANCE.getString("_UI_ShowPropertiesView_menu_item")) //$NON-NLS-1$
 		{
+			@Override
 			public void run() {
 				try {
 					getPage().showView("org.eclipse.ui.views.PropertySheet"); //$NON-NLS-1$
@@ -104,10 +114,12 @@ public class EXTLibraryActionBarContributor
 	protected IAction refreshViewerAction =
 		new Action(EXTLibraryEditorPlugin.INSTANCE.getString("_UI_RefreshViewer_menu_item")) //$NON-NLS-1$
 		{
+			@Override
 			public boolean isEnabled() {
 				return activeEditorPart instanceof IViewerProvider;
 			}
 
+			@Override
 			public void run() {
 				if (activeEditorPart instanceof IViewerProvider) {
 					Viewer viewer = ((IViewerProvider)activeEditorPart).getViewer();
@@ -127,7 +139,7 @@ public class EXTLibraryActionBarContributor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	protected Collection createChildActions;
+	protected Collection<IAction> createChildActions;
 
 	/**
 	 * This is the menu manager into which menu contribution items should be added for CreateChild actions.
@@ -144,7 +156,7 @@ public class EXTLibraryActionBarContributor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	protected Collection createSiblingActions;
+	protected Collection<IAction> createSiblingActions;
 
 	/**
 	 * This is the menu manager into which menu contribution items should be added for CreateSibling actions.
@@ -165,6 +177,7 @@ public class EXTLibraryActionBarContributor
 		validateAction = new ValidateAction();
 	}
 
+	@Override
 	public void init(IActionBars actionBars) {
 		super.init(actionBars);
 
@@ -186,6 +199,7 @@ public class EXTLibraryActionBarContributor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
+	@Override
 	public void contributeToToolBar(IToolBarManager toolBarManager) {
 		toolBarManager.add(new Separator("extlibrary-settings")); //$NON-NLS-1$
 		toolBarManager.add(new Separator("extlibrary-additions")); //$NON-NLS-1$
@@ -197,6 +211,7 @@ public class EXTLibraryActionBarContributor
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 */
+	@Override
 	public void contributeToMenu(IMenuManager menuManager) {
 		super.contributeToMenu(menuManager);
 
@@ -235,6 +250,7 @@ public class EXTLibraryActionBarContributor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
+	@Override
 	public void setActiveEditor(IEditorPart part) {
 		super.setActiveEditor(part);
 		activeEditorPart = part;
@@ -259,12 +275,14 @@ public class EXTLibraryActionBarContributor
 		}
 	}
 	
+	@Override
 	public void activate() {
 		longRunningReadAction.setActiveWorkbenchPart(activeEditor);
 		
 		super.activate();
 	}
 	
+	@Override
 	public void deactivate() {
 		longRunningReadAction.setActiveWorkbenchPart(null);
 		
@@ -291,8 +309,8 @@ public class EXTLibraryActionBarContributor
 
 		// Query the new selection for appropriate new child/sibling descriptors
 		//
-		Collection newChildDescriptors = null;
-		Collection newSiblingDescriptors = null;
+		Collection<?> newChildDescriptors = null;
+		Collection<?> newSiblingDescriptors = null;
 
 		ISelection selection = event.getSelection();
 		if (selection instanceof IStructuredSelection && ((IStructuredSelection)selection).size() == 1) {
@@ -326,11 +344,11 @@ public class EXTLibraryActionBarContributor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	protected Collection generateCreateChildActions(Collection descriptors, ISelection selection) {
-		Collection actions = new ArrayList();
+	protected Collection<IAction> generateCreateChildActions(Collection<?> descriptors, ISelection selection) {
+		Collection<IAction> actions = new ArrayList<IAction>();
 		if (descriptors != null) {
-			for (Iterator i = descriptors.iterator(); i.hasNext(); ) {
-				actions.add(new CreateChildAction(activeEditorPart, selection, i.next()));
+			for (Object next : descriptors) {
+				actions.add(new CreateChildAction(activeEditorPart, selection, next));
 			}
 		}
 		return actions;
@@ -343,11 +361,11 @@ public class EXTLibraryActionBarContributor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	protected Collection generateCreateSiblingActions(Collection descriptors, ISelection selection) {
-		Collection actions = new ArrayList();
+	protected Collection<IAction> generateCreateSiblingActions(Collection<?> descriptors, ISelection selection) {
+		Collection<IAction> actions = new ArrayList<IAction>();
 		if (descriptors != null) {
-			for (Iterator i = descriptors.iterator(); i.hasNext(); ) {
-				actions.add(new CreateSiblingAction(activeEditorPart, selection, i.next()));
+			for (Object next : descriptors) {
+				actions.add(new CreateSiblingAction(activeEditorPart, selection, next));
 			}
 		}
 		return actions;
@@ -362,10 +380,11 @@ public class EXTLibraryActionBarContributor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	protected void populateManager(IContributionManager manager, Collection actions, String contributionID) {
+	protected void populateManager(IContributionManager manager,
+			Collection<? extends IAction> actions, String contributionID) {
+		
 		if (actions != null) {
-			for (Iterator i = actions.iterator(); i.hasNext(); ) {
-				IAction action = (IAction)i.next();
+			for (IAction action : actions) {
 				if (contributionID != null) {
 					manager.insertBefore(contributionID, action);
 				}
@@ -383,7 +402,9 @@ public class EXTLibraryActionBarContributor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	protected void depopulateManager(IContributionManager manager, Collection actions) {
+	protected void depopulateManager(IContributionManager manager,
+			Collection<? extends IAction> actions) {
+		
 		if (actions != null) {
 			IContributionItem[] items = manager.getItems();
 			for (int i = 0; i < items.length; i++) {
@@ -412,6 +433,7 @@ public class EXTLibraryActionBarContributor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
+	@Override
 	public void menuAboutToShow(IMenuManager menuManager) {
 		super.menuAboutToShow(menuManager);
 		MenuManager submenuManager = null;
@@ -430,6 +452,7 @@ public class EXTLibraryActionBarContributor
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
 	 */
+	@Override
 	protected void addGlobalActions(IMenuManager menuManager) {
 		menuManager.insertAfter("additions-end", new Separator("ui-actions")); //$NON-NLS-1$ //$NON-NLS-2$
 		menuManager.insertAfter("ui-actions", showPropertiesViewAction); //$NON-NLS-1$
@@ -450,6 +473,7 @@ public class EXTLibraryActionBarContributor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
+	@Override
 	protected boolean removeAllReferencesOnDelete() {
 		return true;
 	}

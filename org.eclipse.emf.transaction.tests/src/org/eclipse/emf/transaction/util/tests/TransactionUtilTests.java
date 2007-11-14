@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionUtilTests.java,v 1.3 2006/04/21 18:03:41 cdamus Exp $
+ * $Id: TransactionUtilTests.java,v 1.4 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util.tests;
 
@@ -77,15 +77,15 @@ public class TransactionUtilTests extends AbstractTest {
 		
 		startReading();
 		Transaction tx = commit();
-		assertSame(domain, TransactionUtil.getEditingDomain((Object) tx));
+		assertSame(domain, TransactionUtil.getEditingDomain(tx));
 		
-		assertSame(domain, TransactionUtil.getEditingDomain((Object) domain));
+		assertSame(domain, TransactionUtil.getEditingDomain(domain));
 		
 		IEditingDomainProvider edp = new IEditingDomainProvider() {
 			public EditingDomain getEditingDomain() {
 				return domain;
 			}};
 			
-		assertSame(domain, TransactionUtil.getEditingDomain((Object) edp));
+		assertSame(domain, TransactionUtil.getEditingDomain(edp));
 	}
 }

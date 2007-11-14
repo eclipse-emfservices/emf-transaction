@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalCommandStackImpl.java,v 1.8 2007/02/28 21:53:38 cdamus Exp $
+ * $Id: TransactionalCommandStackImpl.java,v 1.9 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -54,7 +54,8 @@ public class TransactionalCommandStackImpl
      * 
      *  @since 1.1
      */
-	protected void doExecute(Command command, Map options) throws InterruptedException, RollbackException {
+	@Override
+	protected void doExecute(Command command, Map<?, ?> options) throws InterruptedException, RollbackException {
 		InternalTransaction tx = createTransaction(command, options);
 		
 		try {
@@ -98,13 +99,14 @@ public class TransactionalCommandStackImpl
      * 
      * @since 1.1
      */
-    protected void handleRollback(Command command, RollbackException rbe) {
+    @Override
+	protected void handleRollback(Command command, RollbackException rbe) {
         if ((command != null) && (top >= 0) && (commandList.get(top) == command)) {
             // pop the failed command
             commandList.remove(top--);
 
             if (top >= 0) {
-                mostRecentCommand = (Command) commandList.get(top);
+                mostRecentCommand = commandList.get(top);
             } else {
                 mostRecentCommand = null;
             }
@@ -118,6 +120,7 @@ public class TransactionalCommandStackImpl
      * an undo transaction (a read/write transaction with the
      * {@link #getUndoRedoOptions() undo/redo options}).
      */
+	@Override
 	public void undo() {
 		if (canUndo()) {
 			try {
@@ -138,6 +141,7 @@ public class TransactionalCommandStackImpl
 	 * Extends the inherited implementation to consider the redoability of
 	 * {@link ConditionalRedoCommand}s.
 	 */
+	@Override
 	public boolean canRedo() {
 		boolean result = super.canRedo();
 		
@@ -158,6 +162,7 @@ public class TransactionalCommandStackImpl
 	 * of a redo transaction (a read/write transaction with the
 	 * {@link #getUndoRedoOptions() undo/redo options}).
 	 */
+	@Override
 	public void redo() {
 		if (canRedo()) {
 			try {
@@ -175,7 +180,9 @@ public class TransactionalCommandStackImpl
 	}
 
 	// Documentation copied from the inherited specification
-	public EMFCommandTransaction createTransaction(Command command, Map options) throws InterruptedException {
+	public EMFCommandTransaction createTransaction(Command command, Map<?, ?> options)
+			throws InterruptedException {
+		
 		EMFCommandTransaction result;
 		
 		if (command instanceof TriggerCommand) {
@@ -191,7 +198,9 @@ public class TransactionalCommandStackImpl
 	}
 
 	// Documentation copied from the inherited specification
-	public void executeTriggers(Command command, List triggers, Map options) throws InterruptedException, RollbackException {
+	public void executeTriggers(Command command, List<Command> triggers,
+			Map<?, ?> options) throws InterruptedException, RollbackException {
+		
 		if (!triggers.isEmpty()) {
 			TriggerCommand trigger = (command == null)
 				? new TriggerCommand(triggers)

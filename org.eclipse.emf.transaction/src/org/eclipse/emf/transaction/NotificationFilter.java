@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: NotificationFilter.java,v 1.2 2006/02/02 16:24:20 cdamus Exp $
+ * $Id: NotificationFilter.java,v 1.3 2007/11/14 18:14:01 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -49,6 +49,7 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 public abstract class NotificationFilter {
 	/** As its name implies, this filter matches any notification. */
 	public static final NotificationFilter ANY = new NotificationFilter() {
+		@Override
 		public boolean matches(Notification notification) {
 			return true;
 		}};
@@ -59,6 +60,7 @@ public abstract class NotificationFilter {
 	 * @see Notification#isTouch()
 	 */
 	public static final NotificationFilter NOT_TOUCH = new NotificationFilter() {
+		@Override
 		public boolean matches(Notification notification) {
 			return !notification.isTouch();
 		}};
@@ -83,6 +85,7 @@ public abstract class NotificationFilter {
 	 * A filter matching "resource loaded" events.
 	 */
 	public static final NotificationFilter RESOURCE_LOADED = new NotificationFilter() {
+		@Override
 		public boolean matches(Notification notification) {
 			return (notification.getNotifier() instanceof Resource)
 					&& (notification.getFeatureID(Resource.class)
@@ -95,6 +98,7 @@ public abstract class NotificationFilter {
 	 * A filter matching "resource unloaded" events.
 	 */
 	public static final NotificationFilter RESOURCE_UNLOADED = new NotificationFilter() {
+		@Override
 		public boolean matches(Notification notification) {
 			return (notification.getNotifier() instanceof Resource)
 					&& (notification.getFeatureID(Resource.class)
@@ -137,6 +141,7 @@ public abstract class NotificationFilter {
 	 */
 	public static NotificationFilter createNotifierFilter(final Object notifier) {
 		return new NotificationFilter() {
+			@Override
 			public boolean matches(Notification notification) {
 				return notification.getNotifier() == notifier;
 			}};
@@ -152,6 +157,7 @@ public abstract class NotificationFilter {
 	 */
 	public static NotificationFilter createEventTypeFilter(final int eventType) {
 		return new NotificationFilter() {
+			@Override
 			public boolean matches(Notification notification) {
 				return notification.getEventType() == eventType;
 			}};
@@ -166,6 +172,7 @@ public abstract class NotificationFilter {
 	 */
 	public static NotificationFilter createFeatureFilter(final EStructuralFeature feature) {
 		return new NotificationFilter() {
+			@Override
 			public boolean matches(Notification notification) {
 				return notification.getFeature() == feature;
 			}};
@@ -180,8 +187,10 @@ public abstract class NotificationFilter {
 	 * 
 	 * @return the filter
 	 */
-	public static NotificationFilter createFeatureFilter(final Class ownerType, final int featureId) {
+	public static NotificationFilter createFeatureFilter(
+			final Class<?> ownerType, final int featureId) {
 		return new NotificationFilter() {
+			@Override
 			public boolean matches(Notification notification) {
 				return ownerType.isInstance(notification.getNotifier())
 						&& (notification.getFeatureID(ownerType) == featureId);
@@ -202,6 +211,7 @@ public abstract class NotificationFilter {
 	 */
 	public static NotificationFilter createFeatureFilter(final EClassifier ownerType, final int featureId) {
 		return new NotificationFilter() {
+			@Override
 			public boolean matches(Notification notification) {
 				return ownerType.isInstance(notification.getNotifier())
 						&& (notification.getFeatureID(ownerType.getInstanceClass()) == featureId);
@@ -217,8 +227,9 @@ public abstract class NotificationFilter {
 	 * 
 	 * @return the filter
 	 */
-	public static NotificationFilter createNotifierTypeFilter(final Class type) {
+	public static NotificationFilter createNotifierTypeFilter(final Class<?> type) {
 		return new NotificationFilter() {
+			@Override
 			public boolean matches(Notification notification) {
 				return type.isInstance(notification.getNotifier());
 			}};
@@ -235,6 +246,7 @@ public abstract class NotificationFilter {
 	 */
 	public static NotificationFilter createNotifierTypeFilter(final EClassifier type) {
 		return new NotificationFilter() {
+			@Override
 			public boolean matches(Notification notification) {
 				return type.isInstance(notification.getNotifier());
 			}};
@@ -251,6 +263,7 @@ public abstract class NotificationFilter {
 	 */
 	public final NotificationFilter and(final NotificationFilter other) {
 		return new NotificationFilter() {
+			@Override
 			public boolean matches(Notification notification) {
 				return NotificationFilter.this.matches(notification)
 						&& other.matches(notification);
@@ -268,6 +281,7 @@ public abstract class NotificationFilter {
 	 */
 	public final NotificationFilter or(final NotificationFilter other) {
 		return new NotificationFilter() {
+			@Override
 			public boolean matches(Notification notification) {
 				return NotificationFilter.this.matches(notification)
 						|| other.matches(notification);
@@ -281,6 +295,7 @@ public abstract class NotificationFilter {
 	 */
 	public final NotificationFilter negated() {
 		return new NotificationFilter() {
+			@Override
 			public boolean matches(Notification notification) {
 				return !NotificationFilter.this.matches(notification);
 			}};

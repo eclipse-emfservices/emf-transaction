@@ -12,16 +12,19 @@
  *
  * </copyright>
  *
- * $Id: PrivilegedRunnableTest.java,v 1.3 2006/11/01 19:14:34 cdamus Exp $
+ * $Id: PrivilegedRunnableTest.java,v 1.4 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
+import java.util.List;
+
+import junit.framework.Assert;
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.transaction.RunnableWithResult;
 
 
@@ -56,7 +59,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 	 * Tests the sharing of a read-only transaction.
 	 */
 	public void test_sharingReadOnlyTransaction() {
-		RunnableWithResult privileged;
+		RunnableWithResult<?> privileged;
 		startReading();
 		
 		privileged = domain.createPrivilegedRunnable(read);
@@ -91,7 +94,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 	 * Tests the sharing of a read-write transaction.
 	 */
 	public void test_sharingReadWriteTransaction() {
-		RunnableWithResult privileged;
+		RunnableWithResult<?> privileged;
 		startWriting();
 		
 		privileged = domain.createPrivilegedRunnable(write);
@@ -147,7 +150,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 				thread2.syncExec(domain.createPrivilegedRunnable(write));
 			}};
 		
-		RunnableWithResult privileged;
+		RunnableWithResult<?> privileged;
 		startWriting();
 		
 		privileged = domain.createPrivilegedRunnable(nestingRunnable);
@@ -167,7 +170,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 	 * a privileged runnable.
 	 */
 	public void test_transactionMustBeActive() {
-		RunnableWithResult privileged;
+		RunnableWithResult<?> privileged;
 		startWriting();
 		
 		privileged = domain.createPrivilegedRunnable(write);
@@ -186,7 +189,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 	 * transaction when executing a privileged runnable.
 	 */
 	public void test_transactionMustBeCurrent() {
-		RunnableWithResult privileged;
+		RunnableWithResult<?> privileged;
 		startWriting();
 		
 		privileged = domain.createPrivilegedRunnable(write);
@@ -213,7 +216,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 	public void test_runtimeExceptionInRunnable_146625() {
 		final RuntimeException e = new RuntimeException();
 		
-		RunnableWithResult privileged;
+		RunnableWithResult<?> privileged;
 		startReading();
 		
 		privileged = domain.createPrivilegedRunnable(new Runnable() {
@@ -299,6 +302,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void doSetUp() throws Exception {
 		super.doSetUp();
 		
@@ -311,6 +315,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 		writeWithResult = new TestWriteWithResult();
 	}
 	
+	@Override
 	protected void doTearDown() throws Exception {
 		read = null;
 		readWithResult = null;
@@ -348,7 +353,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 				try {
 					wait();
 				} catch (InterruptedException e) {
-					TestCase.fail("Interrupted while waiting for runnable"); //$NON-NLS-1$
+					Assert.fail("Interrupted while waiting for runnable"); //$NON-NLS-1$
 				}
 			}
 		}
@@ -359,6 +364,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 			return result;
 		}
 		
+		@Override
 		public void run() {
 			for (;;) {
 				synchronized (this) {
@@ -401,7 +407,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 		}
 	}
 	
-	class TestReadWithResult extends RunnableWithResult.Impl {
+	class TestReadWithResult extends RunnableWithResult.Impl<List<Book>> {
 		boolean wasExecuted = false;
 		
 		public void run() {
@@ -420,7 +426,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 		}
 	}
 	
-	class TestWriteWithResult extends RunnableWithResult.Impl {
+	class TestWriteWithResult extends RunnableWithResult.Impl<List<Book>> {
 		boolean wasExecuted = false;
 		
 		public void run() {

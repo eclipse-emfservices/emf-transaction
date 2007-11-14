@@ -12,11 +12,9 @@
  *
  * </copyright>
  *
- * $Id: DemultiplexingListener.java,v 1.3 2007/06/07 14:26:00 cdamus Exp $
+ * $Id: DemultiplexingListener.java,v 1.4 2007/11/14 18:14:01 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
-
-import java.util.Iterator;
 
 import org.eclipse.emf.common.notify.Notification;
 
@@ -50,10 +48,9 @@ public abstract class DemultiplexingListener extends ResourceSetListenerImpl {
 	 * 
 	 * @see #handleNotification(TransactionalEditingDomain, Notification)
 	 */
+	@Override
 	public void resourceSetChanged(ResourceSetChangeEvent event) {
-		for (Iterator iter = event.getNotifications().iterator(); iter.hasNext();) {
-			Notification next = (Notification) iter.next();
-			
+		for (Notification next : event.getNotifications()) {
 			handleNotification(event.getEditingDomain(), next);
 		}
 	}
@@ -71,6 +68,7 @@ public abstract class DemultiplexingListener extends ResourceSetListenerImpl {
 	/**
 	 * I want only post-commit events, not pre-commit events.
 	 */
+	@Override
 	public boolean isPostcommitOnly() {
 		return true;
 	}

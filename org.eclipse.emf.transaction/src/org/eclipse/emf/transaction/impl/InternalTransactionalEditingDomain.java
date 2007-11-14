@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: InternalTransactionalEditingDomain.java,v 1.5 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: InternalTransactionalEditingDomain.java,v 1.6 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -22,9 +22,9 @@ import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
+import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
-import org.eclipse.emf.transaction.Transaction;
 
 /**
  * Internal interface that must be provided by any implementation of the public
@@ -54,7 +54,8 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	 *     
 	 * @see #activate(InternalTransaction)
 	 */
-	InternalTransaction startTransaction(boolean readOnly, Map options) throws InterruptedException;
+	InternalTransaction startTransaction(boolean readOnly, Map<?, ?> options)
+	throws InterruptedException;
 	
 	/**
 	 * Obtains the transaction that currently has access to me, and whose
@@ -185,7 +186,7 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	 *  
 	 * @return A map with undo/redo options.
 	 */
-	Map getUndoRedoOptions();
+	Map<Object, Object> getUndoRedoOptions();
 	
 	/**
 	 * Transfers ownership of this editing domain to the specified
@@ -193,7 +194,7 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	 *  
 	 * @param runnable the runnable whose thread is to borrow me
 	 */
-	void startPrivileged(PrivilegedRunnable runnable);
+	void startPrivileged(PrivilegedRunnable<?> runnable);
 	
 	/**
 	 * Returns me to my previous owner, upon completion of the specified
@@ -201,5 +202,5 @@ public interface InternalTransactionalEditingDomain extends TransactionalEditing
 	 * 
 	 * @param runnable the runnable whose thread had borrowed me
 	 */
-	void endPrivileged(PrivilegedRunnable runnable);
+	void endPrivileged(PrivilegedRunnable<?> runnable);
 }

@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeEMFOperation.java,v 1.4 2006/05/19 17:19:47 cdamus Exp $
+ * $Id: CompositeEMFOperation.java,v 1.5 2007/11/14 18:14:08 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -92,7 +92,7 @@ import org.eclipse.osgi.util.NLS;
  */
 public class CompositeEMFOperation extends AbstractEMFOperation {
 
-	private final List children;
+	private final List<IUndoableOperation> children;
 	private boolean transactionNestingEnabled = true;
 	
 	/**
@@ -114,7 +114,8 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * @param options for the transaction in which I execute myself, or
 	 *     <code>null</code> for the default options
 	 */
-	public CompositeEMFOperation(TransactionalEditingDomain domain, String label, Map options) {
+	public CompositeEMFOperation(TransactionalEditingDomain domain, String label,
+			Map<?, ?> options) {
 		this(domain, label, null, options);
 	}
 	
@@ -125,7 +126,8 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * @param label my user-readable label
 	 * @param children a list of operations to compose
 	 */
-	public CompositeEMFOperation(TransactionalEditingDomain domain, String label, List children) {
+	public CompositeEMFOperation(TransactionalEditingDomain domain, String label,
+			List<? extends IUndoableOperation> children) {
 		this(domain, label, children, null);
 	}
 	
@@ -139,13 +141,14 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * @param options for the transaction in which I execute myself, or
 	 *     <code>null</code> for the default options
 	 */
-	public CompositeEMFOperation(TransactionalEditingDomain domain, String label, List children, Map options) {
+	public CompositeEMFOperation(TransactionalEditingDomain domain, String label,
+			List<? extends IUndoableOperation> children, Map<?, ?> options) {
 		super(domain, label, options);
 		
 		if (children != null) {
-			this.children = new java.util.ArrayList(children);
+			this.children = new java.util.ArrayList<IUndoableOperation>(children);
 		} else {
-			this.children = new java.util.ArrayList();
+			this.children = new java.util.ArrayList<IUndoableOperation>();
 		}
 	}
 	
@@ -155,10 +158,11 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * so that they may be correctly rolled back (in sequence) in the event
 	 * of rollback, undo, or redo.
 	 */
+	@Override
 	protected final IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 		
-		final List result = new java.util.ArrayList(size());
+		final List<IStatus> result = new java.util.ArrayList<IStatus>(size());
 		
 		if (monitor == null) {
 			monitor = new NullProgressMonitor();
@@ -167,7 +171,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 		monitor.beginTask(getLabel(), size());
 		
 		try {
-			for (ListIterator iter = listIterator(); iter.hasNext();) {
+			for (ListIterator<IUndoableOperation> iter = listIterator(); iter.hasNext();) {
 				if (monitor.isCanceled()) {
 					// abort the current transaction so that it will rollback
 					//   any changes already committed by child transactions
@@ -181,7 +185,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 				}
 				
 				Transaction childTransaction = null;
-				IUndoableOperation next = (IUndoableOperation) iter.next();
+				IUndoableOperation next = iter.next();
 				IStatus status = null;
 				
 				if (!(next instanceof AbstractEMFOperation)) {
@@ -262,7 +266,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	private Transaction createNonEMFTransaction(
 			IUndoableOperation operation,
 			IAdaptable info,
-			Map options)
+			Map<?, ?> options)
 			throws InterruptedException {
 		
 		InternalTransaction result = new NonEMFTransaction(
@@ -273,6 +277,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 		return result;
 	}
 	
+	@Override
 	protected void didCommit(Transaction transaction) {
 		super.didCommit(transaction);
 		
@@ -280,21 +285,25 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 		if (triggers != null) {
 			// append a child operation for the triggers
 			getChildren().add(new AbstractOperation("") { //$NON-NLS-1$
+				@Override
 				public boolean canUndo() {
 					return triggers.canUndo();
 				}
 
+				@Override
 				public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 					// this method will never be called
 					triggers.execute();
 					return Status.OK_STATUS;
 				}
 
+				@Override
 				public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 					triggers.redo();
 					return Status.OK_STATUS;
 				}
 
+				@Override
 				public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 					triggers.undo();
 					return Status.OK_STATUS;
@@ -306,12 +315,13 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	/**
 	 * I can execute if all of my children can execute.
 	 */
+	@Override
 	public boolean canExecute() {
 		boolean result = super.canExecute();
 		
 		if (result) {
-			for (Iterator iter = iterator(); result && iter.hasNext();) {
-				result = ((IUndoableOperation) iter.next()).canExecute();
+			for (Iterator<IUndoableOperation> iter = iterator(); result && iter.hasNext();) {
+				result = iter.next().canExecute();
 			}
 		}
 		
@@ -322,12 +332,13 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * I can undo if my transaction successfully completed with changes recorded
 	 * and my children can all be undone.
 	 */
+	@Override
 	public boolean canUndo() {
 		boolean result = (getChange() != null);
 		
 		if (result && isTransactionNestingEnabled()) {
-			for (Iterator iter = iterator(); result && iter.hasNext();) {
-				result = ((IUndoableOperation) iter.next()).canUndo();
+			for (Iterator<IUndoableOperation> iter = iterator(); result && iter.hasNext();) {
+				result = iter.next().canUndo();
 			}
 		}
 		
@@ -337,6 +348,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	/**
 	 * I undo by asking my children to undo, in reverse order.
 	 */
+	@Override
 	protected final IStatus doUndo(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 		
@@ -347,7 +359,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 			return super.doUndo(monitor, info);
 		}
 		
-		final List result = new java.util.ArrayList(size());
+		final List<IStatus> result = new java.util.ArrayList<IStatus>(size());
 		
 		if (monitor == null) {
 			monitor = new NullProgressMonitor();
@@ -356,8 +368,10 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 		ExecutionException caughtException = null;
 		monitor.beginTask(getLabel(), size());
 		
-		for (ListIterator iter = listIterator(size()); iter.hasPrevious();) {
-			IUndoableOperation prev = (IUndoableOperation) iter.previous();
+		for (ListIterator<IUndoableOperation> iter = listIterator(size());
+				iter.hasPrevious();) {
+			
+			IUndoableOperation prev = iter.previous();
 			IStatus status = null;
 			
 			try {
@@ -392,7 +406,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 				
 				while (iter.hasNext()) {
 					// unwind the child operations
-					IUndoableOperation next = (IUndoableOperation) iter.next();
+					IUndoableOperation next = iter.next();
 					if (!next.canRedo()) {
 						// oops!  Can't continue unwinding.  Oh, well
 						EMFWorkspacePlugin.INSTANCE.log(new Status(
@@ -435,12 +449,13 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * I can redo if my transaction successfully completed with changes recorded
 	 * and my children can all be redone.
 	 */
+	@Override
 	public boolean canRedo() {
 		boolean result = (getChange() != null);
 		
 		if (result && isTransactionNestingEnabled()) {
-			for (Iterator iter = iterator(); result && iter.hasNext();) {
-				result = ((IUndoableOperation) iter.next()).canRedo();
+			for (Iterator<IUndoableOperation> iter = iterator(); result && iter.hasNext();) {
+				result = iter.next().canRedo();
 			}
 		}
 		
@@ -450,6 +465,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	/**
 	 * I undo by asking my children to redo, in forward order.
 	 */
+	@Override
 	protected final IStatus doRedo(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 		
@@ -460,7 +476,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 			return super.doRedo(monitor, info);
 		}
 		
-		final List result = new java.util.ArrayList(size());
+		final List<IStatus> result = new java.util.ArrayList<IStatus>(size());
 		
 		if (monitor == null) {
 			monitor = new NullProgressMonitor();
@@ -469,8 +485,8 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 		ExecutionException caughtException = null;
 		monitor.beginTask(getLabel(), size());
 		
-		for (ListIterator iter = listIterator(); iter.hasNext();) {
-			IUndoableOperation next = (IUndoableOperation) iter.next();
+		for (ListIterator<IUndoableOperation> iter = listIterator(); iter.hasNext();) {
+			IUndoableOperation next = iter.next();
 			IStatus status = null;
 			
 			try {
@@ -505,7 +521,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 				
 				while (iter.hasPrevious()) {
 					// unwind the child operations
-					IUndoableOperation prev = (IUndoableOperation) iter.previous();
+					IUndoableOperation prev = iter.previous();
 					if (!prev.canUndo()) {
 						// oops!  Can't continue unwinding.  Oh, well
 						EMFWorkspacePlugin.INSTANCE.log(new Status(
@@ -545,11 +561,14 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	/**
 	 * Removes all of my children and disposes them.
 	 */
+	@Override
 	public void dispose() {
 		super.dispose();
 		
-		for (ListIterator iter = listIterator(size()); iter.hasPrevious();) {
-			((IUndoableOperation) iter.previous()).dispose();
+		for (ListIterator<IUndoableOperation> iter = listIterator(size());
+				iter.hasPrevious();) {
+			
+			iter.previous().dispose();
 			iter.remove();
 		}
 	}
@@ -569,7 +588,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * @see #iterator()
 	 * @see #listIterator(int)
 	 */
-	protected List getChildren() {
+	protected List<IUndoableOperation> getChildren() {
 		return children;
 	}
 	
@@ -665,8 +684,8 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	private boolean anyChildHasContext(IUndoContext ctx) {
 		boolean result = false;
 		
-		for (Iterator iter = iterator(); !result && iter.hasNext();) {
-			result = ((IUndoableOperation) iter.next()).hasContext(ctx);
+		for (Iterator<IUndoableOperation> iter = iterator(); !result && iter.hasNext();) {
+			result = iter.next().hasContext(ctx);
 		}
 		
 		return result;
@@ -677,6 +696,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * {@link #setTransactionNestingDisabled(boolean) transaction nesting}
 	 * state accordingly.
 	 */
+	@Override
 	void setReuseParentTransaction(boolean reuseParentTransaction) {
 		super.setReuseParentTransaction(reuseParentTransaction);
 		
@@ -744,7 +764,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * 
 	 * @return an iterator of my children
 	 */
-	public Iterator iterator() {
+	public Iterator<IUndoableOperation> iterator() {
 		return new ChildIterator();
 	}
 	
@@ -762,7 +782,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * 
 	 * @return an iterator of my children
 	 */
-	public ListIterator listIterator() {
+	public ListIterator<IUndoableOperation> listIterator() {
 		return new ChildListIterator(0);
 	}
 	
@@ -783,7 +803,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * 
 	 * @return an iterator of my children
 	 */
-	public ListIterator listIterator(int index) {
+	public ListIterator<IUndoableOperation> listIterator(int index) {
 		return new ChildListIterator(index);
 	}
 	
@@ -793,9 +813,9 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 *
 	 * @author Christian W. Damus (cdamus)
 	 */
-	private class ChildIterator implements Iterator {
-		protected Object last;
-		protected final ListIterator iter;
+	private class ChildIterator implements Iterator<IUndoableOperation> {
+		protected IUndoableOperation last;
+		protected final ListIterator<IUndoableOperation> iter;
 	
 		ChildIterator() {
 			this(0);
@@ -809,11 +829,11 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 			assertNotExecuted();
 			
 			iter.remove();
-			didRemove((IUndoableOperation) last);
+			didRemove(last);
 			last = null;
 		}
 	
-		public Object next() {
+		public IUndoableOperation next() {
 			last = iter.next();
 			return last;
 		}
@@ -829,28 +849,30 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 *
 	 * @author Christian W. Damus (cdamus)
 	 */
-	private class ChildListIterator extends ChildIterator implements ListIterator {
+	private class ChildListIterator extends ChildIterator
+			implements ListIterator<IUndoableOperation> {
+		
 		ChildListIterator(int index) {
 			super(index);
 		}
 		
-		public void add(Object o) {
+		public void add(IUndoableOperation o) {
 			assertNotExecuted();
 			
 			if (!getChildren().contains(o)) {
 				iter.add(o);
-				didAdd((IUndoableOperation) o);
+				didAdd(o);
 			}
 		}
 	
-		public void set(Object o) {
+		public void set(IUndoableOperation o) {
 			assertNotExecuted();
 			
 			if (!getChildren().contains(o)) {
-				didRemove((IUndoableOperation) last);
+				didRemove(last);
 				iter.set(o);
 				last = o;
-				didAdd((IUndoableOperation) o);
+				didAdd(o);
 			}
 		}
 	
@@ -862,7 +884,7 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 			return iter.nextIndex();
 		}
 	
-		public Object previous() {
+		public IUndoableOperation previous() {
 			last = iter.previous();
 			return last;
 		}

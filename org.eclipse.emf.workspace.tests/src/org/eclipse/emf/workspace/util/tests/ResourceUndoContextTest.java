@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceUndoContextTest.java,v 1.3 2006/02/01 23:12:10 cdamus Exp $
+ * $Id: ResourceUndoContextTest.java,v 1.4 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -34,8 +34,8 @@ import org.eclipse.emf.ecore.util.EContentAdapter;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.BookOnTape;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
+import org.eclipse.emf.examples.extlibrary.Employee;
 import org.eclipse.emf.examples.extlibrary.Library;
-import org.eclipse.emf.examples.extlibrary.Person;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.workspace.ResourceUndoContext;
@@ -88,7 +88,7 @@ public class ResourceUndoContextTest extends TestCase {
 		
 		assertFalse(listener.notifications.isEmpty());
 		
-		Set affected = ResourceUndoContext.getAffectedResources(
+		Set<Resource> affected = ResourceUndoContext.getAffectedResources(
 				listener.notifications);
 		
 		assertEquals(Collections.singleton(res1), affected);
@@ -104,7 +104,7 @@ public class ResourceUndoContextTest extends TestCase {
 		BookOnTape book = EXTLibraryFactory.eINSTANCE.createBookOnTape();
 		library.getStock().add(book);
 		
-		Person person = EXTLibraryFactory.eINSTANCE.createEmployee();
+		Employee person = EXTLibraryFactory.eINSTANCE.createEmployee();
 		library.getEmployees().add(person);
 		
 		// forget the events so far
@@ -114,7 +114,7 @@ public class ResourceUndoContextTest extends TestCase {
 		
 		assertFalse(listener.notifications.isEmpty());
 		
-		Set affected = ResourceUndoContext.getAffectedResources(
+		Set<Resource> affected = ResourceUndoContext.getAffectedResources(
 				listener.notifications);
 		
 		assertEquals(Collections.singleton(res1), affected);
@@ -143,10 +143,10 @@ public class ResourceUndoContextTest extends TestCase {
 		
 		assertFalse(listener.notifications.isEmpty());
 		
-		Set affected = ResourceUndoContext.getAffectedResources(
+		Set<Resource> affected = ResourceUndoContext.getAffectedResources(
 				listener.notifications);
 		
-		Set expected = new java.util.HashSet();
+		Set<Resource> expected = new java.util.HashSet<Resource>();
 		expected.add(res1);
 		expected.add(res2);
 		
@@ -166,7 +166,7 @@ public class ResourceUndoContextTest extends TestCase {
 		BookOnTape book = EXTLibraryFactory.eINSTANCE.createBookOnTape();
 		library1.getStock().add(book);
 		
-		Person person = EXTLibraryFactory.eINSTANCE.createEmployee();
+		Employee person = EXTLibraryFactory.eINSTANCE.createEmployee();
 		library2.getEmployees().add(person);
 		
 		// forget the events so far
@@ -176,10 +176,10 @@ public class ResourceUndoContextTest extends TestCase {
 		
 		assertFalse(listener.notifications.isEmpty());
 		
-		Set affected = ResourceUndoContext.getAffectedResources(
+		Set<Resource> affected = ResourceUndoContext.getAffectedResources(
 				listener.notifications);
 		
-		Set expected = new java.util.HashSet();
+		Set<Resource> expected = new java.util.HashSet<Resource>();
 		expected.add(res1);
 		expected.add(res2);
 		
@@ -200,7 +200,7 @@ public class ResourceUndoContextTest extends TestCase {
 		BookOnTape book = EXTLibraryFactory.eINSTANCE.createBookOnTape();
 		library1.getStock().add(book);
 		
-		Person person = EXTLibraryFactory.eINSTANCE.createEmployee();
+		Employee person = EXTLibraryFactory.eINSTANCE.createEmployee();
 		library2.getEmployees().add(person);
 		
 		book.setReader(person);
@@ -213,10 +213,10 @@ public class ResourceUndoContextTest extends TestCase {
 		
 		assertFalse(listener.notifications.isEmpty());
 		
-		Set affected = ResourceUndoContext.getAffectedResources(
+		Set<Resource> affected = ResourceUndoContext.getAffectedResources(
 				listener.notifications);
 		
-		Set expected = new java.util.HashSet();
+		Set<Resource> expected = new java.util.HashSet<Resource>();
 		expected.add(res1);
 		expected.add(res2);
 		
@@ -228,6 +228,7 @@ public class ResourceUndoContextTest extends TestCase {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void setUp()
 		throws Exception {
 		
@@ -252,6 +253,7 @@ public class ResourceUndoContextTest extends TestCase {
 		rset.eAdapters().add(listener);
 	}
 	
+	@Override
 	protected void tearDown()
 		throws Exception {
 		
@@ -277,8 +279,9 @@ public class ResourceUndoContextTest extends TestCase {
 	}
 	
 	private static class Listener extends EContentAdapter {
-		final List notifications = new java.util.ArrayList();
+		final List<Notification> notifications = new java.util.ArrayList<Notification>();
 		
+		@Override
 		public void notifyChanged(Notification notification) {
 			notifications.add(notification);
 			

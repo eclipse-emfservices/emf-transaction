@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceEditingDomainFactory.java,v 1.3 2007/06/07 14:25:44 cdamus Exp $
+ * $Id: WorkspaceEditingDomainFactory.java,v 1.4 2007/11/14 18:14:08 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -51,6 +51,7 @@ public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImp
 	 * 
 	 * @return the new editing domain
 	 */
+	@Override
 	public TransactionalEditingDomain createEditingDomain() {
 		return createEditingDomain(OperationHistoryFactory.getOperationHistory());
 	}
@@ -63,6 +64,7 @@ public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImp
 	 * 
 	 * @return the new editing domain
 	 */
+	@Override
 	public TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
 		return createEditingDomain(
 				rset,

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: RecordingCommand.java,v 1.6 2007/06/13 12:27:32 cdamus Exp $
+ * $Id: RecordingCommand.java,v 1.7 2007/11/14 18:14:01 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -93,6 +93,7 @@ public abstract class RecordingCommand
 	 * Subclasses should override this if they have more preparation to do.
 	 * By default, the result is just <code>true</code>.
 	 */
+	@Override
 	protected boolean prepare() {
 		return true;
 	}
@@ -151,6 +152,7 @@ public abstract class RecordingCommand
 	 * I can be undone if I successfully recorded the changes that I executed.
 	 * Subclasses would not normally need to override this method.
 	 */
+	@Override
 	public boolean canUndo() {
 		return canApplyChange();
 	}
@@ -175,6 +177,7 @@ public abstract class RecordingCommand
 	 * Undoes the changes that I recorded.
 	 * Subclasses would not normally need to override this method.
 	 */
+	@Override
 	public final void undo() {
 		if (change != null) {
 			change.applyAndReverse();
@@ -199,6 +202,7 @@ public abstract class RecordingCommand
 	protected abstract void doExecute();
 	
 	// Documentation copied from the inherited specification
+	@Override
 	public Command chain(Command command) {
 	    return new ConditionalRedoCommand.Compound().chain(this).chain(command);
 	}
@@ -245,7 +249,8 @@ public abstract class RecordingCommand
      * Extends the inherited implementation by disposing my change description,
      * if any.
      */
-    public void dispose() {
+    @Override
+	public void dispose() {
         super.dispose();
         
         if (change != null) {

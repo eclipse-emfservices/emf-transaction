@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Tracing.java,v 1.2 2007/06/07 14:26:07 cdamus Exp $
+ * $Id: Tracing.java,v 1.3 2007/11/14 18:14:06 cdamus Exp $
  */
 package org.eclipse.emf.transaction.ui.internal;
 
@@ -109,7 +109,8 @@ public class Tracing {
 	/**
 	 * The cached debug options (for optimization).
 	 */
-	private static final Map cachedOptions = new HashMap();
+	private static final Map<String, Boolean> cachedOptions =
+		new HashMap<String, Boolean>();
 
 	/**
 	 * Retrieves a Boolean value indicating whether tracing is enabled.
@@ -137,13 +138,12 @@ public class Tracing {
 			Boolean value = null;
 			
 			synchronized (cachedOptions) {
-				value = (Boolean) cachedOptions.get(option);
+				value = cachedOptions.get(option);
 	
 				if (null == value) {
 					value =
-						new Boolean(
-							Boolean.TRUE.toString().equalsIgnoreCase(
-								org.eclipse.core.runtime.Platform.getDebugOption(option)));
+						Boolean.valueOf(
+								org.eclipse.core.runtime.Platform.getDebugOption(option));
 	
 					cachedOptions.put(option, value);
 				}
@@ -254,7 +254,7 @@ public class Tracing {
 	 */
 	public static void changing(
         String option,
-        Class clazz,
+        Class<?> clazz,
         String methodName,
         String valueDescription,
         Object oldValue,
@@ -291,7 +291,7 @@ public class Tracing {
 	 * 
 	 */
 	public static void catching(
-		Class clazz,
+		Class<?> clazz,
 		String methodName,
 		Throwable throwable) {
 
@@ -322,7 +322,7 @@ public class Tracing {
 	 * 
 	 */
 	public static void throwing(
-		Class clazz,
+		Class<?> clazz,
 		String methodName,
 		Throwable throwable) {
 
@@ -343,54 +343,6 @@ public class Tracing {
 	}
 
 	/**
-	 * Traces the entering into the specified method of the specified class.
-	 * 
-	 * @param clazz The class whose method is being entered.
-	 * @param methodName The name of method that is being entered.
-	 * 
-	 */
-	public static void entering(
-		Class clazz,
-		String methodName) {
-
-		if (shouldTrace(EMFTransactionUIDebugOptions.METHODS_ENTERING)) {
-
-			trace(
-				PREFIX_ENTERING
-					+ clazz.getName()
-					+ SEPARATOR_METHOD
-					+ methodName);
-		}
-	}
-
-	/**
-	 * Traces the entering into the specified method of the specified class,
-	 * with the specified parameter.
-	 * 
-	 * @param clazz The class whose method is being entered.
-	 * @param methodName The name of method that is being entered.
-	 * @param parameter The parameter to the method being entered.
-	 * 
-	 */
-	public static void entering(
-		Class clazz,
-		String methodName,
-		Object parameter) {
-
-		if (shouldTrace(EMFTransactionUIDebugOptions.METHODS_ENTERING)) {
-
-			trace(
-				PREFIX_ENTERING
-					+ clazz.getName()
-					+ SEPARATOR_METHOD
-					+ methodName
-					+ PARENTHESIS_OPEN
-					+ getArgumentString(parameter)
-					+ PARENTHESIS_CLOSE);
-		}
-	}
-
-	/**
 	 * Traces the entering into the specified method of the specified class,
 	 * with the specified parameters.
 	 * 
@@ -400,9 +352,9 @@ public class Tracing {
 	 * 
 	 */
 	public static void entering(
-		Class clazz,
+		Class<?> clazz,
 		String methodName,
-		Object[] parameters) {
+		Object... parameters) {
 
 		if (shouldTrace(EMFTransactionUIDebugOptions.METHODS_ENTERING)) {
 
@@ -425,7 +377,7 @@ public class Tracing {
 	 * 
 	 */
 	public static void exiting(
-		Class clazz,
+		Class<?> clazz,
 		String methodName) {
 
 		if (shouldTrace(EMFTransactionUIDebugOptions.METHODS_EXITING)) {
@@ -448,7 +400,7 @@ public class Tracing {
 	 * 
 	 */
 	public static void exiting(
-		Class clazz,
+		Class<?> clazz,
 		String methodName,
 		Object returnValue) {
 

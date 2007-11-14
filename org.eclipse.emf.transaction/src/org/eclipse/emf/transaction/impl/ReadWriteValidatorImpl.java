@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteValidatorImpl.java,v 1.10 2007/10/22 21:27:16 cdamus Exp $
+ * $Id: ReadWriteValidatorImpl.java,v 1.11 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -74,7 +74,8 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	private NotificationTree transactionToPrecommit = null;
 	
 	// maps the active transaction and its ancestors to notification tree nodes
-	private final Map txToNode = new java.util.HashMap();
+	private final Map<InternalTransaction, NotificationTree> txToNode =
+		new java.util.HashMap<InternalTransaction, NotificationTree>();
 	
 	/**
 	 * Initializes me.
@@ -143,8 +144,8 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	}
 	
 	// Documentation copied from the inherited method specification
-	public synchronized List getNotificationsForValidation(Transaction tx) {
-		List result = null;
+	public synchronized List<Notification> getNotificationsForValidation(Transaction tx) {
+		List<Notification> result = null;
 		
 		if (tree != null) {
 			NotificationTree nested = findTree(tx);
@@ -158,8 +159,8 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	}
 	
 	// Documentation copied from the inherited method specification
-	public synchronized List getNotificationsForPrecommit(Transaction tx) {
-		List result = null;
+	public synchronized List<Notification> getNotificationsForPrecommit(Transaction tx) {
+		List<Notification> result = null;
 		
 		if ((transactionToPrecommit != null)
 				&& (transactionToPrecommit == findTree(tx))) {
@@ -175,8 +176,8 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	}
 	
 	// Documentation copied from the inherited method specification
-	public synchronized List getNotificationsForPostcommit(Transaction tx) {
-		List result = null;
+	public synchronized List<Notification> getNotificationsForPostcommit(Transaction tx) {
+		List<Notification> result = null;
 		
 		if (tree != null) {
 			NotificationTree nested = findTree(tx);
@@ -203,7 +204,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		NotificationTree result = null;
 		
 		if (tree != null) {
-			result = (NotificationTree) txToNode.get(tx);
+			result = txToNode.get(tx);
 		}
 		
 		return result;
@@ -215,7 +216,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		IStatus result;
 		
 		try {
-			IValidator validator = createValidator();
+			IValidator<Notification> validator = createValidator();
 			
 			result = validator.validate(getNotificationsForValidation(tx));
 		} catch (Exception e) {
@@ -238,7 +239,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
      *
 	 * @return the validator
 	 */
-	protected IValidator createValidator() {
+	protected IValidator<Notification> createValidator() {
 		return ModelValidationService.getInstance().newValidator(EvaluationMode.LIVE);
 	}
 	
@@ -297,13 +298,14 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	 * @author Christian W. Damus (cdamus)
 	 */
 	private static class NotificationTree {
-		private final List children = new org.eclipse.emf.common.util.BasicEList.FastCompare();
+		private final List<NotificationTree> children =
+			new org.eclipse.emf.common.util.BasicEList.FastCompare<NotificationTree>();
 		
 		// number of notifications in parent before start of child transaction
 		private int parentNotificationCount;
 		
 		private InternalTransaction transaction;
-		private List notifications;  // stores the notifications
+		private List<Notification> notifications;  // stores the notifications
 		
 		private final byte notificationMask;
 		
@@ -355,7 +357,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 * 
 		 * @return my children
 		 */
-		List getChildren() {
+		List<NotificationTree> getChildren() {
 			return children;
 		}
 		
@@ -372,14 +374,14 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 * @see ReadWriteValidatorImpl#PRECOMMIT
 		 * @see ReadWriteValidatorImpl#POSTCOMMIT
 		 */
-		List collectNotifications(byte purpose) {
-			List result;
+		List<Notification> collectNotifications(byte purpose) {
+			List<Notification> result;
 			
 			if ((notificationMask & purpose) == purpose) {
-				result = new java.util.ArrayList();
+				result = new java.util.ArrayList<Notification>();
 				collectNotifications(result, purpose);
 			} else {
-				result = Collections.EMPTY_LIST;
+				result = Collections.emptyList();
 			}
 			
 			return result;
@@ -394,14 +396,12 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 * 
 		 * @see #collectNotifications()
 		 */
-		private void collectNotifications(List notifications, byte purpose) {
+		private void collectNotifications(List<? super Notification> notifications, byte purpose) {
 			if ((notificationMask & purpose) == purpose) {
 				int lastIndex = 0;
-				List parentNotifications = getNotifications();
+				List<Notification> parentNotifications = getNotifications();
 				
-				for (Iterator iter = children.iterator(); iter.hasNext();) {
-					NotificationTree next = (NotificationTree) iter.next();
-					
+				for (NotificationTree next : children) {
 					// append the parent transaction's notifications from the
 					//    last position to this child's position
 					notifications.addAll(parentNotifications.subList(
@@ -427,17 +427,17 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 * change, etc.).
 		 */
 		void setRolledBack() {
-			Iterator children = getChildren().iterator();
+			Iterator<NotificationTree> children = getChildren().iterator();
 			boolean inPlace = transaction == null;
 			
-            ListIterator iter;
+            ListIterator<Notification> iter;
 			if (inPlace) {
 			    // already committed?  Some ancestor transaction is rolling back
 			    iter = notifications.listIterator();
 			} else {
 			    // transaction has the notifications
 			    iter = transaction.getNotifications().listIterator();
-	            notifications = new org.eclipse.emf.common.util.BasicEList.FastCompare();
+	            notifications = new org.eclipse.emf.common.util.BasicEList.FastCompare<Notification>();
 			}
 			
 			// filter out all undoable notifications, leaving only those that
@@ -446,14 +446,12 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 			//    where in the notification ordering the child transactions fit
 			//    so that we retain correct linear ordering overall
 			for (int i = 0; children.hasNext();) {
-				NotificationTree child = (NotificationTree) children.next();
+				NotificationTree child = children.next();
 				int parentNotificationCount = child.parentNotificationCount;
 				
 				if (inPlace) {
 	                for (; (i < parentNotificationCount) && iter.hasNext(); i++) {
-	                    Notification next = (Notification) iter.next();
-	                    
-					    if (isUndoableObjectChange(next)) {
+					    if (isUndoableObjectChange(iter.next())) {
 					        iter.remove();
 					    }
 	                }
@@ -464,7 +462,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 	                child.parentNotificationCount = iter.nextIndex();
 				} else {
                     for (; (i < parentNotificationCount) && iter.hasNext(); i++) {
-                        Notification next = (Notification) iter.next();
+                        Notification next = iter.next();
                         
     					if (!isUndoableObjectChange(next)) {
     						notifications.add(next);
@@ -484,15 +482,13 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 			// filter the remaining notifications
 			if (inPlace) {
     			while (iter.hasNext()) {
-    				Notification next = (Notification) iter.next();
-    				
-    				if (isUndoableObjectChange(next)) {
+    				if (isUndoableObjectChange(iter.next())) {
     					iter.remove();
     				}
     			}
 			} else {
                 while (iter.hasNext()) {
-                    Notification next = (Notification) iter.next();
+                    Notification next = iter.next();
                     
                     if (!isUndoableObjectChange(next)) {
                         notifications.add(next);
@@ -522,7 +518,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 * 
 		 * @return my notifications
 		 */
-		List getNotifications() {
+		List<Notification> getNotifications() {
 			return (notifications != null)? notifications :
 				transaction.getNotifications();
 		}

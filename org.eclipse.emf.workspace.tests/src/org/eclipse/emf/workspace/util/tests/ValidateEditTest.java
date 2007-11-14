@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ValidateEditTest.java,v 1.1 2007/10/03 20:17:34 cdamus Exp $
+ * $Id: ValidateEditTest.java,v 1.2 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -45,7 +45,7 @@ public class ValidateEditTest extends AbstractTest {
     
     private Book book;
     
-    private Command cmd = new TestCommand() {
+    private final Command cmd = new TestCommand() {
         public void execute() {
             try {
                 book.setTitle(newTitle);
@@ -102,6 +102,7 @@ public class ValidateEditTest extends AbstractTest {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void doSetUp()
 		throws Exception {
 		
@@ -118,6 +119,7 @@ public class ValidateEditTest extends AbstractTest {
         assertNotNull(book);
 	}
 	
+	@Override
 	protected void doTearDown()
 		throws Exception {
 		
@@ -138,7 +140,7 @@ public class ValidateEditTest extends AbstractTest {
 	}
 	
 	void setValidateEdit() {
-        TransactionalEditingDomain.DefaultOptions defaults = (TransactionalEditingDomain.DefaultOptions) TransactionUtil
+        TransactionalEditingDomain.DefaultOptions defaults = TransactionUtil
             .getAdapter(domain, TransactionalEditingDomain.DefaultOptions.class);
         
         defaults.setDefaultTransactionOptions(Collections.singletonMap(

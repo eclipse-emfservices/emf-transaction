@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TestListener.java,v 1.3 2007/06/07 14:26:18 cdamus Exp $
+ * $Id: TestListener.java,v 1.4 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests.fixtures;
 
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
@@ -36,13 +37,13 @@ public class TestListener extends ResourceSetListenerImpl {
 	public ResourceSetChangeEvent precommit;
 	
 	/** The copied list of precommit notifications from the precommit event. */
-	public List precommitNotifications;
+	public List<Notification> precommitNotifications;
 	
 	/** The last post-commit event received. */
 	public ResourceSetChangeEvent postcommit;
 	
 	/** The copied list of postcommit notifications from the postcommit event.*/
-	public List postcommitNotifications;
+	public List<Notification> postcommitNotifications;
 	
 	public TestListener() {
 		super(NotificationFilter.ANY);
@@ -52,18 +53,20 @@ public class TestListener extends ResourceSetListenerImpl {
 		super(filter);
 	}
 	
+	@Override
 	public Command transactionAboutToCommit(ResourceSetChangeEvent event)
 		throws RollbackException {
 		
 		precommit = event;
-		precommitNotifications = new ArrayList(event.getNotifications());
+		precommitNotifications = new ArrayList<Notification>(event.getNotifications());
 		
 		return null;
 	}
 	
+	@Override
 	public void resourceSetChanged(ResourceSetChangeEvent event) {
 		postcommit = event;
-		postcommitNotifications = new ArrayList(event.getNotifications());
+		postcommitNotifications = new ArrayList<Notification>(event.getNotifications());
 	}
 	
 	/**

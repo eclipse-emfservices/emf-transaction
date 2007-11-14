@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFOperationCommand.java,v 1.6 2007/06/13 12:27:26 cdamus Exp $
+ * $Id: EMFOperationCommand.java,v 1.7 2007/11/14 18:14:08 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -20,6 +20,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import org.eclipse.core.commands.ExecutionException;
@@ -62,7 +63,7 @@ import org.eclipse.osgi.util.NLS;
 public class EMFOperationCommand implements ConditionalRedoCommand {
 	private final TransactionalEditingDomain domain;
 	private IUndoableOperation operation;
-	private Reference adaptable;
+	private Reference<IAdaptable> adaptable;
 	
 	/**
 	 * Initializes me with the undoable operation that I wrap.
@@ -102,7 +103,7 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 		this.operation = operation;
 		
 		if (adaptable != null) {
-			this.adaptable = new WeakReference(adaptable);
+			this.adaptable = new WeakReference<IAdaptable>(adaptable);
 		}
 	}
 	
@@ -188,7 +189,7 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 	private Transaction createNonEMFTransaction(
 			IUndoableOperation operation,
 			IAdaptable info,
-			Map options)
+			Map<?, ?> options)
 			throws InterruptedException {
 		
 		InternalTransaction result = new NonEMFTransaction(
@@ -268,16 +269,16 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 	}
 
 	// Documentation copied from the inherited specification
-	public Collection getResult() {
-		return null;
+	public Collection<?> getResult() {
+		return Collections.EMPTY_LIST;
 	}
 
 	/**
 	 * Obtains the affected objects from my wrapped operation, if it is an
 	 * {@link IAdvancedUndoableOperation}. 
 	 */
-	public Collection getAffectedObjects() {
-		Collection result = null;
+	public Collection<?> getAffectedObjects() {
+		Collection<Object> result = null;
 		
 		if (operation instanceof IAdvancedUndoableOperation) {
 			Object[] affected = ((IAdvancedUndoableOperation) operation).getAffectedObjects();
@@ -339,7 +340,7 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 		IAdaptable result = null;
 		
 		if (adaptable != null) {
-			result = (IAdaptable) adaptable.get();
+			result = adaptable.get();
 		}
 		
 		return result;

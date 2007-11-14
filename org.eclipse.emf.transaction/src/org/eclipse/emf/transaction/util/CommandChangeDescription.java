@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CommandChangeDescription.java,v 1.4 2007/05/24 23:23:53 cdamus Exp $
+ * $Id: CommandChangeDescription.java,v 1.5 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -83,6 +83,7 @@ public class CommandChangeDescription
 	 * I apply my change by undoing the encapsulated operation.  After it is
 	 * undone, I dispose myself.
 	 */
+	@Override
 	public void apply() {
 		try {
 			command.undo();
@@ -95,6 +96,7 @@ public class CommandChangeDescription
 	 * I apply-and-reverse by alternately undoing and redoing the encapsulated
 	 * operation.
 	 */
+	@Override
 	public void applyAndReverse() {
 		if (isRedone) {
 			command.undo();

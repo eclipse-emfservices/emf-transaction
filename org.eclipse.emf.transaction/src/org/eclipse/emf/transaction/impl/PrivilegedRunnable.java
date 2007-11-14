@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: PrivilegedRunnable.java,v 1.2 2006/06/15 13:33:32 cdamus Exp $
+ * $Id: PrivilegedRunnable.java,v 1.3 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -26,10 +26,12 @@ import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 /**
  * Implementation of the privileged runnable, which allows a thread to lend
  * its transaction to another cooperating thread for synchronous execution.
- *
+ * 
+ * @param <T> the result type of the runnable
+ * 
  * @author Christian W. Damus (cdamus)
  */
-public final class PrivilegedRunnable extends RunnableWithResult.Impl {
+public final class PrivilegedRunnable<T> extends RunnableWithResult.Impl<T> {
 	private final InternalTransaction transaction;
 	private final Runnable delegate;
 	private final Thread owner;
@@ -70,8 +72,9 @@ public final class PrivilegedRunnable extends RunnableWithResult.Impl {
 	 * Runs my delegate in the context of the transaction that I share.
 	 */
 	public void run() {
-		final RunnableWithResult rwr = (delegate instanceof RunnableWithResult)?
-			(RunnableWithResult) delegate : null;
+		@SuppressWarnings("unchecked")
+		final RunnableWithResult<T> rwr = (delegate instanceof RunnableWithResult)?
+			(RunnableWithResult<T>) delegate : null;
 		
 		boolean needPrivilege = transaction.getOwner() != Thread.currentThread();
 		if (needPrivilege) {

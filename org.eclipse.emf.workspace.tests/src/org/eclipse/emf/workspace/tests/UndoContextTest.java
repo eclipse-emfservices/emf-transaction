@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: UndoContextTest.java,v 1.1 2006/01/30 16:26:01 cdamus Exp $
+ * $Id: UndoContextTest.java,v 1.2 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -71,6 +71,7 @@ public class UndoContextTest extends AbstractTest {
 		IUndoContext ctx = new TestUndoContext();
 		
 		IUndoableOperation oper = new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 				newAuthor.getBooks().add(book);
@@ -83,7 +84,7 @@ public class UndoContextTest extends AbstractTest {
 			fail(e);
 		}
 		
-		Set affected = ResourceUndoContext.getAffectedResources(oper);
+		Set<Resource> affected = ResourceUndoContext.getAffectedResources(oper);
 		
 		assertNotNull(affected);
 		assertEquals(Collections.singleton(testResource), affected);
@@ -115,6 +116,7 @@ public class UndoContextTest extends AbstractTest {
 		IUndoContext ctx = new TestUndoContext();
 		
 		IUndoableOperation oper = new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 				newAuthor.getBooks().add(book);
@@ -127,11 +129,11 @@ public class UndoContextTest extends AbstractTest {
 			fail(e);
 		}
 		
-		Set affected = ResourceUndoContext.getAffectedResources(oper);
+		Set<Resource> affected = ResourceUndoContext.getAffectedResources(oper);
 		
 		assertNotNull(affected);
 		
-		Set expected = new java.util.HashSet();
+		Set<Resource> expected = new java.util.HashSet<Resource>();
 		expected.add(testResource);
 		expected.add(res2);
 		

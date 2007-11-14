@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: RunnableWithResult.java,v 1.3 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: RunnableWithResult.java,v 1.4 2007/11/14 18:14:01 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -30,11 +30,13 @@ import org.eclipse.core.runtime.IStatus;
  * or failure of the transaction.
  * </p>
  * 
+ * @param <T> the result type of the runnable
+ * 
  * @author Christian W. Damus (cdamus)
  * 
  * @see TransactionalEditingDomain#runExclusive(Runnable)
  */
-public interface RunnableWithResult
+public interface RunnableWithResult<T>
 	extends Runnable {
 
 	/**
@@ -42,7 +44,7 @@ public interface RunnableWithResult
 	 * 
 	 * @return my result, or <code>null</code> if none
 	 */
-	Object getResult();
+	T getResult();
 	
 	/**
 	 * Sets the commit status after completion of the {@link Runnable#run()} method.
@@ -69,8 +71,8 @@ public interface RunnableWithResult
 	 *
 	 * @author Christian W. Damus (cdamus)
 	 */
-	static abstract class Impl implements RunnableWithResult {
-		private Object result;
+	static abstract class Impl<T> implements RunnableWithResult<T> {
+		private T result;
 		private IStatus status;
 		
 		/**
@@ -78,7 +80,7 @@ public interface RunnableWithResult
 		 * 
 		 * @param result my result
 		 */
-		protected final void setResult(Object result) {
+		protected final void setResult(T result) {
 			this.result = result;
 		}
 		
@@ -88,7 +90,7 @@ public interface RunnableWithResult
 		}
 		
 		// Documentation copied from interface
-		public final Object getResult() {
+		public final T getResult() {
 			return result;
 		}
 		

@@ -12,11 +12,9 @@
  *
  * </copyright>
  *
- * $Id: TriggerListener.java,v 1.4 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: TriggerListener.java,v 1.5 2007/11/14 18:14:01 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
-
-import java.util.Iterator;
 
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Notification;
@@ -55,12 +53,11 @@ public abstract class TriggerListener extends ResourceSetListenerImpl {
 	 * @return a composite of the commands returned by the subclass
 	 *     implementation of the {@link #trigger} method
 	 */
+	@Override
 	public Command transactionAboutToCommit(ResourceSetChangeEvent event) throws RollbackException {
 		Command result = null;
 		
-		for (Iterator iter = event.getNotifications().iterator(); iter.hasNext();) {
-			Notification next = (Notification) iter.next();
-			
+		for (Notification next : event.getNotifications()) {
 			Command trigger = trigger(event.getEditingDomain(), next);
 			if (trigger != null) {
 				if (result == null) {
@@ -96,6 +93,7 @@ public abstract class TriggerListener extends ResourceSetListenerImpl {
 	/**
 	 * I want only ppre-commit events, not post-commit events.
 	 */
+	@Override
 	public boolean isPrecommitOnly() {
 		return true;
 	}

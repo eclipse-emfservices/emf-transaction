@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TestEditingDomain.java,v 1.3 2007/06/07 14:26:18 cdamus Exp $
+ * $Id: TestEditingDomain.java,v 1.4 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests.fixtures;
 
@@ -42,6 +42,7 @@ public class TestEditingDomain extends TransactionalEditingDomainImpl {
 
 	public static class FactoryImpl extends TransactionalEditingDomainImpl.FactoryImpl {
 
+		@Override
 		public TransactionalEditingDomain createEditingDomain() {
 			TransactionalEditingDomain result = new TestEditingDomain(
 					new ComposedAdapterFactory(
@@ -52,11 +53,13 @@ public class TestEditingDomain extends TransactionalEditingDomainImpl {
 			return result;
 		}
 
+		@Override
 		public TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
 			// not used by the extension point
 			return null;
 		}
 
+		@Override
 		public TransactionalEditingDomain getEditingDomain(ResourceSet rset) {
 			// not used by the extension point
 			return null;

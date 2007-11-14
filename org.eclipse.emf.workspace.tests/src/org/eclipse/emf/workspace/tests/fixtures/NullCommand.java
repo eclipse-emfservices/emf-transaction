@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: NullCommand.java,v 1.2 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: NullCommand.java,v 1.3 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
@@ -25,6 +25,7 @@ import org.eclipse.emf.common.command.AbstractCommand;
  */
 public class NullCommand extends AbstractCommand {
 
+	@Override
 	protected boolean prepare() {
 		return true;
 	}
@@ -35,6 +36,7 @@ public class NullCommand extends AbstractCommand {
 	}
 	
 	/** Does nothing. */
+	@Override
 	public void undo() {
 		// nothing to do
 	}

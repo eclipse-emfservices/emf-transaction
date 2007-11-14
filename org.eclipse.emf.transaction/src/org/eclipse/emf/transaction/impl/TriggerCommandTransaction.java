@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TriggerCommandTransaction.java,v 1.1 2006/03/15 01:40:31 cdamus Exp $
+ * $Id: TriggerCommandTransaction.java,v 1.2 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -39,7 +39,8 @@ public class TriggerCommandTransaction
 	 * @param domain the editing domain in which I am active
 	 * @param options my options
 	 */
-	public TriggerCommandTransaction(TriggerCommand command, InternalTransactionalEditingDomain domain, Map options) {
+	public TriggerCommandTransaction(TriggerCommand command,
+			InternalTransactionalEditingDomain domain, Map<?, ?> options) {
 		super(command, domain, options);
 	}
 
@@ -47,6 +48,7 @@ public class TriggerCommandTransaction
 	 * Extends the inherited implementation by first clearing my change
 	 * description, so that I will not propagate these changes upwards.
 	 */
+	@Override
 	protected synchronized void close() {
 		change.clear();
 		
@@ -57,6 +59,7 @@ public class TriggerCommandTransaction
 	 * Overrides the inherited implementation to simply propagate triggers to
 	 * my parent, because it's the transaction that the outside world can see.
 	 */
+	@Override
 	public void addTriggers(TriggerCommand triggers) {
 		((InternalTransaction) getParent()).addTriggers(triggers);
 	}

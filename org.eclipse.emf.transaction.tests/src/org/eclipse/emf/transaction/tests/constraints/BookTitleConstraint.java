@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: BookTitleConstraint.java,v 1.2 2007/06/07 14:26:16 cdamus Exp $
+ * $Id: BookTitleConstraint.java,v 1.3 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests.constraints;
 
@@ -30,6 +30,7 @@ import org.eclipse.emf.validation.IValidationContext;
 public class BookTitleConstraint
 	extends AbstractModelConstraint {
 
+	@Override
 	public IStatus validate(IValidationContext ctx) {
 		EMFEventType eType = ctx.getEventType();
 		
@@ -38,7 +39,7 @@ public class BookTitleConstraint
 			
 			if (newValue == null
 				|| ((String)newValue).length() == 0) {
-				return ctx.createFailureStatus(null);
+				return ctx.createFailureStatus();
 			}
 		}
 		

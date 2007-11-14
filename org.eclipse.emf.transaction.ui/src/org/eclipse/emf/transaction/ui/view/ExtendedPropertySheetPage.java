@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ExtendedPropertySheetPage.java,v 1.3 2007/06/07 14:26:08 cdamus Exp $
+ * $Id: ExtendedPropertySheetPage.java,v 1.4 2007/11/14 18:14:06 cdamus Exp $
  */
 package org.eclipse.emf.transaction.ui.view;
 
@@ -59,7 +59,8 @@ public class ExtendedPropertySheetPage
 	 * Delegates to the superclass implementation within a read transaction,
 	 * if an editing domain is available.
 	 */
-	public void refresh() {
+	@Override
+    public void refresh() {
 		TransactionalEditingDomain domain = getTransactionalEditingDomain();
 		
 		if (domain == null) {
@@ -90,7 +91,8 @@ public class ExtendedPropertySheetPage
 	 * Delegates to the superclass implementation within a read transaction,
 	 * if an editing domain is available.
 	 */
-	public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
+	@Override
+    public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
 		TransactionalEditingDomain domain = getTransactionalEditingDomain();
 		
 		if (domain == null) {

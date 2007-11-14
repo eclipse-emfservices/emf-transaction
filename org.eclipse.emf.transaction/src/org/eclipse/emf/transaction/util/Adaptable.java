@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Adaptable.java,v 1.1 2007/10/03 20:17:38 cdamus Exp $
+ * $Id: Adaptable.java,v 1.2 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -35,9 +35,11 @@ public interface Adaptable {
     /**
      * Obtains an instance of the specified adapter type.
      * 
+     * @param <T> the interface for which to get an adapter
+     * 
      * @param adapterType the required interface
      * @return an instance of the required interface that adapts me, or
      *    <code>null</code> if I do not supply this interface
      */
-    Object getAdapter(Class adapterType);
+    <T> T getAdapter(Class<? extends T> adapterType);
 }

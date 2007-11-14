@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListenersTest.java,v 1.8 2007/06/07 14:26:17 cdamus Exp $
+ * $Id: ResourceSetListenersTest.java,v 1.9 2007/11/14 18:14:12 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -85,11 +85,11 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertFalse(listener.postcommit.getTransaction().isActive());
 			assertSame(domain, listener.postcommit.getEditingDomain());
 			
-			List notifications = listener.postcommitNotifications;
+			List<Notification> notifications = listener.postcommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(1, notifications.size());
 			
-			Notification notification = (Notification) notifications.get(0);
+			Notification notification = notifications.get(0);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
 			assertSame(newTitle, notification.getNewValue());
@@ -140,11 +140,11 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertFalse(listener.postcommit.getTransaction().isActive());
 			assertSame(domain, listener.postcommit.getEditingDomain());
 			
-			List notifications = listener.postcommitNotifications;
+			List<Notification> notifications = listener.postcommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(1, notifications.size());
 			
-			Notification notification = (Notification) notifications.get(0);
+			Notification notification = notifications.get(0);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
 			assertSame(newTitle, notification.getNewValue());
@@ -196,21 +196,21 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertFalse(listener.postcommit.getTransaction().isActive());
 			assertSame(domain, listener.postcommit.getEditingDomain());
 			
-			List notifications = listener.postcommitNotifications;
+			List<Notification> notifications = listener.postcommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(3, notifications.size());
 			
-			Notification notification = (Notification) notifications.get(0);
+			Notification notification = notifications.get(0);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Category(), notification.getFeature());
 			assertSame(BookCategory.BIOGRAPHY_LITERAL, notification.getNewValue());
 			
-			notification = (Notification) notifications.get(1);
+			notification = notifications.get(1);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
 			assertSame(newTitle, notification.getNewValue());
 			
-			notification = (Notification) notifications.get(2);
+			notification = notifications.get(2);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Pages(), notification.getFeature());
 			assertEquals(new Integer(500), notification.getNewValue());
@@ -231,6 +231,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 		commit();
 		
 		TestListener testListener = new TestListener() {
+			@Override
 			public void resourceSetChanged(ResourceSetChangeEvent event) {
 				try {
 					// can execute read operations
@@ -308,11 +309,11 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertFalse(listener.precommit.getTransaction().isActive());
 			assertSame(domain, listener.precommit.getEditingDomain());
 			
-			List notifications = listener.precommitNotifications;
+			List<Notification> notifications = listener.precommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(1, notifications.size());
 			
-			Notification notification = (Notification) notifications.get(0);
+			Notification notification = notifications.get(0);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
 			assertSame(newTitle, notification.getNewValue());
@@ -397,11 +398,11 @@ public class ResourceSetListenersTest extends AbstractTest {
 						assertFalse(listener.precommit.getTransaction().isActive());
 						assertSame(domain, listener.precommit.getEditingDomain());
 						
-						List notifications = listener.precommitNotifications;
+						List<Notification> notifications = listener.precommitNotifications;
 						assertNotNull(notifications);
 						assertEquals(1, notifications.size());
 						
-						Notification notification = (Notification) notifications.get(0);
+						Notification notification = notifications.get(0);
 						assertSame(book, notification.getNotifier());
 						assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
 						assertSame(newTitle, notification.getNewValue());
@@ -422,11 +423,11 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertFalse(listener.precommit.getTransaction().isActive());
 			assertSame(domain, listener.precommit.getEditingDomain());
 			
-			List notifications = listener.precommitNotifications;
+			List<Notification> notifications = listener.precommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(1, notifications.size());
 			
-			Notification notification = (Notification) notifications.get(0);
+			Notification notification = notifications.get(0);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Category(), notification.getFeature());
 			assertSame(BookCategory.BIOGRAPHY_LITERAL, notification.getNewValue());
@@ -447,6 +448,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 		commit();
 		
 		TestListener testListener = new TestListener() {
+			@Override
 			public Command transactionAboutToCommit(ResourceSetChangeEvent event) {
 				try {
 					// can execute read operations
@@ -515,6 +517,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 		commit();
 		
 		TestListener testListener = new TestListener() {
+			@Override
 			public Command transactionAboutToCommit(ResourceSetChangeEvent event) {
 				try {
 					// cannot commit the transaction while it is committing
@@ -581,7 +584,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 		
 		assertEquals("New Library", newLibrary.getName()); //$NON-NLS-1$
 		assertEquals(1, newLibrary.getBooks().size());
-		assertEquals("New Book", ((Book) newLibrary.getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle()); //$NON-NLS-1$
 		
 		commit();
 	}
@@ -611,7 +614,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 		
 		// the book is created by the first trigger
 		assertEquals(1, newLibrary.getBooks().size());
-		Book book = (Book) newLibrary.getBooks().get(0);
+		Book book = newLibrary.getBooks().get(0);
 		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
 		
 		// the publication date is created by the cascaded trigger
@@ -665,13 +668,13 @@ public class ResourceSetListenersTest extends AbstractTest {
 			
 			assertNotNull(listener.postcommit);
 			
-			List notifications = listener.postcommitNotifications;
+			List<Notification> notifications = listener.postcommitNotifications;
 			assertNotNull(notifications);
 			
 			// unbatched notifications are always singletons
 			assertEquals(1, notifications.size());
 			
-			Notification notification = (Notification) notifications.get(0);
+			Notification notification = notifications.get(0);
 			assertSame(domain.getResourceSet(), notification.getNotifier());
 			assertEquals(Notification.ADD, notification.getEventType());
 			assertEquals(ResourceSet.RESOURCE_SET__RESOURCES, notification.getFeatureID(null));
@@ -688,9 +691,10 @@ public class ResourceSetListenersTest extends AbstractTest {
 		try {
 			class Listener extends ResourceSetListenerImpl {
 				ResourceSetChangeEvent lastEvent = null;
-				List lastNotifications = null;
+				List<Notification> lastNotifications = null;
 				int count = 0;
 				
+				@Override
 				public void resourceSetChanged(ResourceSetChangeEvent event) {
 					count++;
 					
@@ -730,6 +734,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 		final Resource[] newRes = new Resource[1];
 		
 		TestListener testListener = new TestListener() {
+			@Override
 			public void resourceSetChanged(ResourceSetChangeEvent event) {
 				// make sure that I only do this on the first time that I
 				//    am invoked (from the new library notification)
@@ -760,13 +765,13 @@ public class ResourceSetListenersTest extends AbstractTest {
 			//     caused more notifications to the listeners)
 			assertNotNull(listener.postcommit);
 			
-			List notifications = listener.postcommitNotifications;
+			List<Notification> notifications = listener.postcommitNotifications;
 			assertNotNull(notifications);
 			
 			// unbatched notifications are always singletons
 			assertEquals(1, notifications.size());
 			
-			Notification notification = (Notification) notifications.get(0);
+			Notification notification = notifications.get(0);
 			assertSame(domain.getResourceSet(), notification.getNotifier());
 			assertEquals(Notification.ADD, notification.getEventType());
 			assertEquals(ResourceSet.RESOURCE_SET__RESOURCES, notification.getFeatureID(null));
@@ -786,6 +791,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			class AggregatedListener extends TestListener {
 				int count = 0;
 				
+				@Override
 				public Command transactionAboutToCommit(ResourceSetChangeEvent event)
 					throws RollbackException {
 					
@@ -794,12 +800,14 @@ public class ResourceSetListenersTest extends AbstractTest {
 					return super.transactionAboutToCommit(event);
 				}
 				
+				@Override
 				public void reset() {
 					super.reset();
 					
 					count = 0;
 				}
 				
+				@Override
 				public boolean isAggregatePrecommitListener() {
 					return true;
 				}
@@ -835,17 +843,17 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertNotNull(localListener.precommit.getTransaction());
 			assertEquals(1, localListener.count);
 			
-			List notifications = localListener.precommitNotifications;
+			List<Notification> notifications = localListener.precommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(2, notifications.size());
 			
 			// notifications came in the right order
-			Notification notification = (Notification) notifications.get(0);
+			Notification notification = notifications.get(0);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
 			assertSame(newTitle1, notification.getNewValue());
 			
-			notification = (Notification) notifications.get(1);
+			notification = notifications.get(1);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
 			assertSame(newTitle2, notification.getNewValue());
@@ -866,6 +874,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			class AggregatedListener extends TestListener {
 				int count = 0;
 				
+				@Override
 				public Command transactionAboutToCommit(ResourceSetChangeEvent event)
 					throws RollbackException {
 					
@@ -874,11 +883,11 @@ public class ResourceSetListenersTest extends AbstractTest {
 					super.transactionAboutToCommit(event);
 					
 					if (count < 2) {
-						List notifications = event.getNotifications();
+						List<Notification> notifications = event.getNotifications();
 						assertNotNull(notifications);
 						assertEquals(1, notifications.size());
 						
-						Notification notification = (Notification) notifications.get(0);
+						Notification notification = notifications.get(0);
 						assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
 						assertSame(newTitle1, notification.getNewValue());
 						
@@ -893,12 +902,14 @@ public class ResourceSetListenersTest extends AbstractTest {
 					return null;
 				}
 				
+				@Override
 				public void reset() {
 					super.reset();
 					
 					count = 0;
 				}
 				
+				@Override
 				public boolean isAggregatePrecommitListener() {
 					return true;
 				}
@@ -924,11 +935,11 @@ public class ResourceSetListenersTest extends AbstractTest {
 			assertNotNull(localListener.precommit.getTransaction());
 			assertEquals(2, localListener.count);
 			
-			List notifications = localListener.precommitNotifications;
+			List<Notification> notifications = localListener.precommitNotifications;
 			assertNotNull(notifications);
 			assertEquals(1, notifications.size());
 			
-			Notification notification = (Notification) notifications.get(0);
+			Notification notification = notifications.get(0);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
 			assertSame(newTitle2, notification.getNewValue());
@@ -946,6 +957,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 		class ResourceListener extends DemultiplexingListener {
 			boolean wasCalled;
 			
+			@Override
 			protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
 				wasCalled = true;
 			}
@@ -994,6 +1006,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 				interestingBook = book;
 			}
 			
+			@Override
 			protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
 				Object notifier = notification.getNotifier();
 				
@@ -1048,6 +1061,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 				interestingBook = book;
 			}
 			
+			@Override
 			protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
 				Object notifier = notification.getNotifier();
 				
@@ -1107,6 +1121,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 				interestingBook = book;
 			}
 			
+			@Override
 			protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
 				Object notifier = notification.getNotifier();
 				
@@ -1163,6 +1178,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 				interestingBook = book;
 			}
 			
+			@Override
 			protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
 				Object notifier = notification.getNotifier();
 				
@@ -1218,13 +1234,15 @@ public class ResourceSetListenersTest extends AbstractTest {
     public void test_recordingCommandsAsTriggers_bug157103() {
         // one trigger sets default library names
         domain.addResourceSetListener(new LibraryDefaultNameTrigger() {
-            protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+            @Override
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
                 Command result = null;
                 
                 final Library newLibrary = (Library) notification.getNewValue();
                 if ((newLibrary.getName() == null) || (newLibrary.getName().length() == 0)) {
                     result = new RecordingCommand(domain) {
-                        protected void doExecute() {
+                        @Override
+						protected void doExecute() {
                             newLibrary.setName("New Library"); //$NON-NLS-1$
                         }};
                 }
@@ -1236,7 +1254,8 @@ public class ResourceSetListenersTest extends AbstractTest {
         
         // add a new library.  Our trigger will set a default name
         domain.getCommandStack().execute(new RecordingCommand(domain) {
-            protected void doExecute() {
+            @Override
+			protected void doExecute() {
                 newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
                 root.getBranches().add(newLibrary[0]);
                 
@@ -1265,6 +1284,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void doSetUp()
 		throws Exception {
 		
@@ -1280,6 +1300,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 		domain.addResourceSetListener(listener);
 	}
 	
+	@Override
 	protected void doTearDown()
 		throws Exception {
 		

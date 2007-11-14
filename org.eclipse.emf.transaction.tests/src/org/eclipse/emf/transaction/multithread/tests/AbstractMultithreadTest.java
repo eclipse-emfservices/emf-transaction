@@ -12,18 +12,14 @@
  *
  * </copyright>
  *
- * $Id: AbstractMultithreadTest.java,v 1.3 2007/06/07 14:26:17 cdamus Exp $
+ * $Id: AbstractMultithreadTest.java,v 1.4 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.multithread.tests;
-
-import java.util.Arrays;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import junit.textui.TestRunner;
 
-import org.eclipse.core.runtime.IPlatformRunnable;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.AbstractTest;
 
@@ -33,8 +29,7 @@ import org.eclipse.emf.transaction.tests.AbstractTest;
  * @author Christian W. Damus (cdamus)
  */
 public class AbstractMultithreadTest
-	extends TestCase
-	implements IPlatformRunnable {
+	extends TestCase {
 
 	private TransactionalEditingDomain domain = null;
 	
@@ -51,14 +46,6 @@ public class AbstractMultithreadTest
 
 		return suite;
 	}
-
-	public Object run(Object args)
-		throws Exception {
-
-		TestRunner.run(suite());
-		return Arrays
-			.asList(new String[] {"Please see raw test suite output for details."}); //$NON-NLS-1$
-	}
 	
 	//
 	// Fixture methods
@@ -68,6 +55,7 @@ public class AbstractMultithreadTest
 		return domain;
 	}
 	
+	@Override
 	protected void setUp()
 		throws Exception {
 		
@@ -78,6 +66,7 @@ public class AbstractMultithreadTest
 		domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
 	}
 	
+	@Override
 	protected void tearDown()
 		throws Exception {
 		

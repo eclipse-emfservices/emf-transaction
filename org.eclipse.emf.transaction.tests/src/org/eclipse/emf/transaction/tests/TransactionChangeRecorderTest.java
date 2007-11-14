@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorderTest.java,v 1.3 2006/12/01 18:38:33 cdamus Exp $
+ * $Id: TransactionChangeRecorderTest.java,v 1.4 2007/11/14 18:14:12 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -85,12 +85,12 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 		EPackage pkg = findPackage("root/nested1", true); //$NON-NLS-1$
 		assertSame(recorder, getRecorder(pkg));
 		
-		Iterator contents = ((InternalEList) pkg.eContents()).basicIterator();
+		Iterator<EObject> contents = ((InternalEList<EObject>) pkg.eContents()).basicIterator();
 		
 		// check that the EPackage is not yet resolved
-		EObject obj = (EObject) contents.next();
+		EObject obj = contents.next();
 		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
-		obj = (EObject) contents.next();
+		obj = contents.next();
 		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
 		
 		assertFalse(nestedResource1.isLoaded());
@@ -166,12 +166,12 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 		EPackage pkg = findPackage("root/nested1", true); //$NON-NLS-1$
 		assertSame(recorder, getRecorder(pkg));
 		
-		Iterator contents = ((InternalEList) pkg.eContents()).basicIterator();
+		Iterator<EObject> contents = ((InternalEList<EObject>) pkg.eContents()).basicIterator();
 		
 		// check that the EPackage is not yet resolved
-		EObject obj = (EObject) contents.next();
+		EObject obj = contents.next();
 		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
-		obj = (EObject) contents.next();
+		obj = contents.next();
 		assertTrue(!(obj instanceof EPackage) || obj.eIsProxy());
 		
 		assertFalse(nestedResource1.isLoaded());
@@ -451,6 +451,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 	// Framework methods
 	//
 	
+	@Override
 	protected void doSetUp() throws Exception {
 		super.doSetUp();
 		
@@ -462,12 +463,12 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 						"/test_models/test_model.ecore").toString()), //$NON-NLS-1$
 						true);
 			rootResource.setURI(URI.createPlatformResourceURI(
-					"/" + PROJECT_NAME + "/test_model.ecore")); //$NON-NLS-1$ //$NON-NLS-2$
+					"/" + PROJECT_NAME + "/test_model.ecore", true)); //$NON-NLS-1$ //$NON-NLS-2$
 			
 			nestedResource1 = rset.createResource(URI.createPlatformResourceURI(
-					"/" + PROJECT_NAME + "/test_model1.ecore")); //$NON-NLS-1$ //$NON-NLS-2$
+					"/" + PROJECT_NAME + "/test_model1.ecore", true)); //$NON-NLS-1$ //$NON-NLS-2$
 			nestedResource2 = rset.createResource(URI.createPlatformResourceURI(
-					"/" + PROJECT_NAME + "/test_model2.ecore")); //$NON-NLS-1$ //$NON-NLS-2$
+					"/" + PROJECT_NAME + "/test_model2.ecore", true)); //$NON-NLS-1$ //$NON-NLS-2$
 			
 			startWriting();
 			
@@ -497,6 +498,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 		}
 	}
 	
+	@Override
 	protected void doTearDown() throws Exception {
 		if (rootResource != null) {
 			unloadAndRemove(rootResource);
@@ -542,6 +544,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 	 * @param object the object
 	 * @return its name
 	 */
+	@Override
 	protected String getName(EObject object) {
 		if (object instanceof ENamedElement) {
 			return ((ENamedElement) object).getName();
@@ -562,9 +565,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 	protected TransactionChangeRecorder getRecorder(Notifier notifier) {
 		TransactionChangeRecorder result = null;
 		
-		for (Iterator iter = notifier.eAdapters().iterator(); iter.hasNext();) {
-			Object next = iter.next();
-			
+		for (Object next : notifier.eAdapters()) {
 			if (next instanceof TransactionChangeRecorder) {
 				result = (TransactionChangeRecorder) next;
 				break;

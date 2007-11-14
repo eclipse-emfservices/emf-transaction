@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.9 2007/10/03 20:17:27 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.10 2007/11/14 18:14:12 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -73,9 +72,10 @@ public class AbstractTest
 	protected static final String PROJECT_NAME = "emftxtests"; //$NON-NLS-1$
 	protected static final String RESOURCE_NAME = "/" + PROJECT_NAME + "/testres.extlibrary";  //$NON-NLS-1$//$NON-NLS-2$
 
-	private final List transactionStack = new java.util.ArrayList();
+	private final List<InternalTransaction> transactionStack =
+		new java.util.ArrayList<InternalTransaction>();
     
-    private List tearDownActions;
+    private List<Runnable> tearDownActions;
 	
 	public AbstractTest() {
 		super();
@@ -89,6 +89,7 @@ public class AbstractTest
 	// Test configuration methods
 	//
 	
+	@Override
 	protected final void setUp()
 		throws Exception {
 		
@@ -115,7 +116,7 @@ public class AbstractTest
 				URI.createURI(EmfTransactionTestsBundle.getEntry(
 					"/test_models/test_model.extlibrary").toString()), //$NON-NLS-1$
 					true);
-			originalRes.setURI(URI.createPlatformResourceURI(RESOURCE_NAME));
+			originalRes.setURI(URI.createPlatformResourceURI(RESOURCE_NAME, true));
 			originalRes.save(Collections.EMPTY_MAP);
 			testResource = originalRes;
 			root = (Library) find("root"); //$NON-NLS-1$
@@ -146,12 +147,13 @@ public class AbstractTest
      */
     protected final void addTearDownAction(Runnable action) {
         if (tearDownActions == null) {
-            tearDownActions = new java.util.ArrayList();
+            tearDownActions = new java.util.ArrayList<Runnable>();
         }
         
         tearDownActions.add(action);
     }
     
+	@Override
 	protected final void tearDown()
 		throws Exception {
 		
@@ -165,9 +167,8 @@ public class AbstractTest
     
     private void processTearDownActions() {
         if (tearDownActions != null) {
-            for (Iterator iter = tearDownActions.iterator(); iter.hasNext();) {
+            for (Runnable action : tearDownActions) {
                 try {
-                    Runnable action = (Runnable) iter.next();
                     action.run();
                 } catch (Exception e) {
                     System.err.println("Exception in tear-down action:"); //$NON-NLS-1$
@@ -231,7 +232,7 @@ public class AbstractTest
 			file.create(input, true, null);
 			
 			result = domain.createResource(
-				URI.createPlatformResourceURI(file.getFullPath().toString()).toString());
+				URI.createPlatformResourceURI(file.getFullPath().toString(), true).toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail("Exception creating test resource: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -341,9 +342,7 @@ public class AbstractTest
 			String name = names[i];
 			result = null;
 			
-			for (Iterator iter = getContents(current).iterator(); iter.hasNext();) {
-				EObject child = (EObject) iter.next();
-				
+			for (EObject child : getContents(current)) {
 				if (name.equals(getName(child))) {
 					result = child;
 					break;
@@ -363,7 +362,7 @@ public class AbstractTest
 	 * @return its name
 	 */
 	protected String getName(EObject object) {
-		return (String) GetName.INSTANCE.doSwitch(object);
+		return GetName.INSTANCE.doSwitch(object);
 	}
 	
 	/**
@@ -372,13 +371,13 @@ public class AbstractTest
 	 * @param object an object, which may be a resource or an element
 	 * @return its immediate contents (children)
 	 */
-	private List getContents(Object object) {
+	private List<EObject> getContents(Object object) {
 		if (object instanceof EObject) {
 			return ((EObject) object).eContents();
 		} else if (object instanceof Resource) {
 			return ((Resource) object).getContents();
 		} else {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 	}
 	
@@ -397,7 +396,7 @@ public class AbstractTest
 	 *
 	 * @author Christian W. Damus (cdamus)
 	 */
-	private static final class GetName extends EXTLibrarySwitch {
+	private static final class GetName extends EXTLibrarySwitch<String> {
 		static final GetName INSTANCE = new GetName();
 		
 		private GetName() {
@@ -408,23 +407,28 @@ public class AbstractTest
 			return object.getTitle();
 		}
 
-		public Object caseBook(Book object) {
+		@Override
+		public String caseBook(Book object) {
 			return object.getTitle();
 		}
 
-		public Object caseLibrary(Library object) {
+		@Override
+		public String caseLibrary(Library object) {
 			return object.getName();
 		}
 
-		public Object casePeriodical(Periodical object) {
+		@Override
+		public String casePeriodical(Periodical object) {
 			return object.getTitle();
 		}
 		
-		public Object caseWriter(Writer object) {
+		@Override
+		public String caseWriter(Writer object) {
 			return object.getName();
 		}
 
-		public Object casePerson(Person object) {
+		@Override
+		public String casePerson(Person object) {
 			if (object.getFirstName() == null) {
 				if (object.getLastName() == null) {
 					return ""; //$NON-NLS-1$
@@ -443,7 +447,8 @@ public class AbstractTest
 			}
 		}
 
-		public Object defaultCase(EObject object) {
+		@Override
+		public String defaultCase(EObject object) {
 			return ""; //$NON-NLS-1$
 		}
 	}
@@ -483,7 +488,7 @@ public class AbstractTest
 	 * 
 	 * @param options the options
 	 */
-	protected void startWriting(Map options) {
+	protected void startWriting(Map<?, ?> options) {
 		try {
 			transactionStack.add(
 					((InternalTransactionalEditingDomain) domain).startTransaction(false, options));
@@ -518,7 +523,7 @@ public class AbstractTest
 	 * 
 	 * @param options the options
 	 */
-	protected void startReading(Map options) {
+	protected void startReading(Map<?, ?> options) {
 		try {
 			transactionStack.add(
 					((InternalTransactionalEditingDomain) domain).startTransaction(true, options));
@@ -534,7 +539,7 @@ public class AbstractTest
 		Transaction result = null;
 		
 		try {
-			result = (Transaction) transactionStack.remove(transactionStack.size() - 1);
+			result = transactionStack.remove(transactionStack.size() - 1);
 			result.commit();
 		} catch (Exception e) {
 			fail(e);
@@ -550,7 +555,7 @@ public class AbstractTest
 		Transaction result = null;
 		
 		try {
-			result = (Transaction) transactionStack.remove(transactionStack.size() - 1);
+			result = transactionStack.remove(transactionStack.size() - 1);
 			result.rollback();
 		} catch (Exception e) {
 			fail(e);
@@ -577,8 +582,8 @@ public class AbstractTest
 	 * 
 	 * @return the map
 	 */
-	protected Map makeOptions(String option) {
-		return Collections.singletonMap(option, Boolean.TRUE);
+	protected Map<Object, Object> makeOptions(String option) {
+		return Collections.<Object, Object>singletonMap(option, Boolean.TRUE);
 	}
 	
 	/**
@@ -590,21 +595,21 @@ public class AbstractTest
 	 * 
 	 * @return the matching statuses, or an empty collection if none found
 	 */
-	protected Collection findValidationStatuses(IStatus status, int severity) {
-		Set result;
+	protected Collection<IStatus> findValidationStatuses(IStatus status, int severity) {
+		Set<IStatus> result;
 		
 		if (status.isMultiStatus()) {
-			result = new java.util.HashSet();
+			result = new java.util.HashSet<IStatus>();
 			IStatus[] children = status.getChildren();
 			
-			for (int i = 0; i < children.length; i++) {
-				result.addAll(findValidationStatuses(children[i], severity));
+			for (IStatus element : children) {
+				result.addAll(findValidationStatuses(element, severity));
 			}
 		} else if ((status instanceof IConstraintStatus)
-				&& (status.getSeverity() == severity)) {
+				&& (status.matches(severity))) {
 			result = Collections.singleton(status);
 		} else {
-			result = Collections.EMPTY_SET;
+			result = Collections.emptySet();
 		}
 		
 		return result;

@@ -12,11 +12,12 @@
  *
  * </copyright>
  *
- * $Id: TestValidationEditingDomain.java,v 1.1 2007/03/22 19:11:51 cdamus Exp $
+ * $Id: TestValidationEditingDomain.java,v 1.2 2007/11/14 18:14:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests.fixtures;
 
 import org.eclipse.emf.common.notify.AdapterFactory;
+import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
@@ -28,6 +29,7 @@ import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
 import org.eclipse.emf.validation.model.EvaluationMode;
 import org.eclipse.emf.validation.service.IConstraintDescriptor;
 import org.eclipse.emf.validation.service.IConstraintFilter;
+import org.eclipse.emf.validation.service.ILiveValidator;
 import org.eclipse.emf.validation.service.IValidator;
 import org.eclipse.emf.validation.service.ModelValidationService;
 
@@ -49,6 +51,7 @@ public class TestValidationEditingDomain extends TransactionalEditingDomainImpl 
 					
 	public static class FactoryImpl extends TransactionalEditingDomainImpl.FactoryImpl {
 
+		@Override
 		public TransactionalEditingDomain createEditingDomain() {
 			TransactionalEditingDomainImpl result = new TestValidationEditingDomain(
 					new ComposedAdapterFactory(
@@ -61,11 +64,13 @@ public class TestValidationEditingDomain extends TransactionalEditingDomainImpl 
 			return result;
 		}
 
+		@Override
 		public TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
 			// not used by the extension point
 			return null;
 		}
 
+		@Override
 		public TransactionalEditingDomain getEditingDomain(ResourceSet rset) {
 			// not used by the extension point
 			return null;
@@ -82,10 +87,12 @@ public class TestValidationEditingDomain extends TransactionalEditingDomainImpl 
 		}
 		
 		public class TestReadWriteValidatorImpl extends ReadWriteValidatorImpl {
-			protected IValidator createValidator() {
+			@Override
+			protected IValidator<Notification> createValidator() {
 				if (enableCustomValidator) {
 					readWriteValidatorHitCount++;
-					IValidator validator = ModelValidationService.getInstance().newValidator(EvaluationMode.LIVE);
+					ILiveValidator validator = ModelValidationService.getInstance().newValidator(
+						EvaluationMode.LIVE);
 					validator.addConstraintFilter(new IConstraintFilter() {
 						public boolean accept(IConstraintDescriptor constraint,
 								EObject target) {

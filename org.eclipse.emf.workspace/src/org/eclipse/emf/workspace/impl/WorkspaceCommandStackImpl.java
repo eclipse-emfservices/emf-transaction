@@ -12,12 +12,11 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.10 2007/10/03 20:16:28 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.11 2007/11/14 18:14:07 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -95,6 +94,7 @@ public class WorkspaceCommandStackImpl
      * Extends the superclass implementation to add/remove listeners on the
      * editing domain.
 	 */
+	@Override
 	public void setEditingDomain(InternalTransactionalEditingDomain domain) {
         InternalTransactionalEditingDomain oldDomain = getDomain();
         
@@ -133,7 +133,8 @@ public class WorkspaceCommandStackImpl
      * 
      *  @since 1.1
 	 */
-	protected void doExecute(Command command, Map options)
+	@Override
+	protected void doExecute(Command command, Map<?, ?> options)
 			throws InterruptedException, RollbackException {
 		EMFCommandOperation oper = new EMFCommandOperation(getDomain(), command, options);
 		
@@ -177,6 +178,7 @@ public class WorkspaceCommandStackImpl
 	/**
 	 * Queries whether we can undo my default undo context in my operation history.
 	 */
+	@Override
 	public boolean canUndo() {
 		return getOperationHistory().canUndo(getDefaultUndoContext());
 	}
@@ -184,6 +186,7 @@ public class WorkspaceCommandStackImpl
 	/**
 	 * Undoes my default undo context in my operation history.
 	 */
+	@Override
 	public void undo() {
 		try {
 			getOperationHistory().undo(
@@ -205,6 +208,7 @@ public class WorkspaceCommandStackImpl
 	/**
 	 * Queries whether we can redo my default undo context in my operation history.
 	 */
+	@Override
 	public boolean canRedo() {
 		return getOperationHistory().canRedo(getDefaultUndoContext());
 	}
@@ -212,6 +216,7 @@ public class WorkspaceCommandStackImpl
 	/**
 	 * Redoes my default undo context in my operation history.
 	 */
+	@Override
 	public void redo() {
 		try {
 			getOperationHistory().redo(
@@ -233,6 +238,7 @@ public class WorkspaceCommandStackImpl
 	/**
 	 * Disposes my default undo context in my operation history.
 	 */
+	@Override
 	public void flush() {
 		getOperationHistory().dispose(
 				getDefaultUndoContext(),
@@ -250,6 +256,7 @@ public class WorkspaceCommandStackImpl
 	 * Gets the command from the most recently executed, done, or redone
 	 * operation.
 	 */
+	@Override
 	public Command getMostRecentCommand() {
 		Command result = null;
 		
@@ -263,6 +270,7 @@ public class WorkspaceCommandStackImpl
 	/**
 	 * Gets the command from the top of the undo history, if any.
 	 */
+	@Override
 	public Command getUndoCommand() {
 		Command result = null;
 		
@@ -279,6 +287,7 @@ public class WorkspaceCommandStackImpl
 	/**
 	 * Gets the command from the top of the redo history, if any.
 	 */
+	@Override
 	public Command getRedoCommand() {
 		Command result = null;
 		
@@ -293,7 +302,9 @@ public class WorkspaceCommandStackImpl
 	}
 	
 	// Documentation copied from the method specification
-	public EMFCommandTransaction createTransaction(Command command, Map options) throws InterruptedException {
+	public EMFCommandTransaction createTransaction(Command command,
+			Map<?, ?> options) throws InterruptedException {
+		
 		EMFCommandTransaction result;
 		
 		if (command instanceof TriggerCommand) {
@@ -309,7 +320,9 @@ public class WorkspaceCommandStackImpl
 	}
 
 	// Documentation copied from the method specification
-	public void executeTriggers(Command command, List triggers, Map options) throws InterruptedException, RollbackException {
+	public void executeTriggers(Command command, List<Command> triggers,
+			Map<?, ?> options) throws InterruptedException, RollbackException {
+		
 		if (!triggers.isEmpty()) {
 			TriggerCommand trigger = (command == null)
 				? new TriggerCommand(triggers)
@@ -390,6 +403,7 @@ public class WorkspaceCommandStackImpl
 			}
 		}
 		
+		@Override
 		public void resourceSetChanged(ResourceSetChangeEvent event) {
             IUndoableOperation operation = null;
             
@@ -399,20 +413,18 @@ public class WorkspaceCommandStackImpl
                     EMFWorkspacePlugin.OPTION_OWNING_OPERATION);
             }
             
-            Set affectedResources = ResourceUndoContext.getAffectedResources(
+            Set<Resource> affectedResources = ResourceUndoContext.getAffectedResources(
                 event.getNotifications());
             
-			Set unloaded = getUnloadedResources(event.getNotifications());
+			Set<Resource> unloaded = getUnloadedResources(event.getNotifications());
 			if (unloaded != null) {
 				// don't add these resources to the operation
 				affectedResources.removeAll(unloaded);
 				
                 // dispose their undo contexts
-				for (Iterator iter = unloaded.iterator(); iter.hasNext();) {
+				for (Resource next : unloaded) {
 					getOperationHistory().dispose(
-							new ResourceUndoContext(
-									getDomain(),
-									(Resource) iter.next()),
+							new ResourceUndoContext(getDomain(), next),
 							true, true, true);
 				}
 			}
@@ -420,10 +432,9 @@ public class WorkspaceCommandStackImpl
             if ((operation != null) && !affectedResources.isEmpty()) {
                 // add any resource undo contexts to this operation that are
                 //   not already applied
-                for (Iterator iter = affectedResources.iterator(); iter.hasNext();) {
+                for (Resource next : affectedResources) {
                     ResourceUndoContext ctx = new ResourceUndoContext(
-                        getDomain(),
-                        (Resource) iter.next());
+                        getDomain(), next);
                     
                     if (!operation.hasContext(ctx)) {
                         operation.addContext(ctx);
@@ -439,41 +450,43 @@ public class WorkspaceCommandStackImpl
 		 * @return a set of resources that the notifications indicate have been
 		 *     unloaded, or <code>null</code> if none
 		 */
-		private Set getUnloadedResources(Collection notifications) {
-			Set result = null;
+		private Set<Resource> getUnloadedResources(Collection<Notification> notifications) {
+			Set<Resource> result = null;
 			
-			for (Iterator iter = notifications.iterator(); iter.hasNext();) {
-				Notification next = (Notification) iter.next();
-				
+			for (Notification next : notifications) {
 				if (NotificationFilter.RESOURCE_UNLOADED.matches(next)) {
 					if (result == null) {
-						result = new java.util.HashSet();
+						result = new java.util.HashSet<Resource>();
 					}
 					
-					result.add(next.getNotifier());
+					result.add((Resource) next.getNotifier());
 				}
 			}
 			
 			return result;
 		}
 		
+		@Override
 		public boolean isPostcommitOnly() {
 			// only interested in post-commit "resourceSetChanged" event
 			return true;
 		}
 	}
 	
+	@Override
 	public boolean isSaveNeeded() {
 		// We override the execute method and never call the super implementation
 		//  so we have to implement the isSaveNeeded method ourselves.
 		IUndoableOperation nextUndoableOperation = history.getUndoOperation(getDefaultUndoContext());
 		
-		if (nextUndoableOperation == null)
+		if (nextUndoableOperation == null) {
 			return false;
+		}
 		
 		return savedContext != null ? !nextUndoableOperation.hasContext(getSavedContext()) : true;
 	}
 	
+	@Override
 	public void saveIsDone() {
 		// We override the execute method and never call the super implementation
 		//  so we have to implement the saveIsDone method ourselves.

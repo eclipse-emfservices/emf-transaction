@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ActionWrapperHelper.java,v 1.1 2006/12/07 23:17:11 cdamus Exp $
+ * $Id: ActionWrapperHelper.java,v 1.2 2007/11/14 18:14:04 cdamus Exp $
  */
 package org.eclipse.emf.workspace.ui.actions;
 
@@ -34,15 +34,18 @@ import org.eclipse.ui.operations.OperationHistoryActionHandler;
  * that they cannot inherit because they must separately extend the EMF
  * action classes.  i.e., this is an instance of the "prefer composition over
  * inheritance" idiom.
- *
+ * 
+ * @param <T> the operation-history action handler type that I support
+ * 
  * @author Christian W. Damus (cdamus)
  */
-class ActionWrapperHelper extends Action {
-	private final OwnerAccess ownerAccess;
+class ActionWrapperHelper<T extends OperationHistoryActionHandler> extends Action {
+	private final OwnerAccess<T> ownerAccess;
 	
-	private OperationHistoryActionHandler delegate;
+	private T delegate;
 	
-	private Map siteToActionHandler = new java.util.HashMap();
+	private final Map<IWorkbenchPartSite, T> siteToActionHandler =
+		new java.util.HashMap<IWorkbenchPartSite, T>();
 	private IPartListener partListener;
 	
 	private final IPropertyChangeListener listener = new IPropertyChangeListener() {
@@ -52,7 +55,7 @@ class ActionWrapperHelper extends Action {
 					event.getProperty(), event.getOldValue(), event.getNewValue());
 		}};
 
-	ActionWrapperHelper(OwnerAccess ownerAccess) {
+	ActionWrapperHelper(OwnerAccess<T> ownerAccess) {
 		this.ownerAccess = ownerAccess;
 	}
 		
@@ -84,9 +87,8 @@ class ActionWrapperHelper extends Action {
 		}
 	}
 	
-	private OperationHistoryActionHandler getActionHandler(IWorkbenchPartSite site, IUndoContext context) {
-		OperationHistoryActionHandler result =
-			(OperationHistoryActionHandler) siteToActionHandler.get(site);
+	private T getActionHandler(IWorkbenchPartSite site, IUndoContext context) {
+		T result = siteToActionHandler.get(site);
 		
 		if (result == null) {
 			result = ownerAccess.createDelegate(site, context);
@@ -108,9 +110,7 @@ class ActionWrapperHelper extends Action {
 			partListener = new IPartListener() {
 			
 				public void partClosed(IWorkbenchPart part) {
-					OperationHistoryActionHandler handler =
-						(OperationHistoryActionHandler) siteToActionHandler.get(
-								part.getSite());
+					T handler = siteToActionHandler.get(part.getSite());
 					
 					if (handler != null) {
 						siteToActionHandler.remove(part.getSite());
@@ -152,6 +152,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public String getDescription() {
 		if (delegate != null) {
 			return delegate.getDescription();
@@ -163,6 +164,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public String getText() {
 		if (delegate != null) {
 			return delegate.getText();
@@ -174,6 +176,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public String getToolTipText() {
 		if (delegate != null) {
 			return delegate.getToolTipText();
@@ -185,6 +188,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public boolean isEnabled() {
 		if (delegate != null) {
 			return delegate.isEnabled();
@@ -196,6 +200,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public boolean isHandled() {
 		if (delegate != null) {
 			return delegate.isHandled();
@@ -207,6 +212,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void run() {
 		if (delegate != null) {
 			delegate.run();
@@ -216,6 +222,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void runWithEvent(Event event) {
 		if (delegate != null) {
 			delegate.runWithEvent(event);
@@ -225,6 +232,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void setChecked(boolean checked) {
 		if (delegate != null) {
 			delegate.setChecked(checked);
@@ -234,6 +242,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void setDescription(String text) {
 		if (delegate != null) {
 			delegate.setDescription(text);
@@ -243,6 +252,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void setEnabled(boolean enabled) {
 		if (delegate != null) {
 			delegate.setEnabled(enabled);
@@ -252,6 +262,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void setText(String text) {
 		if (delegate != null) {
 			delegate.setText(text);
@@ -261,6 +272,7 @@ class ActionWrapperHelper extends Action {
 	/**
 	 * Delegates to the operation framework action handler.
 	 */
+	@Override
 	public void setToolTipText(String toolTipText) {
 		if (delegate != null) {
 			delegate.setToolTipText(toolTipText);
@@ -273,7 +285,7 @@ class ActionWrapperHelper extends Action {
 	 *
 	 * @author Christian W. Damus (cdamus)
 	 */
-	static interface OwnerAccess {
+	static interface OwnerAccess<T extends Action> {
 		/**
 		 * Fires a property change event on behalf of the owner action wrapper.
 		 * 
@@ -292,6 +304,6 @@ class ActionWrapperHelper extends Action {
 		 * 
 		 * @return the new action handler
 		 */
-		OperationHistoryActionHandler createDelegate(IWorkbenchPartSite site, IUndoContext context);
+		T createDelegate(IWorkbenchPartSite site, IUndoContext context);
 	}
 }

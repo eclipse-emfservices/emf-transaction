@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: InternalTransactionalCommandStack.java,v 1.2 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: InternalTransactionalCommandStack.java,v 1.3 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -65,7 +65,8 @@ public interface InternalTransactionalCommandStack extends TransactionalCommandS
 	 *     
 	 * @see #getDomain()
 	 */
-	EMFCommandTransaction createTransaction(Command command, Map options) throws InterruptedException;
+	EMFCommandTransaction createTransaction(Command command, Map<?, ?> options)
+	throws InterruptedException;
 	
 	/**
 	 * Executes the specified list of trigger commands.  All of the commands are
@@ -86,7 +87,8 @@ public interface InternalTransactionalCommandStack extends TransactionalCommandS
 	 * @see ResourceSetListener#transactionAboutToCommit(org.eclipse.emf.transaction.ResourceSetChangeEvent)
 	 * @see #createTransaction(Command, Map)
 	 */
-	void executeTriggers(Command command, List triggers, Map options) throws InterruptedException, RollbackException;
+	void executeTriggers(Command command, List<Command> triggers,
+			Map<?, ?> options) throws InterruptedException, RollbackException;
 	
 	/**
 	 * Disposes of my state and any additional resources that I may be

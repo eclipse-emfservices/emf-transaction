@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceLoadedListener.java,v 1.3 2007/06/07 14:25:36 cdamus Exp $
+ * $Id: ResourceLoadedListener.java,v 1.4 2007/11/14 18:13:57 cdamus Exp $
  */
 
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
@@ -46,7 +46,7 @@ import org.eclipse.ui.part.FileEditorInput;
 public class ResourceLoadedListener extends DemultiplexingListener {
 	private static ResourceLoadedListener instance;
 	
-	private final Set ignoredResources = new java.util.HashSet();
+	private final Set<Resource> ignoredResources = new java.util.HashSet<Resource>();
 	
 	/**
 	 * Initializes me with my filter.
@@ -87,6 +87,7 @@ public class ResourceLoadedListener extends DemultiplexingListener {
 		ignoredResources.remove(res);
 	}
 
+	@Override
 	protected void handleNotification(TransactionalEditingDomain domain, Notification notification) {
 		if (ignoredResources.contains(notification.getNotifier())) {
 			// skip any resource that we are supposed to ignore

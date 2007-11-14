@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.11 2007/10/15 16:20:40 cdamus Exp $
+ * $Id: Lock.java,v 1.12 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -21,7 +21,6 @@ import java.util.Map;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.ILock;
@@ -72,7 +71,7 @@ import org.eclipse.emf.transaction.internal.l10n.Messages;
  * @author Christian W. Damus (cdamus)
  */
 public class Lock {
-	private static final IJobManager jobmgr = Platform.getJobManager();
+	private static final IJobManager jobmgr = Job.getJobManager();
 	
 	private static long nextId = 0;
 	
@@ -99,16 +98,18 @@ public class Lock {
 	
 	// threads currently yielding read access
 	// must use identity map because threads can override equals()
-	private final Map yielders = new java.util.IdentityHashMap();
+	private final Map<Thread, Lock> yielders =
+		new java.util.IdentityHashMap<Thread, Lock>();
 	
 	// every thread has its own ILock that it acquires while it owns the
 	//    transaction lock, to ensure that the thread is registered as a
 	//    "lock owner" in the lock table.  This ensures that Display.syncExec()
 	//    calls from these threads will use the work queue to communicate
 	//    runnables to a waiting UI thread
-	private ThreadLocal threadLock = new ThreadLocal() {
-		protected Object initialValue() {
-			return Platform.getJobManager().newLock();
+	private final ThreadLocal<ILock> threadLock = new ThreadLocal<ILock>() {
+		@Override
+		protected ILock initialValue() {
+			return Job.getJobManager().newLock();
 		}};
 		
 	/**
@@ -693,7 +694,7 @@ public class Lock {
 			} else if (current == owner) {
 				// current thread no longer needs the dummy lock
 				getThreadLock().release();
-			} // else non-owner is transfering.  Shouldn't happen
+			} // else non-owner is transferring.  Shouldn't happen
 			
 		owner = thread;
 	}
@@ -705,9 +706,10 @@ public class Lock {
 	 * @return the current thread's thread lock
 	 */
 	private ILock getThreadLock() {
-		return (ILock) threadLock.get();
+		return threadLock.get();
 	}
 	
+	@Override
 	public String toString() {
 		Thread lastKnownOwner = owner;
 		
@@ -729,7 +731,7 @@ public class Lock {
         private final Thread thread;
         private final boolean exclusive;
 
-        private ILock ilock = jobmgr.newLock();
+        private final ILock ilock = jobmgr.newLock();
         private IStatus acquireStatus;
         
         private boolean aborted;
@@ -747,7 +749,8 @@ public class Lock {
         /**
          * @see org.eclipse.core.runtime.jobs.Job#run(org.eclipse.core.runtime.IProgressMonitor)
          */
-        protected IStatus run(IProgressMonitor monitor) {
+        @Override
+		protected IStatus run(IProgressMonitor monitor) {
             try {
                 ilock.acquire();
                 

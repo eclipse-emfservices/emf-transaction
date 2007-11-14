@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ValidateEditSupport.java,v 1.1 2007/10/03 20:17:38 cdamus Exp $
+ * $Id: ValidateEditSupport.java,v 1.2 2007/11/14 18:14:00 cdamus Exp $
  */
 
 package org.eclipse.emf.transaction.util;
@@ -114,7 +114,7 @@ public interface ValidateEditSupport {
      * @since 1.2
      */
     class Default implements ValidateEditSupport {
-        private final Set resourcesToValidate = new java.util.HashSet();
+        private final Set<Resource> resourcesToValidate = new java.util.HashSet<Resource>();
         
         /**
          * Initializes me.
@@ -130,7 +130,7 @@ public interface ValidateEditSupport {
          * 
          * @return the resources to validate-edit
          */
-        protected final Set getResourcesToValidate() {
+        protected final Set<Resource> getResourcesToValidate() {
             return resourcesToValidate;
         }
         
@@ -157,15 +157,15 @@ public interface ValidateEditSupport {
          * @return the result of the validate-edit attempt
          */
         protected IStatus doValidateEdit(Transaction transaction,
-                Collection resources, Object context) {
+                Collection<? extends Resource> resources, Object context) {
             IStatus result = Status.OK_STATUS;
 
             EditingDomain domain = transaction.getEditingDomain();
 
-            for (Iterator iter = resources.iterator(); result.isOK()
+            for (Iterator<? extends Resource> iter = resources.iterator(); result.isOK()
                     && iter.hasNext();) {
                 
-                Resource next = (Resource) iter.next();
+                Resource next = iter.next();
 
                 if (domain.isReadOnly(next)) {
                     result = new Status(IStatus.ERROR, EMFTransactionPlugin
@@ -187,12 +187,12 @@ public interface ValidateEditSupport {
             if (!resourcesToValidate.isEmpty()) {
                 // protect against concurrent modifications: setting modified
                 //   state to false will trigger removal from the collection
-                Resource[] resources = (Resource[]) resourcesToValidate
-                    .toArray(new Resource[resourcesToValidate.size()]);
+                Resource[] resources = resourcesToValidate.toArray(
+                	new Resource[resourcesToValidate.size()]);
                 
-                for (int i = 0; i < resources.length; i++) {
+                for (Resource element : resources) {
                     // note that this is exempt from the transaction protocol
-                    resources[i].setModified(false);
+                    element.setModified(false);
                     
                     // setting modified to false should have removed them 
                     // already, but just in case ...

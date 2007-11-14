@@ -12,12 +12,11 @@
  *
  * </copyright>
  *
- * $Id: EMFCommandOperation.java,v 1.8 2007/06/13 12:27:26 cdamus Exp $
+ * $Id: EMFCommandOperation.java,v 1.9 2007/11/14 18:14:08 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -83,7 +82,9 @@ public class EMFCommandOperation
 	 * @param command my command
 	 * @param options transaction options, or <code>null</code> for the defaults
 	 */
-	public EMFCommandOperation(TransactionalEditingDomain domain, Command command, Map options) {
+	public EMFCommandOperation(TransactionalEditingDomain domain, Command command,
+			Map<?, ?> options) {
+		
 		super(domain, command.getLabel(), options);
 		
 		this.command = command;
@@ -103,6 +104,7 @@ public class EMFCommandOperation
 	/**
 	 * I can execute if my command can execute.
 	 */
+	@Override
 	public boolean canExecute() {
 		return super.canExecute() && command.canExecute();
 	}
@@ -110,6 +112,7 @@ public class EMFCommandOperation
 	/**
 	 * Executes me by executing my command.
 	 */
+	@Override
 	protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
 		throws ExecutionException {
 		
@@ -118,6 +121,7 @@ public class EMFCommandOperation
 		return Status.OK_STATUS;
 	}
 	
+	@Override
 	protected void didCommit(Transaction transaction) {
 		super.didCommit(transaction);
 		
@@ -131,6 +135,7 @@ public class EMFCommandOperation
 	/**
 	 * I can undo if my command or (if any) trigger command can undo.
 	 */
+	@Override
 	public boolean canUndo() {
 		return super.canUndo() &&
 			(command.canUndo() && ((triggerCommand == null) || triggerCommand.canUndo()));
@@ -139,6 +144,7 @@ public class EMFCommandOperation
 	/**
 	 * Undoes me by undoing my trigger command (if any) and my command.
 	 */
+	@Override
 	protected IStatus doUndo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		if (triggerCommand != null) {
 			triggerCommand.undo();
@@ -153,6 +159,7 @@ public class EMFCommandOperation
 	 * I can redo if either my wrapped command is a {@link ConditionalRedoCommand}
 	 * that can undo, or it is not a conditionally redoable command.
 	 */
+	@Override
 	public boolean canRedo() {
 		return super.canRedo() &&
 			(canRedo(command) && ((triggerCommand == null) || canRedo(triggerCommand)));
@@ -166,6 +173,7 @@ public class EMFCommandOperation
 	/**
 	 * Redoes me by redoing my command and my trigger command (if any).
 	 */
+	@Override
 	protected IStatus doRedo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		command.redo();
 		
@@ -180,7 +188,8 @@ public class EMFCommandOperation
      * Extends the inherited implementation to additionally dispose my command
      * and my trigger command (if any).
      */
-    public void dispose() {
+    @Override
+	public void dispose() {
         super.dispose();
         
         if (command != null) {
@@ -197,7 +206,8 @@ public class EMFCommandOperation
 	 * 
 	 * @see EMFOperationTransaction
 	 */
-	Transaction createTransaction(Map options) throws InterruptedException {
+	@Override
+	Transaction createTransaction(Map<?, ?> options) throws InterruptedException {
 		InternalTransactionalCommandStack stack =
 			(InternalTransactionalCommandStack) getEditingDomain().getCommandStack();
 		
@@ -227,9 +237,9 @@ public class EMFCommandOperation
 		
 		if (cmd instanceof CompoundCommand) {
 			CompoundCommand compound = (CompoundCommand) cmd;
-			List nested = compound.getCommandList();
+			List<Command> nested = compound.getCommandList();
 			if (!nested.isEmpty()) {
-				improveLabel((Command) nested.get(0));
+				improveLabel(nested.get(0));
 				return;
 			}
 		} else if (cmd instanceof SetCommand) {
@@ -265,11 +275,10 @@ public class EMFCommandOperation
 						owner, IItemPropertySource.class);
 			
 			if (source != null) {
-				Collection descriptors = source.getPropertyDescriptors(owner);
+				Collection<IItemPropertyDescriptor> descriptors =
+					source.getPropertyDescriptors(owner);
 				
-				for (Iterator iter = descriptors.iterator(); iter.hasNext();) {
-					IItemPropertyDescriptor next = (IItemPropertyDescriptor) iter.next();
-					
+				for (IItemPropertyDescriptor next : descriptors) {
 					if (next.getFeature(owner) == feature) {
 						setLabel(NLS.bind(pattern, next.getDisplayName(owner)));
 						break;

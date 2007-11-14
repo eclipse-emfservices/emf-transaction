@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorder.java,v 1.6 2007/10/03 20:17:38 cdamus Exp $
+ * $Id: TransactionChangeRecorder.java,v 1.7 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -108,6 +108,7 @@ public class TransactionChangeRecorder extends ChangeRecorder {
 	 * 
 	 * @throws IllegalStateException if I have been {@link #dispose() disposed}
 	 */
+	@Override
 	public ChangeDescription endRecording() {
 		if (disposed) {
 			throw new IllegalStateException("cannot end a disposed recorder"); //$NON-NLS-1$
@@ -135,18 +136,22 @@ public class TransactionChangeRecorder extends ChangeRecorder {
 	 *       outside of the scope of the editing domain and its resource set</li>
 	 * </ul>
 	 */
+	@Override
 	public void setTarget(Notifier target) {
 		if (!disposed) {
-			Iterator contents = target instanceof EObject ? isResolveProxies() ? ((EObject) target).eContents().iterator()
-					: ((InternalEList) ((EObject) target).eContents()).basicIterator()
-					: target instanceof ResourceSet ? ((ResourceSet) target)
-							.getResources().iterator()
-							: target instanceof Resource ? ((Resource) target)
-									.getContents().iterator() : null;
-	
+			Iterator<? extends Notifier> contents = (target instanceof EObject) ? isResolveProxies() ? ((EObject) target)
+				.eContents().iterator()
+				: ((InternalEList<EObject>) ((EObject) target).eContents())
+					.basicIterator()
+				: target instanceof ResourceSet ? ((ResourceSet) target)
+					.getResources().iterator()
+					: target instanceof Resource ? ((Resource) target)
+						.getContents().iterator()
+						: null;
+
 			if (contents != null) {
 				while (contents.hasNext()) {
-					Notifier notifier = (Notifier) contents.next();
+					Notifier notifier = contents.next();
 					addAdapter(notifier);
 				}
 			}
@@ -160,6 +165,7 @@ public class TransactionChangeRecorder extends ChangeRecorder {
 	 * currently recording) and passing it along to the domain's current
 	 * transaction (if any).
 	 */
+	@Override
 	public void notifyChanged(Notification notification) {
 		if (disposed) {
 			// I am disposed, so I should no longer be responding to or even
@@ -385,6 +391,7 @@ public class TransactionChangeRecorder extends ChangeRecorder {
 	 * 
 	 * @since 1.1
 	 */
+	@Override
 	public void dispose() {
 		if (!disposed) {
 			super.dispose();
@@ -395,8 +402,10 @@ public class TransactionChangeRecorder extends ChangeRecorder {
 			if (rset != null) {
 				removeAdapter(rset);
 				
-				for (Iterator iter = EcoreUtil.getAllProperContents(rset, false); iter.hasNext();) {
-					removeAdapter((Notifier) iter.next());
+				for (Iterator<Notifier> iter = EcoreUtil.getAllProperContents(rset, false);
+						iter.hasNext();) {
+					
+					removeAdapter(iter.next());
 				}
 			}
 			

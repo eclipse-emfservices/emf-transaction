@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: LibraryDefaultNameTrigger.java,v 1.4 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: LibraryDefaultNameTrigger.java,v 1.5 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
@@ -45,6 +45,7 @@ public class LibraryDefaultNameTrigger extends TriggerListener {
 		this.isAggregate = isAggregate;
 	}
 	
+	@Override
 	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 		Command result = null;
 		
@@ -60,6 +61,7 @@ public class LibraryDefaultNameTrigger extends TriggerListener {
 		return result;
 	}
 	
+	@Override
 	public boolean isAggregatePrecommitListener() {
 		return isAggregate;
 	}

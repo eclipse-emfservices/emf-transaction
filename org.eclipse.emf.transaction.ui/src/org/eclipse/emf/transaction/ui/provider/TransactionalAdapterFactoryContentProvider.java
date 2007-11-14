@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalAdapterFactoryContentProvider.java,v 1.2 2007/06/07 14:26:08 cdamus Exp $
+ * $Id: TransactionalAdapterFactoryContentProvider.java,v 1.3 2007/11/14 18:14:06 cdamus Exp $
  */
 package org.eclipse.emf.transaction.ui.provider;
 
@@ -27,6 +27,7 @@ import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIPlugin;
 import org.eclipse.emf.transaction.ui.internal.EMFTransactionUIStatusCodes;
 import org.eclipse.emf.transaction.ui.internal.Tracing;
 import org.eclipse.emf.transaction.ui.internal.l10n.Messages;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.ui.views.properties.IPropertySource;
 
@@ -61,13 +62,15 @@ public class TransactionalAdapterFactoryContentProvider
 	 * Runs the specified runnable in the editing domain, with interrupt
 	 * handling.
 	 * 
+	 * @param <T> the result type of the runnable
+	 * 
 	 * @param run the runnable to run
 	 * 
 	 * @return its result, or <code>null</code> on interrupt
 	 */
-	protected Object run(RunnableWithResult run) {
+	protected <T> T run(RunnableWithResult<? extends T> run) {
 		try {
-			return domain.runExclusive(run);
+			return TransactionUtil.runExclusive(domain, run);
 		} catch (InterruptedException e) {
 			Tracing.catching(TransactionalAdapterFactoryContentProvider.class, "run", e); //$NON-NLS-1$
 			
@@ -89,8 +92,9 @@ public class TransactionalAdapterFactoryContentProvider
 	 * Extends the inherited implementation by running in a read-only transaction.
 	 * The returned property source also uses transactions to access properties.
 	 */
+	@Override
 	protected IPropertySource createPropertySource(final Object object, final IItemPropertySource itemPropertySource) {
-		return wrap((IPropertySource) run(new RunnableWithResult.Impl() {
+		return wrap(run(new RunnableWithResult.Impl<IPropertySource>() {
 			public void run() {
 				setResult(TransactionalAdapterFactoryContentProvider.super.createPropertySource(object, itemPropertySource));
 			}}));
@@ -99,8 +103,9 @@ public class TransactionalAdapterFactoryContentProvider
 	/**
 	 * Extends the inherited implementation by running in a read-only transaction.
 	 */
+	@Override
 	public Object[] getChildren(final Object object) {
-		return (Object[]) run(new RunnableWithResult.Impl() {
+		return run(new RunnableWithResult.Impl<Object[]>() {
 			public void run() {
 				setResult(TransactionalAdapterFactoryContentProvider.super.getChildren(object));
 			}});
@@ -109,8 +114,9 @@ public class TransactionalAdapterFactoryContentProvider
 	/**
 	 * Extends the inherited implementation by running in a read-only transaction.
 	 */
+	@Override
 	public Object[] getElements(final Object object) {
-		return (Object[]) run(new RunnableWithResult.Impl() {
+		return run(new RunnableWithResult.Impl<Object[]>() {
 			public void run() {
 				setResult(TransactionalAdapterFactoryContentProvider.super.getElements(object));
 			}});
@@ -119,8 +125,9 @@ public class TransactionalAdapterFactoryContentProvider
 	/**
 	 * Extends the inherited implementation by running in a read-only transaction.
 	 */
+	@Override
 	public Object getParent(final Object object) {
-		return run(new RunnableWithResult.Impl() {
+		return run(new RunnableWithResult.Impl<Object>() {
 			public void run() {
 				setResult(TransactionalAdapterFactoryContentProvider.super.getParent(object));
 			}});
@@ -130,8 +137,9 @@ public class TransactionalAdapterFactoryContentProvider
 	 * Extends the inherited implementation by running in a read-only transaction.
 	 * The returned property source also uses transactions to access properties.
 	 */
+	@Override
 	public IPropertySource getPropertySource(final Object object) {
-		return wrap((IPropertySource) run(new RunnableWithResult.Impl() {
+		return wrap(run(new RunnableWithResult.Impl<IPropertySource>() {
 			public void run() {
 				setResult(TransactionalAdapterFactoryContentProvider.super.getPropertySource(object));
 			}}));
@@ -140,21 +148,20 @@ public class TransactionalAdapterFactoryContentProvider
 	/**
 	 * Extends the inherited implementation by running in a read-only transaction.
 	 */
+	@Override
 	public boolean hasChildren(final Object object) {
-		Boolean result = (Boolean) run(new RunnableWithResult.Impl() {
+		return run(new RunnableWithResult.Impl<Boolean>() {
 			public void run() {
-				setResult(TransactionalAdapterFactoryContentProvider.super.hasChildren(object)
-						? Boolean.TRUE : Boolean.FALSE);
+				setResult(TransactionalAdapterFactoryContentProvider.super.hasChildren(object));
 			}});
-		
-		return (result == null) ? false : result.booleanValue();
 	}
 
 	/**
 	 * Extends the inherited implementation by running in a read-only transaction.
 	 */
+	@Override
 	public void inputChanged(final Viewer vwr, final Object oldInput, final Object newInput) { 
-		run(new RunnableWithResult.Impl() {
+		run(new RunnableWithResult.Impl<Object>() {
 			public void run() {
 				TransactionalAdapterFactoryContentProvider.super.inputChanged(vwr, oldInput, newInput);
 			}});

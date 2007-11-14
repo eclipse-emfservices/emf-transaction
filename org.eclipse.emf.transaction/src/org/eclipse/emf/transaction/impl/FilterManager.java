@@ -12,13 +12,12 @@
  *
  * </copyright>
  *
- * $Id: FilterManager.java,v 1.4 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: FilterManager.java,v 1.5 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.emf.common.notify.Notification;
@@ -70,8 +69,9 @@ public final class FilterManager {
 	 * 
 	 * @see #selectUnbatched(List, NotificationFilter)
 	 */
-	public List select(List notifications, NotificationFilter filter, ArrayList cache) {
-		List result;
+	public List<Notification> select(List<Notification> notifications,
+			NotificationFilter filter, ArrayList<Notification> cache) {
+		List<Notification> result;
 		
 		if (filter == NotificationFilter.ANY) {
 			result = notifications;
@@ -84,9 +84,7 @@ public final class FilterManager {
 				filter = NotificationFilter.NOT_TOUCH;
 			}
 			
-			for (Iterator iter = notifications.iterator(); iter.hasNext();) {
-				Notification next = (Notification) iter.next();
-				
+			for (Notification next : notifications) {
 				if (filter.matches(next)) {
 					result.add(next);
 				}
@@ -111,8 +109,9 @@ public final class FilterManager {
 	 * 
 	 * @see #selectUnbatched(List, NotificationFilter)
 	 */
-	public List select(List notifications, NotificationFilter filter) {
-		return select(notifications, filter, new ArrayList());
+	public List<Notification> select(List<Notification> notifications,
+			NotificationFilter filter) {
+		return select(notifications, filter, new ArrayList<Notification>());
 	}
 	
 	/**
@@ -132,18 +131,20 @@ public final class FilterManager {
 	 * 
 	 * @see #select(List, NotificationFilter)
 	 */
-	public List selectUnbatched(List notification, NotificationFilter filter) {
-		List result;
+	public List<Notification> selectUnbatched(List<Notification> notification,
+			NotificationFilter filter) {
+		
+		List<Notification> result;
 		
 		if (filter == null) {
 			// the default filter
 			filter = NotificationFilter.NOT_TOUCH;
 		}
 
-		if (filter.matches((Notification) notification.get(0))) {
+		if (filter.matches(notification.get(0))) {
 			result = notification;
 		} else {
-			result = Collections.EMPTY_LIST;
+			result = Collections.emptyList();
 		}
 		
 		return result;

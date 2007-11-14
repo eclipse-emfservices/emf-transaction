@@ -12,12 +12,11 @@
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.18 2007/10/31 19:59:58 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.19 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -86,9 +85,9 @@ public class TransactionImpl
 	 * As of the 1.2 release, this map is immutable.
 	 * </p>
 	 */
-	public static final Map DEFAULT_UNDO_REDO_OPTIONS;
+	public static final Map<Object, Object> DEFAULT_UNDO_REDO_OPTIONS;
 	static {
-		Map map = new java.util.HashMap();
+		Map<Object, Object> map = new java.util.HashMap<Object, Object>();
 		map.put(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
 		map.put(Transaction.OPTION_NO_UNDO, Boolean.TRUE);
 		map.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
@@ -103,8 +102,8 @@ public class TransactionImpl
 	private final TransactionalEditingDomain domain;
 	private Thread owner;
 	private final boolean readOnly;
-	private final Map options;
-	private final Map mutableOptions;
+	private final Map<Object, Object> options;
+	private final Map<Object, Object> mutableOptions;
 	
 	private InternalTransaction parent;
 	private InternalTransaction root;
@@ -112,7 +111,7 @@ public class TransactionImpl
 	private boolean active;
 	private boolean closing; // prevents re-entrant commit/rollback
 	private boolean rollingBack;
-	protected List notifications;
+	protected List<Notification> notifications;
 	protected final CompositeChangeDescription change;
 	
 	private boolean aborted;
@@ -140,12 +139,13 @@ public class TransactionImpl
 	 *     if I am read/write
 	 * @param options my options, or <code>null</code> for defaults
 	 */
-	public TransactionImpl(TransactionalEditingDomain domain, boolean readOnly, Map options) {
+	public TransactionImpl(TransactionalEditingDomain domain, boolean readOnly,
+			Map<?, ?> options) {
 		this.domain = domain;
 		this.readOnly = readOnly;
 		this.owner = Thread.currentThread();
 		
-		this.mutableOptions = new java.util.HashMap();
+		this.mutableOptions = new java.util.HashMap<Object, Object>();
 		this.options = Collections.unmodifiableMap(mutableOptions);
 		
 		if (options != null) {
@@ -159,7 +159,7 @@ public class TransactionImpl
 		change = new CompositeChangeDescription();
 		
 		if (collectsNotifications(this)) {
-			notifications = new org.eclipse.emf.common.util.BasicEList.FastCompare();
+			notifications = new org.eclipse.emf.common.util.BasicEList.FastCompare<Notification>();
 		} else {
 			// no need to collect any notifications if we won't use them
 			notifications = null;
@@ -265,7 +265,7 @@ public class TransactionImpl
 	}
 
 	// Documentation copied from the inherited specification
-	public final Map getOptions() {
+	public final Map<Object, Object> getOptions() {
 		return options;
 	}
 
@@ -628,8 +628,8 @@ public class TransactionImpl
 				//  my changes except for certain special cases where we must
 				//  prevent the passing of our changes.
 				
-				if (getOptions().get(BLOCK_CHANGE_PROPAGATION) == Boolean.TRUE
-						&& parent.getOptions().get(ALLOW_CHANGE_PROPAGATION_BLOCKING) == Boolean.TRUE) {
+				if (hasOption(this, BLOCK_CHANGE_PROPAGATION)
+						&& hasOption(parent, ALLOW_CHANGE_PROPAGATION_BLOCKING)) {
 					parent.resume(null);
 				} else {
 					parent.resume(change);
@@ -653,8 +653,9 @@ public class TransactionImpl
 	}
 	
 	// Documentation copied from the inherited specification
-	public List getNotifications() {
-		return (notifications == null)? Collections.EMPTY_LIST : notifications;
+	public List<Notification> getNotifications() {
+		return (notifications == null)? Collections.<Notification>emptyList()
+			: notifications;
 	}
 	
 	/**
@@ -679,7 +680,7 @@ public class TransactionImpl
 	// Documentation copied from the inherited specification
 	public void addTriggers(TriggerCommand triggers) {
 		// extract out only the triggered commands (exclude the triggering command)
-		List triggerCommands = triggers.getTriggers();
+		List<Command> triggerCommands = triggers.getTriggers();
 		Command triggerCommand;
 		
 		if (triggerCommands.isEmpty()) {
@@ -689,7 +690,7 @@ public class TransactionImpl
 		// bug 165026:  Must copy the list, because it may be read-only like
 		//    GMF's NOOP_TRIGGER command
 		triggerCommand = new ConditionalRedoCommand.Compound(
-				new java.util.ArrayList(triggerCommands));
+				new java.util.ArrayList<Command>(triggerCommands));
 		
 		if (this.triggers == null) {
 			this.triggers = triggerCommand;
@@ -703,7 +704,7 @@ public class TransactionImpl
 	}
 	
 	// Documentation copied from the inherited specification
-	public void startPrivileged(PrivilegedRunnable runnable) {
+	public void startPrivileged(PrivilegedRunnable<?> runnable) {
 		if (runnable.getTransaction() != this) {
 			throw new IllegalArgumentException(
 					"runnable has no privileges on this transaction"); //$NON-NLS-1$
@@ -723,7 +724,7 @@ public class TransactionImpl
 	}
 
 	// Documentation copied from the inherited specification
-	public void endPrivileged(PrivilegedRunnable runnable) {
+	public void endPrivileged(PrivilegedRunnable<?> runnable) {
 		if (runnable.getTransaction() != this) {
 			throw new IllegalArgumentException(
 					"runnable has no privileges on this transaction"); //$NON-NLS-1$
@@ -746,12 +747,11 @@ public class TransactionImpl
         
 	    // if we have no parent transaction, then we are a root and we "inherit"
 	    // the editing domain's default transaction options
-        Map parentOptions = (parent == null) ? getDefaultOptions(getEditingDomain())
-            : parent.getOptions();
+        Map<?, ?> parentOptions = (parent == null) ?
+        	getDefaultOptions(getEditingDomain()) : parent.getOptions();
         
         if (parentOptions != null) {
-            for (Iterator iter = parentOptions.entrySet().iterator(); iter.hasNext();) {
-                Map.Entry next = (Map.Entry) iter.next();
+            for (Map.Entry<?, ?> next : parentOptions.entrySet()) {
                 Object option = next.getKey();
                 
                 if (ALLOW_CHANGE_PROPAGATION_BLOCKING.equals(option)) {
@@ -770,6 +770,7 @@ public class TransactionImpl
         }
 	}
 	
+	@Override
 	public String toString() {
 		return "Transaction[active=" + isActive() //$NON-NLS-1$
 			+ ", read-only=" + isReadOnly() //$NON-NLS-1$
@@ -889,10 +890,13 @@ public class TransactionImpl
 	 * 
 	 * @since 1.2
 	 */
-	protected static Map getDefaultOptions(TransactionalEditingDomain domain) {
-        TransactionalEditingDomain.DefaultOptions defaults = (TransactionalEditingDomain.DefaultOptions) TransactionUtil
+	protected static Map<?, ?> getDefaultOptions(
+			TransactionalEditingDomain domain) {
+		
+        TransactionalEditingDomain.DefaultOptions defaults = TransactionUtil
             .getAdapter(domain, TransactionalEditingDomain.DefaultOptions.class);
         
-        return (defaults == null)? Collections.EMPTY_MAP : defaults.getDefaultTransactionOptions();
+        return (defaults == null)? Collections.EMPTY_MAP
+        	: defaults.getDefaultTransactionOptions();
     }
 }

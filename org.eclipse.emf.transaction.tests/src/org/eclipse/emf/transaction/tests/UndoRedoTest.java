@@ -12,11 +12,10 @@
  *
  * </copyright>
  *
- * $Id: UndoRedoTest.java,v 1.9 2007/10/31 19:59:57 cdamus Exp $
+ * $Id: UndoRedoTest.java,v 1.10 2007/11/14 18:14:12 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
-import java.util.Iterator;
 import java.util.Set;
 
 import junit.framework.Test;
@@ -88,6 +87,7 @@ public class UndoRedoTest extends AbstractTest {
 		commit();
 		
 		Command cmd = new RecordingCommand(domain) {
+			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 				newAuthor.getBooks().add(book);
@@ -157,7 +157,7 @@ public class UndoRedoTest extends AbstractTest {
 		
 		assertSame(root, newLibrary.eContainer());
 		assertEquals(1, newLibrary.getBooks().size());
-		Book book = (Book) newLibrary.getBooks().get(0);
+		Book book = newLibrary.getBooks().get(0);
 		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
 		assertNotNull(book.getPublicationDate());
 		
@@ -181,7 +181,7 @@ public class UndoRedoTest extends AbstractTest {
 		
 		assertSame(root, newLibrary.eContainer());
 		assertEquals(1, newLibrary.getBooks().size());
-		book = (Book) newLibrary.getBooks().get(0);
+		book = newLibrary.getBooks().get(0);
 		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
 		assertNotNull(book.getPublicationDate());
 		
@@ -202,6 +202,7 @@ public class UndoRedoTest extends AbstractTest {
 		final Library newLibrary = EXTLibraryFactory.eINSTANCE.createLibrary();
 		
 		Command cmd = new RecordingCommand(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library.  Our triggers will set a default name and book
 				root.getBranches().add(newLibrary);
@@ -217,7 +218,7 @@ public class UndoRedoTest extends AbstractTest {
 		
 		assertSame(root, newLibrary.eContainer());
 		assertEquals(1, newLibrary.getBooks().size());
-		Book book = (Book) newLibrary.getBooks().get(0);
+		Book book = newLibrary.getBooks().get(0);
 		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
 		assertNotNull(book.getPublicationDate());
 		
@@ -241,7 +242,7 @@ public class UndoRedoTest extends AbstractTest {
 		
 		assertSame(root, newLibrary.eContainer());
 		assertEquals(1, newLibrary.getBooks().size());
-		book = (Book) newLibrary.getBooks().get(0);
+		book = newLibrary.getBooks().get(0);
 		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
 		assertNotNull(book.getPublicationDate());
 		
@@ -369,15 +370,19 @@ public class UndoRedoTest extends AbstractTest {
 			void reset() { count = 0; }
 			
 			public void execute() { reset(); }
+			@Override
 			public void undo() { assertEquals(1, ++count); }
+			@Override
 			public void redo() { assertEquals(1, ++count); }
 		}
 		
-		final Set countingCommands = new java.util.HashSet();
+		final Set<CountingCommand> countingCommands =
+			new java.util.HashSet<CountingCommand>();
 		
 		// add the trigger to create a default book in a new library, combined
 		//    with a counting command
 		domain.addResourceSetListener(new LibraryDefaultBookTrigger() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				Command result = super.trigger(domain, notification);
 				
@@ -393,6 +398,7 @@ public class UndoRedoTest extends AbstractTest {
 		// add another trigger that will set default publication dates for new
 		//    items, combined with a counting command
 		domain.addResourceSetListener(new ItemDefaultPublicationDateTrigger() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				Command result = super.trigger(domain, notification);
 				
@@ -423,8 +429,8 @@ public class UndoRedoTest extends AbstractTest {
 		
 		commit();
 		
-		for (Iterator iter = countingCommands.iterator(); iter.hasNext();) {
-			((CountingCommand) iter.next()).reset();
+		for (CountingCommand next : countingCommands) {
+			next.reset();
 		}
 		
 		startWriting();
@@ -434,8 +440,8 @@ public class UndoRedoTest extends AbstractTest {
 		
 		commit();
 		
-		for (Iterator iter = countingCommands.iterator(); iter.hasNext();) {
-			((CountingCommand) iter.next()).reset();
+		for (CountingCommand next : countingCommands) {
+			next.reset();
 		}
 		
 		startWriting();
@@ -445,8 +451,8 @@ public class UndoRedoTest extends AbstractTest {
 		
 		commit();
 		
-		for (Iterator iter = countingCommands.iterator(); iter.hasNext();) {
-			((CountingCommand) iter.next()).reset();
+		for (CountingCommand next : countingCommands) {
+			next.reset();
 		}
 	}
 	
@@ -459,6 +465,7 @@ public class UndoRedoTest extends AbstractTest {
 				// nothing to do
 			}
 		
+			@Override
 			public boolean canRedo() {
 				return false;
 			}};
@@ -479,12 +486,14 @@ public class UndoRedoTest extends AbstractTest {
 	public void test_nonredoableTriggerCommand_138287() {
 		// add a trigger command that is not redoable
 		domain.addResourceSetListener(new TriggerListener() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new TestCommand.Redoable() {
 					public void execute() {
 						// nothing to do
 					}
 				
+					@Override
 					public boolean canRedo() {
 						return false;
 					}};
@@ -520,12 +529,14 @@ public class UndoRedoTest extends AbstractTest {
 	public void test_nonredoableTriggerCommands() {
 		// add a trigger command that is not redoable
 		domain.addResourceSetListener(new TriggerListener() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new TestCommand.Redoable() {
 					public void execute() {
 						// nothing to do
 					}
 				
+					@Override
 					public boolean canRedo() {
 						return false;
 					}};
@@ -533,12 +544,14 @@ public class UndoRedoTest extends AbstractTest {
 		
 		// add a trigger command that is not redoable
 		domain.addResourceSetListener(new TriggerListener() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new TestCommand.Redoable() {
 					public void execute() {
 						// nothing to do
 					}
 				
+					@Override
 					public boolean canRedo() {
 						return false;
 					}};
@@ -570,12 +583,14 @@ public class UndoRedoTest extends AbstractTest {
 	public void test_nonredoableTriggerCommand_RecordingCommand_138287() {
 		// add a trigger command that is not redoable
 		domain.addResourceSetListener(new TriggerListener() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new TestCommand.Redoable() {
 					public void execute() {
 						// nothing to do
 					}
 				
+					@Override
 					public boolean canRedo() {
 						return false;
 					}};
@@ -585,6 +600,7 @@ public class UndoRedoTest extends AbstractTest {
 		
 		// this command *is* implicitly redoable; it is the trigger that is not
 		RecordingCommand cmd = new RecordingCommand(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library, just to record some change
 				root.getBranches().add(newLibrary);
@@ -633,6 +649,7 @@ public class UndoRedoTest extends AbstractTest {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void doSetUp()
 		throws Exception {
 		
@@ -642,6 +659,7 @@ public class UndoRedoTest extends AbstractTest {
 		ValidationRollbackTest.validationEnabled = true;
 	}
 	
+	@Override
 	protected void doTearDown()
 		throws Exception {
 		

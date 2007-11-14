@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.10 2007/10/03 20:16:31 cdamus Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.11 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -232,24 +232,29 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		final IUndoContext undoContext = new UndoContext();
 		
 		domain.addResourceSetListener(new ResourceSetListenerImpl() {
+			@Override
 			public boolean isPrecommitOnly() {
 				return true;
 			}
 			
+			@Override
 			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
 				throws RollbackException {
 				
 				IUndoableOperation op = new AbstractOperation("") { //$NON-NLS-1$
+					@Override
 					public IStatus execute(IProgressMonitor monitor, IAdaptable info)
 						throws ExecutionException {
 						return Status.OK_STATUS;
 					}
 	
+					@Override
 					public IStatus redo(IProgressMonitor monitor, IAdaptable info)
 						throws ExecutionException {
 						return Status.OK_STATUS;
 					}
 	
+					@Override
 					public IStatus undo(IProgressMonitor monitor, IAdaptable info)
 						throws ExecutionException {
 						return Status.OK_STATUS;
@@ -266,6 +271,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		IUndoContext resCtx = new ResourceUndoContext(domain, r);
         
 		AbstractEMFOperation op = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
+			@Override
 			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
 				throws ExecutionException {
 				
@@ -286,7 +292,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		}
 		
 		assertNotNull(op.getContexts());
-        List opContexts = Arrays.asList(op.getContexts());
+        List<IUndoContext> opContexts = Arrays.asList(op.getContexts());
 		assertTrue(opContexts.contains(resCtx));
         assertTrue(opContexts.contains(undoContext));
 		
@@ -315,6 +321,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		
 		Command op = new RecordingCommand(domain) {
 
+			@Override
 			protected void doExecute() {
 				r.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 				
@@ -362,9 +369,11 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         final RuntimeException error = new RuntimeException();
         
         ResourceSetListener testListener = new TriggerListener() {
-        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        	@Override
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
         		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
-        			protected void doExecute() {
+        			@Override
+					protected void doExecute() {
         				throw error;
         			}};
         	}};
@@ -376,7 +385,8 @@ public class WorkbenchCommandStackTest extends AbstractTest {
             domain.addResourceSetListener(testListener);
             
             domain.getCommandStack().execute(new RecordingCommand(domain) {
-                protected void doExecute() {
+                @Override
+				protected void doExecute() {
                     root.getWriters().clear();
                     root.getStock().clear();
                     root.getBranches().clear();
@@ -404,9 +414,11 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         final RuntimeException error = new OperationCanceledException();
         
         ResourceSetListener testListener = new TriggerListener() {
-        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        	@Override
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
         		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
-        			protected void doExecute() {
+        			@Override
+					protected void doExecute() {
         				throw error;
         			}};
         	}};
@@ -418,7 +430,8 @@ public class WorkbenchCommandStackTest extends AbstractTest {
             domain.addResourceSetListener(testListener);
             
             domain.getCommandStack().execute(new RecordingCommand(domain) {
-                protected void doExecute() {
+                @Override
+				protected void doExecute() {
                     root.getWriters().clear();
                     root.getStock().clear();
                     root.getBranches().clear();
@@ -446,9 +459,11 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         final RuntimeException error = new RuntimeException();
         
         ResourceSetListener testListener = new TriggerListener() {
-        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        	@Override
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
         		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
-        			protected void doExecute() {
+        			@Override
+					protected void doExecute() {
         				throw error;
         			}};
         	}};
@@ -458,7 +473,8 @@ public class WorkbenchCommandStackTest extends AbstractTest {
             
             try {
 	            IStatus status = new AbstractEMFOperation(domain, "test") { //$NON-NLS-1$
-	                protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
+	                @Override
+					protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
 	                    root.getWriters().clear();
 	                    root.getStock().clear();
 	                    root.getBranches().clear();
@@ -489,9 +505,11 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         final RuntimeException error = new OperationCanceledException();
         
         ResourceSetListener testListener = new TriggerListener() {
-        	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+        	@Override
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
         		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
-        			protected void doExecute() {
+        			@Override
+					protected void doExecute() {
         				throw error;
         			}};
         	}};
@@ -501,7 +519,8 @@ public class WorkbenchCommandStackTest extends AbstractTest {
             
             try {
 	            IStatus status = new AbstractEMFOperation(domain, "test") { //$NON-NLS-1$
-	                protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
+	                @Override
+					protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
 	                    root.getWriters().clear();
 	                    root.getStock().clear();
 	                    root.getBranches().clear();
@@ -531,13 +550,15 @@ public class WorkbenchCommandStackTest extends AbstractTest {
     public void test_recordingCommandsAsTriggers_bug157103() {
         // one trigger sets default library names
         domain.addResourceSetListener(new LibraryDefaultNameTrigger() {
-            protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
+            @Override
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
                 Command result = null;
                 
                 final Library newLibrary = (Library) notification.getNewValue();
                 if ((newLibrary.getName() == null) || (newLibrary.getName().length() == 0)) {
                     result = new RecordingCommand(domain) {
-                        protected void doExecute() {
+                        @Override
+						protected void doExecute() {
                             newLibrary.setName("New Library"); //$NON-NLS-1$
                         }};
                 }
@@ -549,7 +570,8 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         
         IUndoContext ctx = new UndoContext();
         IUndoableOperation operation = new AbstractEMFOperation(domain, "Test") { //$NON-NLS-1$
-            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
+            @Override
+			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
                 newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
                 root.getBranches().add(newLibrary[0]);
                 
@@ -679,14 +701,16 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         SelfOpeningEMFCompositeOperation operation = new SelfOpeningEMFCompositeOperation(
             domain) {
 
-            protected IStatus doExecute(IOperationHistory history,
+            @Override
+			protected IStatus doExecute(IOperationHistory history,
                     IProgressMonitor monitor, IAdaptable info)
                 throws ExecutionException {
 
                 return history.execute(
                     new AbstractEMFOperation(domain, "Test") { //$NON-NLS-1$
 
-                        protected IStatus doExecute(IProgressMonitor monitor,
+                        @Override
+						protected IStatus doExecute(IProgressMonitor monitor,
                                 IAdaptable info) {
                             root.getBranches().add(
                                 EXTLibraryFactory.eINSTANCE.createLibrary());
@@ -711,12 +735,14 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void doSetUp() throws Exception {
 		super.doSetUp();
 		
 		defaultContext = ((IWorkspaceCommandStack) getCommandStack()).getDefaultUndoContext();
 	}
 	
+	@Override
 	protected void doTearDown() throws Exception {
 		defaultContext = null;
 		

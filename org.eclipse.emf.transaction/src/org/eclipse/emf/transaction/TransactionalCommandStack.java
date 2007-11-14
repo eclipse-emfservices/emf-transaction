@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalCommandStack.java,v 1.2 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: TransactionalCommandStack.java,v 1.3 2007/11/14 18:14:01 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -51,7 +51,7 @@ public interface TransactionalCommandStack
 	 * @throws RollbackException if the changes performed by the command are
 	 *    rolled back by validation of the transaction
 	 */
-	void execute(Command command, Map options) throws InterruptedException, RollbackException;
+	void execute(Command command, Map<?, ?> options) throws InterruptedException, RollbackException;
 
 	/**
 	 * Sets an exception handler.  This object will be notified when exceptions

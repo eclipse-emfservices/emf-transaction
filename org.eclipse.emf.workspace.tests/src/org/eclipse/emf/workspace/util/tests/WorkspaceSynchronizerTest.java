@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizerTest.java,v 1.7 2007/10/25 04:00:13 cdamus Exp $
+ * $Id: WorkspaceSynchronizerTest.java,v 1.8 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -188,6 +188,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 				"moveDestination.extlibrary"); //$NON-NLS-1$
 		
 		Job job = new WorkspaceJob("Modify Workspace") { //$NON-NLS-1$
+			@Override
 			public IStatus runInWorkspace(IProgressMonitor monitor)
 					throws CoreException {
 				// make two copies
@@ -223,6 +224,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 			// make the workspace changes in a single job so that all deltas
 			//    are fired in one batch
 			job = new WorkspaceJob("Modify Workspace") { //$NON-NLS-1$
+				@Override
 				public IStatus runInWorkspace(IProgressMonitor monitor)
 						throws CoreException {
 					// delete one file
@@ -531,6 +533,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void doSetUp()
 		throws Exception {
 		
@@ -540,6 +543,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		synch = new WorkspaceSynchronizer(domain, delegate);
 	}
 	
+	@Override
 	protected void doTearDown()
 		throws Exception {
 		
@@ -563,6 +567,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 				setSystem(true);
 			}
 			
+			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				synchronized (lock) {
 					lock.notify();
@@ -589,9 +594,9 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	 * @author Christian W. Damus (cdamus)
 	 */
 	static class TestDelegate implements WorkspaceSynchronizer.Delegate {
-		final List deletedResources = new java.util.ArrayList();
-		final Map movedResources = new java.util.LinkedHashMap();
-		final List changedResources = new java.util.ArrayList();
+		final List<Resource> deletedResources = new java.util.ArrayList<Resource>();
+		final Map<Resource, URI> movedResources = new java.util.LinkedHashMap<Resource, URI>();
+		final List<Resource> changedResources = new java.util.ArrayList<Resource>();
 		
 		boolean defaultBehaviour = false;
 		

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $$Id: ConsoleUtil.java,v 1.2 2007/06/07 14:25:36 cdamus Exp $$
+ * $$Id: ConsoleUtil.java,v 1.3 2007/11/14 18:13:57 cdamus Exp $$
  */
 package org.eclipse.emf.workspace.examples.extlibrary.console;
 
@@ -42,10 +42,12 @@ import org.eclipse.ui.console.MessageConsoleStream;
 public class ConsoleUtil {
 	
 	/** cache for console name to actual console object mapping*/
-	private static Map nameToConsole = new HashMap();
+	private static Map<String, MessageConsole> nameToConsole =
+		new HashMap<String, MessageConsole>();
 	
 	/** cache for 'console name' to 'stream for that console' mapping */
-	private static Map nameToStream = new HashMap();
+	private static Map<String, MessageConsoleStream> nameToStream =
+		new HashMap<String, MessageConsoleStream>();
 
 	/**
 	 * Registers the console with the Eclipse Console Manager.
@@ -64,7 +66,7 @@ public class ConsoleUtil {
 			nameToConsole.put(name, console );
 		}
 		
-		return (MessageConsole) nameToConsole.get( name);
+		return nameToConsole.get( name);
 	}
 	
 	
@@ -75,7 +77,8 @@ public class ConsoleUtil {
 	 */
 	public synchronized static void unregisterConsole(String name){		
 		if(nameToConsole.containsKey( name)){		
-			ConsolePlugin.getDefault().getConsoleManager().removeConsoles( new IConsole[]{(IConsole)nameToConsole.get(name)});
+			ConsolePlugin.getDefault().getConsoleManager().removeConsoles(
+				new IConsole[]{nameToConsole.get(name)});
 			nameToConsole.remove( name);
 		}		
 	}
@@ -97,7 +100,7 @@ public class ConsoleUtil {
 			
 		}
 		
-		return (MessageConsoleStream) nameToStream.get(name);
+		return nameToStream.get(name);
 		
 	}
 

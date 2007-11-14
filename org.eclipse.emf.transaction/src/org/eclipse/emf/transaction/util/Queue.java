@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Queue.java,v 1.2 2006/01/13 21:50:43 cdamus Exp $
+ * $Id: Queue.java,v 1.3 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -196,6 +196,7 @@ final class Queue {
 		return result;
 	}
 	
+	@Override
 	public String toString() {
 		StringBuffer result = new StringBuffer();
 		boolean first = true;
@@ -353,6 +354,7 @@ final class Queue {
 			}
 		}
 		
+		@Override
 		public String toString() {
 			return thread.getName() + "[" + notified + ", " + timedOut + ']'; //$NON-NLS-1$ //$NON-NLS-2$
 		}

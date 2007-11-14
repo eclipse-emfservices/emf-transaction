@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.7 2007/03/22 17:27:08 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.8 2007/11/14 18:13:53 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -90,6 +90,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		IUndoContext ctx = new TestUndoContext();
 		
 		IUndoableOperation oper = new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 				newAuthor.getBooks().add(book);
@@ -155,6 +156,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		// one trigger sets the external data
 		domain.addResourceSetListener(new TriggerListener() {
 		
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain,
 					Notification notification) {
 				if (notification.getFeature() == EXTLibraryPackage.Literals.LIBRARY__NAME) {
@@ -169,6 +171,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		IUndoContext ctx = new TestUndoContext();
 		
 		IUndoableOperation oper = new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library.  Our triggers will set a default name and book
 				newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
@@ -242,6 +245,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		IUndoContext ctx = new TestUndoContext();
 		
 		IUndoableOperation oper = new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library.  Our triggers will set a default name and book
 				newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
@@ -262,7 +266,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		
 		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
 		assertEquals(1, newLibrary[0].getBooks().size());
-		assertEquals("New Book", ((Book) newLibrary[0].getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary[0].getBooks().get(0).getTitle()); //$NON-NLS-1$
 		
 		commit();
 
@@ -293,7 +297,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		assertTrue(root.getBranches().contains(newLibrary[0]));
 		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
 		assertEquals(1, newLibrary[0].getBooks().size());
-		assertEquals("New Book", ((Book) newLibrary[0].getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary[0].getBooks().get(0).getTitle()); //$NON-NLS-1$
 		
 		commit();
 	}
@@ -314,6 +318,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		IUndoContext ctx = new TestUndoContext();
 		
 		IUndoableOperation oper = new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library.  Our triggers will set a default name and book
 				newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
@@ -334,7 +339,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		
 		// the book is created by the first trigger
 		assertEquals(1, newLibrary[0].getBooks().size());
-		Book book = (Book) newLibrary[0].getBooks().get(0);
+		Book book = newLibrary[0].getBooks().get(0);
 		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
 		
 		// the publication date is created by the cascaded trigger
@@ -368,7 +373,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		// verify that the changes were redone
 		assertTrue(root.getBranches().contains(newLibrary[0]));
 		assertEquals(1, newLibrary[0].getBooks().size());
-		book = (Book) newLibrary[0].getBooks().get(0);
+		book = newLibrary[0].getBooks().get(0);
 		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
 		assertNotNull(book.getPublicationDate());
 		
@@ -395,6 +400,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		IUndoContext ctx = new TestUndoContext();
 		
 		IUndoableOperation oper = new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 				newAuthor.getBooks().add(book);
@@ -449,11 +455,12 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		
 		IUndoableOperation oper = new TestOperation(
 				domain,
-				makeOptions(new Object[] {
-					Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE,
-					Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE,
-					Transaction.OPTION_NO_VALIDATION, Boolean.TRUE,
-				})) {
+				makeOptions(
+					Transaction.OPTION_NO_NOTIFICATIONS, true,
+					Transaction.OPTION_NO_TRIGGERS, true,
+					Transaction.OPTION_NO_VALIDATION, true)) {
+			
+			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 				newAuthor.getBooks().add(book);
@@ -498,9 +505,11 @@ public class AbstractEMFOperationTest extends AbstractTest {
 	public void test_rollbackNestingTransactionOnException_135673() {
 		CompositeEMFOperation outer = new CompositeEMFOperation(domain, ""); //$NON-NLS-1$
 		AbstractEMFOperation inner = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
+			@Override
 			public boolean canExecute() {
 				return true;
 			}
+			@Override
 			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
 					throws ExecutionException {
 				// start some nested transactions
@@ -533,10 +542,12 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		assertNotNull(book);
 		
 		final AbstractEMFOperation emfOperation = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
+			@Override
 			public boolean canExecute() {
 				return true;
 			}
 			
+			@Override
 			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
 				throws ExecutionException {
 				
@@ -602,10 +613,12 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		};
 		
 		AbstractEMFOperation root = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
+			@Override
 			public boolean canExecute() {
 				return true;
 			}
 			
+			@Override
 			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
 				throws ExecutionException {
 				
@@ -661,7 +674,8 @@ public class AbstractEMFOperationTest extends AbstractTest {
     public void test_nullProgressMonitors_bug150033() {
         IUndoableOperation operation = new AbstractEMFOperation(domain, "Test") { //$NON-NLS-1$
         
-            protected IStatus doUndo(IProgressMonitor monitor, IAdaptable info)
+            @Override
+			protected IStatus doUndo(IProgressMonitor monitor, IAdaptable info)
                 throws ExecutionException {
                 
                 monitor.isCanceled();
@@ -669,7 +683,8 @@ public class AbstractEMFOperationTest extends AbstractTest {
                 return super.doUndo(monitor, info);
             }
         
-            protected IStatus doRedo(IProgressMonitor monitor, IAdaptable info)
+            @Override
+			protected IStatus doRedo(IProgressMonitor monitor, IAdaptable info)
                 throws ExecutionException {
                 
                 monitor.isCanceled();
@@ -677,7 +692,8 @@ public class AbstractEMFOperationTest extends AbstractTest {
                 return super.doRedo(monitor, info);
             }
         
-            protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
+            @Override
+			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
                 throws ExecutionException {
                 
                 monitor.isCanceled();

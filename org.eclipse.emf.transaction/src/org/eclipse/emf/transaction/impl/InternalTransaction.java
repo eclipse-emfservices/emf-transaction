@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: InternalTransaction.java,v 1.5 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: InternalTransaction.java,v 1.6 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -99,7 +99,7 @@ public interface InternalTransaction
 	 * 
 	 * @see #add(Notification)
 	 */
-	List getNotifications();
+	List<Notification> getNotifications();
 	
 	/**
 	 * Pauses me while a child transaction is active, so that I do not collect
@@ -157,7 +157,7 @@ public interface InternalTransaction
 	 *  
 	 * @param runnable the runnable whose thread is to borrow me
 	 */
-	void startPrivileged(PrivilegedRunnable runnable);
+	void startPrivileged(PrivilegedRunnable<?> runnable);
 	
 	/**
 	 * Returns me to my previous owner, upon completion of the specified
@@ -165,5 +165,5 @@ public interface InternalTransaction
 	 * 
 	 * @param runnable the runnable whose thread had borrowed me
 	 */
-	void endPrivileged(PrivilegedRunnable runnable);
+	void endPrivileged(PrivilegedRunnable<?> runnable);
 }

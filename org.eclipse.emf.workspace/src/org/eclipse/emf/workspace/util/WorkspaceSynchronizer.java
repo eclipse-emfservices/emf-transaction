@@ -13,13 +13,12 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.7 2007/10/25 04:00:13 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.8 2007/11/14 18:14:08 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
@@ -78,7 +77,8 @@ public final class WorkspaceSynchronizer {
 	private Delegate delegate;
 	
 	// we employ a copy-on-write strategy on this collection for thread safety
-	private static Collection synchronizers = new java.util.ArrayList();
+	private static Collection<WorkspaceSynchronizer> synchronizers =
+		new java.util.ArrayList<WorkspaceSynchronizer>();
 	
 	// we use a single listener to serve all synchronizers.
 	private static IResourceChangeListener workspaceListener =
@@ -163,7 +163,7 @@ public final class WorkspaceSynchronizer {
 	 * @param delta the resource change
 	 * @param synchRequests accumulates synch requests for the deltas
 	 */
-	void processDelta(IResourceDelta delta, List synchRequests) {
+	void processDelta(IResourceDelta delta, List<SynchRequest> synchRequests) {
 	    String fullPath = delta.getFullPath().toString();
 	    URI uri = URI.createPlatformResourceURI(fullPath, false);
 	    ResourceSet rset = getEditingDomain().getResourceSet();
@@ -274,7 +274,8 @@ public final class WorkspaceSynchronizer {
 	static void startListening(WorkspaceSynchronizer synchronizer) {
 		// copy-on-write for thread safety
 		synchronized (synchronizers) {
-			Collection newList = new java.util.ArrayList(synchronizers.size() + 1);
+			Collection<WorkspaceSynchronizer> newList =
+				new java.util.ArrayList<WorkspaceSynchronizer>(synchronizers.size() + 1);
 			newList.addAll(synchronizers);
 			newList.add(synchronizer);
 			synchronizers = newList;
@@ -294,7 +295,8 @@ public final class WorkspaceSynchronizer {
 	static void stopListening(WorkspaceSynchronizer synchronizer) {
 		// copy-on-write for thread safety
 		synchronized (synchronizers) {
-			Collection newList = new java.util.ArrayList(synchronizers);
+			Collection<WorkspaceSynchronizer> newList =
+				new java.util.ArrayList<WorkspaceSynchronizer>(synchronizers);
 			newList.remove(synchronizer);
 			synchronizers = newList;
 			
@@ -311,7 +313,7 @@ public final class WorkspaceSynchronizer {
 	 * 
 	 * @return the currently active synchronizers
 	 */
-	static Collection getSynchronizers() {
+	static Collection<WorkspaceSynchronizer> getSynchronizers() {
 		// does not need synchronization because we copy on write
 		return synchronizers;
 	}
@@ -388,7 +390,8 @@ public final class WorkspaceSynchronizer {
 			IResourceDelta delta = event.getDelta();
 			
 			try {
-				final List synchRequests = new java.util.ArrayList();
+				final List<SynchRequest> synchRequests =
+					new java.util.ArrayList<SynchRequest>();
 				
 				delta.accept(new IResourceDeltaVisitor() {
 					public boolean visit(IResourceDelta delta) {
@@ -422,10 +425,9 @@ public final class WorkspaceSynchronizer {
 		 * @param delta the delta to process
 		 * @param synchRequests accumulates synch requests for the deltas
 		 */
-		private void processDelta(IResourceDelta delta, List synchRequests) {
-			for (Iterator iter = getSynchronizers().iterator(); iter.hasNext();) {
-				((WorkspaceSynchronizer) iter.next()).processDelta(
-						delta, synchRequests);
+		private void processDelta(IResourceDelta delta, List<SynchRequest> synchRequests) {
+			for (WorkspaceSynchronizer next : getSynchronizers()) {
+				next.processDelta(delta, synchRequests);
 			}
 		}
 	}
@@ -472,7 +474,7 @@ public final class WorkspaceSynchronizer {
 	 * @author Christian W. Damus (cdamus)
 	 */
 	private static class ResourceSynchJob extends WorkspaceJob {
-		private final List synchRequests;
+		private final List<SynchRequest> synchRequests;
 		
 		/**
 		 * Initializes me with the list of resources changes that I am to
@@ -480,7 +482,7 @@ public final class WorkspaceSynchronizer {
 		 * 
 		 * @param synchRequests the resource synchronization requests
 		 */
-		ResourceSynchJob(List synchRequests) {
+		ResourceSynchJob(List<SynchRequest> synchRequests) {
 			super(Messages.synchJobName);
 			
 			this.synchRequests = synchRequests;
@@ -491,10 +493,11 @@ public final class WorkspaceSynchronizer {
 		/**
 		 * Processes my queued resource synchronization requests.
 		 */
+		@Override
 		public IStatus runInWorkspace(IProgressMonitor monitor) {
 			try {
-				for (Iterator iter = synchRequests.iterator(); iter.hasNext();) {
-					((SynchRequest) iter.next()).perform();
+				for (SynchRequest next : synchRequests) {
+					next.perform();
 				}
 			} catch (InterruptedException e) {
 				Tracing.catching(ResourceSynchJob.class, "run", e); //$NON-NLS-1$

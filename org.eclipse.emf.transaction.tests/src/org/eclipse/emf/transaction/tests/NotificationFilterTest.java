@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: NotificationFilterTest.java,v 1.3 2007/06/07 14:26:17 cdamus Exp $
+ * $Id: NotificationFilterTest.java,v 1.4 2007/11/14 18:14:12 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -74,7 +74,7 @@ public class NotificationFilterTest extends AbstractTest {
 			
 			assertNotNull(bookListener.postcommit);
 			assertEquals(1, bookListener.postcommitNotifications.size());
-			Notification notification = (Notification) bookListener.postcommitNotifications.get(0);
+			Notification notification = bookListener.postcommitNotifications.get(0);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Title(), notification.getFeature());
 			assertSame(oldTitle, notification.getOldValue());
@@ -82,7 +82,7 @@ public class NotificationFilterTest extends AbstractTest {
 			
 			assertNotNull(authorListener.postcommit);
 			assertEquals(1, authorListener.postcommitNotifications.size());
-			notification = (Notification) authorListener.postcommitNotifications.get(0);
+			notification = authorListener.postcommitNotifications.get(0);
 			assertSame(newAuthor, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getWriter_Books(), notification.getFeature());
 			assertSame(book, notification.getNewValue());

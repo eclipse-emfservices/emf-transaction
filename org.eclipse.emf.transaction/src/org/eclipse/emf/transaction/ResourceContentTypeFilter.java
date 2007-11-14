@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceContentTypeFilter.java,v 1.2 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: ResourceContentTypeFilter.java,v 1.3 2007/11/14 18:14:01 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -61,6 +61,7 @@ class ResourceContentTypeFilter extends NotificationFilter {
 	}
 	
 	// Documentation inherited from the method specification
+	@Override
 	public boolean matches(Notification notification) {
 		boolean result = false;
 		IContentType[] actualTypes = getContentTypes(notification);
@@ -122,10 +123,12 @@ class ResourceContentTypeFilter extends NotificationFilter {
 				return contentTypes;
 			}
 			
+			@Override
 			public boolean isAdapterForType(Object type) {
 				return type == Cache.class;
 			}
 			
+			@Override
 			public void notifyChanged(Notification msg) {
 				if (!msg.isTouch()) {
 					// clear the cache

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ExternalDataOperation.java,v 1.2 2007/06/07 14:26:02 cdamus Exp $
+ * $Id: ExternalDataOperation.java,v 1.3 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
@@ -40,6 +40,7 @@ public class ExternalDataOperation extends AbstractOperation {
 		this.newValue = newValue;
 	}
 	
+	@Override
 	public IStatus execute(IProgressMonitor monitor, IAdaptable info) {
 		// change the external (non-EMF) data
 		oldValue = externalData[0];
@@ -48,12 +49,14 @@ public class ExternalDataOperation extends AbstractOperation {
 		return Status.OK_STATUS;
 	}
 	
+	@Override
 	public IStatus undo(IProgressMonitor monitor, IAdaptable info) {
 		externalData[0] = oldValue;
 		
 		return Status.OK_STATUS;
 	}
 	
+	@Override
 	public IStatus redo(IProgressMonitor monitor, IAdaptable info) {
 		externalData[0] = newValue;
 		

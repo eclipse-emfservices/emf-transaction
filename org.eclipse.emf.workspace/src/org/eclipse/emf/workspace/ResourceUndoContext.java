@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,13 +12,12 @@
  *
  * </copyright>
  *
- * $Id: ResourceUndoContext.java,v 1.4 2006/02/02 16:24:23 cdamus Exp $
+ * $Id: ResourceUndoContext.java,v 1.5 2007/11/14 18:14:08 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -82,6 +81,7 @@ public final class ResourceUndoContext
 	 * I am equal to other <code>ResourceUndoContexts</code> on the same
 	 * resource as mine.
 	 */
+	@Override
 	public boolean equals(Object o) {
 		boolean result = false;
 		
@@ -93,6 +93,7 @@ public final class ResourceUndoContext
 	}
 
 	// Redefines the inherited method
+	@Override
 	public int hashCode() {
 		return resource == null ? 0 : resource.hashCode();
 	}
@@ -125,20 +126,21 @@ public final class ResourceUndoContext
 	 * @return the resources affected by the specified notifications.
 	 *     The resulting set should be treated as unmodifiable
 	 */
-	public static Set getAffectedResources(List notifications) {
-		Set result;
+	public static Set<Resource> getAffectedResources(
+			List<? extends Notification> notifications) {
+		
+		Set<Resource> result;
 		
 		if (notifications.isEmpty()) {
-			result = Collections.EMPTY_SET;
+			result = Collections.emptySet();
 		} else {
-			result = new java.util.HashSet();
+			result = new java.util.HashSet<Resource>();
 			
-			for (Iterator iter = notifications.iterator(); iter.hasNext();) {
-				Notification next = (Notification) iter.next();
+			for (Notification next : notifications) {
 				Object notifier = next.getNotifier();
 				
 				if (notifier instanceof Resource) {
-					result.add(notifier);
+					result.add((Resource) notifier);
 				} else if (notifier instanceof EObject) {
 					EObject eobj = (EObject) notifier;
                     Resource resource = eobj.eResource();
@@ -170,14 +172,14 @@ public final class ResourceUndoContext
 	 * @return the {@link Resource}s that it affects, or an empty set if none.
 	 *     The resulting set should be treated as unmodifiable
 	 */
-	public static Set getAffectedResources(IUndoableOperation operation) {
-		Set result;
+	public static Set<Resource> getAffectedResources(IUndoableOperation operation) {
+		Set<Resource> result;
 		IUndoContext[] contexts = operation.getContexts();
 		
 		if (contexts.length == 0) {
-			result = Collections.EMPTY_SET;
+			result = Collections.emptySet();
 		} else {
-			result = new java.util.HashSet();
+			result = new java.util.HashSet<Resource>();
 			
 			for (int i = 0; i < contexts.length; i++) {
 				if (contexts[i] instanceof ResourceUndoContext) {
@@ -197,7 +199,7 @@ public final class ResourceUndoContext
 	 * @param notification a potential cross-resource reference change notification
 	 */
 	private static void handleCrossResourceReference(
-			Set resources,
+			Set<Resource> resources,
 			Notification notification) {
 		
 		Object oldValue = notification.getOldValue();
@@ -229,15 +231,17 @@ public final class ResourceUndoContext
                 resources.add(resource);
             }
 			break;
-		case Notification.ADD_MANY:
-			for (Iterator iter = ((Collection) newValue).iterator(); iter.hasNext();) {
-                resource = ((EObject) iter.next()).eResource();
+		case Notification.ADD_MANY: {
+		    @SuppressWarnings("unchecked")
+		    Collection<EObject> newReferences = (Collection<EObject>) newValue;
+			for (EObject next : newReferences) {
+                resource = next.eResource();
                 
                 if (resource != null) {
                     resources.add(resource);
                 }
 			}
-			break;
+			break;}
 		case Notification.REMOVE:
             resource = ((EObject) oldValue).eResource();
             
@@ -245,15 +249,17 @@ public final class ResourceUndoContext
                 resources.add(resource);
             }
 			break;
-		case Notification.REMOVE_MANY:
-			for (Iterator iter = ((Collection) oldValue).iterator(); iter.hasNext();) {
-                resource = ((EObject) iter.next()).eResource();
+		case Notification.REMOVE_MANY: {
+            @SuppressWarnings("unchecked")
+            Collection<EObject> oldReferences = (Collection<EObject>) oldValue;
+            for (EObject next : oldReferences) {
+                resource = next.eResource();
                 
                 if (resource != null) {
                     resources.add(resource);
                 }
 			}
-			break;
+			break;}
 		}
 	}
 }

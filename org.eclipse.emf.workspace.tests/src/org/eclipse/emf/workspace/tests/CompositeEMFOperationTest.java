@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: CompositeEMFOperationTest.java,v 1.4 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: CompositeEMFOperationTest.java,v 1.5 2007/11/14 18:13:53 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -36,6 +36,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.ecore.change.ChangeDescription;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.Library;
@@ -151,7 +152,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		child2.addContext(ctx1);
 		child3.addContext(ctx3);
 		
-		ListIterator iter = composite.listIterator();
+		ListIterator<IUndoableOperation> iter = composite.listIterator();
 		
 		// no contexts, yet
 		assertEquals(
@@ -310,6 +311,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
 		
 		composite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 			}});
@@ -317,6 +319,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		composite.add(new ChangeExternalData(externalData, book));
 		
 		composite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				newAuthor.getBooks().add(book);
 			}});
@@ -402,6 +405,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
 		
 		composite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 			}});
@@ -415,6 +419,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		
 		// EMF change in the nested non-transactional composite
 		composite2.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				newAuthor.getBooks().add(book);
 			}});
@@ -502,6 +507,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
 		
 		composite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				newAuthor.getBooks().add(book);
 			}});
@@ -515,6 +521,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		
 		// EMF change in the nested non-transactional composite
 		composite2.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				book.setTitle(null);  // will not pass validation
 			}});
@@ -568,6 +575,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
 		
 		composite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library.  Our triggers will set a default name and book
 				newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
@@ -592,7 +600,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		
 		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
 		assertEquals(1, newLibrary[0].getBooks().size());
-		assertEquals("New Book", ((Book) newLibrary[0].getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary[0].getBooks().get(0).getTitle()); //$NON-NLS-1$
 		assertEquals("New Book", externalData[0]); //$NON-NLS-1$
 		
 		commit();
@@ -627,7 +635,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		assertTrue(root.getBranches().contains(newLibrary[0]));
 		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
 		assertEquals(1, newLibrary[0].getBooks().size());
-		assertEquals("New Book", ((Book) newLibrary[0].getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary[0].getBooks().get(0).getTitle()); //$NON-NLS-1$
 		assertEquals("New Book", externalData[0]); //$NON-NLS-1$
 		
 		commit();
@@ -654,6 +662,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
 		
 		composite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library.  Our triggers will set a default name and book
 				newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
@@ -674,7 +683,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		
 		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
 		assertEquals(1, newLibrary[0].getBooks().size());
-		assertEquals("New Book", ((Book) newLibrary[0].getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary[0].getBooks().get(0).getTitle()); //$NON-NLS-1$
 		
 		commit();
 
@@ -707,7 +716,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		assertTrue(root.getBranches().contains(newLibrary[0]));
 		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
 		assertEquals(1, newLibrary[0].getBooks().size());
-		assertEquals("New Book", ((Book) newLibrary[0].getBooks().get(0)).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary[0].getBooks().get(0).getTitle()); //$NON-NLS-1$
 		
 		commit();
 	}
@@ -738,6 +747,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
 		
 		composite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 			}});
@@ -745,6 +755,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		composite.add(new ChangeExternalData(externalData, book));
 		
 		composite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				newAuthor.getBooks().add(book);
 			}});
@@ -1278,6 +1289,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		composite.setTransactionNestingEnabled(false);
 		
 		composite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library
 				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
@@ -1285,11 +1297,13 @@ public class CompositeEMFOperationTest extends AbstractTest {
 
 		CompositeEMFOperation nestedComposite = new CompositeEMFOperation(domain, "Nested"); //$NON-NLS-1$
 		nestedComposite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library
 				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 			}});
 		nestedComposite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library
 				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
@@ -1308,7 +1322,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		assertNotNull(transaction);
 		
 		// only one transaction (contributing one change description to the composite)
-		Collection changes = getChanges(transaction);
+		Collection<ChangeDescription> changes = getChanges(transaction);
 		assertEquals(1, changes.size());
 		
 		capture.clear();
@@ -1392,6 +1406,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		composite.setTransactionNestingEnabled(false);
 		
 		composite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library
 				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
@@ -1400,11 +1415,13 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		CompositeEMFOperation nestedComposite = new CompositeEMFOperation(domain, "Nested"); //$NON-NLS-1$
 		nestedComposite.add(new ChangeExternalData(externalData, book));  // non-EMF change
 		nestedComposite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library
 				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 			}});
 		nestedComposite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library
 				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
@@ -1427,7 +1444,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		//    before the non-EMF changes, one change for the non-EMF changes,
 		//    and one change for everything after.  We would have 4 changes
 		//    without the no-nesting hint
-		Collection changes = getChanges(transaction);
+		Collection<ChangeDescription> changes = getChanges(transaction);
 		assertEquals(3, changes.size());
 		
 		capture.clear();
@@ -1507,6 +1524,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		composite.setTransactionNestingEnabled(false);
 		
 		composite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library
 				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
@@ -1516,16 +1534,19 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		nestedComposite.add(new TestOperation(domain,
 				// this transaction has different options
 				Collections.singletonMap(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE)) {
+			@Override
 			protected void doExecute() {
 				// add a new library
 				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 			}});
 		nestedComposite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library
 				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 			}});
 		nestedComposite.add(new TestOperation(domain) {
+			@Override
 			protected void doExecute() {
 				// add a new library
 				root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
@@ -1548,7 +1569,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		//    before the different options, one change for the different options,
 		//    and one change for everything after.  We would have 4 changes
 		//    without the no-nesting hint
-		Collection changes = getChanges(transaction);
+		Collection<ChangeDescription> changes = getChanges(transaction);
 		assertEquals(3, changes.size());
 		
 		capture.clear();
@@ -1610,14 +1631,15 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	 * Does a reflective hack to get the private <tt>changes</tt> field of a
 	 * composite change description.
 	 */
-	private Collection getChanges(Transaction tx) {
-		Collection result = null;
+	@SuppressWarnings("unchecked")
+	private Collection<ChangeDescription> getChanges(Transaction tx) {
+		Collection<ChangeDescription> result = null;
 		CompositeChangeDescription composite = (CompositeChangeDescription) tx.getChangeDescription();
 		
 		try {
 			Field changes = composite.getClass().getDeclaredField("changes"); //$NON-NLS-1$
 			changes.setAccessible(true);
-			result = (Collection) changes.get(composite);
+			result = (Collection<ChangeDescription>) changes.get(composite);
 		} catch (Exception e) {
 			fail("Could not access private changes field of CompositeChangeDescription: " + e.getLocalizedMessage()); //$NON-NLS-1$
 		}
@@ -1644,13 +1666,14 @@ public class CompositeEMFOperationTest extends AbstractTest {
 			this.library = library;
 		}
 		
+		@Override
 		public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 			oldData = externalData[0];
 			
 			// can safely read in the enclosing composite's write transaction
 			if (book == null) {
 				// get the book from the new library, then
-				book = (Book) library[0].getBooks().get(0);
+				book = library[0].getBooks().get(0);
 			}
 			
 			externalData[0] = book.getTitle();
@@ -1658,11 +1681,13 @@ public class CompositeEMFOperationTest extends AbstractTest {
 			return Status.OK_STATUS;
 		}
 		
+		@Override
 		public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 			externalData[0] = oldData;
 			return Status.OK_STATUS;
 		}
 		
+		@Override
 		public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 			externalData[0] = book.getTitle();
 			return Status.OK_STATUS;
@@ -1670,10 +1695,10 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	}
 	
 	private static class FailCancelOperation extends AbstractOperation {
-		private IStatus executeStatus;
-		private IStatus undoStatus;
-		private IStatus redoStatus;
-		private boolean cancelMonitor;
+		private final IStatus executeStatus;
+		private final IStatus undoStatus;
+		private final IStatus redoStatus;
+		private final boolean cancelMonitor;
 		
 		FailCancelOperation(IStatus exec, IStatus undo, IStatus redo, boolean cancel) {
 			super("Fail/Cancel Operation"); //$NON-NLS-1$
@@ -1683,6 +1708,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 			this.cancelMonitor = cancel;
 		}
 		
+		@Override
 		public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 			if ((executeStatus.getSeverity() == IStatus.CANCEL) && cancelMonitor) {
 				monitor.setCanceled(true);
@@ -1692,6 +1718,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 			return executeStatus;
 		}
 		
+		@Override
 		public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 			if ((undoStatus.getSeverity() == IStatus.CANCEL) && cancelMonitor) {
 				monitor.setCanceled(true);
@@ -1701,6 +1728,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 			return undoStatus;
 		}
 		
+		@Override
 		public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 			if ((redoStatus.getSeverity() == IStatus.CANCEL) && cancelMonitor) {
 				monitor.setCanceled(true);
@@ -1726,18 +1754,21 @@ public class CompositeEMFOperationTest extends AbstractTest {
 			wasRedone = false;
 		}
 		
+		@Override
 		public IStatus execute(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 			wasExecuted = true;
 			return Status.OK_STATUS;
 		}
 		
+		@Override
 		public IStatus undo(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 			wasUndone = true;
 			return Status.OK_STATUS;
 		}
 		
+		@Override
 		public IStatus redo(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 			wasRedone = true;
@@ -1748,10 +1779,12 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	private static class TransactionCapture extends ResourceSetListenerImpl {
 		private Transaction transaction;
 		
+		@Override
 		public boolean isPostcommitOnly() {
 			return true;
 		}
 		
+		@Override
 		public void resourceSetChanged(ResourceSetChangeEvent event) {
 			if (transaction == null) {
 				transaction = event.getTransaction();

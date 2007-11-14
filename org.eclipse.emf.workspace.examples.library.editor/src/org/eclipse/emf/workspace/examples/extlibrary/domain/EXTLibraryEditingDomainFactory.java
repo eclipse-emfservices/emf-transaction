@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EXTLibraryEditingDomainFactory.java,v 1.4 2007/10/03 20:17:42 cdamus Exp $
+ * $Id: EXTLibraryEditingDomainFactory.java,v 1.5 2007/11/14 18:13:57 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.domain;
 
@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
@@ -50,15 +51,16 @@ public class EXTLibraryEditingDomainFactory implements TransactionalEditingDomai
 		((TransactionalCommandStack) result.getCommandStack()).setExceptionHandler(
 				new CommandStackExceptionHandler());
 		
-		DefaultOptions defaults = (DefaultOptions) TransactionUtil.getAdapter(
+		DefaultOptions defaults = TransactionUtil.getAdapter(
             result, DefaultOptions.class);
 		if (defaults != null) {
-            Map options = new java.util.HashMap();
+            Map<Object, Object> options = new java.util.HashMap<Object, Object>();
 
             options.put(Transaction.OPTION_VALIDATE_EDIT,
                 new WorkspaceValidateEditSupport() {
-                    protected IStatus doValidateEdit(Transaction transaction,
-                            Collection resources, Object context) {
+                    @Override
+					protected IStatus doValidateEdit(Transaction transaction,
+                            Collection<? extends Resource> resources, Object context) {
                         if ((context == null) && (Display.getCurrent() != null)) {
                             // get the active shell for the context
                             // when validating on the UI thread

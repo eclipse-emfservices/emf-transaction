@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: NullOperation.java,v 1.2 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: NullOperation.java,v 1.3 2007/11/14 18:13:54 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
@@ -53,31 +53,37 @@ public class NullOperation extends AbstractOperation {
 		this.isRedoable = isRedoable;
 	}
 	
+	@Override
 	public boolean canExecute() {
 		return isExecutable;
 	}
 	
+	@Override
 	public boolean canUndo() {
 		return isUndoable;
 	}
 	
+	@Override
 	public boolean canRedo() {
 		return isRedoable;
 	}
 	
 	// Documentation copied from the inherited specification
+	@Override
 	public IStatus execute(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 		return Status.OK_STATUS;
 	}
 
 	// Documentation copied from the inherited specification
+	@Override
 	public IStatus redo(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 		return Status.OK_STATUS;
 	}
 
 	// Documentation copied from the inherited specification
+	@Override
 	public IStatus undo(IProgressMonitor monitor, IAdaptable info)
 			throws ExecutionException {
 		return Status.OK_STATUS;

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionValidator.java,v 1.3 2007/03/22 19:11:49 cdamus Exp $
+ * $Id: TransactionValidator.java,v 1.4 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 
@@ -57,18 +58,18 @@ public interface TransactionValidator {
 		}
 
 		// Documentation copied from the inherited specification
-		public List getNotificationsForValidation(Transaction tx) {
-			return Collections.EMPTY_LIST;
+		public List<Notification> getNotificationsForValidation(Transaction tx) {
+			return Collections.emptyList();
 		}
 
 		// Documentation copied from the inherited specification
-		public List getNotificationsForPrecommit(Transaction tx) {
-			return Collections.EMPTY_LIST;
+		public List<Notification> getNotificationsForPrecommit(Transaction tx) {
+			return Collections.emptyList();
 		}
 
 		// Documentation copied from the inherited specification
-		public List getNotificationsForPostcommit(Transaction tx) {
-			return Collections.EMPTY_LIST;
+		public List<Notification> getNotificationsForPostcommit(Transaction tx) {
+			return Collections.emptyList();
 		}
 
 		// Documentation copied from the inherited specification
@@ -124,7 +125,7 @@ public interface TransactionValidator {
 	 * @return the transaction's notifications, or <code>null</code> if the
 	 *     transaction has not started yet
 	 */
-	List getNotificationsForValidation(Transaction tx);
+	List<Notification> getNotificationsForValidation(Transaction tx);
 	
 	/**
 	 * Obtains the notifications that I need to broadcast in a pre-commit
@@ -136,7 +137,7 @@ public interface TransactionValidator {
 	 * @return those of the transaction's notifications that are eligible to
 	 *     be broadcast, or <code>null</code> if the transaction has not started
 	 */
-	List getNotificationsForPrecommit(Transaction tx);
+	List<Notification> getNotificationsForPrecommit(Transaction tx);
 	
 	/**
 	 * Obtains the notifications that I need to broadcast in a post-commit
@@ -148,7 +149,7 @@ public interface TransactionValidator {
 	 * @return those of the transaction's notifications that are eligible to
 	 *     be broadcast, or <code>null</code> if the transaction has not started
 	 */
-	List getNotificationsForPostcommit(Transaction tx);
+	List<Notification> getNotificationsForPostcommit(Transaction tx);
 	
 	/**
 	 * Disposes me by clearing my state and cleaning up any resources that I

@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: PerformanceTest.java,v 1.4 2006/10/10 14:31:40 cdamus Exp $
+ * $Id: PerformanceTest.java,v 1.5 2007/11/14 18:14:12 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -22,6 +22,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import junit.framework.Test;
+import junit.framework.TestSuite;
 
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.command.CompoundCommand;
@@ -39,9 +42,6 @@ import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-
 
 /**
  * Regression tests for performance problems (time and memory).
@@ -52,10 +52,10 @@ public class PerformanceTest extends AbstractTest {
 	static final int RUNS = 10;
 	static final int OUTLIERS = 2;  // room for 1 high and 1 low outlier
 	
-	private List timings;
+	private List<Long> timings;
 	private long clock;
 	
-	private int count = RUNS + OUTLIERS;
+	private final int count = RUNS + OUTLIERS;
 	
 	public PerformanceTest(String name) {
 		super(name);
@@ -95,6 +95,7 @@ public class PerformanceTest extends AbstractTest {
 		
 		// add a listener to incur the cost of broadcasting pre- and post-commit
 		ResourceSetListener listener = new ResourceSetListenerImpl() {
+			@Override
 			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
 					throws RollbackException {
 				CompoundCommand result = null;
@@ -107,21 +108,22 @@ public class PerformanceTest extends AbstractTest {
 					// only create a command on the first transaction
 					result = new CompoundCommand();
 					
-					for (Iterator iter = event.getNotifications().iterator(); iter.hasNext();) {
+					for (Iterator<?> iter = event.getNotifications().iterator(); iter.hasNext();) {
 						iter.next();
 						
 						precommitEvents[0]++;
 						
 						result.append(new TestCommand() {
-							public void execute() {}});
+							public void execute() {/* nothing to do */}});
 					}
 				}
 				
 				return result;
 			}
 		
+			@Override
 			public void resourceSetChanged(ResourceSetChangeEvent event) {
-				for (Iterator iter = event.getNotifications().iterator(); iter.hasNext();) { 
+				for (Iterator<?> iter = event.getNotifications().iterator(); iter.hasNext();) { 
 					iter.next();
 					
 					// do a trivial amount of work
@@ -132,7 +134,7 @@ public class PerformanceTest extends AbstractTest {
 
 		domain.addResourceSetListener(listener);
 		
-		Map options = new java.util.HashMap();
+		Map<Object, Object> options = new java.util.HashMap<Object, Object>();
 //		options.put(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE);
 //		options.put(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
 //		options.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
@@ -190,31 +192,38 @@ public class PerformanceTest extends AbstractTest {
 		final int[] receivedValidationNotifications = new int[1];
 		
 		ResourceSetListener prePostCommitCollector = new ResourceSetListenerImpl() {
+			@Override
 			public NotificationFilter getFilter() {
 				return NotificationFilter.ANY;
 			}
 			
+			@Override
 			public Command transactionAboutToCommit(ResourceSetChangeEvent event) throws RollbackException {
 				receivedPrecommitNotifications[0] += event.getNotifications().size();
 				return null;
 			}
 			
+			@Override
 			public void resourceSetChanged(ResourceSetChangeEvent event) {
 				receivedPostcommitNotifications[0] = event.getNotifications().size();
 			}};
 		domain.addResourceSetListener(prePostCommitCollector);
 		ResourceSetListener validationCollector = new ResourceSetListenerImpl() {
+			@Override
 			public NotificationFilter getFilter() {
 				return NotificationFilter.ANY;
 			}
 			
+			@Override
 			public boolean isPrecommitOnly() {
 				return true;
 			}
+			@Override
 			public boolean isAggregatePrecommitListener() {
 				return true;
 			}
 			
+			@Override
 			public Command transactionAboutToCommit(ResourceSetChangeEvent event) throws RollbackException {
 				receivedValidationNotifications[0] =
 					((InternalTransactionalEditingDomain) domain).getValidator()
@@ -270,15 +279,17 @@ public class PerformanceTest extends AbstractTest {
 	// Fixture methods
 	//
 	
+	@Override
 	protected void doSetUp() throws Exception {
 		super.doSetUp();
 		
 		System.out.println("Performance test: " + getName()); //$NON-NLS-1$
 		System.out.println("==============================="); //$NON-NLS-1$
 		
-		timings = new java.util.ArrayList();
+		timings = new java.util.ArrayList<Long>();
 	}
 	
+	@Override
 	protected void doTearDown() throws Exception {
 		removeOutliers();
 		
@@ -343,11 +354,11 @@ public class PerformanceTest extends AbstractTest {
 	
 	protected void addLibraryWithBooks(Date today) {
 		Library lib = EXTLibraryFactory.eINSTANCE.createLibrary();
-		EList branches = lib.getBranches();
+		EList<Library> branches = lib.getBranches();
 		
 		for (int j = 0; j < 20; j++) {
 			Library branch = EXTLibraryFactory.eINSTANCE.createLibrary();
-			EList books = branch.getBooks();
+			EList<Book> books = branch.getBooks();
 			
 			for (int i = 0; i < 10; i++) {
 				Book book = EXTLibraryFactory.eINSTANCE.createBook();
@@ -452,19 +463,22 @@ public class PerformanceTest extends AbstractTest {
 		root.setName(Long.toString(System.currentTimeMillis() ^ root.getName().hashCode()));
 	}
 	
-	private static Map allNotifications;
-	private static Map noTriggers;
-	private static Map validationOnly;
-	private static Map noNotifications;
+	private static Map<Object, Object> allNotifications;
+	private static Map<Object, Object> noTriggers;
+	private static Map<Object, Object> validationOnly;
+	private static Map<Object, Object> noNotifications;
 	static {
-		allNotifications = Collections.EMPTY_MAP;
-		noTriggers = Collections.singletonMap(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
-		validationOnly = new java.util.HashMap(noTriggers);
+		allNotifications = Collections.emptyMap();
+		noTriggers = Collections.<Object, Object>singletonMap(
+			Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
+		validationOnly = new java.util.HashMap<Object, Object>(noTriggers);
 		validationOnly.put(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE);
-		noNotifications = new java.util.HashMap(validationOnly);
+		noNotifications = new java.util.HashMap<Object, Object>(validationOnly);
 		noNotifications.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
 	}
-	private Map getOptions(boolean trigger, boolean notify, boolean validate) {
+	private Map<Object, Object> getOptions(boolean trigger, boolean notify,
+			boolean validate) {
+		
 		if (!trigger) {
 			if (!notify) {
 				if (!validate) {
@@ -487,7 +501,7 @@ public class PerformanceTest extends AbstractTest {
 	final long stopClock() {
 		long result = System.currentTimeMillis() - clock;
 		
-		timings.add(new Long(result));
+		timings.add(result);
 		
 		return result;
 	}
@@ -506,10 +520,10 @@ public class PerformanceTest extends AbstractTest {
 		int count = timings.size();
 		
 		for (int i = 0; i < count; i++) {
-			result += ((Long) timings.get(i)).doubleValue();
+			result += timings.get(i).doubleValue();
 		}
 		
-		result /= (double) count;
+		result /= count;
 		
 		return result;
 	}
@@ -521,12 +535,12 @@ public class PerformanceTest extends AbstractTest {
 		int count = timings.size();
 		
 		for (int i = 0; i < count; i++) {
-			dev = ((Long) timings.get(i)).doubleValue() - mean;
+			dev = timings.get(i).doubleValue() - mean;
 			
 			result += dev * dev;
 		}
 		
-		result = Math.sqrt(result / (double) count);
+		result = Math.sqrt(result / count);
 		
 		return result;
 	}

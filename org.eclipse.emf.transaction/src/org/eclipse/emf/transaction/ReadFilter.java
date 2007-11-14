@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadFilter.java,v 1.5 2007/06/07 14:26:00 cdamus Exp $
+ * $Id: ReadFilter.java,v 1.6 2007/11/14 18:14:01 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -45,6 +45,7 @@ class ReadFilter extends NotificationFilter {
 	}
 	
 	// Documentation inherited from the method specification
+	@Override
 	public boolean matches(Notification notification) {
 		switch (notification.getEventType()) {
 		case Notification.RESOLVE:

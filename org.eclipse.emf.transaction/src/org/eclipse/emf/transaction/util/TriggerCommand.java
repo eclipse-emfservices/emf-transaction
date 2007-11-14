@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TriggerCommand.java,v 1.5 2007/06/13 12:27:32 cdamus Exp $
+ * $Id: TriggerCommand.java,v 1.6 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -36,7 +36,7 @@ import org.eclipse.emf.transaction.internal.Tracing;
  */
 public class TriggerCommand extends ConditionalRedoCommand.Compound {
 	private final Command triggeringCommand;
-	private final List triggers;
+	private final List<Command> triggers;
 	
 	/**
 	 * Initializes me with a list of commands triggered not by the execution of
@@ -47,11 +47,12 @@ public class TriggerCommand extends ConditionalRedoCommand.Compound {
 	 * 
 	 * @param triggers the trigger commands that I encapsulate
 	 */
-	public TriggerCommand(List triggers) {
-		super(0, "Triggers", "Triggered Changes", triggers); //$NON-NLS-1$ //$NON-NLS-2$
+	public TriggerCommand(List<? extends Command> triggers) {
+		super(0, "Triggers", "Triggered Changes", //$NON-NLS-1$ //$NON-NLS-2$
+		    new java.util.ArrayList<Command>(triggers));
 		
 		this.triggeringCommand = null;
-		this.triggers = triggers;
+		this.triggers = commandList;
 	}
 	
 	/**
@@ -62,11 +63,12 @@ public class TriggerCommand extends ConditionalRedoCommand.Compound {
 	 * @param triggeringCommand the command that triggered further commands
 	 * @param triggers the trigger commands that I encapsulate
 	 */
-	public TriggerCommand(Command triggeringCommand, List triggers) {
-		super(0, triggeringCommand.getLabel(), triggeringCommand.getDescription(), triggers);
+	public TriggerCommand(Command triggeringCommand, List<? extends Command> triggers) {
+		super(0, triggeringCommand.getLabel(), triggeringCommand.getDescription(),
+		    new java.util.ArrayList<Command>(triggers));
 		
 		this.triggeringCommand = triggeringCommand;
-		this.triggers = triggers;
+		this.triggers = commandList;
 	}
 	
 	/**
@@ -85,11 +87,12 @@ public class TriggerCommand extends ConditionalRedoCommand.Compound {
 	 * 
 	 * @return my triggers, as a list of {@link Command}s.  Will not be empty
 	 */
-	public final List getTriggers() {
+	public final List<Command> getTriggers() {
 		return triggers;
 	}
 	
 	// Documentation copied from the inherited specification
+	@Override
 	protected boolean prepare() {
 		// we will check canExecute() as we go
 		return !triggers.isEmpty();
@@ -99,11 +102,12 @@ public class TriggerCommand extends ConditionalRedoCommand.Compound {
 	 * Executes all of my trigger commands, then prepends the original triggering
 	 * command (if any) so that it will be undone/redone with the others.
 	 */
+	@Override
 	public void execute() {
 		// execute just the triggers
-	    for (ListIterator iter = commandList.listIterator(); iter.hasNext();) {
+	    for (ListIterator<Command> iter = commandList.listIterator(); iter.hasNext();) {
 			try {
-				Command command = (Command) iter.next();
+				Command command = iter.next();
 				
 				if (command.canExecute()) {
 					command.execute();
@@ -123,7 +127,7 @@ public class TriggerCommand extends ConditionalRedoCommand.Compound {
 					// Iterate back over the executed commands to undo them.
 					//
 					while (iter.hasPrevious()) {
-						Command command = (Command) iter.previous();
+						Command command = iter.previous();
 						if (command.canUndo()) {
 							command.undo();
 						} else {
@@ -147,7 +151,7 @@ public class TriggerCommand extends ConditionalRedoCommand.Compound {
 			// then replace the command-list with a new list that includes
 			// the
 			// originally executed command (for undo/redo)
-			commandList = new java.util.ArrayList(triggers.size() + 1);
+			commandList = new java.util.ArrayList<Command>(triggers.size() + 1);
 			commandList.add(triggeringCommand);
 			commandList.addAll(triggers);
 		}
@@ -157,7 +161,8 @@ public class TriggerCommand extends ConditionalRedoCommand.Compound {
      * Extends the inherited implementation by disposing my triggering command,
      * also (if any).
      */
-    public void dispose() {
+    @Override
+	public void dispose() {
         super.dispose();
         
         if (triggeringCommand != null) {
