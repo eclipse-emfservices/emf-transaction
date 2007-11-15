@@ -21,13 +21,13 @@ feature@org.eclipse.emf.workspace.examples=v200711141947,:pserver:anonymous@dev.
 
 plugin@org.eclipse.emf.transaction=v200711141947,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction
 plugin@org.eclipse.emf.transaction.ui=v200711141947,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction.ui
-plugin@org.eclipse.emf.transaction.doc=v200711141947,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.transaction.doc
+plugin@org.eclipse.emf.transaction.doc=v200711151515,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.transaction.doc
 plugin@org.eclipse.emf.transaction.examples=v200711141947,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.transaction.examples
 plugin@org.eclipse.emf.transaction.tests=v200711141947,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.transaction.tests
 
 plugin@org.eclipse.emf.workspace=v200711141947,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.workspace
 plugin@org.eclipse.emf.workspace.ui=v200711141947,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.workspace.ui
-plugin@org.eclipse.emf.workspace.doc=v200711141947,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.workspace.doc
+plugin@org.eclipse.emf.workspace.doc=v200711151515,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.workspace.doc
 plugin@org.eclipse.emf.workspace.examples.library.editor=v200711141947,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.workspace.examples.library.editor
 plugin@org.eclipse.emf.workspace.examples=v200711141947,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.workspace.examples
 plugin@org.eclipse.emf.workspace.tests=v200711141947,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.workspace.tests
