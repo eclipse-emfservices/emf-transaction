@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFOperationCommand.java,v 1.6 2007/06/13 12:27:26 cdamus Exp $
+ * $Id: EMFOperationCommand.java,v 1.6.2.1 2007/11/16 18:08:33 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -309,14 +309,16 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 	 * if any. 
 	 */
 	public void dispose() {
-        if (operation instanceof AbstractEMFOperation) {
-            // force disposal of its change, because we may be in a
-            //   CommandChangeDescription that is trying to dispose
-            ((AbstractEMFOperation) operation).disposeChange(true);
-        }
-        
-        operation.dispose();
-		operation = null;
+        if (operation != null) {
+	        if (operation instanceof AbstractEMFOperation) {
+	            // force disposal of its change, because we may be in a
+	            //   CommandChangeDescription that is trying to dispose
+	            ((AbstractEMFOperation) operation).disposeChange(true);
+	        }
+          
+	        operation.dispose();
+			operation = null;
+		}
 		
 		if (adaptable != null) {
 			adaptable.clear();

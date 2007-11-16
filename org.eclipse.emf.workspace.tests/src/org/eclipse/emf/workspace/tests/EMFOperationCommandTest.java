@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFOperationCommandTest.java,v 1.4 2007/06/07 14:26:03 cdamus Exp $
+ * $Id: EMFOperationCommandTest.java,v 1.4.2.1 2007/11/16 18:08:34 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -406,6 +406,48 @@ public class EMFOperationCommandTest extends AbstractTest {
 		getCommandStack().undo();
 		
 		assertFalse(getCommandStack().canRedo());
+	}
+
+	/**
+	 * Tests that the EMFOperationCommand tests its wrapped operation for
+	 * multiple disposability.
+	 */
+	public void test_multipleDisposableOperation_209491() {
+
+		IUndoableOperation operation = new TestOperation(domain) {
+			protected void doExecute() {
+				// nothing to do
+			}
+
+			public boolean canRedo() {
+				return false;
+			}};
+
+		EMFOperationCommand operationCommand = new EMFOperationCommand(domain, operation);
+		getCommandStack().execute(operationCommand);
+
+		operationCommand.dispose();
+
+		Exception exception;
+		try {
+			// Confirm that the operation has been nulled by testing that this throws a null pointer exception.
+			operationCommand.canExecute();
+			exception = null;
+		}
+		catch (NullPointerException nullPointerException) {
+			exception = nullPointerException;
+		}
+		assertNotNull(exception);
+
+		try {
+			// This should not throw a null pointer exception.
+			operationCommand.dispose();
+			exception = null;
+		}
+		catch (NullPointerException nullPointerException) {
+			exception = nullPointerException;
+		}
+		assertNull(exception);
 	}
 	
 	//
