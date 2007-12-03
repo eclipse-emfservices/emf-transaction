@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.8 2007/11/14 18:14:08 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.9 2007/12/03 19:05:07 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -27,6 +27,7 @@ import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
+import org.eclipse.core.resources.IResourceRuleFactory;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
@@ -35,6 +36,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.jobs.MultiRule;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -162,8 +165,10 @@ public final class WorkspaceSynchronizer {
 	 * 
 	 * @param delta the resource change
 	 * @param synchRequests accumulates synch requests for the deltas
+	 * @param affectedFiles accumulates the files affected by the deltas
 	 */
-	void processDelta(IResourceDelta delta, List<SynchRequest> synchRequests) {
+	void processDelta(IResourceDelta delta, List<SynchRequest> synchRequests,
+			List<IFile> affectedFiles) {
 	    String fullPath = delta.getFullPath().toString();
 	    URI uri = URI.createPlatformResourceURI(fullPath, false);
 	    ResourceSet rset = getEditingDomain().getResourceSet();
@@ -181,6 +186,11 @@ public final class WorkspaceSynchronizer {
 		
 		if ((resource != null) && resource.isLoaded()) {
 			switch (delta.getKind()) {
+			case IResourceDelta.ADDED:
+				if ((delta.getFlags() & IResourceDelta.MOVED_FROM) != 0) {
+					affectedFiles.add((IFile) delta.getResource());
+				}
+				break;
 			case IResourceDelta.REMOVED:
 				if ((delta.getFlags() & IResourceDelta.MOVED_TO) != 0) {
 				    // first, see whether a resource with the new URI already
@@ -206,6 +216,7 @@ public final class WorkspaceSynchronizer {
 				break;
 			case IResourceDelta.CHANGED:
 				synchRequests.add(new ChangedSynchRequest(this, resource));
+				affectedFiles.add((IFile) delta.getResource());
 				break;
 			}
 		}
@@ -393,6 +404,9 @@ public final class WorkspaceSynchronizer {
 				final List<SynchRequest> synchRequests =
 					new java.util.ArrayList<SynchRequest>();
 				
+				final List<IFile> affectedFiles =
+					new java.util.ArrayList<IFile>();
+				
 				delta.accept(new IResourceDeltaVisitor() {
 					public boolean visit(IResourceDelta delta) {
 						if (delta.getResource().getType() == IResource.FILE) {
@@ -402,7 +416,7 @@ public final class WorkspaceSynchronizer {
 							        break;
 							    }
 							case IResourceDelta.REMOVED:
-								processDelta(delta, synchRequests);
+								processDelta(delta, synchRequests, affectedFiles);
 								break;
 							}
 						}
@@ -411,7 +425,7 @@ public final class WorkspaceSynchronizer {
 					}});
 				
 				if (!synchRequests.isEmpty()) {
-					new ResourceSynchJob(synchRequests).schedule();
+					new ResourceSynchJob(synchRequests, affectedFiles).schedule();
 				}
 			} catch (CoreException e) {
 				Tracing.catching(WorkspaceListener.class, "resourceChanged", e); //$NON-NLS-1$
@@ -424,10 +438,12 @@ public final class WorkspaceSynchronizer {
 		 * 
 		 * @param delta the delta to process
 		 * @param synchRequests accumulates synch requests for the deltas
+		 * @param affectedFiles accumulates files affected by the deltas
 		 */
-		private void processDelta(IResourceDelta delta, List<SynchRequest> synchRequests) {
+		private void processDelta(IResourceDelta delta, List<SynchRequest> synchRequests,
+				List<IFile> affectedFiles) {
 			for (WorkspaceSynchronizer next : getSynchronizers()) {
-				next.processDelta(delta, synchRequests);
+				next.processDelta(delta, synchRequests, affectedFiles);
 			}
 		}
 	}
@@ -481,13 +497,15 @@ public final class WorkspaceSynchronizer {
 		 * process.
 		 * 
 		 * @param synchRequests the resource synchronization requests
+		 * @param affectedResources the resources affected by the workspace changes
 		 */
-		ResourceSynchJob(List<SynchRequest> synchRequests) {
+		ResourceSynchJob(List<SynchRequest> synchRequests,
+				List<? extends IResource> affectedResources) {
 			super(Messages.synchJobName);
 			
 			this.synchRequests = synchRequests;
 			
-			setRule(ResourcesPlugin.getWorkspace().getRoot());
+			setRule(getRule(affectedResources));
 		}
 		
 		/**
@@ -505,6 +523,28 @@ public final class WorkspaceSynchronizer {
 			}
 			
 			return Status.OK_STATUS;
+		}
+		
+		/**
+		 * Obtains a scheduling rule to schedule myself on to give my delegate
+		 * access to the specified affected resources.
+		 * 
+		 * @param affectedResources
+		 * @return the appropriate scheduling rule, or <code>null</code> if
+		 *     none is required
+		 */
+		private ISchedulingRule getRule(List<? extends IResource> affectedResources) {
+			ISchedulingRule result = null;
+			
+			if (!affectedResources.isEmpty()) {
+				IResourceRuleFactory factory = ResourcesPlugin.getWorkspace().getRuleFactory();
+				
+				for (IResource next : affectedResources) {
+					result = MultiRule.combine(result, factory.modifyRule(next));
+				}
+			}
+			
+			return result;
 		}
 	}
 }
