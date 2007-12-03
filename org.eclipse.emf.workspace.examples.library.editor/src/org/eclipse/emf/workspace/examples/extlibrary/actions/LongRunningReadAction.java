@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: LongRunningReadAction.java,v 1.4 2007/11/14 18:13:57 cdamus Exp $
+ * $Id: LongRunningReadAction.java,v 1.5 2007/12/03 15:58:51 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.actions;
 
@@ -118,26 +118,27 @@ public class LongRunningReadAction extends Action {
 		 */
 		private IStatus longRunningRead(IProgressMonitor monitor) {
 			for (int i = 0; i < 60; i++) {
-				// every half-second, check for cancellation and also
-				//    yield to other readers
-				try {
-					ConsoleUtil.println(
-							CONSOLE,
-							NLS.bind(
-									Messages.readJob_msg,
-									new Integer(id),
-									new Integer(i)));
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					// assume cancellation
-					return Status.CANCEL_STATUS;
+				// every half-second, check for cancellation.
+				// Yield to other readers five times in each interval
+				ConsoleUtil.println(
+						CONSOLE,
+						NLS.bind(
+								Messages.readJob_msg,
+								new Integer(id),
+								new Integer(i)));
+				for (int j = 0; j < 5; j++) {
+	                try {
+	                    Thread.sleep(100);
+	                } catch (InterruptedException e) {
+	                    // assume cancellation
+	                    return Status.CANCEL_STATUS;
+	                }
+				    domain.yield();
 				}
 				
 				if (monitor.isCanceled()) {
 					return Status.CANCEL_STATUS;
 				}
-				
-				domain.yield();
 			}
 			
 			return Status.OK_STATUS;

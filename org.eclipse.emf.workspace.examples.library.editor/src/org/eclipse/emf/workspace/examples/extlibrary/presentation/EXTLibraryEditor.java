@@ -12,17 +12,19 @@
  *
  * </copyright>
  *
- * $Id: EXTLibraryEditor.java,v 1.7 2007/11/14 18:13:57 cdamus Exp $
+ * $Id: EXTLibraryEditor.java,v 1.8 2007/12/03 15:58:51 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
 
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,11 +44,19 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.AdapterFactory;
+import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.common.ui.MarkerHelper;
+import org.eclipse.emf.common.ui.ViewerPane;
+import org.eclipse.emf.common.ui.editor.ProblemEditorPart;
 import org.eclipse.emf.common.ui.viewer.IViewerProvider;
+import org.eclipse.emf.common.util.BasicDiagnostic;
+import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EValidator;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.util.EContentAdapter;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.edit.domain.IEditingDomainProvider;
@@ -59,6 +69,9 @@ import org.eclipse.emf.edit.ui.celleditor.AdapterFactoryTreeEditor;
 import org.eclipse.emf.edit.ui.dnd.EditingDomainViewerDropAdapter;
 import org.eclipse.emf.edit.ui.dnd.LocalTransfer;
 import org.eclipse.emf.edit.ui.dnd.ViewerDragAdapter;
+import org.eclipse.emf.edit.ui.provider.UnwrappingSelectionProvider;
+import org.eclipse.emf.edit.ui.util.EditUIMarkerHelper;
+import org.eclipse.emf.edit.ui.util.EditUIUtil;
 import org.eclipse.emf.examples.extlibrary.provider.EXTLibraryItemProviderAdapterFactory;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
@@ -87,8 +100,12 @@ import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Tree;
@@ -96,14 +113,14 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IPartListener;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.actions.WorkspaceModifyOperation;
 import org.eclipse.ui.dialogs.SaveAsDialog;
 import org.eclipse.ui.ide.IGotoMarker;
-import org.eclipse.ui.part.EditorPart;
 import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.ui.part.MultiPageEditorPart;
 import org.eclipse.ui.views.contentoutline.ContentOutline;
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
@@ -124,7 +141,7 @@ import org.eclipse.ui.views.properties.PropertySheetPage;
  *   <li>a {@link ResourceSetListener} is statically registered on this editing
  *       domain that automatically creates editors for any resource loaded (e.g.,
  *       by proxy resolution)</li>
- *   <li>the editing domain delegates command-stack functionality to the worbench
+ *   <li>the editing domain delegates command-stack functionality to the workbench
  *       {@link IOperationHistory}.  It provides its {@link IUndoContext} to
  *       specialized implementations of the undo/redo actions that operate on the
  *       operation history.  Execution of commands is also delegated to the
@@ -132,15 +149,19 @@ import org.eclipse.ui.views.properties.PropertySheetPage;
  *   <li>refreshing of the tree content and property sheet is performed within
  *       read-only transactions on the editing domain, using the
  *       {@link TransactionalEditingDomain#runExclusive(Runnable)} API</li>
- *   <li>only the 'selection' tree view is provided (it is not a multi-page editor)</li>
+ *   <li>only the 'selection' tree view is provided, in addition to the problem
+ *       page if and when it is required</li>
  *   <li>synchronization of the workspace resource with the loaded EMF resource
- *       uses the {@link WorkspaceSynchronizer} utility API</li>
+ *       uses the {@link WorkspaceSynchronizer} utility API instead of a
+ *       resource-change listener</li>
  * </ul>
+ * In the code, customizations from the EMF-generated implementation are
+ * marked by <tt>//.CUSTOM:</tt> comments.
  * <!-- end-user-doc -->
  * @generated
  */
 public class EXTLibraryEditor
-	extends EditorPart
+	extends MultiPageEditorPart
 	implements IEditingDomainProvider, ISelectionProvider, IMenuListener, IViewerProvider, IGotoMarker {
 	/**
 	 * This keeps track of the editing domain that is used to track all changes to the model.
@@ -150,8 +171,12 @@ public class EXTLibraryEditor
 	 */
 	protected AdapterFactoryEditingDomain editingDomain;
 
+	//.CUSTOM: The undo context for this editor's Undo and Redo menus
 	protected IUndoContext undoContext;
-	protected Resource resource;  // the resource that we are editing
+	
+	//.CUSTOM: The (one and only) resource that we are editing.  The
+	//         EMF-generated editor edits any number of resources.
+	protected Resource resource;
 	
 	/**
 	 * This is the one adapter factory used for providing views of the model.
@@ -201,6 +226,19 @@ public class EXTLibraryEditor
 	 * @generated
 	 */
 	protected TreeViewer selectionViewer;
+	
+	//.CUSTOM: Tracking of the current viewer-pane and definition of additional
+	//         viewers is deleted by this single-page editor.  The following
+	//         fields generated by EMF are deleted:
+	//           parentViewer, treeViewer, listViewer, tableViewer, treeViewerWithColumns
+
+	/**
+	 * This keeps track of the active viewer pane, in the book.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	protected ViewerPane currentViewerPane;
 
 	/**
 	 * This keeps track of the active content viewer, which may be either one of the viewers in the pages or the content outline viewer.
@@ -224,8 +262,7 @@ public class EXTLibraryEditor
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	protected Collection<ISelectionChangedListener> selectionChangedListeners =
-		new ArrayList<ISelectionChangedListener>();
+	protected Collection<ISelectionChangedListener> selectionChangedListeners = new ArrayList<ISelectionChangedListener>();
 
 	/**
 	 * This keeps track of the selection of the editor as a whole.
@@ -234,6 +271,15 @@ public class EXTLibraryEditor
 	 * @generated
 	 */
 	protected ISelection editorSelection = StructuredSelection.EMPTY;
+
+	/**
+	 * The MarkerHelper is responsible for creating workspace resource markers presented
+	 * in Eclipse's Problems View.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	protected MarkerHelper markerHelper = new EditUIMarkerHelper();
 
 	/**
 	 * This listens for when the outline becomes active
@@ -262,48 +308,127 @@ public class EXTLibraryEditor
 				}
 			}
 			public void partBroughtToTop(IWorkbenchPart p) {
-				// nothing to do
+				// Ignore.
 			}
 			public void partClosed(IWorkbenchPart p) {
-				// nothing to do
+				// Ignore.
 			}
 			public void partDeactivated(IWorkbenchPart p) {
-				// nothing to do
+				// Ignore.
 			}
 			public void partOpened(IWorkbenchPart p) {
-				// nothing to do
+				// Ignore.
 			}
 		};
 
 	/**
 	 * Resources that have been removed since last activation.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	Collection<Resource> removedResources = new ArrayList<Resource>();
+	protected Collection<Resource> removedResources = new ArrayList<Resource>();
 
 	/**
 	 * Resources that have been changed since last activation.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	Collection<Resource> changedResources = new ArrayList<Resource>();
+	protected Collection<Resource> changedResources = new ArrayList<Resource>();
 
 	/**
 	 * Resources that have been moved since last activation.
-	 * Maps {@link Resource resource} to {@link URI new URI}
 	 */
-	Map<Resource, URI> movedResources = new HashMap<Resource, URI>();
+	//.CUSTOM: Demonstrates the WorkspaceSynchronizer's handling of moves
+	protected Map<Resource, URI> movedResources = new HashMap<Resource, URI>();
 
 	/**
 	 * Resources that have been saved.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	Collection<Resource> savedResources = new ArrayList<Resource>();
-	
-	private boolean dirty;
+	protected Collection<Resource> savedResources = new ArrayList<Resource>();
 
+	/**
+	 * Map to store the diagnostic associated with a resource.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	protected Map<Resource, Diagnostic> resourceToDiagnosticMap = new LinkedHashMap<Resource, Diagnostic>();
+
+	/**
+	 * Controls whether the problem indication should be updated.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	protected boolean updateProblemIndication = true;
+
+	/**
+	 * Adapter used to update the problem indication when resources are demanded loaded.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	protected EContentAdapter problemIndicationAdapter = 
+		new EContentAdapter() {
+			@Override
+			public void notifyChanged(Notification notification) {
+				if (notification.getNotifier() instanceof Resource) {
+					switch (notification.getFeatureID(Resource.class)) {
+						case Resource.RESOURCE__IS_LOADED:
+						case Resource.RESOURCE__ERRORS:
+						case Resource.RESOURCE__WARNINGS: {
+							Resource resource = (Resource)notification.getNotifier();
+							Diagnostic diagnostic = analyzeResourceProblems(resource, null);
+							if (diagnostic.getSeverity() != Diagnostic.OK) {
+								resourceToDiagnosticMap.put(resource, diagnostic);
+							}
+							else {
+								resourceToDiagnosticMap.remove(resource);
+							}
+
+							if (updateProblemIndication) {
+								getSite().getShell().getDisplay().asyncExec
+									(new Runnable() {
+										 public void run() {
+											 updateProblemIndication();
+										 }
+									 });
+							}
+							break;
+						}
+					}
+				}
+				else {
+					super.notifyChanged(notification);
+				}
+			}
+
+			@Override
+			protected void setTarget(Resource target) {
+				basicSetTarget(target);
+			}
+
+			@Override
+			protected void unsetTarget(Resource target) {
+				basicUnsetTarget(target);
+			}
+		};
+	
+	//.CUSTOM: We track dirty state by the last operation executed when saved
+	private IUndoableOperation savedOperation;
+		
+	//.CUSTOM: Applies this editor's undo context to operations that affect
+	//         its resource.  Also sets selection to viewer on execution of
+	//         operations that wrap EMF Commands.
 	private final IOperationHistoryListener historyListener = new IOperationHistoryListener() {
 		public void historyNotification(final OperationHistoryEvent event) {
-			if (event.getEventType() == OperationHistoryEvent.DONE) {
+			switch(event.getEventType()) {
+			case OperationHistoryEvent.DONE:
 				Set<Resource> affectedResources = ResourceUndoContext.getAffectedResources(
 						event.getOperation());
 				
@@ -320,7 +445,6 @@ public class EXTLibraryEditor
 					
 					getSite().getShell().getDisplay().asyncExec(new Runnable() {
 						public void run() {
-							dirty = true;
 							firePropertyChange(IEditorPart.PROP_DIRTY);
 
 							// Try to select the affected objects.
@@ -340,17 +464,31 @@ public class EXTLibraryEditor
 						}
 					});
 				}
+				break;
+			case OperationHistoryEvent.UNDONE:
+			case OperationHistoryEvent.REDONE:
+				getSite().getShell().getDisplay().asyncExec(new Runnable() {
+					public void run() {
+						firePropertyChange(IEditorPart.PROP_DIRTY);
+					}});
+				break;
 			}
 		}};
 	
 	/**
 	 * Synchronizes workspace changes with the editing domain.
 	 */
+	//.CUSTOM: Replaces the resourceChangeListener field generated by EMF
 	protected WorkspaceSynchronizer workspaceSynchronizer;
 	
 	/**
 	 * Handles activation of the editor or it's associated views.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
+	//.CUSTOM: This editor edits only a single resource and uses a
+	//         WorkspaceSynchronizer to detect external changes
 	protected void handleActivate() {
 		setCurrentViewer(selectionViewer);
 		
@@ -373,6 +511,7 @@ public class EXTLibraryEditor
 					EXTLibraryEditor.this.dispose();
 				}
 			} else if (movedResources.containsKey(res)) {
+				//.CUSTOM: Generated editor does not have move support
 				if (savedResources.contains(res)) {
 					getOperationHistory().dispose(undoContext, true, true, true);
 					
@@ -399,6 +538,7 @@ public class EXTLibraryEditor
 		}
 	}
 
+	//.CUSTOM: Replaces EMF-generated IResourceChangeListener implementation
 	private WorkspaceSynchronizer.Delegate createSynchronizationDelegate() {
 		return new WorkspaceSynchronizer.Delegate() {
 			public boolean handleResourceDeleted(Resource resource) {
@@ -446,6 +586,7 @@ public class EXTLibraryEditor
 	/**
 	 * Handles what to do with changed resource on activation.
 	 */
+	//.CUSTOM: Replaces EMF-generated handleChangedResources() method
 	protected void handleChangedResource() {
 		Resource res = getResource();
 		
@@ -453,7 +594,6 @@ public class EXTLibraryEditor
 			changedResources.remove(res);
 			
 			getOperationHistory().dispose(undoContext, true, true, true);
-			dirty = false;
 			firePropertyChange(IEditorPart.PROP_DIRTY);
 
 			ResourceLoadedListener listener = ResourceLoadedListener.getDefault();
@@ -473,12 +613,16 @@ public class EXTLibraryEditor
 			} finally {
 				listener.watch(res);
 			}
+				
+			updateProblemIndication = true;
+			updateProblemIndication();
 		}
 	}
 	
 	/**
 	 * Handles what to do with moved resource on activation.
 	 */
+	//.CUSTOM: EMF-generated editor does not handle moves
 	protected void handleMovedResource() {
 		if (!isDirty() || handleDirtyConflict()) {
 			Resource res = getResource();
@@ -493,12 +637,73 @@ public class EXTLibraryEditor
 				// load the new URI in another editor
 				res.getResourceSet().getResource(newURI, true);
 			}
+				
+			updateProblemIndication = true;
+			updateProblemIndication();
+		}
+	}
+  
+	/**
+	 * Updates the problems indication with the information described in the specified diagnostic.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	protected void updateProblemIndication() {
+		if (updateProblemIndication) {
+			BasicDiagnostic diagnostic =
+				new BasicDiagnostic
+					(Diagnostic.OK,
+					 "org.eclipse.emf.examples.library.editor", //$NON-NLS-1$
+					 0,
+					 null,
+					 new Object [] { editingDomain.getResourceSet() });
+			for (Diagnostic childDiagnostic : resourceToDiagnosticMap.values()) {
+				if (childDiagnostic.getSeverity() != Diagnostic.OK) {
+					diagnostic.add(childDiagnostic);
+				}
+			}
+
+			int lastEditorPage = getPageCount() - 1;
+			if (lastEditorPage >= 0 && getEditor(lastEditorPage) instanceof ProblemEditorPart) {
+				((ProblemEditorPart)getEditor(lastEditorPage)).setDiagnostic(diagnostic);
+				if (diagnostic.getSeverity() != Diagnostic.OK) {
+					setActivePage(lastEditorPage);
+				}
+			}
+			else if (diagnostic.getSeverity() != Diagnostic.OK) {
+				ProblemEditorPart problemEditorPart = new ProblemEditorPart();
+				problemEditorPart.setDiagnostic(diagnostic);
+				problemEditorPart.setMarkerHelper(markerHelper);
+				try {
+					addPage(++lastEditorPage, problemEditorPart, getEditorInput());
+					setPageText(lastEditorPage, problemEditorPart.getPartName());
+					setActivePage(lastEditorPage);
+					showTabs();
+				}
+				catch (PartInitException exception) {
+					EXTLibraryEditorPlugin.INSTANCE.log(exception);
+				}
+			}
+
+			if (markerHelper.hasMarkers(editingDomain.getResourceSet())) {
+				markerHelper.deleteMarkers(editingDomain.getResourceSet());
+				if (diagnostic.getSeverity() != Diagnostic.OK) {
+					try {
+						markerHelper.createMarkers(diagnostic);
+					}
+					catch (CoreException exception) {
+						EXTLibraryEditorPlugin.INSTANCE.log(exception);
+					}
+				}
+			}
 		}
 	}
 
 	/**
 	 * Shows a dialog that asks if conflicting changes should be discarded.
-	 * 
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
 	 * @generated
 	 */
 	protected boolean handleDirtyConflict() {
@@ -513,18 +718,29 @@ public class EXTLibraryEditor
 	 * This creates a model editor.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated
 	 */
 	public EXTLibraryEditor() {
 		super();
+		initializeEditingDomain();
+	}
 
+	/**
+	 * This sets up the editing domain for the model editor.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated NOT
+	 */
+	//.CUSTOM: Instead of the command-stack listener, we create an
+	//         operation-history listener.  We also create our undo context.
+	protected void initializeEditingDomain() {
 		// Create an adapter factory that yields item providers.
 		//
-		List<AdapterFactory> factories = new ArrayList<AdapterFactory>();
-		factories.add(new ResourceItemProviderAdapterFactory());
-		factories.add(new EXTLibraryItemProviderAdapterFactory());
-		factories.add(new ReflectiveItemProviderAdapterFactory());
+		adapterFactory = new ComposedAdapterFactory(ComposedAdapterFactory.Descriptor.Registry.INSTANCE);
 
-		adapterFactory = new ComposedAdapterFactory(factories);
+		adapterFactory.addAdapterFactory(new ResourceItemProviderAdapterFactory());
+		adapterFactory.addAdapterFactory(new EXTLibraryItemProviderAdapterFactory());
+		adapterFactory.addAdapterFactory(new ReflectiveItemProviderAdapterFactory());
 
 		// Get the registered workbench editing domain.
 		//
@@ -537,9 +753,9 @@ public class EXTLibraryEditor
 	}
 
 	/**
-	 * This is here for the listener to be able to call it. <!-- begin-user-doc
-	 * --> <!-- end-user-doc -->
-	 * 
+	 * This is here for the listener to be able to call it.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
 	 * @generated
 	 */
 	@Override
@@ -548,9 +764,9 @@ public class EXTLibraryEditor
 	}
 
 	/**
-	 * This sets the selection into whichever viewer is active. <!--
-	 * begin-user-doc --> <!-- end-user-doc -->
-	 * 
+	 * This sets the selection into whichever viewer is active.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
 	 * @generated
 	 */
 	public void setSelectionToViewer(Collection<?> collection) {
@@ -592,34 +808,77 @@ public class EXTLibraryEditor
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
+	//.CUSTOM: EMF-generated class extends AdapterFactoryContentProvider
 	public class ReverseAdapterFactoryContentProvider extends TransactionalAdapterFactoryContentProvider {
+		/**
+		 * <!-- begin-user-doc -->
+		 * <!-- end-user-doc -->
+		 * @generated NOT
+		 */
+		//.CUSTOM: Superclass constructor requires the transactional editing domain
 		public ReverseAdapterFactoryContentProvider(AdapterFactory adapterFactory) {
 			super((TransactionalEditingDomain) getEditingDomain(), adapterFactory);
 		}
 
+		/**
+		 * <!-- begin-user-doc -->
+		 * <!-- end-user-doc -->
+		 * @generated
+		 */
 		@Override
 		public Object [] getElements(Object object) {
 			Object parent = super.getParent(object);
 			return (parent == null ? Collections.EMPTY_SET : Collections.singleton(parent)).toArray();
 		}
 
+		/**
+		 * <!-- begin-user-doc -->
+		 * <!-- end-user-doc -->
+		 * @generated
+		 */
 		@Override
 		public Object [] getChildren(Object object) {
 			Object parent = super.getParent(object);
 			return (parent == null ? Collections.EMPTY_SET : Collections.singleton(parent)).toArray();
 		}
 
+		/**
+		 * <!-- begin-user-doc -->
+		 * <!-- end-user-doc -->
+		 * @generated
+		 */
 		@Override
 		public boolean hasChildren(Object object) {
 			Object parent = super.getParent(object);
 			return parent != null;
 		}
 
+		/**
+		 * <!-- begin-user-doc -->
+		 * <!-- end-user-doc -->
+		 * @generated
+		 */
 		@Override
 		public Object getParent(Object object) {
 			return null;
 		}
+	}
+
+	/**
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	public void setCurrentViewerPane(ViewerPane viewerPane) {
+		if (currentViewerPane != viewerPane) {
+			if (currentViewerPane != null) {
+				currentViewerPane.showFocus(false);
+			}
+			currentViewerPane = viewerPane;
+		}
+		setCurrentViewer(currentViewerPane.getViewer());
 	}
 
 	/**
@@ -691,7 +950,7 @@ public class EXTLibraryEditor
 		contextMenu.addMenuListener(this);
 		Menu menu= contextMenu.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
-		getSite().registerContextMenu(contextMenu, viewer);
+		getSite().registerContextMenu(contextMenu, new UnwrappingSelectionProvider(viewer));
 
 		int dndOperations = DND.DROP_COPY | DND.DROP_MOVE | DND.DROP_LINK;
 		Transfer[] transfers = new Transfer[] { LocalTransfer.getInstance() };
@@ -703,31 +962,77 @@ public class EXTLibraryEditor
 	 * This is the method called to load a resource into the editing domain's resource set based on the editor's input.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
+	 * @generated NOT
 	 */
 	public void createModel() {
-		// I assume that the input is a file object.
-		//
-		IFileEditorInput modelFile = (IFileEditorInput)getEditorInput();
-
+		URI resourceURI = EditUIUtil.getURI(getEditorInput());
+		Exception exception = null;
+		resource = null; //.CUSTOM: We record our single resource
 		try {
 			// Load the resource through the editing domain.
 			//
-			resource = editingDomain.loadResource(URI
-                .createPlatformResourceURI(
-                    modelFile.getFile().getFullPath().toString(), true)
-                .toString());
-            resource.setTrackingModification(true);
+			resource = editingDomain.getResourceSet().getResource(resourceURI, true);
 		}
-		catch (Exception exception) {
-			EXTLibraryEditorPlugin.INSTANCE.log(exception);
+		catch (Exception e) {
+			exception = e;
+			resource = editingDomain.getResourceSet().getResource(resourceURI, false);
+		}
+
+		Diagnostic diagnostic = analyzeResourceProblems(resource, exception);
+		if (diagnostic.getSeverity() != Diagnostic.OK) {
+			resourceToDiagnosticMap.put(resource,  analyzeResourceProblems(resource, exception));
+		}
+		
+		//.CUSTOM: We manage only the one resource in the set
+		editingDomain.getResourceSet().eAdapters().add(problemIndicationAdapter);
+	}
+
+	/**
+	 * Returns a diagnostic describing the errors and warnings listed in the resource
+	 * and the specified exception (if any).
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	public Diagnostic analyzeResourceProblems(Resource resource, Exception exception) {
+		if (!resource.getErrors().isEmpty() || !resource.getWarnings().isEmpty()) {
+			BasicDiagnostic basicDiagnostic =
+				new BasicDiagnostic
+					(Diagnostic.ERROR,
+					 "org.eclipse.emf.workspace.examples.library.editor", //$NON-NLS-1$
+					 0,
+					 getString("_UI_CreateModelError_message", resource.getURI()), //$NON-NLS-1$
+					 new Object [] { exception == null ? (Object)resource : exception });
+			basicDiagnostic.merge(EcoreUtil.computeDiagnostic(resource, true));
+			return basicDiagnostic;
+		}
+		else if (exception != null) {
+			return
+				new BasicDiagnostic
+					(Diagnostic.ERROR,
+					 "org.eclipse.emf.workspace.examples.library.editor", //$NON-NLS-1$
+					 0,
+					 getString("_UI_CreateModelError_message", resource.getURI()), //$NON-NLS-1$
+					 new Object[] { exception });
+		}
+		else {
+			return Diagnostic.OK_INSTANCE;
 		}
 	}
 	
+	/**
+	 * Obtains the single resource that I edit.
+	 */
+	//.CUSTOM: This editor edits only one resource.
 	protected Resource getResource() {
 		return resource;
 	}
 	
+	/**
+	 * Obtains my undo context for populating the Undo and Redo menus
+	 * from the operation history.
+	 */
+	//.CUSTOM: Operation-history-integrated editors have undo contexts.
 	public IUndoContext getUndoContext() {
 		return undoContext;
 	}
@@ -736,39 +1041,129 @@ public class EXTLibraryEditor
 	 * This is the method used by the framework to install your own controls.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
-	 * @generated
+	 * @generated NOT
 	 */
+	//.CUSTOM: We only have the one tree editor in this example.
 	@Override
-	public void createPartControl(Composite parent) {
+	public void createPages() {
 		// Creates the model from the editor input
 		//
 		createModel();
 
-		Tree tree = new Tree(parent, SWT.MULTI);
-		selectionViewer = new TreeViewer(tree);
+		// Only creates the other pages if there is something that can be edited
+		//
+		if (getResource() != null && !getResource().getContents().isEmpty()) {
+			// Create a page for the selection tree view.
+			//
+			{
+				ViewerPane viewerPane =
+					new ViewerPane(getSite().getPage(), EXTLibraryEditor.this) {
+						@Override
+						public Viewer createViewer(Composite composite) {
+							Tree tree = new Tree(composite, SWT.MULTI);
+							TreeViewer newTreeViewer = new TreeViewer(tree);
+							return newTreeViewer;
+						}
+						@Override
+						public void requestActivation() {
+							super.requestActivation();
+							setCurrentViewerPane(this);
+						}
+					};
+				viewerPane.createControl(getContainer());
 
-		selectionViewer.setContentProvider(new TransactionalAdapterFactoryContentProvider((TransactionalEditingDomain) getEditingDomain(), adapterFactory));
+				selectionViewer = (TreeViewer)viewerPane.getViewer();
+				
+				//.CUSTOM: Use a transactional content provider
+				selectionViewer.setContentProvider(new TransactionalAdapterFactoryContentProvider((TransactionalEditingDomain) getEditingDomain(), adapterFactory));
 
-		selectionViewer.setLabelProvider(new TransactionalAdapterFactoryLabelProvider((TransactionalEditingDomain) getEditingDomain(), adapterFactory));
-		
-		// unlike other EMF editors, I edit only a single resource, not a resource set
-		selectionViewer.setInput(getResource());
+				//.CUSTOM: Use a transactional label provider
+				selectionViewer.setLabelProvider(new TransactionalAdapterFactoryLabelProvider((TransactionalEditingDomain) getEditingDomain(), adapterFactory));
+				
+				//.CUSTOM: I edit only a single resource
+				selectionViewer.setInput(getResource());
+				selectionViewer.setSelection(new StructuredSelection(getResource()), true);
+				viewerPane.setTitle(getResource());
 
-		new AdapterFactoryTreeEditor(selectionViewer.getTree(), adapterFactory);
+				new AdapterFactoryTreeEditor(selectionViewer.getTree(), adapterFactory);
 
-		createContextMenuFor(selectionViewer);
+				createContextMenuFor(selectionViewer);
+				int pageIndex = addPage(viewerPane.getControl());
+				setPageText(pageIndex, getString("_UI_SelectionPage_label")); //$NON-NLS-1$
+			}
+		}
+
+		// Ensures that this editor will only display the page's tab
+		// area if there are more than one page
+		//
+		getContainer().addControlListener
+			(new ControlAdapter() {
+				boolean guard = false;
+				@Override
+				public void controlResized(ControlEvent event) {
+					if (!guard) {
+						guard = true;
+						hideTabs();
+						guard = false;
+					}
+				}
+			 });
+
+		getSite().getShell().getDisplay().asyncExec
+			(new Runnable() {
+				 public void run() {
+					 updateProblemIndication();
+				 }
+			 });
+	}
+
+	/**
+	 * If there is just one page in the multi-page editor part,
+	 * this hides the single tab at the bottom.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	protected void hideTabs() {
+		if (getPageCount() <= 1) {
+			setPageText(0, ""); //$NON-NLS-1$
+			if (getContainer() instanceof CTabFolder) {
+				((CTabFolder)getContainer()).setTabHeight(1);
+				Point point = getContainer().getSize();
+				getContainer().setSize(point.x, point.y + 6);
+			}
+		}
+	}
+
+	/**
+	 * If there is more than one page in the multi-page editor part,
+	 * this shows the tabs at the bottom.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	protected void showTabs() {
+		if (getPageCount() > 1) {
+			setPageText(0, getString("_UI_SelectionPage_label")); //$NON-NLS-1$
+			if (getContainer() instanceof CTabFolder) {
+				((CTabFolder)getContainer()).setTabHeight(SWT.DEFAULT);
+				Point point = getContainer().getSize();
+				getContainer().setSize(point.x, point.y - 6);
+			}
+		}
 	}
 
 	/**
 	 * This is how the framework determines which interfaces we implement.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public Object getAdapter(Class key) {
 		if (key.equals(IContentOutlinePage.class)) {
-			return getContentOutlinePage();
+			return showOutlineView() ? getContentOutlinePage() : null;
 		}
 		else if (key.equals(IPropertySheetPage.class)) {
 			return getPropertySheetPage();
@@ -777,7 +1172,7 @@ public class EXTLibraryEditor
 			return this;
 		}
 		else if (key.equals(IUndoContext.class)) {
-			// used by undo/redo actions to get their undo context
+			//.CUSTOM: used by undo/redo actions to get their undo context
 			return undoContext;
 		}
 		else {
@@ -789,6 +1184,7 @@ public class EXTLibraryEditor
 	 * This accesses a cached version of the content outliner.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
 	public IContentOutlinePage getContentOutlinePage() {
 		if (contentOutlinePage == null) {
@@ -803,14 +1199,17 @@ public class EXTLibraryEditor
 
 					// Set up the tree viewer.
 					//
+					//.CUSTOM: Use transactional content provider
 					contentOutlineViewer.setContentProvider(
 						new TransactionalAdapterFactoryContentProvider(
 							(TransactionalEditingDomain) getEditingDomain(), adapterFactory));
+					
+					//.CUSTOM: Use transactional label provider
 					contentOutlineViewer.setLabelProvider(
 						new TransactionalAdapterFactoryLabelProvider(
 							(TransactionalEditingDomain) getEditingDomain(), adapterFactory));
 					
-					// unlike other EMF editors, I edit only a single resource, not a resource set
+					//.CUSTOM: I edit only a single resource, not a resource set
 					contentOutlineViewer.setInput(getResource());
 
 					// Make sure our popups work.
@@ -820,6 +1219,7 @@ public class EXTLibraryEditor
 					if (!editingDomain.getResourceSet().getResources().isEmpty()) {
 					  // Select the root object in the view.
 					  //
+					  //.CUSTOM: I edit only a single resource.
 					  ArrayList<Object> selection = new ArrayList<Object>();
 					  selection.add(getResource());
 					  contentOutlineViewer.setSelection(new StructuredSelection(selection), true);
@@ -860,6 +1260,7 @@ public class EXTLibraryEditor
 	 * This accesses a cached version of the property sheet.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
 	public IPropertySheetPage getPropertySheetPage() {
 		if (propertySheetPage == null) {
@@ -877,6 +1278,7 @@ public class EXTLibraryEditor
 						getActionBarContributor().shareGlobalActions(this, actionBars);
 					}
 				};
+			//.CUSTOM: Use a transactional property-source provider
 			propertySheetPage.setPropertySourceProvider(new TransactionalAdapterFactoryContentProvider((TransactionalEditingDomain) getEditingDomain(), adapterFactory));
 		}
 
@@ -887,6 +1289,7 @@ public class EXTLibraryEditor
 	 * This deals with how we want selection in the outliner to affect the other views.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated
 	 */
 	public void handleContentOutlineSelection(ISelection selection) {
 		if (!selection.isEmpty() && selection instanceof IStructuredSelection) {
@@ -913,19 +1316,28 @@ public class EXTLibraryEditor
 	 * This is for implementing {@link IEditorPart} and simply tests the command stack.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
 	@Override
 	public boolean isDirty() {
-		return dirty;
+		//.CUSTOM: We track the last operation executed before save was performed
+		IUndoableOperation op = getOperationHistory().getUndoOperation(getUndoContext());
+		return op != savedOperation;
 	}
 
 	/**
 	 * This is for implementing {@link IEditorPart} and simply saves the model file.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
 	@Override
 	public void doSave(IProgressMonitor progressMonitor) {
+		// Save only resources that have actually changed.
+		//
+		final Map<Object, Object> saveOptions = new HashMap<Object, Object>();
+		saveOptions.put(Resource.OPTION_SAVE_ONLY_IF_CHANGED, Resource.OPTION_SAVE_ONLY_IF_CHANGED_MEMORY_BUFFER);
+
 		// Do the work within an operation because this is a long running activity
 		// that modifies the workbench.  Moreover, we must do this in a read-only
 		// transaction in the editing domain, to ensure exclusive read access
@@ -937,6 +1349,7 @@ public class EXTLibraryEditor
 				@Override
 				public void execute(IProgressMonitor monitor) {
 					try {
+						//.CUSTOM: Save in a read-only transaction
 						((TransactionalEditingDomain) getEditingDomain()).runExclusive(new Runnable() {
 							public void run() {
 								try {
@@ -944,10 +1357,10 @@ public class EXTLibraryEditor
 									//
 									Resource savedResource = getResource();
 									savedResources.add(savedResource);
-									savedResource.save(Collections.EMPTY_MAP);
+									savedResource.save(saveOptions);
 								}
 								catch (Exception exception) {
-									EXTLibraryEditorPlugin.INSTANCE.log(exception);
+									resourceToDiagnosticMap.put(resource, analyzeResourceProblems(resource, exception));
 								}
 							}});
 					}
@@ -957,6 +1370,7 @@ public class EXTLibraryEditor
 				}
 			};
 
+		updateProblemIndication = false;
 		try {
 			// This runs the options, and shows progress.
 			//
@@ -964,7 +1378,8 @@ public class EXTLibraryEditor
 
 			// Refresh the necessary state.
 			//
-			dirty = false;
+			//.CUSTOM: We record the last operation executed when saved.
+			savedOperation = getOperationHistory().getUndoOperation(getUndoContext());
 			firePropertyChange(IEditorPart.PROP_DIRTY);
 		}
 		catch (Exception exception) {
@@ -972,6 +1387,30 @@ public class EXTLibraryEditor
 			//
 			EXTLibraryEditorPlugin.INSTANCE.log(exception);
 		}
+		updateProblemIndication = true;
+		updateProblemIndication();
+	}
+
+	/**
+	 * This returns whether something has been persisted to the URI of the specified resource.
+	 * The implementation uses the URI converter from the editor's resource set to try to open an input stream. 
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	protected boolean isPersisted(Resource resource) {
+		boolean result = false;
+		try {
+			InputStream stream = editingDomain.getResourceSet().getURIConverter().createInputStream(resource.getURI());
+			if (stream != null) {
+				result = true;
+				stream.close();
+			}
+		}
+		catch (IOException e) {
+			// Ignore
+		}
+		return result;
 	}
 
 	/**
@@ -999,8 +1438,7 @@ public class EXTLibraryEditor
 		if (path != null) {
 			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
 			if (file != null) {
-				doSaveAs(URI.createPlatformResourceURI(file.getFullPath()
-                    .toString(), true), new FileEditorInput(file));
+				doSaveAs(URI.createPlatformResourceURI(file.getFullPath().toString(), true), new FileEditorInput(file));
 			}
 		}
 	}
@@ -1008,12 +1446,14 @@ public class EXTLibraryEditor
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
 	protected void doSaveAs(final URI uri, final IEditorInput editorInput) {
 		// changing the URI is, conceptually, a write operation.  However, it does
 		//    not affect the abstract state of the model, so we only need exclusive
 		//    (read) access
 		try {
+			//.CUSTOM: Save in a read-only transaction
 			((TransactionalEditingDomain) getEditingDomain()).runExclusive(new Runnable() {
 				public void run() {
 					getResource().setURI(uri);
@@ -1039,12 +1479,15 @@ public class EXTLibraryEditor
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
 	public void gotoMarker(IMarker marker) {
 		try {
 			if (marker.getType().equals(EValidator.MARKER)) {
 				final String uriAttribute = marker.getAttribute(EValidator.URI_ATTRIBUTE, null);
 				if (uriAttribute != null) {
+					//.CUSTOM: Use a read-only transaction to read the resource
+					//         when navigating to an object
 					try {
 						((TransactionalEditingDomain) getEditingDomain()).runExclusive(new Runnable() {
 							public void run() {
@@ -1070,6 +1513,7 @@ public class EXTLibraryEditor
 	 * This is called during startup.
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
 	@Override
 	public void init(IEditorSite site, IEditorInput editorInput) {
@@ -1079,6 +1523,8 @@ public class EXTLibraryEditor
 		site.setSelectionProvider(this);
 		site.getPage().addPartListener(partListener);
 		
+		//.CUSTOM: Create a workspace synchronizer instead of a
+		//         resource change listener
 		workspaceSynchronizer = new WorkspaceSynchronizer(
 				(TransactionalEditingDomain) editingDomain,
 				createSynchronizationDelegate());
@@ -1087,9 +1533,11 @@ public class EXTLibraryEditor
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
 	@Override
 	public void setFocus() {
+		//.CUSTOM: We only have the one viewer
 		selectionViewer.getControl().setFocus();
 	}
 
@@ -1230,6 +1678,8 @@ public class EXTLibraryEditor
 		return adapterFactory;
 	}
 
+	//.CUSTOM: We have a command stack that delegates
+	//         to the operation history
 	private IOperationHistory getOperationHistory() {
 		return ((IWorkspaceCommandStack) editingDomain.getCommandStack()).getOperationHistory();
 	}
@@ -1237,15 +1687,27 @@ public class EXTLibraryEditor
 	/**
 	 * <!-- begin-user-doc -->
 	 * <!-- end-user-doc -->
+	 * @generated NOT
 	 */
 	@Override
 	public void dispose() {
+		updateProblemIndication = false;
+
+		//.CUSTOM: We use a workspace synchronizer instead of a
+		//         resource change listener
 		workspaceSynchronizer.dispose();
+		
+		//.CUSTOM: We have operation history stuff to clean up
 		getOperationHistory().removeOperationHistoryListener(historyListener);
 		getOperationHistory().dispose(getUndoContext(), true, true, true);
 		
+		//.CUSTOM: We have only one resource to edit, but it is in
+		//         a shared resource set (not our own private set).
+		//         So, we must unload it explicitly.  Also remove our problem
+		//         indication adapter
 		getResource().unload();
 		editingDomain.getResourceSet().getResources().remove(getResource());
+		editingDomain.getResourceSet().eAdapters().remove(problemIndicationAdapter);
 		
 		getSite().getPage().removePartListener(partListener);
 
@@ -1266,4 +1728,13 @@ public class EXTLibraryEditor
 		super.dispose();
 	}
 
+	/**
+	 * Returns whether the outline view should be presented to the user.
+	 * <!-- begin-user-doc -->
+	 * <!-- end-user-doc -->
+	 * @generated
+	 */
+	protected boolean showOutlineView() {
+		return true;
+	}
 }
