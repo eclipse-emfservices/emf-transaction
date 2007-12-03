@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizerTest.java,v 1.4.2.2 2007/07/24 17:28:58 cdamus Exp $
+ * $Id: WorkspaceSynchronizerTest.java,v 1.4.2.3 2007/12/03 19:28:52 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -23,6 +23,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
@@ -35,6 +36,7 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.examples.extlibrary.Library;
+import org.eclipse.emf.validation.marker.MarkerUtil;
 import org.eclipse.emf.workspace.tests.AbstractTest;
 import org.eclipse.emf.workspace.util.WorkspaceSynchronizer;
 
@@ -491,6 +493,38 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
         assertFalse(delegate.deletedResources.contains(res));
         assertTrue(delegate.movedResources.containsKey(res));
         assertEquals(newRes.getURI(), delegate.movedResources.get(res));
+    }
+    
+    /**
+     * Tests the response to resource deletion when the deleted resource also
+     * had markers.
+     */
+    public void test_resourceDeletedThatHadMarkers_207306() {
+        IFile file = WorkspaceSynchronizer.getFile(testResource);
+        
+        try {
+            IMarker marker = file.createMarker(MarkerUtil.VALIDATION_MARKER_TYPE);
+            marker.setAttribute(MarkerUtil.RULE_ATTRIBUTE, "foo"); //$NON-NLS-1$
+        } catch (CoreException e) {
+            fail(e);
+        }
+        
+        delegate.defaultBehaviour = true;
+        
+        assertTrue(testResource.isLoaded());
+        
+        try {
+            synchronized (delegate) {
+                file.delete(true, null);
+                delegate.wait(20000);
+            }
+        } catch (Exception e) {
+            fail(e);
+        }
+
+        waitForWorkspaceChanges();
+        
+        assertFalse(testResource.isLoaded());
     }
 	
 	//
