@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFTransactionStatusCodes.java,v 1.3 2007/05/03 13:16:55 cdamus Exp $
+ * $Id: EMFTransactionStatusCodes.java,v 1.4 2007/12/04 23:04:49 cdamus Exp $
  */
 package org.eclipse.emf.transaction.internal;
 
@@ -43,6 +43,7 @@ public class EMFTransactionStatusCodes {
 	public static final int EXCEPTION_HANDLER_FAILED = 50;
 	public static final int PRIVILEGED_RUNNABLE_FAILED = 51;
 	
+	public static final int RELOAD_DURING_UNLOAD = 100;
 	
 	/** Not instantiable. */
 	private EMFTransactionStatusCodes() {

@@ -12,16 +12,22 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetManager.java,v 1.3 2007/11/14 18:14:00 cdamus Exp $
+ * $Id: ResourceSetManager.java,v 1.4 2007/12/04 23:04:49 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
 import java.util.Collection;
 import java.util.Map;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
+import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
+import org.eclipse.emf.transaction.internal.l10n.Messages;
+import org.eclipse.osgi.util.NLS;
 
 /**
  * The resource set manager keeps track of the load state of {@link Resource}s
@@ -166,7 +172,22 @@ public final class ResourceSetManager {
 			if (notification.getNewBooleanValue()) {
 				setLoaded(res);
 			} else {
-				setUnloaded(res);  // just in case
+				// double-check that it hasn't been internally re-loaded by,
+				// e.g., proxy resolution during clearing of adapters from
+				// unloaded objects
+				if (res.isLoaded()) {
+					// whoops!  It's been reloaded
+					setLoaded(res);
+					
+					EMFTransactionPlugin.getPlugin().log(new Status(
+					    IStatus.WARNING,
+                        EMFTransactionPlugin.getPluginId(),
+                        EMFTransactionStatusCodes.RELOAD_DURING_UNLOAD,
+                        NLS.bind(Messages.reloadDuringUnload, res.getURI()),
+					    null));
+				} else {
+					setUnloaded(res);
+				}
 			}
 			break;
 		case Resource.RESOURCE__CONTENTS:

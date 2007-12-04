@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Messages.java,v 1.6 2007/10/03 20:17:38 cdamus Exp $
+ * $Id: Messages.java,v 1.7 2007/12/04 23:04:49 cdamus Exp $
  */
 package org.eclipse.emf.transaction.internal.l10n;
 
@@ -52,6 +52,8 @@ public class Messages
 	public static String upgradeReadLock;
 
 	public static String privilegedRunnable;
+	
+	public static String reloadDuringUnload;
 	
 	static {
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

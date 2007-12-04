@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorderTest.java,v 1.4 2007/11/14 18:14:12 cdamus Exp $
+ * $Id: TransactionChangeRecorderTest.java,v 1.5 2007/12/04 23:04:51 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -23,7 +23,9 @@ import java.util.Iterator;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.notify.Notifier;
+import org.eclipse.emf.common.notify.impl.AdapterImpl;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.ENamedElement;
@@ -446,6 +448,36 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 					+ e.getLocalizedMessage());
 		}
 	}
+    
+    public void test_resourceLoadsWhileUnloading_189587() {
+        Adapter reloader = new AdapterImpl() {
+        
+            @Override
+            public void unsetTarget(Notifier oldTarget) {
+                assertTrue(oldTarget instanceof EObject);
+                EObject eobject = (EObject) oldTarget;
+                assertTrue(eobject.eIsProxy());
+                
+                // cause the resource to re-load while it is unloading
+                EcoreUtil.resolve(eobject, domain.getResourceSet());
+            }};
+        
+        loadRoot();
+        EClass eclass = findClass("root/A", true); //$NON-NLS-1$
+        eclass.eAdapters().add(reloader);
+        
+        // unload the resource
+        Resource res = eclass.eResource();
+        res.unload();
+        assertTrue("Resource not reloaded", res.isLoaded()); //$NON-NLS-1$
+        
+        try {
+            // should be allowed to modify this resource by unloading it again
+            res.unload();
+        } catch (IllegalStateException e) {
+            fail("Should not have thrown: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+    }
 	
 	//
 	// Framework methods
