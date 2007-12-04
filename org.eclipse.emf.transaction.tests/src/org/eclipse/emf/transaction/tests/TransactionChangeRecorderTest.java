@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006 IBM Corporation and others.
+ * Copyright (c) 2006, 2007 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorderTest.java,v 1.3 2006/12/01 18:38:33 cdamus Exp $
+ * $Id: TransactionChangeRecorderTest.java,v 1.3.2.1 2007/12/04 22:24:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -23,7 +23,9 @@ import java.util.Iterator;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.notify.Notifier;
+import org.eclipse.emf.common.notify.impl.AdapterImpl;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.ENamedElement;
@@ -446,6 +448,35 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 					+ e.getLocalizedMessage());
 		}
 	}
+    
+    public void test_resourceLoadsWhileUnloading_189587() {
+        Adapter reloader = new AdapterImpl() {
+        
+            public void unsetTarget(Notifier oldTarget) {
+                assertTrue(oldTarget instanceof EObject);
+                EObject eobject = (EObject) oldTarget;
+                assertTrue(eobject.eIsProxy());
+                
+                // cause the resource to re-load while it is unloading
+                EcoreUtil.resolve(eobject, domain.getResourceSet());
+            }};
+        
+        loadRoot();
+        EClass eclass = findClass("root/A", true); //$NON-NLS-1$
+        eclass.eAdapters().add(reloader);
+        
+        // unload the resource
+        Resource res = eclass.eResource();
+        res.unload();
+        assertTrue("Resource not reloaded", res.isLoaded()); //$NON-NLS-1$
+        
+        try {
+            // should be allowed to modify this resource by unloading it again
+            res.unload();
+        } catch (IllegalStateException e) {
+            fail("Should not have thrown: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        }
+    }
 	
 	//
 	// Framework methods
@@ -462,12 +493,12 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 						"/test_models/test_model.ecore").toString()), //$NON-NLS-1$
 						true);
 			rootResource.setURI(URI.createPlatformResourceURI(
-					"/" + PROJECT_NAME + "/test_model.ecore")); //$NON-NLS-1$ //$NON-NLS-2$
+					"/" + PROJECT_NAME + "/test_model.ecore", true)); //$NON-NLS-1$ //$NON-NLS-2$
 			
 			nestedResource1 = rset.createResource(URI.createPlatformResourceURI(
-					"/" + PROJECT_NAME + "/test_model1.ecore")); //$NON-NLS-1$ //$NON-NLS-2$
+					"/" + PROJECT_NAME + "/test_model1.ecore", true)); //$NON-NLS-1$ //$NON-NLS-2$
 			nestedResource2 = rset.createResource(URI.createPlatformResourceURI(
-					"/" + PROJECT_NAME + "/test_model2.ecore")); //$NON-NLS-1$ //$NON-NLS-2$
+					"/" + PROJECT_NAME + "/test_model2.ecore", true)); //$NON-NLS-1$ //$NON-NLS-2$
 			
 			startWriting();
 			

@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetManager.java,v 1.2 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: ResourceSetManager.java,v 1.2.2.1 2007/12/04 22:24:14 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -163,7 +163,15 @@ public final class ResourceSetManager {
 			if (notification.getNewBooleanValue()) {
 				setLoaded(res);
 			} else {
-				setUnloaded(res);  // just in case
+				// double-check that it hasn't been internally re-loaded by,
+				// e.g., proxy resolution during clearing of adapters from
+				// unloaded objects
+				if (res.isLoaded()) {
+					// whoops!  It's been reloaded
+					setLoaded(res);
+				} else {
+					setUnloaded(res);
+				}
 			}
 			break;
 		case Resource.RESOURCE__CONTENTS:
