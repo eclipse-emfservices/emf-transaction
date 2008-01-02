@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.9 2007/12/03 19:05:07 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.10 2008/01/02 16:12:19 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -38,6 +38,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.MultiRule;
+import org.eclipse.emf.common.archive.ArchiveURLConnection;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -227,18 +228,57 @@ public final class WorkspaceSynchronizer {
 	 * it has a platform-resource URI.  Note that the resulting file, if not
 	 * <code>null</code>, may nonetheless not actually exist (as the file is
 	 * just a handle).
+	 * <p>
+	 * Note that, if the <tt>resource</tt> is in an archive (such as a ZIP file)
+	 * then it does not map to a workspace file.  In this case, however, the
+	 * workspace file (if any) corresponding to the containing archive can be
+	 * obtained via the {@link #getUnderlyingFile(Resource)} method.
+	 * </p>
 	 * 
 	 * @param resource an EMF resource
 	 * 
 	 * @return the corresponding workspace file, or <code>null</code> if the
 	 *    resource's URI is not a platform-resource URI
+	 *    
+	 * @see #getUnderlyingFile(Resource)
 	 */
 	public static IFile getFile(Resource resource) {
         ResourceSet rset = resource.getResourceSet();
         
         return getFile(
             resource.getURI(),
-            (rset != null)? rset.getURIConverter() : null);
+            (rset != null)? rset.getURIConverter() : null,
+            false);
+	}
+
+	/**
+	 * Obtains the workspace file underlying the specified resource.
+	 * If the resource has an {@link URI#isArchive() archive} scheme, the
+	 * {@linkplain URI#authority() authority} is considered instead.
+	 * If the URI has a file scheme, it's looked up in the workspace, just as
+	 * in the {@link #getFile(Resource)} method.
+	 * Otherwise, a platform scheme is assumed.
+	 * <p>
+	 * Note that the resulting file, if not
+	 * <code>null</code>, may nonetheless not actually exist (as the file is
+	 * just a handle).
+	 * </p>
+	 * 
+	 * @param resource an EMF resource
+	 * 
+	 * @return the underlying workspace file, or <code>null</code> if the
+	 *    resource's URI is not a platform-resource URI
+	 * 
+	 * @see #getFile(Resource)
+	 * @since 1.2
+	 */
+	public static IFile getUnderlyingFile(Resource resource) {
+        ResourceSet rset = resource.getResourceSet();
+        
+        return getFile(
+            resource.getURI(),
+            (rset != null)? rset.getURIConverter() : null,
+            true);
 	}
     
     /**
@@ -250,15 +290,30 @@ public final class WorkspaceSynchronizer {
      * 
      * @return the file, if available in the workspace
      */
-    private static IFile getFile(URI uri, URIConverter converter) {
+    private static IFile getFile(URI uri, URIConverter converter, boolean considerArchives) {
         IFile result = null;
         
-        if ("platform".equals(uri.scheme()) && (uri.segmentCount() > 2)) { //$NON-NLS-1$
-            if ("resource".equals(uri.segment(0))) { //$NON-NLS-1$
-                IPath path = new Path(URI.decode(uri.path())).removeFirstSegments(1);
-                
-                result = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
+        if (considerArchives && uri.isArchive()) {
+            class MyArchiveURLConnection extends ArchiveURLConnection {
+              public MyArchiveURLConnection(String url) {
+                super(url);
+              }
+              public String getNestedURI() {
+                try
+                {
+                  return getNestedURL();
+                }
+                catch (IOException exception)
+                {
+                  return "";
+                }
+              }
             }
+            MyArchiveURLConnection archiveURLConnection = new MyArchiveURLConnection(uri.toString());
+            result = getFile(URI.createURI(archiveURLConnection.getNestedURI()), converter, considerArchives);
+        } else if (uri.isPlatformResource()) {
+            IPath path = new Path(uri.toPlatformString(true));
+            result = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
         } else if (uri.isFile() && !uri.isRelative()) {
             result = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(
                 new Path(uri.toFileString()));
@@ -269,7 +324,7 @@ public final class WorkspaceSynchronizer {
                 
                 if (!uri.equals(normalized)) {
                     // recurse on the new URI
-                    result = getFile(normalized, converter);
+                    result = getFile(normalized, converter, considerArchives);
                 }
             }
         }

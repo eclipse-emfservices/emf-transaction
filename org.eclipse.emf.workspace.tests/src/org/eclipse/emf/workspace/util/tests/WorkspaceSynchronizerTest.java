@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizerTest.java,v 1.8 2007/11/14 18:13:54 cdamus Exp $
+ * $Id: WorkspaceSynchronizerTest.java,v 1.9 2008/01/02 16:12:16 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -69,6 +69,35 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		
 		URI uri = testResource.getURI();
 		assertEquals(file.getName(), uri.segment(uri.segmentCount() - 1));
+	}
+
+	/**
+	 * Tests the static getUnderlyingFile() utility method.
+	 */
+	public void test_getUnderlyingFile_163291() {
+		Resource archiveResource = new ResourceImpl();
+		archiveResource.setURI(URI.createURI("archive:platform:/resource" + RESOURCE_NAME + "!/foo"));
+		IFile file = WorkspaceSynchronizer.getUnderlyingFile(archiveResource);
+		
+		assertNotNull(file);
+		assertTrue(file.exists());
+		assertEquals(file, this.file);
+
+		archiveResource = new ResourceImpl();
+		archiveResource.setURI(URI.createURI("archive:platform:/resource" + RESOURCE_NAME + "!/foo.zip!/goo"));
+		file = WorkspaceSynchronizer.getUnderlyingFile(archiveResource);
+		
+		assertNotNull(file);
+		assertTrue(file.exists());
+		assertEquals(file, this.file);
+
+		archiveResource = new ResourceImpl();
+		archiveResource.setURI(URI.createURI("archive:archive:platform:/resource" + RESOURCE_NAME + "!/foo.zip!/goo"));
+		file = WorkspaceSynchronizer.getUnderlyingFile(archiveResource);
+		
+		assertNotNull(file);
+		assertTrue(file.exists());
+		assertEquals(file, this.file);
 	}
 	
 	/**
