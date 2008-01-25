@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.11 2007/11/14 18:13:54 cdamus Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.12 2008/01/25 14:40:12 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -360,6 +360,42 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		
 		assertTrue(stack.isSaveNeeded());
 	}
+    
+    public void test_isSaveNeeded_214325() {
+        TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+        final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml")); //$NON-NLS-1$
+        
+        Command op = new RecordingCommand(domain) {
+
+            @Override
+            protected void doExecute() {
+                r.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+                
+            }
+        };
+        
+        BasicCommandStack stack = (BasicCommandStack)domain.getCommandStack();
+        
+        // Force the operation history to clear itself of our operations.
+        OperationHistoryFactory.getOperationHistory().setLimit(
+            ((WorkspaceCommandStackImpl)stack).getDefaultUndoContext(), 0);
+        OperationHistoryFactory.getOperationHistory().setLimit(
+            ((WorkspaceCommandStackImpl)stack).getDefaultUndoContext(), 20);
+        
+        assertFalse(stack.isSaveNeeded());
+        
+        stack.execute(op);
+        
+        assertTrue(stack.isSaveNeeded());
+        
+        stack.saveIsDone();
+        
+        assertFalse(stack.isSaveNeeded());
+        
+        stack.undo();
+        
+        assertTrue(stack.isSaveNeeded());
+    }
 	
     /**
      * Test that run-time exceptions in a trigger command cause rollback of
