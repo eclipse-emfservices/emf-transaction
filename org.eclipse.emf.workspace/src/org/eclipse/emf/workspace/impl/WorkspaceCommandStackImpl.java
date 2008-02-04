@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.12 2008/01/25 14:40:12 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.13 2008/02/04 14:26:18 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -55,6 +55,7 @@ import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
 import org.eclipse.emf.workspace.internal.EMFWorkspaceStatusCodes;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
+import org.eclipse.osgi.util.NLS;
 
 /**
  * Implementation of a transactional command stack that delegates
@@ -73,7 +74,17 @@ public class WorkspaceCommandStackImpl
 	private final IOperationHistory history;
 	private DomainListener domainListener;
 	
-	private final IUndoContext defaultContext = new UndoContext();
+	private final IUndoContext defaultContext = new UndoContext() {
+	    @Override
+	    public String getLabel() {
+	        return getDefaultUndoContextLabel();
+	    }
+	    
+    	@Override
+    	public String toString() {
+    	    return getLabel();
+    	}};
+	    
 	private IUndoContext savedContext = null;
 	
 	private IUndoableOperation mostRecentOperation;
@@ -122,12 +133,56 @@ public class WorkspaceCommandStackImpl
 		return defaultContext;
 	}
 	
+	/**
+	 * Obtains the label to display for the default undo context that I apply
+	 * to operations executed through me as {@link Command}s.  Subclasses may
+	 * override to customize the label.
+	 * 
+	 * @return my default undo context label
+	 * 
+	 * @since 1.2
+	 */
+	protected String getDefaultUndoContextLabel() {
+	    String domainID = (getDomain() == null)? null : getDomain().getID();
+	    if (domainID == null) {
+	        domainID = String.valueOf(domainID);  // guaranteed to be safe
+	    }
+	    return NLS.bind(Messages.cmdStkCtxLabel, domainID);
+	}
+	
 	private final IUndoContext getSavedContext() {
 		if (savedContext == null) {
-			savedContext = new UndoContext();
+			savedContext = new UndoContext() {
+		        @Override
+		        public String getLabel() {
+		            return getSavepointUndoContextLabel();
+		        }
+		        
+		        @Override
+		        public String toString() {
+		            return getLabel();
+		        }};
 		}
 		return savedContext;
 	}
+    
+    /**
+     * Obtains the label to display for the save-point undo context that I apply
+     * to the last operation in my {@linkplain #getDefaultUndoContext() default undo context}
+     * that was executed at the time save was performed (as indicated by invocation
+     * of the {@link #saveIsDone()} method).  Subclasses may override to customize the label.
+     * 
+     * @return my default undo context label
+     * 
+     * @since 1.2
+     */
+    protected String getSavepointUndoContextLabel() {
+        String domainID = (getDomain() == null)? null : getDomain().getID();
+        if (domainID == null) {
+            domainID = String.valueOf(domainID);  // guaranteed to be safe
+        }
+        return NLS.bind(Messages.cmdStkSaveCtxLabel, domainID);
+    }
 
 	/**
      * {@inheritDoc}

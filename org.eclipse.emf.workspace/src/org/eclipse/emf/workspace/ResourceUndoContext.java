@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceUndoContext.java,v 1.5 2007/11/14 18:14:08 cdamus Exp $
+ * $Id: ResourceUndoContext.java,v 1.6 2008/02/04 14:26:18 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -29,6 +29,7 @@ import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
+import org.eclipse.osgi.util.NLS;
 
 /**
  * An {@link IUndoContext} that tags an EMF operation with a resource affected by it.
@@ -51,6 +52,7 @@ public final class ResourceUndoContext
 	private final TransactionalEditingDomain editingDomain;
 	
 	private final Resource resource;
+	private final String label;
 
 	/**
 	 * Initializes me with the editing domain that owns a resource and the
@@ -62,11 +64,12 @@ public final class ResourceUndoContext
 	public ResourceUndoContext(TransactionalEditingDomain domain, Resource resource) {
 		this.editingDomain = domain;
 		this.resource = resource;
+		this.label = NLS.bind(Messages.resCtxLabel, resource.getURI());
 	}
 	
 	// Documentation copied from the interface
 	public String getLabel() {
-		return Messages.resCtxLabel;
+		return label;
 	}
 
 	/**
@@ -261,5 +264,10 @@ public final class ResourceUndoContext
 			}
 			break;}
 		}
+	}
+	
+	@Override
+	public String toString() {
+	    return getLabel();
 	}
 }

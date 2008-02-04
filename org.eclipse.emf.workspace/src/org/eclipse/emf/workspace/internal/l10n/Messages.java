@@ -1,7 +1,7 @@
 /**
  * <copyright> 
  *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: Messages.java,v 1.2 2006/10/10 14:31:52 cdamus Exp $
+ * $Id: Messages.java,v 1.3 2008/02/04 14:26:18 cdamus Exp $
  */
 package org.eclipse.emf.workspace.internal.l10n;
 
@@ -53,6 +53,8 @@ public class Messages
 	public static String replaceLabel;
 	
 	public static String resCtxLabel;
+	public static String cmdStkCtxLabel;
+	public static String cmdStkSaveCtxLabel;
 	
 	public static String synchJobName;
 	
