@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.13 2008/02/04 14:26:18 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.14 2008/02/04 14:28:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -172,7 +172,7 @@ public class WorkspaceCommandStackImpl
      * that was executed at the time save was performed (as indicated by invocation
      * of the {@link #saveIsDone()} method).  Subclasses may override to customize the label.
      * 
-     * @return my default undo context label
+     * @return my save-point undo context label
      * 
      * @since 1.2
      */
