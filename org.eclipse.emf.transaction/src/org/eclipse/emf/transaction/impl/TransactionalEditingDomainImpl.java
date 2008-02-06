@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.16 2007/11/14 18:14:00 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.17 2008/02/06 13:00:43 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -1059,7 +1059,8 @@ public class TransactionalEditingDomainImpl
 			
 			@Override
 			public boolean isAdapterForType(Object type) {
-				return type == ResourceSetDomainLink.class;
+				return (type == ResourceSetDomainLink.class) ||
+				    (type == IEditingDomainProvider.class);
 			}
 			
 			final TransactionalEditingDomain getDomain() {
