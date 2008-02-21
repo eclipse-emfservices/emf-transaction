@@ -7,6 +7,7 @@ Bundle-Localization: plugin
 Require-Bundle: org.eclipse.emf.workspace;bundle-version="[1.2.0,2.0.0)",
  org.eclipse.emf.edit.ui;bundle-version="[2.3.0,3.0.0)"
 Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.eclipse.emf.workspace.ui.internal.EMFWorkbenchUIPlugin$Implementation
 Bundle-Vendor: %Plugin.providerName
 Export-Package: org.eclipse.emf.workspace.ui.actions,
