@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2008 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Mario Winterer - 225068 Memory leak in part listener management 
  *
  * </copyright>
  *
- * $Id: ActionWrapperHelper.java,v 1.2 2007/11/14 18:14:04 cdamus Exp $
+ * $Id: ActionWrapperHelper.java,v 1.3 2008/04/07 12:58:38 cdamus Exp $
  */
 package org.eclipse.emf.workspace.ui.actions;
 
@@ -25,6 +26,7 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.ui.IPartListener;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.operations.OperationHistoryActionHandler;
@@ -91,14 +93,88 @@ class ActionWrapperHelper<T extends OperationHistoryActionHandler> extends Actio
 		T result = siteToActionHandler.get(site);
 		
 		if (result == null) {
-			result = ownerAccess.createDelegate(site, context);
-			site.getPage().addPartListener(getPartListener());
-			siteToActionHandler.put(site, result);
+			result = createActionHandler(site, context);
 		}
 		
 		return result;
 	}
 	
+	/**
+	 * Creates and returns a action handler for the given workbench-site with the
+	 * given undo context. The created action handler will be stored in the
+	 * siteToActionHandler map for further use.
+	 * 
+	 * @param site
+	 *            The site to create an action handler for.
+	 * @param context
+	 *            The undo context the action handler should use.
+	 * @return the new action handler
+	 */
+	private T createActionHandler(IWorkbenchPartSite site, IUndoContext context) {
+		T result = ownerAccess.createDelegate(site, context);
+
+		if (!actionHandlerExists(site.getPage())) {
+			// there are no handlers for the given page so far;
+			// one will be added below so we must listen to closing parts
+			// on this page to update the siteToActionHandler map.
+			enablePartListener(site.getPage());
+		}
+
+		siteToActionHandler.put(site, result);
+
+		return result;
+	}
+
+	/**
+	 * Removes the action handler for the given workbench-site (if existing) from the
+	 * site to action-handler map.
+	 * 
+	 * @param site the part site from which to remove the action handler
+	 */
+	private void removeActionHandler(IWorkbenchPartSite site) {
+		T handler = siteToActionHandler.get(site);
+
+		if (handler != null) {
+			siteToActionHandler.remove(site);
+
+			if (!actionHandlerExists(site.getPage())) {
+				// no more action handler => we do not need to listen to part
+				// changes
+				disablePartListener(site.getPage());
+			}
+
+			// don't dispose the handler, because it's listening for the
+			// part closures, too
+		}
+	}
+
+	/**
+	 * Tests if there is a mapping to an action handler for any part of the given
+	 * page.
+	 * 
+	 * @param page a workbench page
+	 * @return whether this page currently has any action handler
+	 */
+	private boolean actionHandlerExists(IWorkbenchPage page) {
+		for (IWorkbenchPartSite site : siteToActionHandler.keySet()) {
+			if (site.getPage() == page) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private void enablePartListener(IWorkbenchPage page) {
+		// according to javadoc of addPartListener, the part listener will not
+		// be added twice.
+		page.addPartListener(getPartListener());
+	}
+
+	private void disablePartListener(IWorkbenchPage page) {
+		page.removePartListener(getPartListener());
+	}
+
 	/**
 	 * Obtains a part listener that will remove the mapping of part-site to
 	 * action handler when a part is closed.
@@ -110,14 +186,7 @@ class ActionWrapperHelper<T extends OperationHistoryActionHandler> extends Actio
 			partListener = new IPartListener() {
 			
 				public void partClosed(IWorkbenchPart part) {
-					T handler = siteToActionHandler.get(part.getSite());
-					
-					if (handler != null) {
-						siteToActionHandler.remove(part.getSite());
-						
-						// don't dispose the handler, because it's listening for the
-						//    part closures, too
-					}
+					removeActionHandler(part.getSite());
 				}
 			
 				public void partOpened(IWorkbenchPart part) {
