@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ReadWriteValidatorImpl.java,v 1.11 2007/11/14 18:14:00 cdamus Exp $
+ * $Id: ReadWriteValidatorImpl.java,v 1.12 2008/04/17 16:36:17 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -99,11 +99,11 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 			
 			if (transaction.getParent() == null) {
 				// got the root transaction
-				tree = new NotificationTree(transaction, notificationMask);
+				tree = new NotificationTree(transaction, null, notificationMask);
 				newTree = tree;
 			} else if (parent != null) {
 				// if the transaction has a parent but there is no matching
-				//    tree node, then this parent is silent, so there is no
+				//    tree node, then the parent is silent, so there is no
 				//    need to create any descendent nodes
 				newTree = parent.addChild(transaction, notificationMask);
 			}
@@ -315,15 +315,16 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 * parent has so far collected.
 		 * 
 		 * @param transaction the transaction
+		 * @param parent the tree node of the parent transaction, or <code>null</code>
+		 *     if there is no parent node
 		 * @param notificationMask a mask of the {@link #POSTCOMMIT}, {@link #PRECOMMIT}, and
 		 *     {@link #VALIDATION} bits of the kinds of notifications that the
 		 *     transaction collects
 		 */
-		NotificationTree(InternalTransaction transaction, byte notificationMask) {
+		NotificationTree(InternalTransaction transaction, NotificationTree parent, byte notificationMask) {
 			assert notificationMask > 0: "transaction must be collecting notifications"; //$NON-NLS-1$
 			
 			this.transaction = transaction;
-			InternalTransaction parent = (InternalTransaction) transaction.getParent();
 			
 			if (parent == null) {
 				parentNotificationCount = 0;
@@ -344,7 +345,7 @@ public class ReadWriteValidatorImpl implements TransactionValidator {
 		 *     transaction collects
 		 */
 		NotificationTree addChild(InternalTransaction child, byte notificationMask) {
-			NotificationTree result = new NotificationTree(child, notificationMask);
+			NotificationTree result = new NotificationTree(child, this, notificationMask);
 			
 			children.add(result);
 			
