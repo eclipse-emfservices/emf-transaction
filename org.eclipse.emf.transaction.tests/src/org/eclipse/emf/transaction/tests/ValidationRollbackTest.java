@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,13 +12,14 @@
  *
  * </copyright>
  *
- * $Id: ValidationRollbackTest.java,v 1.6.2.1 2007/10/22 21:25:18 cdamus Exp $
+ * $Id: ValidationRollbackTest.java,v 1.6.2.2 2008/04/17 16:34:05 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
 import java.util.Collections;
 import java.util.EventObject;
 import java.util.List;
+import java.util.Random;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -26,18 +27,24 @@ import junit.framework.TestSuite;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.common.command.AbstractCommand;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.command.CommandStack;
 import org.eclipse.emf.common.command.CommandStackListener;
 import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
+import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.DemultiplexingListener;
 import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.RecordingCommand;
+import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListener;
+import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
@@ -698,7 +705,146 @@ public class ValidationRollbackTest extends AbstractTest {
             domain.removeResourceSetListener(l);
         }
     }
-	
+
+    /**
+     * Tests that when a rollback transaction creates nested transactions, we do not
+     * end up attempting illegal sub-lists of notification lists in the validator when
+     * reducing the notifications leaves some that indicate non-undoable changes (such
+     * as resource loads and URI changes).
+     */
+    public void test_rollback_nestedTransactions_illegalSubList_227429() {
+    	// add a post-commit listener to ensure that we will attempt to send
+    	// post-commit events
+        TestListener tl = new TestListener(NotificationFilter.NOT_TOUCH);
+        domain.addResourceSetListener(tl);
+        
+    	final boolean[] enable = new boolean[] {false};
+    	final Writer[] writer = new Writer[1];
+    	final Random random = new Random(System.currentTimeMillis());
+    	
+    	// encapsulated operation that has non-undoable side-effects
+    	final Runnable run = new Runnable() {
+    		Resource resource = null;
+			public void run() {
+				if (resource == null) {
+					resource = domain.getResourceSet().createResource(
+							URI.createURI("http://localhost/foo.xmi")); //$NON-NLS-1$
+				}
+				
+				Book book = EXTLibraryFactory.eINSTANCE.createBook();
+				book.setTitle("Book " + random.nextInt(1000) + 1);
+				
+				// an undoable change
+				book.setAuthor(writer[0]);
+				
+				// not an undoable change
+				resource.setURI(URI.createURI("http://localhost/" //$NON-NLS-1$
+						+ random.nextInt(1000) + "/foo.xmi")); //$NON-NLS-1$
+			}};
+    	
+    	// add trigger commands that create nested transactions during rollback
+    	ResourceSetListener pl = new TriggerListener(NotificationFilter.NOT_TOUCH) {
+			protected Command trigger(TransactionalEditingDomain domain,
+					Notification notification) {
+				
+				if (enable[0]) {
+					enable[0] = false;
+					return new AbstractCommand("Test") {
+					
+						protected boolean prepare() {
+							return true;
+						}
+						
+						void undoRedo() {
+							InternalTransactionalEditingDomain idomain =
+								(InternalTransactionalEditingDomain) ValidationRollbackTest.this.domain;
+							try {
+								Transaction xa = idomain.startTransaction(false, idomain.getUndoRedoOptions());
+								run.run();
+								xa.commit();
+							} catch (Exception e) {
+								fail(e);
+							}
+						}
+						
+						public void undo() {
+							undoRedo();
+						}
+						
+						public void redo() {
+							undoRedo();
+						}
+					
+						public void execute() {
+							run.run();
+						}
+					};
+				}
+				return null;
+			}};
+        domain.addResourceSetListener(pl);
+    	
+    	// another listener to force rollback on commit of root transaction
+    	ResourceSetListener pl2 = new ResourceSetListenerImpl(NotificationFilter.NOT_TOUCH) {
+    		public boolean isPrecommitOnly() {
+    			return true;
+    		}
+    		public boolean isAggregatePrecommitListener() {
+    			return true;
+    		}
+    		public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+    				throws RollbackException {
+    			
+				throw new RollbackException(new Status(IStatus.ERROR,
+						"org.eclipse.emf.transaction.tests", //$NON-NLS-1$
+						"Please, roll back.")); //$NON-NLS-1$
+    		}};
+        domain.addResourceSetListener(pl2);
+        
+        try {
+            // find the writer to use
+            startReading();
+            writer[0] = (Writer) find("root/level1/level2/Level2 Writer"); //$NON-NLS-1$
+            assertNotNull(writer[0]);
+            commit();
+            
+            Transaction xa = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+            
+            // in the outer transaction, make some change
+            run.run();
+            
+            // start an inner read/write transaction
+            Transaction inner = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+            
+            run.run();
+            
+            inner.commit();
+
+            // a change between nested transactions
+            run.run();
+            
+            // another nested transaction
+            inner = ((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
+            run.run();
+            
+            // before committing, enable the trigger listener
+            enable[0] = true;
+            inner.commit();
+            
+            xa.commit();
+            
+            fail("Commit of root transaction should have failed."); //$NON-NLS-1$
+        } catch (RollbackException e) {
+        	// roll-back is expected
+        } catch (Exception e) {
+            fail(e);
+        } finally {
+            domain.removeResourceSetListener(pl2);
+            domain.removeResourceSetListener(pl);
+            domain.removeResourceSetListener(tl);
+        }
+    }
+    
 	//
 	// Fixture methods
 	//
