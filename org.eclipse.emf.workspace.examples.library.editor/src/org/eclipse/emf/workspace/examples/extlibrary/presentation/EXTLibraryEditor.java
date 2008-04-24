@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EXTLibraryEditor.java,v 1.8 2007/12/03 15:58:51 cdamus Exp $
+ * $Id: EXTLibraryEditor.java,v 1.9 2008/04/24 01:11:51 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
 
@@ -427,10 +427,10 @@ public class EXTLibraryEditor
 	//         operations that wrap EMF Commands.
 	private final IOperationHistoryListener historyListener = new IOperationHistoryListener() {
 		public void historyNotification(final OperationHistoryEvent event) {
+			Set<Resource> affectedResources = ResourceUndoContext.getAffectedResources(
+					event.getOperation());
 			switch(event.getEventType()) {
 			case OperationHistoryEvent.DONE:
-				Set<Resource> affectedResources = ResourceUndoContext.getAffectedResources(
-						event.getOperation());
 				
 				if (affectedResources.contains(getResource())) {
 					final IUndoableOperation operation = event.getOperation();
@@ -467,10 +467,30 @@ public class EXTLibraryEditor
 				break;
 			case OperationHistoryEvent.UNDONE:
 			case OperationHistoryEvent.REDONE:
-				getSite().getShell().getDisplay().asyncExec(new Runnable() {
-					public void run() {
-						firePropertyChange(IEditorPart.PROP_DIRTY);
-					}});
+				if (affectedResources.contains(getResource())) {
+					final IUndoableOperation operation = event.getOperation();
+
+					getSite().getShell().getDisplay().asyncExec(new Runnable() {
+						public void run() {
+							firePropertyChange(IEditorPart.PROP_DIRTY);
+
+							// Try to select the affected objects.
+							//
+							if (operation instanceof EMFCommandOperation) {
+								Command command = ((EMFCommandOperation) operation).getCommand();
+								
+								if (command != null) {
+									setSelectionToViewer(command
+											.getAffectedObjects());
+								}
+							}
+							
+							if (propertySheetPage != null) {
+								propertySheetPage.refresh();
+							}
+						}
+					});
+				}
 				break;
 			}
 		}};
