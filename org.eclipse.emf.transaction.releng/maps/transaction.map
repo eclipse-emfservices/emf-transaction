@@ -36,7 +36,7 @@ plugin@org.eclipse.emf.workspace.tests=v200805041345,:pserver:anonymous@dev.ecli
 
 !*** All-in-one data integrity frameworks features
 
-feature@org.eclipse.emf.emfqtv.all.sdk=v200710032115,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/emfqtv/org.eclipse.emf.emfqtv.all.sdk-feature
+feature@org.eclipse.emf.emfqtv.all.sdk=v200805052240,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/emfqtv/org.eclipse.emf.emfqtv.all.sdk-feature
 feature@org.eclipse.emf.emfqtv.all=v200710032115,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/emfqtv/org.eclipse.emf.emfqtv.all-feature
 
 
