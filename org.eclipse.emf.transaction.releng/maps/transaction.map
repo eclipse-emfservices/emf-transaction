@@ -9,6 +9,8 @@ fragment@org.eclipse.ant.optional.junit=v20050226,:pserver:anonymous@dev.eclipse
 
 !*** plugins, features and fragments
 
+feature@org.eclipse.emf.transaction.master=HEAD,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction.master-feature
+
 feature@org.eclipse.emf.transaction.sdk=v200805041345,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction.sdk-feature
 feature@org.eclipse.emf.transaction=v200805041345,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction-feature
 feature@org.eclipse.emf.transaction.doc=v200805041345,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.transaction.doc-feature
