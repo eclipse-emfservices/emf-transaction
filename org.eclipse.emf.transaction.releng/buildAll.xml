@@ -156,15 +156,16 @@ propertyName=propertyValue
 	      <zipfileset refid="rootfiles" />
 	    </zip>
 
+	    <!-- all-runtime (includes only the 3-1 feature definition; no nested content) -->
+	    <zip destfile="${buildDirectory}/${buildLabel}/${projectName}-qtv-all-runtime-${buildAlias}.zip" update="true">
+	      <zipfileset src="${buildDirectory}/${buildLabel}/${allSDKZip}" dirmode="775" filemode="664" includes="**/org.eclipse.emf.emfqtv.all_*, **/org.eclipse.emf.emfqtv.all_*/**"/>
+	      <zipfileset refid="rootfiles" />
+	    </zip>
+
 	    <echo-timestamp />
 	    <ant target="generateDigests" antfile="${helper}" />
+		
 	</target>
-
-    <!-- all-runtime (includes only the 3-1 feature definition; no nested content) -->
-    <zip destfile="${buildDirectory}/${buildLabel}/${projectName}-qtv-all-runtime-${buildAlias}.zip" update="true">
-      <zipfileset src="${buildDirectory}/${buildLabel}/${allSDKZip}" dirmode="775" filemode="664" includes="**/org.eclipse.emf.emfqtv.all_*, **/org.eclipse.emf.emfqtv.all_*/**"/>
-      <zipfileset refid="rootfiles" />
-    </zip>
 	
 	<!-- main entry points are run, runtestsOnly, runWithoutTest, and buildOnly -->
 
