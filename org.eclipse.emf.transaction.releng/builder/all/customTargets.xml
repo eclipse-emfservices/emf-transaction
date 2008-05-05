@@ -68,7 +68,7 @@
 	<!-- ===================================================================== -->
 	<target name="postSetup">
 		<property name="getDeps.xml" location="${buildDirectory}/../org.eclipse.modeling.common.releng/scripts/getDependencies.xml"/>
-		<echo message="Download, then unpack: OCL SDK, EMF Examples, EMF SDK + Eclipse SDK..."/>
+		<echo message="Download, then unpack: Validation SDK, Query SDK, OCL SDK, EMF Examples, EMF SDK + Eclipse SDK..."/>
 		<ant target="getDependency" antfile="${getDeps.xml}">
 			<property name="url" value="${eclipseURL}" />
 			<property name="file" value="${eclipseFile}" />
@@ -84,6 +84,16 @@
 			<property name="file" value="${emfExamplesFile}"/>
 			<property name="isUnpackedFile" value="${buildDirectory}/plugins/org.eclipse.emf.examples/plugin.xml"/>
 		</ant>
+        <ant target="getDependency" antfile="${getDeps.xml}">
+            <property name="url" value="${validationURL}"/>
+            <property name="file" value="${validationFile}"/>
+            <property name="isUnpackedFile" value="${buildDirectory}/plugins/org.eclipse.emf.validation/META-INF/MANIFEST.MF"/>
+        </ant>
+        <ant target="getDependency" antfile="${getDeps.xml}">
+            <property name="url" value="${queryURL}"/>
+            <property name="file" value="${queryFile}"/>
+            <property name="isUnpackedFile" value="${buildDirectory}/plugins/org.eclipse.emf.query/META-INF/MANIFEST.MF"/>
+        </ant>
 		<ant target="getDependency" antfile="${getDeps.xml}">
 			<property name="url" value="${oclURL}"/>
 			<property name="file" value="${oclFile}"/>
