@@ -5,8 +5,8 @@ Bundle-SymbolicName: org.eclipse.emf.transaction.ui;singleton:=true
 Bundle-Version: 1.2.0.qualifier
 Bundle-Vendor: %Plugin.providerName
 Bundle-Localization: plugin
-Require-Bundle: org.eclipse.emf.edit.ui;bundle-version="[2.3.0,3.0.0)",
- org.eclipse.emf.transaction;bundle-version="[1.2.0,2.0.0)"
+Require-Bundle: org.eclipse.emf.edit.ui;bundle-version="[2.3.0,3.0.0)";visibility:=reexport,
+ org.eclipse.emf.transaction;bundle-version="[1.2.0,2.0.0)";visibility:=reexport
 Eclipse-LazyStart: true
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.eclipse.emf.transaction.ui.internal.EMFTransactionUIPlugin$Implementation
