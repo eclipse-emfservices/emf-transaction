@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalCommandStackImpl.java,v 1.9 2007/11/14 18:14:00 cdamus Exp $
+ * $Id: TransactionalCommandStackImpl.java,v 1.10 2008/05/06 15:04:03 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -57,9 +57,14 @@ public class TransactionalCommandStackImpl
 	@Override
 	protected void doExecute(Command command, Map<?, ?> options) throws InterruptedException, RollbackException {
 		InternalTransaction tx = createTransaction(command, options);
+		boolean completed = false;
 		
 		try {
 			basicExecute(command);
+			
+			// new in EMF 2.4:  AbortExecutionException can cause the
+			// command not to be added to the undo stack
+			completed = mostRecentCommand == command;
 			
 			// commit the transaction now
 			tx.commit();
@@ -76,7 +81,7 @@ public class TransactionalCommandStackImpl
 				// the transaction has already incorporated the triggers
 				//    into its change description, so the recording command
 				//    doesn't need them again
-				if (!(command instanceof RecordingCommand)) {
+				if (!(command instanceof RecordingCommand) && completed) {
 					Command triggerCommand = tx.getTriggers();
 					
 					if (triggerCommand != null) {

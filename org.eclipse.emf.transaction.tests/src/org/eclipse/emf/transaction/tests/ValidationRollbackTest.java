@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: ValidationRollbackTest.java,v 1.9 2008/04/17 16:36:14 cdamus Exp $
+ * $Id: ValidationRollbackTest.java,v 1.10 2008/05/06 15:04:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -27,6 +27,7 @@ import junit.framework.TestSuite;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.common.command.AbortExecutionException;
 import org.eclipse.emf.common.command.AbstractCommand;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.command.CommandStack;
@@ -743,7 +744,7 @@ public class ValidationRollbackTest extends AbstractTest {
                 }
                 
                 Book book = EXTLibraryFactory.eINSTANCE.createBook();
-                book.setTitle("Book " + random.nextInt(1000) + 1);
+                book.setTitle("Book " + random.nextInt(1000) + 1); //$NON-NLS-1$
                 
                 // an undoable change
                 book.setAuthor(writer[0]);
@@ -761,7 +762,7 @@ public class ValidationRollbackTest extends AbstractTest {
                 
                 if (enable[0]) {
                     enable[0] = false;
-                    return new AbstractCommand("Test") {
+                    return new AbstractCommand("Test") { //$NON-NLS-1$
                     
                         @Override
                         protected boolean prepare() {
@@ -859,6 +860,29 @@ public class ValidationRollbackTest extends AbstractTest {
             domain.removeResourceSetListener(pl2);
             domain.removeResourceSetListener(pl);
             domain.removeResourceSetListener(tl);
+        }
+    }
+    
+    /**
+     * Tests that, when a command execution is canceled with the
+     * {@link AbortExecutionException}, the transaction is committed because it
+     * didn't make any changes, but the command is not on the undo stack.
+     */
+    public void test_rollbackOnAbortExecutionException_230129() {
+        Command command = new RecordingCommand(domain) {
+            @Override
+			protected void doExecute() {
+                throw new AbortExecutionException("Cancel me"); //$NON-NLS-1$
+            }};
+        
+        try {
+            getCommandStack().execute(command, Collections.EMPTY_MAP);
+            
+            assertFalse(getCommandStack().canUndo());
+        } catch (RollbackException e) {
+            fail("Should not have rolled back: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        } catch (InterruptedException e) {
+            fail("Interrupted"); //$NON-NLS-1$
         }
     }
 	
