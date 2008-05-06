@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.10 2007/11/14 18:14:12 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.11 2008/05/06 15:05:14 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -26,9 +26,16 @@ import java.util.Set;
 
 import junit.framework.TestCase;
 
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileInfo;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceVisitor;
+import org.eclipse.core.resources.ResourceAttributes;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.common.util.URI;
@@ -201,12 +208,74 @@ public class AbstractTest
 			testResource = null;
 		}
 		
-		if ((project != null) && project.exists()) {
-			project.delete(true, true, null);
-		}
+		project = ResourcesPlugin.getWorkspace().getRoot().getProject(PROJECT_NAME);
+		
+		delete(project);
 		
 		project = null;
+		file = null;
 		domain = null;
+	}
+	
+	protected void delete(java.io.File file) {
+		if (!file.exists()) {
+			return;
+		}
+		
+		try {
+			IFileStore store = EFS.getLocalFileSystem().fromLocalFile(file);
+			IFileInfo info = store.fetchInfo();
+			info.setAttribute(EFS.ATTRIBUTE_READ_ONLY, false);
+			info.setAttribute(EFS.ATTRIBUTE_HIDDEN, false);
+			info.setAttribute(EFS.ATTRIBUTE_ARCHIVE, false);
+			store.putInfo(info, EFS.SET_ATTRIBUTES, null);
+		} catch (Exception e) {
+			fail("Failed to clean up test file: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+	}
+	
+	protected void delete(IFile file) {
+		if (!file.exists()) {
+			return;
+		}
+		
+		try {
+			if (file.isReadOnly()) {
+				// on Mac, it can become read-only in certain tests
+				ResourceAttributes attrs = new ResourceAttributes();
+				attrs.setReadOnly(false);
+				attrs.setHidden(false);
+				attrs.setArchive(false);
+				file.setResourceAttributes(attrs);
+			}
+			file.delete(true, null);
+		} catch (Exception e) {
+			fail("Failed to clean up test file: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+	}
+	
+	protected void delete(IProject project) {
+		if (!project.exists()) {
+			return;
+		}
+		
+		try {
+			project.refreshLocal(IResource.DEPTH_INFINITE, null);
+			
+			project.accept(new IResourceVisitor() {
+				public boolean visit(IResource res)
+						throws CoreException {
+					if (res.getType() == IResource.FILE) {
+						delete((IFile) res);
+					}
+					
+					return true;
+				}});
+			
+			project.delete(true, true, null);
+	} catch (Exception e) {
+			fail("Failed to clean up test project: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
 	}
 
 	//

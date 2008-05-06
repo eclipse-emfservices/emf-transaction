@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2008 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EditingDomainTest.java,v 1.4 2007/01/30 22:16:52 cdamus Exp $
+ * $Id: EditingDomainTest.java,v 1.5 2008/05/06 15:05:14 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -90,11 +90,7 @@ public class EditingDomainTest extends AbstractTest {
         
         addTearDownAction(new Runnable() {
             public void run() {
-                try {
-                    proj.delete(true, null);
-                } catch (Exception e) {
-                    // doesn't really matter
-                }
+                delete(proj);
             }});
         
         try {
@@ -158,7 +154,7 @@ public class EditingDomainTest extends AbstractTest {
         
         addTearDownAction(new Runnable() {
             public void run() {
-                file.delete();
+                delete(file);
             }});
         
         // a resource that doesn't exist should be writable
