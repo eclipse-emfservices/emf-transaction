@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EXTLibraryEditor.java,v 1.9 2008/04/24 01:11:51 cdamus Exp $
+ * $Id: EXTLibraryEditor.java,v 1.10 2008/06/05 18:15:33 cdamus Exp $
  */
 package org.eclipse.emf.workspace.examples.extlibrary.presentation;
 
@@ -528,7 +528,6 @@ public class EXTLibraryEditor
 			if (removedResources.contains(res)) {
 				if (handleDirtyConflict()) {
 					getSite().getPage().closeEditor(EXTLibraryEditor.this, false);
-					EXTLibraryEditor.this.dispose();
 				}
 			} else if (movedResources.containsKey(res)) {
 				//.CUSTOM: Generated editor does not have move support
@@ -568,7 +567,6 @@ public class EXTLibraryEditor
 						(new Runnable() {
 							 public void run() {
 								 getSite().getPage().closeEditor(EXTLibraryEditor.this, false);
-								 EXTLibraryEditor.this.dispose();
 							 }
 						 });
 				} else {
