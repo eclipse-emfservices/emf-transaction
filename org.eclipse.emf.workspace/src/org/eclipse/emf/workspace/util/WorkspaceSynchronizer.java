@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,10 +10,11 @@
  * Contributors:
  *   IBM - Initial API and implementation
  *   Geoff Martin - Fix deletion of resource that has markers
+ *   Zeligsoft - Bug 233004
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.10 2008/01/02 16:12:19 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.10.2.1 2008/07/01 15:09:44 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -155,8 +156,24 @@ public final class WorkspaceSynchronizer {
 	 */
 	public void dispose() {
 		stopListening(this);
-		delegate.dispose();
-		delegate = null;
+		
+		synchronized (this) {
+			if (!isDisposed()) {
+				delegate.dispose();
+				delegate = null;
+			}
+		}
+	}
+	
+	/**
+	 * Queries whether I am disposed already.
+	 * 
+	 * @return whether I am disposed
+	 * 
+	 * @since 1.2.1
+	 */
+	boolean isDisposed() {
+		return delegate == null;
 	}
 	
 	/**
@@ -305,7 +322,7 @@ public final class WorkspaceSynchronizer {
                 }
                 catch (IOException exception)
                 {
-                  return "";
+                  return ""; //$NON-NLS-1$
                 }
               }
             }
@@ -570,7 +587,16 @@ public final class WorkspaceSynchronizer {
 		public IStatus runInWorkspace(IProgressMonitor monitor) {
 			try {
 				for (SynchRequest next : synchRequests) {
-					next.perform();
+					try {
+						synchronized (next.getLock()) {
+							if (!next.isDisposed()) {
+								next.perform();
+							}
+						}
+					} catch (RuntimeException e) {
+						Tracing.catching(ResourceSynchJob.class, "run", e); //$NON-NLS-1$
+						EMFWorkspacePlugin.INSTANCE.log(e);
+					}
 				}
 			} catch (InterruptedException e) {
 				Tracing.catching(ResourceSynchJob.class, "run", e); //$NON-NLS-1$
