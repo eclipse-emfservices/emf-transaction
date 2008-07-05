@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 234868
  *
  * </copyright>
  *
- * $Id: TestOperation.java,v 1.3 2007/11/14 18:13:54 cdamus Exp $
+ * $Id: TestOperation.java,v 1.3.2.1 2008/07/05 16:22:34 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
@@ -34,6 +35,8 @@ import org.eclipse.emf.workspace.AbstractEMFOperation;
 public abstract class TestOperation
 	extends AbstractEMFOperation {
 
+	private IStatus status = Status.OK_STATUS;
+	
 	public TestOperation(TransactionalEditingDomain domain) {
 		super(domain, "Testing"); //$NON-NLS-1$
 	}
@@ -46,8 +49,16 @@ public abstract class TestOperation
 	protected final IStatus doExecute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		doExecute();
 		
-		return Status.OK_STATUS;
+		return getStatus();
 	}
 	
-	protected abstract void doExecute();
+	protected final IStatus getStatus() {
+		return status;
+	}
+	
+	protected final void setStatus(IStatus status) {
+		this.status = status;
+	}
+	
+	protected abstract void doExecute() throws ExecutionException;
 }
