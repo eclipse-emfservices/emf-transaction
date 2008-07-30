@@ -11,14 +11,16 @@
  *   IBM - Initial API and implementation
  *   Geoff Martin - Fix deletion of resource that has markers
  *   Zeligsoft - Bug 233004
+ *   Christian Vogt - Bug 235634
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.10.2.1 2008/07/01 15:09:44 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.10.2.2 2008/07/30 15:51:41 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.List;
 
@@ -343,6 +345,19 @@ public final class WorkspaceSynchronizer {
                     // recurse on the new URI
                     result = getFile(normalized, converter, considerArchives);
                 }
+            }
+        }
+        
+        if ((result == null) && !uri.isRelative()) {
+            try {
+                IFile[] files = ResourcesPlugin.getWorkspace().getRoot()
+                        .findFilesForLocationURI(new java.net.URI(uri.toString()));
+                if (files.length > 0) {
+                    // set the result to be the first file found
+                    result = files[0];
+                }
+            } catch (URISyntaxException e) {
+                // won't get this because EMF provides a well-formed URI
             }
         }
         
