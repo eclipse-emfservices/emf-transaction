@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 218276
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.8 2007/11/14 18:13:53 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.9 2008/08/13 13:24:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -28,6 +29,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
@@ -35,8 +37,10 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.NotificationFilter;
+import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListener;
+import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
@@ -717,6 +721,71 @@ public class AbstractEMFOperationTest extends AbstractTest {
        } catch (Exception e) {
            fail("Should not have failed to redo with null monitor: " + e.getLocalizedMessage()); //$NON-NLS-1$
        }
+    }
+    
+    /**
+     * Tests that recording-commands used as triggers are not undone twice.
+     */
+    public void test_undoWithRecordingCommandTrigger_218276() {
+    	final Book[] book = new Book[] {(Book) find("root/Root Book")}; //$NON-NLS-1$
+    	final int newCopies = 30;
+    	
+    	final RecordingCommand trigger = new RecordingCommand(domain, "Test Trigger") { //$NON-NLS-1$
+		
+			@Override
+			protected void doExecute() {
+				book[0].setCopies(newCopies);
+			}};
+    	
+		ResourceSetListener listener = new ResourceSetListenerImpl() {
+			@Override
+			public boolean isPrecommitOnly() {
+				return true;
+			}
+			
+			@Override
+			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+					throws RollbackException {
+				
+				CompoundCommand result = new CompoundCommand();
+				
+				for (Notification next : event.getNotifications()) {
+					if (next.getFeature() == EXTLibraryPackage.Literals.BOOK__TITLE) {
+						return trigger;
+					}
+				}
+				
+				return result;
+			}};
+		
+		try {
+			domain.addResourceSetListener(listener);
+			
+			final String newTitle = "New Title"; //$NON-NLS-1$
+			
+			IUndoableOperation op = new TestOperation(domain) {
+				@Override
+				protected void doExecute()
+						throws ExecutionException {
+					book[0].setTitle(newTitle);
+				}};
+
+			op.execute(null, null);
+			
+			assertEquals("Wrong number of copies on execute", newCopies, book[0].getCopies()); //$NON-NLS-1$
+			
+			op.undo(null, null);
+			
+			assertFalse("Wrong number of copies on undo", book[0].getCopies() == newCopies); //$NON-NLS-1$
+			
+			op.redo(null, null);
+			
+			assertEquals("Wrong number of copies on redo", newCopies, book[0].getCopies()); //$NON-NLS-1$
+		} catch (ExecutionException e) {
+			fail(e);
+		} finally {
+			domain.removeResourceSetListener(listener);
+		}
     }
 	
 	//

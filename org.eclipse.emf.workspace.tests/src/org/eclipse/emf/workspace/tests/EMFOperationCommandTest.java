@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 234868
  *
  * </copyright>
  *
- * $Id: EMFOperationCommandTest.java,v 1.6 2007/11/16 17:58:50 cdamus Exp $
+ * $Id: EMFOperationCommandTest.java,v 1.7 2008/08/13 13:24:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -20,9 +21,14 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.AbstractOperation;
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.edit.command.SetCommand;
@@ -456,6 +462,263 @@ public class EMFOperationCommandTest extends AbstractTest {
 			exception = nullPointerException;
 		}
 		assertNull(exception);
+	}
+	
+	/**
+	 * Tests that failure of an EMFOperationCommand used as a trigger will
+	 * roll back a transaction.
+	 */
+	public void test_operationTriggerFails_234868() {
+		final TestOperation trigger = new TestOperation(domain) {
+		
+			@Override
+			protected void doExecute()
+					throws ExecutionException {
+				
+				throw new ExecutionException("I should fail"); //$NON-NLS-1$
+			}};
+		
+		TriggerListener listener = new TriggerListener() {
+		
+			@Override
+			protected Command trigger(TransactionalEditingDomain domain,
+					Notification notification) {
+				return new EMFOperationCommand(domain, trigger);
+			}};
+		
+		try {
+			domain.addResourceSetListener(listener);
+			
+			startWriting();
+			Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+			book.setCopies(book.getCopies() + 30);
+			commitWithRollback();  // should roll back due to trigger
+			
+			fail("Should have rolled back."); //$NON-NLS-1$
+		} catch (RollbackException rbe) {
+			// success
+			System.out.println("Got expected exception: " + rbe.getLocalizedMessage()); //$NON-NLS-1$
+		} finally {
+			domain.removeResourceSetListener(listener);
+		}
+	}
+	
+	/**
+	 * Tests that execution of an EMFOperationCommand used as a trigger will
+	 * roll back a transaction when the operation status is an ERROR.
+	 */
+	public void test_operationTriggerErrorStatus_234868() {
+		final TestOperation trigger = new TestOperation(domain) {
+		
+			@Override
+			protected void doExecute() {
+				
+				setStatus(new Status(IStatus.ERROR,
+					"org.eclipse.emf.workspace.tests", "I should fail")); //$NON-NLS-1$ //$NON-NLS-2$
+			}};
+		
+		TriggerListener listener = new TriggerListener() {
+		
+			@Override
+			protected Command trigger(TransactionalEditingDomain domain,
+					Notification notification) {
+				return new EMFOperationCommand(domain, trigger);
+			}};
+		
+		try {
+			domain.addResourceSetListener(listener);
+			
+			startWriting();
+			Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+			book.setCopies(book.getCopies() + 30);
+			commitWithRollback();  // should roll back due to trigger
+			
+			fail("Should have rolled back."); //$NON-NLS-1$
+		} catch (RollbackException rbe) {
+			// success
+			System.out.println("Got expected exception: " + rbe.getLocalizedMessage()); //$NON-NLS-1$
+		} finally {
+			domain.removeResourceSetListener(listener);
+		}
+	}
+	
+	/**
+	 * Tests that execution of a non-EMF operation used as a trigger will
+	 * roll back a transaction when the operation status is a ERROR.
+	 */
+	public void test_operationTriggerErrorStatus_nonEMF_234868() {
+		final IUndoableOperation trigger = new AbstractOperation("Non-EMF Changes") { //$NON-NLS-1$
+		
+			@Override
+			public IStatus execute(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return new Status(IStatus.ERROR,
+					"org.eclipse.emf.workspace.tests", "I should fail"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			
+			@Override
+			public IStatus undo(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return Status.OK_STATUS;
+			}
+			
+			@Override
+			public IStatus redo(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return Status.OK_STATUS;
+			}};
+		
+		TriggerListener listener = new TriggerListener() {
+		
+			@Override
+			protected Command trigger(TransactionalEditingDomain domain,
+					Notification notification) {
+				return new EMFOperationCommand(domain, trigger);
+			}};
+		
+		try {
+			domain.addResourceSetListener(listener);
+			
+			startWriting();
+			Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+			book.setCopies(book.getCopies() + 30);
+			commitWithRollback();  // should roll back due to trigger
+			
+			fail("Should have rolled back."); //$NON-NLS-1$
+		} catch (RollbackException rbe) {
+			// success
+			System.out.println("Got expected exception: " + rbe.getLocalizedMessage()); //$NON-NLS-1$
+		} finally {
+			domain.removeResourceSetListener(listener);
+		}
+	}
+	
+	/**
+	 * Tests that undo of a non-EMF operation used as a trigger will
+	 * roll back a transaction when the operation status is a ERROR.
+	 */
+	public void test_operationTriggerErrorStatus_nonEMF_undo_234868() {
+		final IUndoableOperation trigger = new AbstractOperation("Non-EMF Changes") { //$NON-NLS-1$
+		
+			@Override
+			public IStatus execute(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return Status.OK_STATUS;
+			}
+			
+			@Override
+			public IStatus undo(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return new Status(IStatus.ERROR,
+					"org.eclipse.emf.workspace.tests", "I should fail"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			
+			@Override
+			public IStatus redo(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return Status.OK_STATUS;
+			}};
+		
+		TriggerListener listener = new TriggerListener() {
+		
+			@Override
+			protected Command trigger(TransactionalEditingDomain domain,
+					Notification notification) {
+				return new EMFOperationCommand(domain, trigger);
+			}};
+		
+		try {
+			domain.addResourceSetListener(listener);
+			
+			IUndoableOperation op = new TestOperation(domain) {
+				protected void doExecute() throws ExecutionException {
+					Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+					book.setCopies(book.getCopies() + 30);
+				}};
+			
+			try {
+				op.execute(null, null);
+			} catch (ExecutionException e) {
+				fail("Should not fail to execute: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			}
+			
+			try {
+				op.undo(null, null);
+				fail("Should have failed to undo."); //$NON-NLS-1$
+			} catch (ExecutionException e) {
+				// success
+				System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			}
+		} finally {
+			domain.removeResourceSetListener(listener);
+		}
+	}
+	
+	/**
+	 * Tests that redo of a non-EMF operation used as a trigger will
+	 * roll back a transaction when the operation status is a ERROR.
+	 */
+	public void test_operationTriggerErrorStatus_nonEMF_redo_234868() {
+		final IUndoableOperation trigger = new AbstractOperation("Non-EMF Changes") { //$NON-NLS-1$
+		
+			@Override
+			public IStatus execute(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return Status.OK_STATUS;
+			}
+			
+			@Override
+			public IStatus undo(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return Status.OK_STATUS;
+			}
+			
+			@Override
+			public IStatus redo(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return new Status(IStatus.ERROR,
+					"org.eclipse.emf.workspace.tests", "I should fail"); //$NON-NLS-1$ //$NON-NLS-2$
+			}};
+		
+		TriggerListener listener = new TriggerListener() {
+		
+			@Override
+			protected Command trigger(TransactionalEditingDomain domain,
+					Notification notification) {
+				return new EMFOperationCommand(domain, trigger);
+			}};
+		
+		try {
+			domain.addResourceSetListener(listener);
+			
+			IUndoableOperation op = new TestOperation(domain) {
+				protected void doExecute() throws ExecutionException {
+					Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+					book.setCopies(book.getCopies() + 30);
+				}};
+			
+			try {
+				op.execute(null, null);
+			} catch (ExecutionException e) {
+				fail("Should not fail to execute: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			}
+			
+			try {
+				op.undo(null, null);
+			} catch (ExecutionException e) {
+				fail("Should not fail to undo: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			}
+			
+			try {
+				op.redo(null, null);
+				fail("Should have failed to redo."); //$NON-NLS-1$
+			} catch (ExecutionException e) {
+				// success
+				System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			}
+		} finally {
+			domain.removeResourceSetListener(listener);
+		}
 	}
 	
 	//

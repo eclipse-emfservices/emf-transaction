@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 234868
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.17 2007/11/14 18:14:08 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.18 2008/08/13 13:24:44 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -33,6 +34,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.command.CompoundCommand;
+import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionChangeDescription;
@@ -42,6 +44,7 @@ import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionImpl;
 import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
+import org.eclipse.emf.workspace.internal.EMFWorkspaceStatusCodes;
 import org.eclipse.emf.workspace.internal.Tracing;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
 
@@ -362,6 +365,27 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 			// snuff the exception, because this is expected (user asked to
 			//    cancel the model change).  We will rollback, below
 			result = Status.CANCEL_STATUS;
+		} catch (Exception e) {
+			// the change description could contain non-EMF operations
+			// that fail to undo, resulting in WrappedExceptions or
+			// other exceptions
+			Tracing.catching(AbstractEMFOperation.class, "undo", e); //$NON-NLS-1$
+			
+			Throwable t = e;
+			if (t instanceof WrappedException) {
+				// after tracing, unwrap
+				t = ((WrappedException) e).getCause();
+			}
+			
+			IStatus status = new Status(
+				IStatus.ERROR,
+				EMFWorkspacePlugin.getPluginId(),
+				EMFWorkspaceStatusCodes.UNDO_ROLLED_BACK,
+				Messages.undoRolledBack,
+				t);
+			EMFWorkspacePlugin.INSTANCE.log(status);
+			
+			throw new ExecutionException(status.getMessage(), t);
 		} finally {
 			if ((tx != null) && tx.isActive()) {
 				// we didn't commit it, so some RuntimeException or Error must
@@ -432,6 +456,27 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 			// snuff the exception, because this is expected (user asked to
 			//    cancel the model change).  We will rollback, below
 			result = Status.CANCEL_STATUS;
+		} catch (Exception e) {
+			// the change description could contain non-EMF operations
+			// that fail to redo, resulting in WrappedExceptions or
+			// other exceptions
+			Tracing.catching(AbstractEMFOperation.class, "redo", e); //$NON-NLS-1$
+			
+			Throwable t = e;
+			if (t instanceof WrappedException) {
+				// after tracing, unwrap
+				t = ((WrappedException) e).getCause();
+			}
+			
+			IStatus status = new Status(
+				IStatus.ERROR,
+				EMFWorkspacePlugin.getPluginId(),
+				EMFWorkspaceStatusCodes.REDO_ROLLED_BACK,
+				Messages.redoRolledBack,
+				t);
+			EMFWorkspacePlugin.INSTANCE.log(status);
+			
+			throw new ExecutionException(status.getMessage(), t);
 		} finally {
 			if ((tx != null) && tx.isActive()) {
 				// we didn't commit it, so some RuntimeException or Error must

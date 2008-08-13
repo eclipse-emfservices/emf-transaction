@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *
+ *   Zeligsoft - Bug 218276
+ *   
  * </copyright>
  *
- * $Id: RecordingCommand.java,v 1.7 2007/11/14 18:14:01 cdamus Exp $
+ * $Id: RecordingCommand.java,v 1.8 2008/08/13 13:24:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -48,6 +49,14 @@ import org.eclipse.emf.transaction.util.TransactionUtil;
 public abstract class RecordingCommand
 		extends AbstractCommand
 		implements ConditionalRedoCommand {
+	
+	/**
+	 * An internal option that identifies the {@link Command} that a transaction
+	 * was created to execute.
+	 */
+	// TODO(1.3): Move to TransactionImpl class
+	static final String OPTION_EXECUTING_COMMAND = "executing_command"; //$NON-NLS-1$
+	
 	private final TransactionalEditingDomain domain;
 	private Transaction transaction;
 	private TransactionChangeDescription change;
@@ -110,7 +119,7 @@ public abstract class RecordingCommand
             (InternalTransactionalEditingDomain) domain;
         Transaction nested = null;
         
-        if (isTriggerCommand() && isUndoable()) {
+        if ((isNestedCommand() || isTriggerCommand()) && isUndoable()) {
             // need to create a nested transaction so that we can capture its
             //    changes for undo/redo
             try {
@@ -176,9 +185,17 @@ public abstract class RecordingCommand
 	/**
 	 * Undoes the changes that I recorded.
 	 * Subclasses would not normally need to override this method.
+	 * 
+	 * @throws IllegalStateException if I am not {@linkplain #canUndo() undoable}
+	 * 
+	 * @see #canUndo()
 	 */
 	@Override
 	public final void undo() {
+		if (!canUndo()) {
+			throw new IllegalStateException("command is not undoable"); //$NON-NLS-1$
+		}
+		
 		if (change != null) {
 			change.applyAndReverse();
 		}
@@ -187,8 +204,16 @@ public abstract class RecordingCommand
 	/**
 	 * Redoes the changes that I recorded.
 	 * Subclasses would not normally need to override this method.
+	 * 
+	 * @throws IllegalStateException if I am not {@linkplain #canRedo() redoable}
+	 * 
+	 * @see #canRedo()
 	 */
 	public final void redo() {
+		if (!canRedo()) {
+			throw new IllegalStateException("command is not redoable"); //$NON-NLS-1$
+		}
+		
 		if (change != null) {
 			change.applyAndReverse();
 		}
@@ -207,6 +232,29 @@ public abstract class RecordingCommand
 	    return new ConditionalRedoCommand.Compound().chain(this).chain(command);
 	}
     
+	private Transaction getActiveTransaction() {
+		return ((InternalTransactionalEditingDomain) domain)
+			.getActiveTransaction();
+	}
+	
+	/**
+	 * Queries whether I am a nested command, not executing as the rot command
+	 * of the active transaction.
+	 * 
+	 * @return whether I am not the root command being executed in a transaction
+	 */
+	private boolean isNestedCommand() {
+		boolean result = false;
+		
+		Transaction tx = getActiveTransaction();
+		if (tx != null) {
+			Object rootCommand = tx.getOptions().get(OPTION_EXECUTING_COMMAND);
+			result = (rootCommand != null) && !rootCommand.equals(this);
+		}
+		
+		return result;
+	}
+	
     /**
      * Queries whether I am executing in the context of a trigger transaction.
      * That is to say, whether I am a trigger command.
@@ -215,7 +263,7 @@ public abstract class RecordingCommand
      */
     private boolean isTriggerCommand() {
         boolean result = false;
-        Transaction tx = ((InternalTransactionalEditingDomain) domain).getActiveTransaction();
+        Transaction tx = getActiveTransaction();
         
         while (!result && (tx != null)) {
             result = Boolean.TRUE.equals(tx.getOptions().get(
@@ -234,7 +282,7 @@ public abstract class RecordingCommand
      */
     private boolean isUndoable() {
         boolean result = true;
-        Transaction tx = ((InternalTransactionalEditingDomain) domain).getActiveTransaction();
+        Transaction tx = getActiveTransaction();
         
         while (result && (tx != null)) {
             result = !Boolean.TRUE.equals(tx.getOptions().get(Transaction.OPTION_NO_UNDO))

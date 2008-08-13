@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,13 +9,15 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 218276
  *
  * </copyright>
  *
- * $Id: EMFCommandTransaction.java,v 1.4 2007/11/14 18:14:00 cdamus Exp $
+ * $Id: EMFCommandTransaction.java,v 1.5 2008/08/13 13:24:41 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.eclipse.emf.common.command.Command;
@@ -30,6 +32,13 @@ import org.eclipse.emf.common.command.Command;
  */
 public class EMFCommandTransaction
 	extends TransactionImpl {
+	
+	/**
+	 * An internal option that identifies the {@link Command} that a transaction
+	 * was created to execute.
+	 */
+	// TODO(1.3): Move to TransactionImpl class
+	static final String OPTION_EXECUTING_COMMAND = "executing_command"; //$NON-NLS-1$
 
 	private final Command command;
 
@@ -42,7 +51,7 @@ public class EMFCommandTransaction
 	 */
 	public EMFCommandTransaction(Command command, InternalTransactionalEditingDomain domain,
 			Map<?, ?> options) {
-		super(domain, false, options);
+		super(domain, false, addCommand(options, command));
 		
 		this.command = command;
 	}
@@ -55,5 +64,31 @@ public class EMFCommandTransaction
 	 */
 	public final Command getCommand() {
 		return command;
+	}
+	
+	/**
+	 * Given the specified options and command, computes an options map that
+	 * has the same options as those provided, plus the specified command as
+	 * the executing-command option.
+	 * 
+	 * @param options a map of options
+	 * @param command the command that we are executing in this transaction
+	 * @return a new map of options that increments those supplied with the
+	 *       appropriate executing-command option
+	 */
+	private static Map<?, ?> addCommand(Map<?, ?> options, Command command) {
+		Map<?, ?> result = options;
+
+		if (options == null) {
+			result = Collections
+				.singletonMap(OPTION_EXECUTING_COMMAND, command);
+		} else if (options.get(OPTION_EXECUTING_COMMAND) != command) {
+			Map<Object, Object> mutable = new java.util.HashMap<Object, Object>(
+				options);
+			mutable.put(OPTION_EXECUTING_COMMAND, command);
+			result = mutable;
+		}
+
+		return result;
 	}
 }

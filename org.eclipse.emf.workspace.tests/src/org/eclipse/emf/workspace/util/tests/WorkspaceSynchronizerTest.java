@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 233004
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizerTest.java,v 1.9 2008/01/02 16:12:16 cdamus Exp $
+ * $Id: WorkspaceSynchronizerTest.java,v 1.10 2008/08/13 13:24:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -24,9 +25,13 @@ import junit.framework.TestSuite;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IResourceChangeEvent;
+import org.eclipse.core.resources.IResourceChangeListener;
+import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.ILogListener;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -37,6 +42,7 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.validation.marker.MarkerUtil;
+import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
 import org.eclipse.emf.workspace.tests.AbstractTest;
 import org.eclipse.emf.workspace.util.WorkspaceSynchronizer;
 
@@ -45,6 +51,7 @@ import org.eclipse.emf.workspace.util.WorkspaceSynchronizer;
  *
  * @author Christian W. Damus (cdamus)
  */
+@SuppressWarnings("nls")
 public class WorkspaceSynchronizerTest extends AbstractTest {
 	
 	private WorkspaceSynchronizer synch;
@@ -556,6 +563,53 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
         waitForWorkspaceChanges();
         
         assertFalse(testResource.isLoaded());
+    }
+    
+    public void test_deleteProjectAndDisposeSynchronizer_233004() {
+    	final IStatus[] logged = new IStatus[1];
+    	
+    	ILogListener log = new ILogListener() {
+		
+			public void logging(IStatus status, String plugin) {
+				logged[0] = status;
+			}};
+		
+    	IResourceChangeListener listener = new IResourceChangeListener() {
+    		private boolean disposedSynch;
+    		
+			public void resourceChanged(IResourceChangeEvent event) {
+				if ((event.getType() == IResourceChangeEvent.POST_CHANGE)
+						&& !disposedSynch) {
+					disposedSynch = true;
+					synch.dispose();
+				}
+			}};
+		
+		try {
+			ResourcesPlugin.getWorkspace().addResourceChangeListener(listener);
+			EMFWorkspacePlugin.getPlugin().getLog().addLogListener(log);
+			
+			ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
+			
+				public void run(IProgressMonitor monitor)
+						throws CoreException {
+					project.delete(true, null);
+				}}, null);
+			
+			// give the synch-job a chance to run
+			Thread.sleep(1000);
+			
+			if (logged[0] != null) {
+				fail("Should not have logged: " + logged[0].getException());
+			}
+		} catch (CoreException e) {
+			fail("Failed to delete project: " + e.getLocalizedMessage());
+		} catch (InterruptedException e) {
+			fail("Test interrupted in sleep");
+		} finally {
+			EMFWorkspacePlugin.getPlugin().getLog().removeLogListener(log);
+			ResourcesPlugin.getWorkspace().removeResourceChangeListener(listener);
+		}
     }
 	
 	//

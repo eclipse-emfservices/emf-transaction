@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,14 +10,17 @@
  * Contributors:
  *   IBM - Initial API and implementation
  *   Geoff Martin - Fix deletion of resource that has markers
+ *   Zeligsoft - Bug 233004
+ *   Christian Vogt - Bug 235634
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.10 2008/01/02 16:12:19 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.11 2008/08/13 13:24:44 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.List;
 
@@ -155,8 +158,24 @@ public final class WorkspaceSynchronizer {
 	 */
 	public void dispose() {
 		stopListening(this);
-		delegate.dispose();
-		delegate = null;
+		
+		synchronized (this) {
+			if (!isDisposed()) {
+				delegate.dispose();
+				delegate = null;
+			}
+		}
+	}
+	
+	/**
+	 * Queries whether I am disposed already.
+	 * 
+	 * @return whether I am disposed
+	 * 
+	 * @since 1.2.1
+	 */
+	boolean isDisposed() {
+		return delegate == null;
 	}
 	
 	/**
@@ -305,7 +324,7 @@ public final class WorkspaceSynchronizer {
                 }
                 catch (IOException exception)
                 {
-                  return "";
+                  return ""; //$NON-NLS-1$
                 }
               }
             }
@@ -326,6 +345,19 @@ public final class WorkspaceSynchronizer {
                     // recurse on the new URI
                     result = getFile(normalized, converter, considerArchives);
                 }
+            }
+        }
+        
+        if ((result == null) && !uri.isRelative()) {
+            try {
+                IFile[] files = ResourcesPlugin.getWorkspace().getRoot()
+                        .findFilesForLocationURI(new java.net.URI(uri.toString()));
+                if (files.length > 0) {
+                    // set the result to be the first file found
+                    result = files[0];
+                }
+            } catch (URISyntaxException e) {
+                // won't get this because EMF provides a well-formed URI
             }
         }
         
@@ -570,7 +602,16 @@ public final class WorkspaceSynchronizer {
 		public IStatus runInWorkspace(IProgressMonitor monitor) {
 			try {
 				for (SynchRequest next : synchRequests) {
-					next.perform();
+					try {
+						synchronized (next.getLock()) {
+							if (!next.isDisposed()) {
+								next.perform();
+							}
+						}
+					} catch (RuntimeException e) {
+						Tracing.catching(ResourceSynchJob.class, "run", e); //$NON-NLS-1$
+						EMFWorkspacePlugin.INSTANCE.log(e);
+					}
 				}
 			} catch (InterruptedException e) {
 				Tracing.catching(ResourceSynchJob.class, "run", e); //$NON-NLS-1$

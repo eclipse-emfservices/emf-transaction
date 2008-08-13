@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 234868
  *
  * </copyright>
  *
- * $Id: AbstractTest.java,v 1.6 2008/05/06 15:05:04 cdamus Exp $
+ * $Id: AbstractTest.java,v 1.7 2008/08/13 13:24:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -51,6 +52,7 @@ import org.eclipse.emf.examples.extlibrary.Periodical;
 import org.eclipse.emf.examples.extlibrary.Person;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.examples.extlibrary.util.EXTLibrarySwitch;
+import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
@@ -602,6 +604,20 @@ public class AbstractTest
 		try {
 			transactionStack.add(
 					((InternalTransactionalEditingDomain) domain).startTransaction(true, options));
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+	
+	/**
+	 * Commits the most recently-opened transaction without asserting that
+	 * the commit doesn't roll back.
+	 */
+	protected void commitWithRollback() throws RollbackException {
+		try {
+			((Transaction) transactionStack.remove(transactionStack.size() - 1)).commit();
+		} catch (RollbackException e) {
+			throw e;
 		} catch (Exception e) {
 			fail(e);
 		}

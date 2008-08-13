@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 218276
  *
  * </copyright>
  *
- * $Id: UndoRedoTest.java,v 1.10 2007/11/14 18:14:12 cdamus Exp $
+ * $Id: UndoRedoTest.java,v 1.11 2008/08/13 13:24:51 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -23,6 +24,7 @@ import junit.framework.TestSuite;
 
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.command.CommandStack;
+import org.eclipse.emf.common.command.CompoundCommand;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.edit.command.AddCommand;
@@ -35,6 +37,7 @@ import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListener;
+import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionChangeDescription;
@@ -643,6 +646,131 @@ public class UndoRedoTest extends AbstractTest {
         assertFalse(((InternalTransactionalEditingDomain) domain)
             .getUndoRedoOptions().containsKey(BOGUS_OPTION));
         assertFalse(TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS.containsKey(BOGUS_OPTION));
+    }
+    
+    /**
+     * Tests that recording-commands used as triggers are not undone twice
+     * when executing recording-commands on the command-stack.
+     */
+    public void test_undoRecordingCommandWithRecordingCommandTrigger_218276() {
+    	final Book[] book = new Book[] {(Book) find("root/Root Book")}; //$NON-NLS-1$
+    	final int newCopies = 30;
+    	
+    	final RecordingCommand trigger = new RecordingCommand(domain, "Test Trigger") { //$NON-NLS-1$
+		
+			@Override
+			protected void doExecute() {
+				book[0].setCopies(newCopies);
+			}};
+			
+		ResourceSetListener listener = new ResourceSetListenerImpl() {
+			@Override
+			public boolean isPrecommitOnly() {
+				return true;
+			}
+			
+			@Override
+			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+					throws RollbackException {
+				
+				CompoundCommand result = new CompoundCommand();
+				
+				for (Notification next : event.getNotifications()) {
+					if (next.getFeature() == EXTLibraryPackage.Literals.BOOK__TITLE) {
+						result.append(trigger);
+					}
+				}
+				
+				return result.isEmpty()? null : result;
+			}};
+		
+		try {
+			domain.addResourceSetListener(listener);
+			
+			final String newTitle = "New Title"; //$NON-NLS-1$
+			
+			getCommandStack().execute(new RecordingCommand(domain, "Test") { //$NON-NLS-1$
+				@Override
+				protected void doExecute() {
+					book[0].setTitle(newTitle);
+				}});
+			
+			assertEquals("Wrong number of copies on execute", newCopies, book[0].getCopies()); //$NON-NLS-1$
+			
+			getCommandStack().undo();
+			
+			assertFalse("Wrong number of copies on undo", book[0].getCopies() == newCopies); //$NON-NLS-1$
+			
+			getCommandStack().redo();
+			
+			assertEquals("Wrong number of copies on redo", newCopies, book[0].getCopies()); //$NON-NLS-1$
+		} finally {
+			domain.removeResourceSetListener(listener);
+		}
+    }
+    
+    /**
+     * Tests that recording-commands used as triggers are not undone twice
+     * when executing recording-commands that are nested in compound commands
+     * that are executing on the command-stack.
+     */
+    public void test_undoNestedRecordingCommandWithRecordingCommandTrigger_218276() {
+    	final Book[] book = new Book[] {(Book) find("root/Root Book")}; //$NON-NLS-1$
+    	final int newCopies = 30;
+    	
+    	final RecordingCommand trigger = new RecordingCommand(domain, "Test Trigger") { //$NON-NLS-1$
+		
+			@Override
+			protected void doExecute() {
+				book[0].setCopies(newCopies);
+			}};
+			
+		ResourceSetListener listener = new ResourceSetListenerImpl() {
+			@Override
+			public boolean isPrecommitOnly() {
+				return true;
+			}
+			
+			@Override
+			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+					throws RollbackException {
+				
+				CompoundCommand result = new CompoundCommand();
+				
+				for (Notification next : event.getNotifications()) {
+					if (next.getFeature() == EXTLibraryPackage.Literals.BOOK__TITLE) {
+						result.append(trigger);
+					}
+				}
+				
+				return result.isEmpty()? null : result;
+			}};
+		
+		try {
+			domain.addResourceSetListener(listener);
+			
+			final String newTitle = "New Title"; //$NON-NLS-1$
+			
+			CompoundCommand cc = new CompoundCommand("Test"); //$NON-NLS-1$
+			cc.append(new RecordingCommand(domain, "Test") { //$NON-NLS-1$
+				@Override
+				protected void doExecute() {
+					book[0].setTitle(newTitle);
+				}});
+			getCommandStack().execute(cc);
+			
+			assertEquals("Wrong number of copies on execute", newCopies, book[0].getCopies()); //$NON-NLS-1$
+			
+			getCommandStack().undo();
+			
+			assertFalse("Wrong number of copies on undo", book[0].getCopies() == newCopies); //$NON-NLS-1$
+			
+			getCommandStack().redo();
+			
+			assertEquals("Wrong number of copies on redo", newCopies, book[0].getCopies()); //$NON-NLS-1$
+		} finally {
+			domain.removeResourceSetListener(listener);
+		}
     }
 	
 	//

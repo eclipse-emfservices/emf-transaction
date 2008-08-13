@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 234868
  *
  * </copyright>
  *
- * $Id: EMFOperationCommand.java,v 1.8 2007/11/16 17:58:51 cdamus Exp $
+ * $Id: EMFOperationCommand.java,v 1.9 2008/08/13 13:24:44 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -31,6 +32,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
@@ -148,7 +150,14 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 				}
 			}
 			
-			operation.execute(new NullProgressMonitor(), getAdaptable());
+			IStatus status = operation.execute(new NullProgressMonitor(),
+				getAdaptable());
+			if ((status != null) && (status.getSeverity() >= IStatus.ERROR)) {
+				ExecutionException exc = new ExecutionException(status
+					.getMessage());
+				Tracing.throwing(EMFOperationCommand.class, "execute", exc); //$NON-NLS-1$
+				throw exc;
+			}
 		} catch (ExecutionException e) {
 			EMFWorkspacePlugin.INSTANCE.log(new Status(
 				IStatus.ERROR,
@@ -156,6 +165,14 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 				EMFWorkspaceStatusCodes.ROLLBACK_FAILED,
 				NLS.bind(Messages.rollbackFailed, operation.getLabel()),
 				e));
+			
+			if ((childTransaction != null) && childTransaction.isActive()) {
+				childTransaction.rollback();
+			}
+			
+			// propagate the exception to whomever is executing this command
+			// (esp. if this is a trigger command for a parent xa)
+			throw new WrappedException(e);
 		} finally {
 			if ((childTransaction != null) && childTransaction.isActive()) {
 				// we created a child transaction on the operation's behalf,
@@ -167,6 +184,10 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 					
 					// rollback should not happen with non-EMF changes
 					EMFWorkspacePlugin.INSTANCE.log(e.getStatus());
+					
+					// propagate the exception to whomever is executing this command
+					// (esp. if this is a trigger command for a parent xa)
+					throw new WrappedException(e);
 				}
 			}
 		}
@@ -223,7 +244,14 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 		}
 		
 		try {
-			operation.undo(new NullProgressMonitor(), getAdaptable());
+			IStatus status = operation.undo(new NullProgressMonitor(),
+				getAdaptable());
+			if ((status != null) && (status.getSeverity() >= IStatus.ERROR)) {
+				ExecutionException exc = new ExecutionException(status
+					.getMessage());
+				Tracing.throwing(EMFOperationCommand.class, "undo", exc); //$NON-NLS-1$
+				throw exc;
+			}
 		} catch (ExecutionException e) {
 			EMFWorkspacePlugin.INSTANCE.log(new Status(
 				IStatus.ERROR,
@@ -231,6 +259,9 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 				EMFWorkspaceStatusCodes.ROLLBACK_FAILED,
 				NLS.bind(Messages.rollbackFailed, operation.getLabel()),
 				e));
+			
+			// propagate the exception to whomever is undoing this command
+			throw new WrappedException(e);
 		}
 	}
 
@@ -257,7 +288,14 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 		}
 		
 		try {
-			operation.redo(new NullProgressMonitor(), getAdaptable());
+			IStatus status = operation.redo(new NullProgressMonitor(),
+				getAdaptable());
+			if ((status != null) && (status.getSeverity() >= IStatus.ERROR)) {
+				ExecutionException exc = new ExecutionException(status
+					.getMessage());
+				Tracing.throwing(EMFOperationCommand.class, "redo", exc); //$NON-NLS-1$
+				throw exc;
+			}
 		} catch (ExecutionException e) {
 			EMFWorkspacePlugin.INSTANCE.log(new Status(
 				IStatus.ERROR,
@@ -265,6 +303,9 @@ public class EMFOperationCommand implements ConditionalRedoCommand {
 				EMFWorkspaceStatusCodes.ROLLBACK_FAILED,
 				NLS.bind(Messages.rollbackFailed, operation.getLabel()),
 				e));
+			
+			// propagate the exception to whomever is redoing this command
+			throw new WrappedException(e);
 		}
 	}
 
