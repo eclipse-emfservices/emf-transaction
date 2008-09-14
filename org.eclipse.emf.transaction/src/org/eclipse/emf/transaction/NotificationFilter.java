@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 225711
  *
  * </copyright>
  *
- * $Id: NotificationFilter.java,v 1.3 2007/11/14 18:14:01 cdamus Exp $
+ * $Id: NotificationFilter.java,v 1.4 2008/09/14 02:38:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -39,6 +40,10 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
  * intended only to inform an adapter that it is being removed; they are
  * not broadcast to all adapters of an object.  Besides which, resource set
  * listeners are not adapters.
+ * </p>
+ * <p>
+ * Since the EMF Transaction 1.3 release, clients can implement arbitrary
+ * filter criteria by specializing the {@link NotificationFilter.Custom} class.
  * </p>
  *
  * @author Christian W. Damus (cdamus)
@@ -312,4 +317,26 @@ public abstract class NotificationFilter {
 	 *     listener; <code>false</code>, otherwise
 	 */
 	public abstract boolean matches(Notification notification);
+
+	/**
+	 * A custom notification filter, implementing user-defined
+	 * {@linkplain NotificationFilter#matches(Notification) selection criteria}.
+	 * Custom notification filters are distinguished from the stock
+	 * implementations created by the factory methods of the
+	 * {@link NotificationFilter} class to ensure that the base class remains
+	 * abstract.
+	 * 
+	 * @author Christian W. Damus (cdamus)
+	 * 
+	 * @since 1.3
+	 */
+	public abstract static class Custom extends NotificationFilter {
+		
+		/**
+		 * Initializes me.
+		 */
+		public Custom() {
+			super();
+		}
+	}
 }
