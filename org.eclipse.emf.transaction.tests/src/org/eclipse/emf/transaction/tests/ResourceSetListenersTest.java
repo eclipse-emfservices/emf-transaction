@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 177642
  *
  * </copyright>
  *
- * $Id: ResourceSetListenersTest.java,v 1.9 2007/11/14 18:14:12 cdamus Exp $
+ * $Id: ResourceSetListenersTest.java,v 1.10 2008/09/14 02:21:42 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -1278,6 +1279,66 @@ public class ResourceSetListenersTest extends AbstractTest {
         
         assertTrue(root.getBranches().contains(newLibrary[0]));
         assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
+    }
+    
+    public void test_internalListenerNotifications_177642() {
+    	class LocalListener extends ResourceSetListenerImpl {
+    		private int setCount, unsetCount;
+    		
+    		void assertTarget(TransactionalEditingDomain domain) {
+    			assertSame(domain, getTarget());
+    		}
+    		
+    		void assertSetCount(int count) {
+    			assertEquals(count, setCount);
+    		}
+    		
+    		void assertUnsetCount(int count) {
+    			assertEquals(count, unsetCount);
+    		}
+    		
+    		@Override
+    		public void setTarget(TransactionalEditingDomain domain) {
+    			super.setTarget(domain);
+    			
+    			setCount++;
+    		}
+    		
+    		@Override
+    		public void unsetTarget(TransactionalEditingDomain domain) {
+    			unsetCount++;
+    			
+    			super.unsetTarget(domain);
+    		}
+    	}
+    	
+    	LocalListener l = new LocalListener();
+    	
+    	domain.addResourceSetListener(l);
+    	
+    	l.assertSetCount(1);
+    	l.assertTarget(domain);
+    	l.assertUnsetCount(0);
+    	
+    	domain.addResourceSetListener(l);
+    	
+    	// idempotent
+    	l.assertSetCount(1);
+    	l.assertTarget(domain);
+    	l.assertUnsetCount(0);
+    	
+    	domain.removeResourceSetListener(l);
+    	
+    	l.assertSetCount(1);
+    	l.assertTarget(null);
+    	l.assertUnsetCount(1);
+    	
+    	domain.removeResourceSetListener(l);
+    	
+    	// idempotent
+    	l.assertSetCount(1);
+    	l.assertTarget(null);
+    	l.assertUnsetCount(1);
     }
 	
 	//

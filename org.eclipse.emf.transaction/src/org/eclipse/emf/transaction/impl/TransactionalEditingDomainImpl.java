@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 177642
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.17 2008/02/06 13:00:43 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.18 2008/09/14 02:21:49 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -223,21 +224,28 @@ public class TransactionalEditingDomainImpl
 		synchronized (precommitListeners) {
 			synchronized (aggregatePrecommitListeners) {
 				synchronized (postcommitListeners) {
+					boolean wasAdded = false;
+					
 					// add the listener to the appropriate list only if it expects
 					//    to receive the event type and is not already in the list
 					
 					if (!l.isPostcommitOnly()) {
 						if (!l.isAggregatePrecommitListener()
 								&& !precommitListeners.contains(l)) {
-							precommitListeners.add(l);
+							wasAdded |= precommitListeners.add(l);
 						} else if (l.isAggregatePrecommitListener()
 								&& !aggregatePrecommitListeners.contains(l)) {
-							aggregatePrecommitListeners.add(l);
+							wasAdded |= aggregatePrecommitListeners.add(l);
 						}
 					}
 					
 					if (!l.isPrecommitOnly() && !postcommitListeners.contains(l)) {
-						postcommitListeners.add(l);
+						wasAdded |= postcommitListeners.add(l);
+					}
+					
+					if (wasAdded && (l instanceof ResourceSetListener.Internal)) {
+						// welcome to the family
+						((ResourceSetListener.Internal) l).setTarget(this);
 					}
 				}
 			}
@@ -249,9 +257,17 @@ public class TransactionalEditingDomainImpl
 		synchronized (precommitListeners) {
 			synchronized (aggregatePrecommitListeners) {
 				synchronized (postcommitListeners) {
-					precommitListeners.remove(l);
-					aggregatePrecommitListeners.remove(l);
-					postcommitListeners.remove(l);
+					boolean wasRemoved = false;
+					
+					wasRemoved |= precommitListeners.remove(l);
+					wasRemoved |= aggregatePrecommitListeners.remove(l);
+					wasRemoved |= postcommitListeners.remove(l);
+					
+					if (wasRemoved
+						&& (l instanceof ResourceSetListener.Internal)) {
+						
+						((ResourceSetListener.Internal) l).unsetTarget(this);
+					}
 				}
 			}
 		}

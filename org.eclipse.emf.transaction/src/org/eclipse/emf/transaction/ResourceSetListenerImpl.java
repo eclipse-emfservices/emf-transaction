@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 177642
  *
  * </copyright>
  *
- * $Id: ResourceSetListenerImpl.java,v 1.3 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: ResourceSetListenerImpl.java,v 1.4 2008/09/14 02:21:49 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -27,9 +28,11 @@ import org.eclipse.emf.common.command.Command;
  * @see ResourceSetChangeEvent
  */
 public class ResourceSetListenerImpl
-	implements ResourceSetListener {
+	implements ResourceSetListener.Internal {
 
 	private final NotificationFilter filter;
+	
+	private TransactionalEditingDomain target;
 	
 	/** Initializes me with the default filter. */
 	protected ResourceSetListenerImpl() {
@@ -92,5 +95,40 @@ public class ResourceSetListenerImpl
 	 */
 	public boolean isPostcommitOnly() {
 		return false;
+	}
+
+	/**
+	 * Queries the transactional editing domain, if any, to which I am
+	 * listening.  Note the assumption of the most common case in which a
+	 * listener is only attached to a single domain.
+	 * 
+	 * @return the editing that I listen to, or <code>null</code> if none
+	 */
+	protected TransactionalEditingDomain getTarget() {
+		return target;
+	}
+	
+	/**
+	 * {@linkplain #getTarget() Remembers} the new editing domain that I am now
+	 * listening to, if it is not <code>null</code>.
+	 * 
+	 * @since 1.3
+	 */
+	public void setTarget(TransactionalEditingDomain domain) {
+		if (domain != null) {
+			this.target = domain;
+		}
+	}
+
+	/**
+	 * If the specified domain is the one that I {@linkplain #getTarget()
+	 * remembered}, then I forget it because I am no longer listening to it.
+	 * 
+	 * @since 1.3
+	 */
+	public void unsetTarget(TransactionalEditingDomain domain) {
+		if (domain == target) {
+			target = null;
+		}
 	}
 }

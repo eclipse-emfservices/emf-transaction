@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 177642
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomain.java,v 1.5 2007/11/14 18:14:01 cdamus Exp $
+ * $Id: TransactionalEditingDomain.java,v 1.6 2008/09/14 02:21:49 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -30,20 +31,21 @@ import org.eclipse.emf.transaction.util.TransactionUtil;
  * An extension of the {@link EditingDomain} API that applies transactional
  * semantics to reading and writing the contents of an EMF {@link ResourceSet}.
  * <p>
- * Editing domains can be created in one of two ways:  dynamically, using
- * a {@link Factory} or statically by registration on the
- * <code>org.eclipse.emf.transaction.editingDomains</code> extension point.
- * The latter mechanism is the preferred way to define editing domains that
- * can be shared with other applications.  To create a new editing domain in
- * code, simply invoke the static factory instance:
+ * Editing domains can be created in one of two ways: dynamically, using a
+ * {@link Factory} or statically by registration on the
+ * <code>org.eclipse.emf.transaction.editingDomains</code> extension point. The
+ * latter mechanism is the preferred way to define editing domains that can be
+ * shared with other applications. To create a new editing domain in code,
+ * simply invoke the static factory instance:
  * </p>
+ * 
  * <PRE>
- *     TransactionalEditingDomain domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
- *     ResourceSet rset = domain.getResourceSet();
- *
- *     // or, create our own resource set and initialize the domain with it
- *     rset = new MyResourceSetImpl();
- *     domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain(rset);
+ * TransactionalEditingDomain domain = TransactionalEditingDomain.Factory.INSTANCE
+ * 	.createEditingDomain();
+ * ResourceSet rset = domain.getResourceSet();
+ * // or, create our own resource set and initialize the domain with it
+ * rset = new MyResourceSetImpl();
+ * domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain(rset);
  * </PRE>
  * <p>
  * To share a named editing domain with other applications, the editing domain
@@ -51,18 +53,17 @@ import org.eclipse.emf.transaction.util.TransactionUtil;
  * Editing domain IDs are configured on an extension point providing the factory
  * implementation that the registry uses to initialize them:
  * </p>
+ * 
  * <pre>
  *     &lt;!-- In the plugin.xml --&gt;
- *     &lt;extension point="org.eclipse.emf.transaction.editingDomains"&gt;
+ *     &lt;extension point=&quot;org.eclipse.emf.transaction.editingDomains&quot;&gt;
  *     &lt;editingDomain
- *           id="com.example.MyEditingDomain"
- *           factory="com.example.MyEditingDomainFactory"/&gt;
+ *           id=&quot;com.example.MyEditingDomain&quot;
+ *           factory=&quot;com.example.MyEditingDomainFactory&quot;/&gt;
  *     &lt;/extension&gt;
- *
  *     // in code, access the registered editing domain by:
- *
  *     TransactionalEditingDomain myDomain = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
- *             "com.example.MyEditingDomain");
+ *             &quot;com.example.MyEditingDomain&quot;);
  * </pre>
  * <p>
  * See the {@link org.eclipse.emf.transaction package documentation} for further
@@ -74,12 +75,21 @@ import org.eclipse.emf.transaction.util.TransactionUtil;
  * It is recommended to implement the <tt>Adaptable</tt> interface and support
  * adaptation to these interfaces to benefit from the services that they offer.
  * </p>
+ * <p>
+ * As of the EMF Transaction 1.3 release, resource-set listeners may optionally
+ * implement a {@linkplain ResourceSetListener.Internal private} interface to be
+ * notified when they are
+ * {@linkplain #addResourceSetListener(ResourceSetListener) added} to or
+ * {@linkplain #removeResourceSetListener(ResourceSetListener) removed} from an
+ * editing domain.
+ * </p>
  * 
  * @author Christian W. Damus (cdamus)
  * 
  * @see TransactionalCommandStack
  * @see Transaction
  * @see ResourceSetListener
+ * @see ResourceSetListener.Internal
  */
 public interface TransactionalEditingDomain
 	extends EditingDomain {

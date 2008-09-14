@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 177642
  *
  * </copyright>
  *
- * $Id: ResourceSetListener.java,v 1.6 2007/06/07 14:25:59 cdamus Exp $
+ * $Id: ResourceSetListener.java,v 1.7 2008/09/14 02:21:49 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -166,4 +167,44 @@ public interface ResourceSetListener extends EventListener {
 	 *     <code>false</code>, otherwise
 	 */
 	boolean isPostcommitOnly();
+	
+	/**
+	 * An interface for communication of internal life-cycle events to the
+	 * listener.  These call-backs do not have anything to do with the state
+	 * of the resource set, but rather inform the listeners of changes in its
+	 * own state.  This interface is optional; listeners should implement it
+	 * only if they need the additional notifications.
+	 * 
+	 * @author Christian W. Damus (cdamus)
+	 * 
+	 * @since 1.3
+	 */
+	interface Internal
+			extends ResourceSetListener {
+
+		/**
+		 * Informs me that I have been attached to the specified editing domain.
+		 * This is particularly useful for listeners that are statically
+		 * registered, as it effectively signals the creation of the editing
+		 * domain.
+		 * 
+		 * @param domain
+		 *            an editing domain to which I have been attached. Note that
+		 *            nothing precludes the addition of a listener to more than
+		 *            one editing domain
+		 */
+		void setTarget(TransactionalEditingDomain domain);
+
+		/**
+		 * Informs me that I have been detached from the specified editing
+		 * domain. This is a good opportunity for me, perhaps, to clean up any
+		 * cached data that pertains to this domain.
+		 * 
+		 * @param domain
+		 *            an editing domain from which I have been detached. Note
+		 *            that I may very will still be attached to other domains
+		 *            than this
+		 */
+		void unsetTarget(TransactionalEditingDomain domain);
+	}
 }
