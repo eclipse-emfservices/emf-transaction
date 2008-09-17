@@ -10,10 +10,11 @@
  * Contributors:
  *   IBM - Initial API and implementation
  *   Zeligsoft - Bug 234868
+ *   IBM - Bug 247691
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.17.2.1 2008/07/05 16:22:37 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.17.2.2 2008/09/17 18:28:53 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -152,6 +153,14 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
             } else {
                 options.put(EMFWorkspacePlugin.OPTION_OWNING_OPERATION, this);
             }
+            
+            // inherit the validate edit option, which doesn't affect the
+            // behaviour of a transaction, to avoid creating a new 
+            // transaction when it is the only difference in the options
+            if (inherited.containsKey(Transaction.OPTION_VALIDATE_EDIT)) {
+				options.put(Transaction.OPTION_VALIDATE_EDIT, 
+					inherited.get(Transaction.OPTION_VALIDATE_EDIT));
+			}
             
 			if (!isReuseParentTransaction() || optionsDiffer(options)) {
 				transaction = createTransaction(options);

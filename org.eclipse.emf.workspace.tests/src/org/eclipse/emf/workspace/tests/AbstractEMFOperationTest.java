@@ -9,13 +9,17 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 218276
+ *   Zeligsoft - Bugs 218276, 247691 (restore method accessibility)
+ *   IBM - Bug 247691
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.8.2.1 2008/07/05 19:59:12 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.8.2.2 2008/09/17 18:29:12 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
+
+import java.lang.reflect.Method;
+import java.util.Collections;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -787,6 +791,65 @@ public class AbstractEMFOperationTest extends AbstractTest {
 			domain.removeResourceSetListener(listener);
 		}
     }
+    
+    /**
+	 * Tests that child operations reuse their parent's transaction when the parent 
+	 * has the {@link Transaction#OPTION_VALIDATE_EDIT} option, but the child does not.
+	 */
+    public void test_inheritValidateEditOption_247691() {
+
+		final CompositeEMFOperation outer = new CompositeEMFOperation(domain,
+			"outer", //$NON-NLS-1$
+			Collections.singletonMap(Transaction.OPTION_VALIDATE_EDIT,
+				Boolean.TRUE));
+
+		outer.setTransactionNestingEnabled(false);
+
+		AbstractEMFOperation inner = new AbstractEMFOperation(domain, "inner") { //$NON-NLS-1$
+
+			@Override
+			public boolean canExecute() {
+				return true;
+			}
+
+			@Override
+			protected IStatus doExecute(IProgressMonitor monitor,
+					IAdaptable info)
+					throws ExecutionException {
+
+				Method getTransactionMethod = null;
+				
+				try {
+					getTransactionMethod = AbstractEMFOperation.class
+						.getDeclaredMethod("getTransaction", new Class[0]); //$NON-NLS-1$
+					getTransactionMethod.setAccessible(true);
+					Object outerTransaction = getTransactionMethod.invoke(
+						outer, new Object[0]);
+					Object innerTransaction = getTransactionMethod.invoke(this,
+						new Object[0]);
+					assertTrue("Should have reused the parent transaction", //$NON-NLS-1$
+						innerTransaction == null
+							|| innerTransaction == outerTransaction);
+					return Status.OK_STATUS;
+
+				} catch (Exception e) {
+					throw new ExecutionException(e.getMessage(), e);
+				} finally {
+					if (getTransactionMethod != null) {
+						getTransactionMethod.setAccessible(false);
+					}
+				}
+			}
+		};
+
+		outer.add(inner);
+
+		try {
+			outer.execute(new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+	}
 	
 	//
 	// Fixtures
