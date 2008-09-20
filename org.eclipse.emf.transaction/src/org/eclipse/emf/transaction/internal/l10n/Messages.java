@@ -1,7 +1,7 @@
 /**
  * <copyright> 
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  * 
  * Contributors: 
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 145877
  *
  * </copyright>
  *
- * $Id: Messages.java,v 1.7 2007/12/04 23:04:49 cdamus Exp $
+ * $Id: Messages.java,v 1.8 2008/09/20 21:23:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction.internal.l10n;
 
@@ -54,6 +55,8 @@ public class Messages
 	public static String privilegedRunnable;
 	
 	public static String reloadDuringUnload;
+	
+	public static String lifecycleListener;
 	
 	static {
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 177642
+ *   Zeligsoft - Bugs 177642, 145877
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomain.java,v 1.6 2008/09/14 02:21:49 cdamus Exp $
+ * $Id: TransactionalEditingDomain.java,v 1.7 2008/09/20 21:23:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -83,6 +83,13 @@ import org.eclipse.emf.transaction.util.TransactionUtil;
  * {@linkplain #removeResourceSetListener(ResourceSetListener) removed} from an
  * editing domain.
  * </p>
+ * <p>
+ * Also since the 1.3 release, the new optional
+ * {@link TransactionalEditingDomain.Lifecycle} interface provides
+ * notifications, from editing domains that support this protocol, of
+ * transaction and editing-domain
+ * {@linkplain TransactionalEditingDomainListener lifecycle changes}.
+ * </p>
  * 
  * @author Christian W. Damus (cdamus)
  * 
@@ -90,6 +97,8 @@ import org.eclipse.emf.transaction.util.TransactionUtil;
  * @see Transaction
  * @see ResourceSetListener
  * @see ResourceSetListener.Internal
+ * @see TransactionalEditingDomain.Lifecycle
+ * @see TransactionalEditingDomainListener
  */
 public interface TransactionalEditingDomain
 	extends EditingDomain {
@@ -432,5 +441,42 @@ public interface TransactionalEditingDomain
 	     * @param options the new options.  The options are copied from the map
 	     */
 	    void setDefaultTransactionOptions(Map<?, ?> options);
+	}
+
+	/**
+	 * <p>
+	 * Adapter interface provided by {@link TransactionalEditingDomain}s that
+	 * support notification of life-cycle events to
+	 * {@link TransactionalEditingDomainListener}s.
+	 * </p>
+	 * <p>
+	 * This interface is not intended to be implemented by clients, but by
+	 * editing domain providers.
+	 * </p>
+	 * 
+	 * @author Christian W. Damus (cdamus)
+	 * 
+	 * @since 1.3
+	 */
+	interface Lifecycle {
+		/**
+		 * Adds a listener to be notified of editing domain and transaction
+		 * life-cycle events.
+		 * 
+		 * @param l
+		 *            a listener to add
+		 */
+		void addTransactionalEditingDomainListener(
+				TransactionalEditingDomainListener l);
+
+		/**
+		 * Removes a lif-cycle event listener from the editing domain.
+		 * 
+		 * @param l
+		 *            a listener to remove
+		 */
+		void removeTransactionalEditingDomainListener(
+				TransactionalEditingDomainListener l);
+		
 	}
 }

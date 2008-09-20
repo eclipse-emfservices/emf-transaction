@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 145877
  *
  * </copyright>
  *
- * $Id: EditingDomainManager.java,v 1.5 2007/11/14 18:14:00 cdamus Exp $
+ * $Id: EditingDomainManager.java,v 1.6 2008/09/20 21:23:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -139,6 +140,28 @@ public class EditingDomainManager {
 	 */
 	public boolean isStaticallyRegistered(String id) {
 		return getDomainConfig(id) != null;
+	}
+
+	/**
+	 * Asserts that the specified editing domain ID is dynamically registered,
+	 * not statically registered on the extension point.
+	 * 
+	 * @param id
+	 *            the ID of an editing domain
+	 * 
+	 * @throws IllegalArgumentException
+	 *             if the specified ID is statically registered
+	 * 
+	 * @since 1.3
+	 */
+	public void assertDynamicallyRegistered(String id) {
+		if (isStaticallyRegistered(id)) {
+			IllegalArgumentException exc = new IllegalArgumentException(NLS
+				.bind(Messages.removeStaticDomain, id));
+			Tracing.throwing(EditingDomainManager.class,
+				"assertDynamicallyRegistered", exc); //$NON-NLS-1$
+			throw exc;
+		}
 	}
 	
 	/**

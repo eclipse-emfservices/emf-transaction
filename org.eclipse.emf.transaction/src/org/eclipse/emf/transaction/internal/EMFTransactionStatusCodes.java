@@ -1,7 +1,7 @@
 /**
  * <copyright> 
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  * 
  * Contributors: 
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 145877
  *
  * </copyright>
  *
- * $Id: EMFTransactionStatusCodes.java,v 1.4 2007/12/04 23:04:49 cdamus Exp $
+ * $Id: EMFTransactionStatusCodes.java,v 1.5 2008/09/20 21:23:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction.internal;
 
@@ -42,6 +43,7 @@ public class EMFTransactionStatusCodes {
 
 	public static final int EXCEPTION_HANDLER_FAILED = 50;
 	public static final int PRIVILEGED_RUNNABLE_FAILED = 51;
+	public static final int LIFECYCLE_LISTENER_FAILED = 52;
 	
 	public static final int RELOAD_DURING_UNLOAD = 100;
 	

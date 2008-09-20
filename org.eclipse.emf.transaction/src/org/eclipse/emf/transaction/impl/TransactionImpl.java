@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 145877
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.19 2007/11/14 18:14:00 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.20 2008/09/20 21:23:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -181,7 +182,28 @@ public class TransactionImpl
 			throw exc;
 		}
 		
-		getInternalDomain().activate(this);
+		if (getInternalDomain().getActiveTransaction() == null) {
+			// attempting to start a new root transaction
+			InternalLifecycle lifecycle = getLifecycle();
+			if (lifecycle != null) {
+				lifecycle.transactionStarting(this);
+			}
+		}
+		
+		try {
+			getInternalDomain().activate(this);
+		} catch (InterruptedException e) {
+			if (getInternalDomain().getActiveTransaction() == null) {
+				// interrupted attempting to start a new root transaction
+				InternalLifecycle lifecycle = getLifecycle();
+				if (lifecycle != null) {
+					lifecycle.transactionInterrupted(this);
+				}
+			}
+			
+			throw e; // re-throw
+		}
+		
 		active = true;
 
 		if (this != getInternalDomain().getActiveTransaction()) {
@@ -228,11 +250,33 @@ public class TransactionImpl
 		}
 		
 		startRecording();
+		
+		if (getParent() == null) {
+			// started a new root transaction
+			InternalLifecycle lifecycle = getLifecycle();
+			if (lifecycle != null) {
+				lifecycle.transactionStarted(this);
+			}
+		}
 	}
 	
 	// Documentation copied from the inherited specification
 	public final TransactionalEditingDomain getEditingDomain() {
 		return domain;
+	}
+
+	/**
+	 * Obtains the life-cycle adapter, if any, of my editing domain, with which
+	 * I will notify it of my lifecycle events.
+	 * 
+	 * @return my domain's lifecycle adapter, or <code>null</code> if my editing
+	 *         domain does not provide one
+	 * 
+	 * @since 1.3
+	 */
+	protected InternalLifecycle getLifecycle() {
+		return TransactionUtil.getAdapter(getEditingDomain(),
+			InternalLifecycle.class);
 	}
 
 	// Documentation copied from the inherited specification
@@ -337,10 +381,17 @@ public class TransactionImpl
 		}
 		
 		try {
+			if (getParent() == null) {
+				// closing a root transaction
+				InternalLifecycle lifecycle = getLifecycle();
+				if (lifecycle != null) {
+					lifecycle.transactionClosing(this);
+				}
+			}
+			
 			// first, check whether I have been aborted.  If so, then I must roll back
 			if (isAborted()) {
-				closing = false;
-				rollback();
+				doRollback();
 				RollbackException exc = new RollbackException(getStatus());
 				Tracing.throwing(TransactionImpl.class, "commit", exc); //$NON-NLS-1$
 				throw exc;
@@ -353,8 +404,7 @@ public class TransactionImpl
 					getInternalDomain().precommit(this);
 				} catch (RollbackException e) {
 					Tracing.catching(TransactionImpl.class, "commit", e); //$NON-NLS-1$
-					closing = false;  // rollback checks this flag
-					rollback();
+					doRollback();
 					Tracing.throwing(TransactionImpl.class, "commit", e); //$NON-NLS-1$
 					throw e;
 				}
@@ -388,8 +438,7 @@ public class TransactionImpl
     				setStatus(validationStatus);
     				
     				if (validationStatus.getSeverity() >= IStatus.ERROR) {
-    					closing = false;  // rollback checks this flag
-    					rollback();
+    					doRollback();
     					RollbackException exc = new RollbackException(validationStatus);
     					Tracing.throwing(TransactionImpl.class, "commit", exc); //$NON-NLS-1$
     					throw exc;
@@ -476,7 +525,19 @@ public class TransactionImpl
 			throw exc;
 		}
 		
+		if (getParent() == null) {
+			// closing a root transaction
+			InternalLifecycle lifecycle = getLifecycle();
+			if (lifecycle != null) {
+				lifecycle.transactionClosing(this);
+			}
+		}
+		
 		closing = true;
+		doRollback();
+	}
+	
+	private void doRollback() {
 		rollingBack = true;
 		
 		if (Tracing.shouldTrace(EMFTransactionDebugOptions.TRANSACTIONS)) {
@@ -637,6 +698,12 @@ public class TransactionImpl
 			} else {
 				// I am a root transaction.  Forget my notifications, if any
 				notifications = null;
+				
+				// closing a root transaction
+				InternalLifecycle lifecycle = getLifecycle();
+				if (lifecycle != null) {
+					lifecycle.transactionClosed(this);
+				}
 			}
 			
 			if (Tracing.shouldTrace(EMFTransactionDebugOptions.TRANSACTIONS)) {

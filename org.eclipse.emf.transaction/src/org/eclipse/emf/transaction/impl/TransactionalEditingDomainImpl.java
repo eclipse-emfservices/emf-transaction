@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 177642
+ *   Zeligsoft - Bugs 177642, 145877
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.18 2008/09/14 02:21:49 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.19 2008/09/20 21:23:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
@@ -47,6 +48,8 @@ import org.eclipse.emf.transaction.RunnableWithResult;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomainEvent;
+import org.eclipse.emf.transaction.TransactionalEditingDomainListener;
 import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
@@ -55,7 +58,6 @@ import org.eclipse.emf.transaction.internal.l10n.Messages;
 import org.eclipse.emf.transaction.util.Adaptable;
 import org.eclipse.emf.transaction.util.Lock;
 import org.eclipse.emf.transaction.util.TransactionUtil;
-import org.eclipse.osgi.util.NLS;
 
 /**
  * The default implementation of the transactional editing domain. 
@@ -64,7 +66,8 @@ import org.eclipse.osgi.util.NLS;
  * to the following optional API:
  * </p>
  * <ul>
- *   <li>{@link TransactionalEditingDomain.DefaultOptions</li>
+ *   <li>{@link TransactionalEditingDomain.DefaultOptions}</li>
+ *   <li>{@link TransactionalEditingDomain.Lifecycle} (since 1.3)</li>
  * </ul>
  *
  * @author Christian W. Damus (cdamus)
@@ -107,6 +110,8 @@ public class TransactionalEditingDomainImpl
 	// this is editable by clients for backwards compatibility with 1.1
 	private final Map<Object, Object> undoRedoOptions = new java.util.HashMap<Object, Object>(
 	    TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS);
+	
+	private LifecycleImpl lifecycle;
 	
 	/**
 	 * Initializes me with my adapter factory, command stack, and resource set.
@@ -872,8 +877,37 @@ public class TransactionalEditingDomainImpl
 		
 	// Documentation copied from the inherited specification
 	public void dispose() {
-		// try this first, because it will fail if we are statically registered
+		// this will fail if we are statically registered
 		//    (in which case it is not permitted to dispose)
+		if (getID() != null) {
+			EditingDomainManager.getInstance().assertDynamicallyRegistered(
+				getID());
+		}
+		
+		getLifecycle().fireLifecycleEvent(
+			TransactionalEditingDomainEvent.EDITING_DOMAIN_DISPOSING, null);
+		
+		// clear resource-set listeners (and notify them) on disposal
+		Set<ResourceSetListener> rsetListeners = new java.util.HashSet<ResourceSetListener>();
+		rsetListeners.addAll(aggregatePrecommitListeners);
+		rsetListeners.addAll(precommitListeners);
+		rsetListeners.addAll(postcommitListeners);
+		
+		for (ResourceSetListener next : rsetListeners) {
+			if (next instanceof ResourceSetListener.Internal) {
+				((ResourceSetListener.Internal) next).unsetTarget(this);
+			}
+		}
+		
+		// clear listeners after notification so that they cannot add themselves
+		// back again during the call-back
+		aggregatePrecommitListeners.clear();
+		precommitListeners.clear();
+		postcommitListeners.clear();
+		getLifecycle().dispose();
+		
+		// only clear my ID after notifying listeners, because they may
+		// need to key on it
 		setID(null);
 		
 		activeTransaction = null;
@@ -899,6 +933,10 @@ public class TransactionalEditingDomainImpl
 	    
 	    if (adapterType == DefaultOptions.class) {
 	        result = (T) this;
+	    } else if (adapterType == Lifecycle.class) {
+	        result = (T) getLifecycle();
+	    } else if (adapterType == InternalLifecycle.class) {
+	        result = (T) getLifecycle();
 	    } else {
 	        result = null;
 	    }
@@ -948,7 +986,38 @@ public class TransactionalEditingDomainImpl
         
 		return this.validatorFactory;
 	}
-
+	
+	/**
+	 * Obtains my lazily-created lifecycle implementation.
+	 * 
+	 * @return my lifecycle
+	 * 
+	 * @since 1.3
+	 */
+	protected synchronized final LifecycleImpl getLifecycle() {
+		if (lifecycle == null) {
+			lifecycle = createLifecycle();
+		}
+		
+		return lifecycle;
+	}
+	
+	/**
+	 * Creates a new lifecycle implementation.  Subclasses may override to
+	 * create their own implementation.
+	 * 
+	 * @return a new lifecycle
+	 * 
+	 * @since 1.3
+	 */
+	protected LifecycleImpl createLifecycle() {
+		return new LifecycleImpl();
+	}
+	
+	//
+	// Nested classes
+	//
+	
 	/**
 	 * Default implementation of the validator factory
 	 * 
@@ -1152,12 +1221,7 @@ public class TransactionalEditingDomainImpl
 
 		// Documentation copied from the inherited specification
 		public synchronized TransactionalEditingDomain remove(String id) {
-			if (EditingDomainManager.getInstance().isStaticallyRegistered(id)) {
-				IllegalArgumentException exc = new IllegalArgumentException(
-					NLS.bind(Messages.removeStaticDomain, id));
-				Tracing.throwing(RegistryImpl.class, "remove", exc); //$NON-NLS-1$
-				throw exc;
-			}
+			EditingDomainManager.getInstance().assertDynamicallyRegistered(id);
 			
 			TransactionalEditingDomain result = domains.remove(id);
 			
@@ -1168,5 +1232,146 @@ public class TransactionalEditingDomainImpl
 			return result;
 		}
 		
+	}
+	
+	/**
+	 * Default implementation of the {@link InternalLifecycle} protocol.
+	 * May be subclassed by custom editing domain implementations.
+	 * 
+	 * @author Christian W. Damus (cdamus)
+	 * 
+	 * @since 1.3
+	 */
+	protected final class LifecycleImpl
+			implements InternalLifecycle {
+
+		private final List<TransactionalEditingDomainListener> lifecycleListeners = new java.util.ArrayList<TransactionalEditingDomainListener>();
+
+		/**
+		 * Initializes me.
+		 */
+		public LifecycleImpl() {
+			super();
+		}
+		
+		public void addTransactionalEditingDomainListener(
+				TransactionalEditingDomainListener l) {
+
+			synchronized (lifecycleListeners) {
+				if (!lifecycleListeners.contains(l)) {
+					lifecycleListeners.add(l);
+				}
+			}
+		}
+
+		public void removeTransactionalEditingDomainListener(
+				TransactionalEditingDomainListener l) {
+
+			synchronized (lifecycleListeners) {
+				lifecycleListeners.remove(l);
+			}
+		}
+
+		public void dispose() {
+			lifecycleListeners.clear();
+		}
+
+		/**
+		 * Obtains a copy of my life-cycle listener list as an array, for safe
+		 * iteration that allows concurrent updates to the original list.
+		 * 
+		 * @return my life-cycle listeners (as of the time of calling this
+		 *         method)
+		 */
+		protected final TransactionalEditingDomainListener[] getLifecycleListeners() {
+			synchronized (lifecycleListeners) {
+				return lifecycleListeners
+					.toArray(new TransactionalEditingDomainListener[lifecycleListeners
+						.size()]);
+			}
+		}
+
+		/**
+		 * Fires the specified life-cycle event to my listeners, if any.
+		 * 
+		 * @param type
+		 *            one of the life-cycle event
+		 *            {@linkplain TransactionalEditingDomainEvent#TRANSACTION_STARTING
+		 *            types}
+		 * @param transaction
+		 *            the transaction that is the subject of the event, or
+		 *            <code>null</code> if the event pertains to the editing
+		 *            domain, itself
+		 */
+		protected void fireLifecycleEvent(int type, Transaction transaction) {
+			if (lifecycleListeners.isEmpty()) {
+				return;
+			}
+
+			TransactionalEditingDomainEvent event = new TransactionalEditingDomainEvent(
+				TransactionalEditingDomainImpl.this, type, transaction);
+
+			for (TransactionalEditingDomainListener next : getLifecycleListeners()) {
+				try {
+					switch (type) {
+						case TransactionalEditingDomainEvent.TRANSACTION_STARTING :
+							next.transactionStarting(event);
+							break;
+						case TransactionalEditingDomainEvent.TRANSACTION_INTERRUPTED :
+							next.transactionInterrupted(event);
+							break;
+						case TransactionalEditingDomainEvent.TRANSACTION_STARTED :
+							next.transactionStarted(event);
+							break;
+						case TransactionalEditingDomainEvent.TRANSACTION_CLOSING :
+							next.transactionClosing(event);
+							break;
+						case TransactionalEditingDomainEvent.TRANSACTION_CLOSED :
+							next.transactionClosed(event);
+							break;
+						case TransactionalEditingDomainEvent.EDITING_DOMAIN_DISPOSING :
+							next.editingDomainDisposing(event);
+							break;
+					}
+				} catch (Exception e) {
+					Tracing.catching(TransactionalEditingDomainImpl.class,
+						"fireLifecycleEvent", e); //$NON-NLS-1$
+
+					EMFTransactionPlugin.getPlugin().getLog().log(
+						new Status(IStatus.ERROR, EMFTransactionPlugin
+							.getPluginId(), Messages.lifecycleListener, e));
+				}
+			}
+		}
+
+		public void transactionClosed(InternalTransaction transaction) {
+			fireLifecycleEvent(
+				TransactionalEditingDomainEvent.TRANSACTION_CLOSED, transaction);
+		}
+
+		public void transactionClosing(InternalTransaction transaction) {
+			fireLifecycleEvent(
+				TransactionalEditingDomainEvent.TRANSACTION_CLOSING,
+				transaction);
+		}
+
+		public void transactionInterrupted(InternalTransaction transaction) {
+			fireLifecycleEvent(
+				TransactionalEditingDomainEvent.TRANSACTION_INTERRUPTED,
+				transaction);
+		}
+
+		public void transactionStarted(InternalTransaction transaction) {
+			fireLifecycleEvent(
+				TransactionalEditingDomainEvent.TRANSACTION_STARTED,
+				transaction);
+		}
+
+		public void transactionStarting(InternalTransaction transaction) {
+			fireLifecycleEvent(
+				TransactionalEditingDomainEvent.TRANSACTION_STARTING,
+				transaction);
+		}
+
 	}
 }

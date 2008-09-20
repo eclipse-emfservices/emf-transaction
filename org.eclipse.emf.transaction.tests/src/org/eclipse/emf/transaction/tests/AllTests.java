@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 145877
  *
  * </copyright>
  *
- * $Id: AllTests.java,v 1.11 2007/11/14 18:14:13 cdamus Exp $
+ * $Id: AllTests.java,v 1.12 2008/09/20 21:22:43 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -50,6 +51,7 @@ public class AllTests
 		suite.addTest(ValidationRollbackTest.suite());
 		suite.addTest(ResourceSetListenersTest.suite());
 		suite.addTest(NotificationFilterTest.suite());
+		suite.addTest(LifecycleListenersTest.suite());
 		suite.addTest(TransactionOptionsTest.suite());
 		suite.addTest(TransactionChangeRecorderTest.suite());
 		suite.addTest(UndoRedoTest.suite());
