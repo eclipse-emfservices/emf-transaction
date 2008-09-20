@@ -12,7 +12,7 @@
  * 
  * </copyright>
  *
- * $Id: TransactionalEditingDomainListener.java,v 1.1 2008/09/20 21:23:08 cdamus Exp $
+ * $Id: TransactionalEditingDomainListener.java,v 1.2 2008/09/20 21:29:32 cdamus Exp $
  */
 
 package org.eclipse.emf.transaction;
@@ -44,10 +44,19 @@ import org.eclipse.core.runtime.IStatus;
  * <li>{@linkplain #editingDomainDisposing(TransactionalEditingDomainEvent)
  * disposal} of the editing domain</li>
  * </ul>
+ * <p>
+ * The {@link TransactionalEditingDomainListenerImpl} class provides convenient
+ * empty implementations of the listener methods, suitable for subclassing to
+ * selectively implement these call-backs.
+ * </p>
  * 
  * @author Christian W. Damus (cdamus)
  * 
  * @since 1.3
+ * 
+ * @see TransactionalEditingDomain.Lifecycle
+ * @see TransactionalEditingDomainListenerImpl
+ * 
  */
 public interface TransactionalEditingDomainListener
 		extends EventListener {
