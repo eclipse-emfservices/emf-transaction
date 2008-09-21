@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 234868
+ *   Zeligsoft - Bugs 234868, 245419
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.18 2008/08/13 13:24:44 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.19 2008/09/21 12:22:41 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -72,7 +72,8 @@ import org.eclipse.emf.workspace.internal.l10n.Messages;
  */
 public abstract class AbstractEMFOperation extends AbstractOperation {
 	private final InternalTransactionalEditingDomain domain;
-	private final Map<Object, Object> txOptions;
+	private Map<Object, Object> txOptions;
+	private boolean canSetOptions = true;
 	
 	private Transaction transaction;
 	private TransactionChangeDescription change;
@@ -105,20 +106,7 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 		super(label);
 		
 		this.domain = (InternalTransactionalEditingDomain) domain;
-		
-		if (options == null) {
-			this.txOptions = Collections.<Object, Object>singletonMap(
-				TransactionImpl.BLOCK_CHANGE_PROPAGATION, Boolean.TRUE);
-		} else {
-			// make a defensive copy to
-			//  - avoid modifying client's data
-			//  - guard against client modifying my map
-			//  - avoid exceptions on immutable maps
-	        Map<Object, Object> myOptions = new java.util.HashMap<Object, Object>(
-	                options);
-			myOptions.put(TransactionImpl.BLOCK_CHANGE_PROPAGATION, Boolean.TRUE);
-			this.txOptions = Collections.unmodifiableMap(myOptions);
-		}
+		internalSetOptions(options);
 	}
 
 	/**
@@ -131,6 +119,8 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	@Override
 	public final IStatus execute(IProgressMonitor monitor, IAdaptable info)
 		throws ExecutionException {
+		
+		canSetOptions = false; // freeze my options
 		
         if (monitor == null) {
             monitor = new NullProgressMonitor();
@@ -517,6 +507,68 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 */
 	public final Map<?, ?> getOptions() {
 		return txOptions;
+	}
+
+	/**
+	 * <p>
+	 * Replaces my options with a new set. This may only be done prior to my
+	 * initial execution.
+	 * </p>
+	 * <p>
+	 * <b>Note</b> that subclasses may override this method, but if they do so,
+	 * then they must call the superclass implementation in order actually to
+	 * effect any change to the operation's options. Thus, subclasses may
+	 * override to disable this capability or to intercept the <tt>options</tt>
+	 * argument and transform its values as required.
+	 * </p>
+	 * 
+	 * @param options
+	 *            my new options
+	 * 
+	 * @throws IllegalStateException
+	 *             if I have {@linkplain #canSetOptions() already been executed}
+	 * 
+	 * @since 1.3
+	 * 
+	 * @see #canSetOptions()
+	 */
+	public void setOptions(Map<?, ?> options) {
+		internalSetOptions(options);
+	}
+
+	/**
+	 * Queries whether my options can be changed. That is, whether I have not
+	 * yet been executed.
+	 * 
+	 * @return whether my options may be changed
+	 * 
+	 * @since 1.3
+	 * 
+	 * @see #setOptions(Map)
+	 */
+	public boolean canSetOptions() {
+		return canSetOptions;
+	}
+
+	private void internalSetOptions(Map<?, ?> options) {
+		if (!canSetOptions) {
+			throw new IllegalStateException("operation has been executed"); //$NON-NLS-1$
+		}
+		
+		if (options == null) {
+			this.txOptions = Collections.<Object, Object> singletonMap(
+				TransactionImpl.BLOCK_CHANGE_PROPAGATION, Boolean.TRUE);
+		} else {
+			// make a defensive copy to
+			// - avoid modifying client's data
+			// - guard against client modifying my map
+			// - avoid exceptions on immutable maps
+			Map<Object, Object> myOptions = new java.util.HashMap<Object, Object>(
+				options);
+			myOptions.put(TransactionImpl.BLOCK_CHANGE_PROPAGATION,
+				Boolean.TRUE);
+			this.txOptions = Collections.unmodifiableMap(myOptions);
+		}
 	}
 	
 	/**

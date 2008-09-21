@@ -9,13 +9,15 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 218276
+ *   Zeligsoft - Bugs 218276, 245419
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.9 2008/08/13 13:24:47 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.10 2008/09/21 12:22:51 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
+
+import java.util.Map;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -62,6 +64,7 @@ import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
  *
  * @author Christian W. Damus (cdamus)
  */
+@SuppressWarnings("nls")
 public class AbstractEMFOperationTest extends AbstractTest {
 
 	public AbstractEMFOperationTest(String name) {
@@ -787,11 +790,134 @@ public class AbstractEMFOperationTest extends AbstractTest {
 			domain.removeResourceSetListener(listener);
 		}
     }
+    
+    /**
+     * Tests the API for changing options after construction of the operation.
+     */
+    public void test_setOptions_245419() {
+		startReading();
+		
+		final Book book = (Book) find("root/Root Book");
+		assertNotNull(book);
+		
+		final String newTitle = "New Title";
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
+		assertNotNull(newAuthor);
+		
+		commit();
+		
+		Map<Object, Object> options = new java.util.HashMap<Object, Object>();
+		options.put("one", 1);
+		options.put("two", 2);
+		
+		IUndoContext ctx = new TestUndoContext();
+		
+		TestOperation oper = new TestOperation(domain, options) {
+			@Override
+			protected void doExecute() {
+				book.setTitle(newTitle);
+				newAuthor.getBooks().add(book);
+			}};
+		
+		// this should be no surprise
+		assertSubset(options, oper.getOptions());
+		
+		// the options were copied from the original map
+		options.clear();
+		options.put("first", true);
+		options.put("second", false);
+		assertNotSubset(options, oper.getOptions());
+		
+		// set the new options
+		assertTrue(oper.canSetOptions());
+		oper.setOptions(options);
+		
+		// they are, indeed, changed
+		assertSubset(options, oper.getOptions());
+		
+		try {
+			oper.addContext(ctx);
+			history.execute(oper, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		// cannot change, now
+		assertFalse(oper.canSetOptions());
+		try {
+			oper.setOptions(options);
+			fail("Should not have been able to set options");
+		} catch (IllegalStateException e) {
+			// success
+			System.out.println("Got expected exception: " + e.getLocalizedMessage());
+		}
+		
+		try {
+			assertTrue(history.canUndo(ctx));
+			history.undo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		// nor now
+		assertFalse(oper.canSetOptions());
+		try {
+			oper.setOptions(options);
+			fail("Should not have been able to set options");
+		} catch (IllegalStateException e) {
+			// success
+			System.out.println("Got expected exception: " + e.getLocalizedMessage());
+		}
+		
+		try {
+			assertTrue(history.canRedo(ctx));
+			history.redo(ctx, new NullProgressMonitor(), null);
+		} catch (ExecutionException e) {
+			fail(e);
+		}
+		
+		// and certainly not after a redo
+		assertFalse(oper.canSetOptions());
+		try {
+			oper.setOptions(options);
+			fail("Should not have been able to set options");
+		} catch (IllegalStateException e) {
+			// success
+			System.out.println("Got expected exception: " + e.getLocalizedMessage());
+		}
+    }
 	
 	//
 	// Fixtures
 	//
 	
+    void assertSubset(Map<?, ?> expected, Map<?, ?> actual) {
+		for (Map.Entry<?, ?> next : expected.entrySet()) {
+			assertEquals("map is not a subset", next.getValue(), actual
+				.get(next.getKey()));
+		}
+	}
+	
+    void assertNotSubset(Map<?, ?> notExpected, Map<?, ?> actual) {
+    	boolean subset = true;
+    	
+		for (Map.Entry<?, ?> next : notExpected.entrySet()) {
+			Object value = actual.get(next.getKey());
+			
+			if (value == null) {
+				if (next.getValue() != null) {
+					subset = false;
+					break;
+				}
+			} else if (!value.equals(next.getValue())) {
+				subset = false;
+				break;
+			}
+		}
+		
+		assertFalse("map is a subset", subset);
+	}
+    
 	static class TestError extends Error {
 		private static final long serialVersionUID = 1502966836790504386L;
 
