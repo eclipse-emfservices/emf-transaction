@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bugs 234868, 245419
+ *   Zeligsoft - Bugs 234868, 245419, 245393
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.19 2008/09/21 12:22:41 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.20 2008/09/21 21:18:28 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -720,33 +720,39 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
         
         change = null;
     }
-    
+
 	/**
 	 * Queries whether I reuse an existing read/write transaction when possible.
-	 * It is not possible when either there is not currently any active
-	 * transaction or when the active transaction has different options from my
-	 * options.
+	 * It is not possible when either there is not any active transaction at the
+	 * time of my execution or when the active transaction has different options
+	 * from my options.
 	 * 
 	 * @return whether I reuse existing transactions
 	 * 
+	 * @since 1.3
+	 * 
 	 * @see #setReuseParentTransaction(boolean)
 	 */
-	boolean isReuseParentTransaction() {
+	public boolean isReuseParentTransaction() {
 		return reuseParentTransaction;
 	}
-	
+
 	/**
-	 * Sets whether I reuse an existing read/write transaction when possible.
-	 * It is not possible when either there is not currently any active
-	 * transaction or when the active transaction has different options from my
-	 * options.  This can be useful for performance of large nested operation
-	 * structures, to eliminate the overhead of creating large numbers of small
-	 * transactions with all of the data that they record.
-	 * <p>
-	 *  
-	 * @param reuseParentTransaction whether to reuse parent transactions
+	 * Sets whether I reuse an existing read/write transaction when possible. It
+	 * is not possible when either there is not any active transaction at the
+	 * time of my execution or when the active transaction has different options
+	 * from my options. This can be useful for performance of large nested
+	 * operation structures, to eliminate the overhead of creating large numbers
+	 * of small transactions with all of the data that they record.
+	 * 
+	 * @param reuseParentTransaction
+	 *            whether to reuse parent transactions
+	 * 
+	 * @since 1.3
+	 * 
+	 * @see #isReuseParentTransaction()
 	 */
-	void setReuseParentTransaction(boolean reuseParentTransaction) {
+	public void setReuseParentTransaction(boolean reuseParentTransaction) {
 		this.reuseParentTransaction = reuseParentTransaction;
 	}
 }

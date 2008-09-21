@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 245393
  *
  * </copyright>
  *
- * $Id: CompositeEMFOperation.java,v 1.5 2007/11/14 18:14:08 cdamus Exp $
+ * $Id: CompositeEMFOperation.java,v 1.6 2008/09/21 21:18:28 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -695,9 +696,13 @@ public class CompositeEMFOperation extends AbstractEMFOperation {
 	 * Extends the inherited method to toggle my
 	 * {@link #setTransactionNestingDisabled(boolean) transaction nesting}
 	 * state accordingly.
+	 * 
+	 * @since 1.3
+	 * 
+	 * @see #isTransactionNestingEnabled()
 	 */
 	@Override
-	void setReuseParentTransaction(boolean reuseParentTransaction) {
+	public void setReuseParentTransaction(boolean reuseParentTransaction) {
 		super.setReuseParentTransaction(reuseParentTransaction);
 		
 		setTransactionNestingEnabled(!reuseParentTransaction);

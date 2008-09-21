@@ -9,11 +9,12 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bugs 218276, 245419
+ *   Zeligsoft - Bugs 218276, 245419, 245393
+ *   IBM - Bug 245393
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.10 2008/09/21 12:22:51 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.11 2008/09/21 21:18:39 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -886,6 +887,52 @@ public class AbstractEMFOperationTest extends AbstractTest {
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
 		}
     }
+    
+    /**
+	 * Tests that execution of an AbstractEMFOperation can be made to reuse the
+	 * active transaction.
+	 */
+	public void test_executeInActiveTransaction_245393() {
+		IUndoableOperation operation = new AbstractEMFOperation(domain,
+			"Test_executeInActiveTransaction") { //$NON-NLS-1$
+
+			@Override
+			protected IStatus doExecute(IProgressMonitor monitor,
+					IAdaptable info)
+					throws ExecutionException {
+
+				final Transaction outer = ((InternalTransactionalEditingDomain) getEditingDomain())
+					.getActiveTransaction();
+				AbstractEMFOperation delegate = new AbstractEMFOperation(
+					domain, "Test_executeInActiveTransaction_delegate") { //$NON-NLS-1$
+
+					@Override
+					protected IStatus doExecute(IProgressMonitor monitor,
+							IAdaptable info)
+							throws ExecutionException {
+
+						assertSame("Transaction not reused by inner operation",
+							outer,
+							((InternalTransactionalEditingDomain) getEditingDomain())
+								.getActiveTransaction());
+						
+						return Status.OK_STATUS;
+					}
+				};
+
+				// re-use the outer operation's transaction for the inner
+				delegate.setReuseParentTransaction(true);
+
+				return delegate.execute(monitor, info);
+			}
+		};
+
+		try {
+			operation.execute(new NullProgressMonitor(), null);
+		} catch (Exception e) {
+			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+	}
 	
 	//
 	// Fixtures
