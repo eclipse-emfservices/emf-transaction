@@ -11,33 +11,33 @@ fragment@org.eclipse.ant.optional.junit=v20050226,:pserver:anonymous@dev.eclipse
 
 feature@org.eclipse.emf.transaction.master=HEAD,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction.master-feature
 
-feature@org.eclipse.emf.transaction.sdk=v200808131328,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction.sdk-feature
-feature@org.eclipse.emf.transaction=v200808131328,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction-feature
-feature@org.eclipse.emf.transaction.doc=v200805130238,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.transaction.doc-feature
+feature@org.eclipse.emf.transaction.sdk=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction.sdk-feature
+feature@org.eclipse.emf.transaction=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction-feature
+feature@org.eclipse.emf.transaction.doc=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.transaction.doc-feature
 feature@org.eclipse.emf.transaction.examples=v200805130238,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.transaction.examples-feature
-feature@org.eclipse.emf.transaction.tests=v200808131328,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.transaction.tests-feature
+feature@org.eclipse.emf.transaction.tests=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.transaction.tests-feature
 
-feature@org.eclipse.emf.workspace=v200808131328,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.workspace-feature
-feature@org.eclipse.emf.workspace.doc=v200805130238,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.workspace.doc-feature
+feature@org.eclipse.emf.workspace=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.workspace-feature
+feature@org.eclipse.emf.workspace.doc=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.workspace.doc-feature
 feature@org.eclipse.emf.workspace.examples=v200805130238,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.workspace.examples-feature
 
-plugin@org.eclipse.emf.transaction=v200808131328,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction
+plugin@org.eclipse.emf.transaction=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction
 plugin@org.eclipse.emf.transaction.ui=v200805130238,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction.ui
-plugin@org.eclipse.emf.transaction.doc=v200805130238,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.transaction.doc
+plugin@org.eclipse.emf.transaction.doc=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.transaction.doc
 plugin@org.eclipse.emf.transaction.examples=v200806051817,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.transaction.examples
-plugin@org.eclipse.emf.transaction.tests=v200808131328,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.transaction.tests
+plugin@org.eclipse.emf.transaction.tests=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.transaction.tests
 
-plugin@org.eclipse.emf.workspace=v200808131328,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.workspace
+plugin@org.eclipse.emf.workspace=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.workspace
 plugin@org.eclipse.emf.workspace.ui=v200805130238,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.workspace.ui
-plugin@org.eclipse.emf.workspace.doc=v200805130238,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.workspace.doc
+plugin@org.eclipse.emf.workspace.doc=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.workspace.doc
 plugin@org.eclipse.emf.workspace.examples.library.editor=v200806051817,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.workspace.examples.library.editor
 plugin@org.eclipse.emf.workspace.examples=v200806051817,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.workspace.examples
-plugin@org.eclipse.emf.workspace.tests=v200808131328,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.workspace.tests
+plugin@org.eclipse.emf.workspace.tests=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.workspace.tests
 
 !*** All-in-one data integrity frameworks features
 
-feature@org.eclipse.emf.emfqtv.all.sdk=v200808131328,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/emfqtv/org.eclipse.emf.emfqtv.all.sdk-feature
-feature@org.eclipse.emf.emfqtv.all=v200808131328,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/emfqtv/org.eclipse.emf.emfqtv.all-feature
+feature@org.eclipse.emf.emfqtv.all.sdk=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/emfqtv/org.eclipse.emf.emfqtv.all.sdk-feature
+feature@org.eclipse.emf.emfqtv.all=v200809221833,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/emfqtv/org.eclipse.emf.emfqtv.all-feature
 
 
 !*** EMF Examples plugins
