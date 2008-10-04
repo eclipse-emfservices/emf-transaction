@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,12 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   IBM - Bug 244654
+ *   Zeligsoft - Bug 244654 (touch ups)
  *
  * </copyright>
  *
- * $Id: WorkbenchCommandStackTest.java,v 1.12 2008/01/25 14:40:12 cdamus Exp $
+ * $Id: WorkbenchCommandStackTest.java,v 1.13 2008/10/04 18:16:47 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -766,6 +768,60 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         IUndoContext expected = new ResourceUndoContext(domain, testResource);
         assertTrue(operation.hasContext(expected));
     }
+	
+    /**
+     * Tests that whatever operation is currently executing while changes occur
+     * in some resource, is tagged with an undo context for that resource.
+     */
+	public void test_nestedExecutionInAbstractOperation_244654() {
+		AbstractOperation operation = new AbstractOperation("Test") { //$NON-NLS-1$
+
+			private AbstractEMFOperation delegate = new AbstractEMFOperation(
+				domain, "Delegate") { //$NON-NLS-1$
+
+				@Override
+				protected IStatus doExecute(IProgressMonitor monitor,
+						IAdaptable info)
+						throws ExecutionException {
+
+					root.getBranches().add(
+						EXTLibraryFactory.eINSTANCE.createLibrary());
+
+					return Status.OK_STATUS;
+				}
+			};
+
+			@Override
+			public IStatus execute(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return delegate.execute(monitor, info);
+			}
+
+			@Override
+			public IStatus redo(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return delegate.redo(monitor, info);
+			}
+
+			@Override
+			public IStatus undo(IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
+				return delegate.undo(monitor, info);
+			}
+		};
+
+		assertTrue(operation.getContexts().length == 0);
+
+		try {
+			history.execute(operation, null, null);
+		} catch (ExecutionException e) {
+			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+
+		IUndoContext expected = new ResourceUndoContext(domain, testResource);
+		assertTrue(
+			"Operation missing expected context", operation.hasContext(expected)); //$NON-NLS-1$
+	}
     
 	//
 	// Fixture methods
