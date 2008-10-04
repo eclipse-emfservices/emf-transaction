@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,11 +9,13 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Fabrice Dubach - [214325] Fix isSaveNeeded() logic
+ *   Fabrice Dubach - Bug 214325 Fix isSaveNeeded() logic
+ *   IBM - Bug 24465
+ *   Zeligsoft - Bug 244654 (Update for J2SE 5.0)
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.14 2008/02/04 14:28:47 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.14.2.1 2008/10/04 17:49:24 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -73,6 +75,7 @@ public class WorkspaceCommandStackImpl
 	
 	private final IOperationHistory history;
 	private DomainListener domainListener;
+	private Set<Resource> historyAffectedResources;
 	
 	private final IUndoContext defaultContext = new UndoContext() {
 	    @Override
@@ -429,6 +432,7 @@ public class WorkspaceCommandStackImpl
 	public void dispose() {
 		setEditingDomain(null);  // remove listeners
 		domainListener = null;
+		historyAffectedResources = null;
 		mostRecentOperation = null;
 	}
 
@@ -439,23 +443,54 @@ public class WorkspaceCommandStackImpl
 	 *
 	 * @author Christian W. Damus (cdamus)
 	 */
-	private class DomainListener extends ResourceSetListenerImpl implements IOperationHistoryListener {
+	private class DomainListener
+			extends ResourceSetListenerImpl
+			implements IOperationHistoryListener {
+		
 		public void historyNotification(OperationHistoryEvent event) {
 			final IUndoableOperation operation = event.getOperation();
-			
+
 			switch (event.getEventType()) {
-			case OperationHistoryEvent.DONE:
-			case OperationHistoryEvent.UNDONE:
-			case OperationHistoryEvent.REDONE:
-				if (operation.hasContext(getDefaultUndoContext())) {
-					mostRecentOperation = operation;
-				}
-				break;
-			case OperationHistoryEvent.OPERATION_REMOVED:
-				if (operation == mostRecentOperation) {
-					mostRecentOperation = null;
-				}
-				break;
+				case OperationHistoryEvent.ABOUT_TO_EXECUTE :
+					// set up to remember affected resources in case we make EMF
+					// changes
+					historyAffectedResources = new java.util.HashSet<Resource>();
+					break;
+				case OperationHistoryEvent.DONE :
+					if ((historyAffectedResources != null)
+						&& !historyAffectedResources.isEmpty()) {
+						// add my undo context to the operation that has
+						// completed, but only if the operation actually changed
+						// any of my resources (in case this history is shared
+						// with other domains)
+						for (Resource next : historyAffectedResources) {
+							operation.addContext(new ResourceUndoContext(
+								getDomain(), next));
+						}
+					}
+
+					historyAffectedResources = null;
+
+					if (operation.hasContext(getDefaultUndoContext())) {
+						mostRecentOperation = operation;
+					}
+					break;
+				case OperationHistoryEvent.OPERATION_NOT_OK :
+					// just forget about the context because this operation
+					// failed
+					historyAffectedResources = null;
+					break;
+				case OperationHistoryEvent.UNDONE :
+				case OperationHistoryEvent.REDONE :
+					if (operation.hasContext(getDefaultUndoContext())) {
+						mostRecentOperation = operation;
+					}
+					break;
+				case OperationHistoryEvent.OPERATION_REMOVED :
+					if (operation == mostRecentOperation) {
+						mostRecentOperation = null;
+					}
+					break;
 			}
 		}
 		
@@ -497,6 +532,12 @@ public class WorkspaceCommandStackImpl
                     }
                 }
             }
+            
+            if (historyAffectedResources != null) {
+				// there is an operation executing on our history that is
+				// affecting my editing domain. Remember the affected resources.
+            	historyAffectedResources.addAll(affectedResources);
+			}
 		}
 		
 		/**

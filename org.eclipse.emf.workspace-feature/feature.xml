@@ -18,7 +18,7 @@
 <feature
       id="org.eclipse.emf.workspace"
       label="%featureName"
-      version="1.2.2.qualifier"
+      version="1.2.3.qualifier"
       provider-name="%providerName"
       image="modeling32.png">
 
