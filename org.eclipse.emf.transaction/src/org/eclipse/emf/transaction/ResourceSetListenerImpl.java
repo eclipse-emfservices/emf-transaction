@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: ResourceSetListenerImpl.java,v 1.4 2008/09/14 02:21:49 cdamus Exp $
+ * $Id: ResourceSetListenerImpl.java,v 1.5 2008/10/09 00:21:15 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -99,10 +99,11 @@ public class ResourceSetListenerImpl
 
 	/**
 	 * Queries the transactional editing domain, if any, to which I am
-	 * listening.  Note the assumption of the most common case in which a
+	 * listening. Note the assumption of the most common case in which a
 	 * listener is only attached to a single domain.
 	 * 
-	 * @return the editing that I listen to, or <code>null</code> if none
+	 * @return the editing domain that I listen to, or <code>null</code> if none
+	 * @since 1.3
 	 */
 	protected TransactionalEditingDomain getTarget() {
 		return target;
