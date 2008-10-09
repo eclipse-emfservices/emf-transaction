@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 145877
+ *   Zeligsoft - Bugs 145877, 248717
  *
  * </copyright>
  *
- * $Id: AllTests.java,v 1.12 2008/09/20 21:22:43 cdamus Exp $
+ * $Id: AllTests.java,v 1.13 2008/10/09 00:45:16 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -60,6 +60,7 @@ public class AllTests
 		suite.addTest(PrivilegedRunnableTest.suite());
         suite.addTest(EditingDomainValidatorTest.suite());
         suite.addTest(ValidateEditTest.suite());
+        suite.addTest(JobManagerSuspensionDeadlockTest.suite());
 		suite.addTest(PerformanceTest.suite());
 		suite.addTest(MemoryLeakTest.suite());
 		return suite;

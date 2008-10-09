@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 248717
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.12 2007/11/14 18:14:00 cdamus Exp $
+ * $Id: Lock.java,v 1.13 2008/10/09 00:45:14 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -381,6 +382,22 @@ public class Lock {
                 }
 
                 job.schedule();
+                
+                if (Job.getJobManager().isSuspended()) {
+					// the Job Manager is suspended. We cannot use a job to
+					// acquire.
+					// We check only after scheduling the job because Eclipse
+					// ensures that all pending jobs run before the JobManager
+					// actually halts. Thus, we have a chance to abort the job,
+					// in case the job manager was already suspended before we
+					// scheduled it.
+                	job.abort();
+                	
+					// If the Job Manager is suspended, then under normal
+					// Eclipse circumstances, this is not the UI thread, anyway
+                	acquire(exclusive);
+                	return;
+                }
 
                 // wait for the job to tell us it's running. Don't allow
                 // the UI thread to be interrupted during this interval
