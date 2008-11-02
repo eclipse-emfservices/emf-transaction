@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 240775
  *
  * </copyright>
  *
- * $Id: WorkspaceEditingDomainFactory.java,v 1.4 2007/11/14 18:14:08 cdamus Exp $
+ * $Id: WorkspaceEditingDomainFactory.java,v 1.5 2008/11/02 18:43:21 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -25,9 +26,17 @@ import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
 import org.eclipse.emf.workspace.impl.WorkspaceCommandStackImpl;
 
 /**
- * Factory for creating transactional editing domains that delegate
- * command execution, undo, and redo to an {@link IOperationHistory}.
- *
+ * <p>
+ * Factory for creating transactional editing domains that delegate command
+ * execution, undo, and redo to an {@link IOperationHistory}.
+ * </p>
+ * <p>
+ * Since the 1.3 release, the determination of how {@link ResourceUndoContext}s
+ * are attached to undoable operations is
+ * {@linkplain #getResourceUndoContextPolicy() customizable} using the new
+ * {@link IResourceUndoContextPolicy} API.
+ * </p>
+ * 
  * @author Christian W. Damus (cdamus)
  */
 public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImpl.FactoryImpl {
@@ -52,7 +61,7 @@ public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImp
 	 * @return the new editing domain
 	 */
 	@Override
-	public TransactionalEditingDomain createEditingDomain() {
+	public synchronized TransactionalEditingDomain createEditingDomain() {
 		return createEditingDomain(OperationHistoryFactory.getOperationHistory());
 	}
 
@@ -65,7 +74,7 @@ public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImp
 	 * @return the new editing domain
 	 */
 	@Override
-	public TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
+	public synchronized TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
 		return createEditingDomain(
 				rset,
 				OperationHistoryFactory.getOperationHistory());
@@ -81,6 +90,7 @@ public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImp
 	 */
 	public TransactionalEditingDomain createEditingDomain(IOperationHistory history) {
 		WorkspaceCommandStackImpl stack = new WorkspaceCommandStackImpl(history);
+		stack.setResourceUndoContextPolicy(getResourceUndoContextPolicy());
 		
 		TransactionalEditingDomain result = new TransactionalEditingDomainImpl(
 			new ComposedAdapterFactory(
@@ -103,6 +113,7 @@ public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImp
 	 */
 	public TransactionalEditingDomain createEditingDomain(ResourceSet rset, IOperationHistory history) {
 		WorkspaceCommandStackImpl stack = new WorkspaceCommandStackImpl(history);
+		stack.setResourceUndoContextPolicy(getResourceUndoContextPolicy());
 		
 		TransactionalEditingDomain result = new TransactionalEditingDomainImpl(
 			new ComposedAdapterFactory(
@@ -113,5 +124,19 @@ public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImp
 		mapResourceSet(result);
 		
 		return result;
+	}
+	
+	/**
+	 * Obtains a resource undo-context policy to apply to the editing domain, to
+	 * determine how to attach {@link ResourceUndoContext}s to operations in the
+	 * associated history.  May be overridden by clients to supply a non-default
+	 * implementation.
+	 * 
+	 * @return the resource undo-context policy
+	 * 
+	 * @since 1.3
+	 */
+	protected IResourceUndoContextPolicy getResourceUndoContextPolicy() {
+		return IResourceUndoContextPolicy.DEFAULT;
 	}
 }

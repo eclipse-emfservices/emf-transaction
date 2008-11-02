@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,14 +9,14 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 240775
  *
  * </copyright>
  *
- * $Id: ResourceUndoContext.java,v 1.6 2008/02/04 14:26:18 cdamus Exp $
+ * $Id: ResourceUndoContext.java,v 1.7 2008/11/02 18:43:21 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -24,8 +24,6 @@ import java.util.Set;
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.emf.common.notify.Notification;
-import org.eclipse.emf.ecore.EObject;
-import org.eclipse.emf.ecore.EReference;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.workspace.internal.l10n.Messages;
@@ -123,49 +121,27 @@ public final class ResourceUndoContext
 	 * Analyzes a list of notifications to extract the set of {@link Resource}s
 	 * affected by the changes.
 	 * 
-	 * @param notifications a list of {@link Notification}s indicating changes
-	 *     in a resource set
-	 *     
-	 * @return the resources affected by the specified notifications.
-	 *     The resulting set should be treated as unmodifiable
+	 * @param notifications
+	 *            a list of {@link Notification}s indicating changes in a
+	 *            resource set
+	 * 
+	 * @return the resources affected by the specified notifications. The
+	 *         resulting set should be treated as unmodifiable
+	 * 
+	 * @deprecated Since the 1.3 release, use the
+	 *             {@link IResourceUndoContextPolicy#getContextResources(IUndoableOperation, List)}
+	 *             method of the editing domain's resource undo-context policy,
+	 *             instead
 	 */
 	public static Set<Resource> getAffectedResources(
 			List<? extends Notification> notifications) {
-		
-		Set<Resource> result;
-		
-		if (notifications.isEmpty()) {
-			result = Collections.emptySet();
-		} else {
-			result = new java.util.HashSet<Resource>();
-			
-			for (Notification next : notifications) {
-				Object notifier = next.getNotifier();
-				
-				if (notifier instanceof Resource) {
-					result.add((Resource) notifier);
-				} else if (notifier instanceof EObject) {
-					EObject eobj = (EObject) notifier;
-                    Resource resource = eobj.eResource();
-                    
-                    if (resource != null) {
-                        result.add(resource);
-                    }
-					
-					// if the reference has an opposite, then we will get the
-					//   notification from the other end, anyway
-					final Object feature = next.getFeature();
-					if ((feature instanceof EReference)
-							&& (((EReference) feature).getEOpposite() == null)) {
-						handleCrossResourceReference(result, next);
-					}
-				}
-			}
-		}
-		
-		return result;
+
+		// the default implementation never considers the operation, so a
+		// null value will not hurt it
+		return IResourceUndoContextPolicy.DEFAULT.getContextResources(null,
+			notifications);
 	}
-	
+
 	/**
 	 * Extracts the set of EMF {@link Resource}s affected by the specified
 	 * operation, from the <code>ResourceUndoContext</code>s attached to it.
@@ -192,78 +168,6 @@ public final class ResourceUndoContext
 		}
 		
 		return result;
-	}
-	
-	/**
-	 * Handles notifications that can potentially represent cross-resource
-	 * references.  Helper to the {@link #getAffectedResources(List)} method.
-	 * 
-	 * @param resources collects the affected resources
-	 * @param notification a potential cross-resource reference change notification
-	 */
-	private static void handleCrossResourceReference(
-			Set<Resource> resources,
-			Notification notification) {
-		
-		Object oldValue = notification.getOldValue();
-		Object newValue = notification.getNewValue();
-        Resource resource;
-		
-		switch (notification.getEventType()) {
-		case Notification.SET:
-		case Notification.UNSET:
-			if (oldValue != null) {
-                resource = ((EObject) oldValue).eResource();
-                
-                if (resource != null) {
-                    resources.add(resource);
-                }
-			}
-			if (newValue != null) {
-                resource = ((EObject) newValue).eResource();
-                
-                if (resource != null) {
-                    resources.add(resource);
-                }
-			}
-			break;
-		case Notification.ADD:
-            resource = ((EObject) newValue).eResource();
-            
-            if (resource != null) {
-                resources.add(resource);
-            }
-			break;
-		case Notification.ADD_MANY: {
-		    @SuppressWarnings("unchecked")
-		    Collection<EObject> newReferences = (Collection<EObject>) newValue;
-			for (EObject next : newReferences) {
-                resource = next.eResource();
-                
-                if (resource != null) {
-                    resources.add(resource);
-                }
-			}
-			break;}
-		case Notification.REMOVE:
-            resource = ((EObject) oldValue).eResource();
-            
-            if (resource != null) {
-                resources.add(resource);
-            }
-			break;
-		case Notification.REMOVE_MANY: {
-            @SuppressWarnings("unchecked")
-            Collection<EObject> oldReferences = (Collection<EObject>) oldValue;
-            for (EObject next : oldReferences) {
-                resource = next.eResource();
-                
-                if (resource != null) {
-                    resources.add(resource);
-                }
-			}
-			break;}
-		}
 	}
 	
 	@Override

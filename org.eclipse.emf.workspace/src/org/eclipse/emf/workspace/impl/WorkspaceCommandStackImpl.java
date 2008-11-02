@@ -11,11 +11,11 @@
  *   IBM - Initial API and implementation
  *   Fabrice Dubach - Bug 214325 Fix isSaveNeeded() logic
  *   IBM - Bug 24465
- *   Zeligsoft - Bug 244654 (Update for J2SE 5.0)
+ *   Zeligsoft - Bugs 244654 (Update for J2SE 5.0), 240775
  *
  * </copyright>
  *
- * $Id: WorkspaceCommandStackImpl.java,v 1.15 2008/10/04 18:16:52 cdamus Exp $
+ * $Id: WorkspaceCommandStackImpl.java,v 1.16 2008/11/02 18:43:21 cdamus Exp $
  */
 package org.eclipse.emf.workspace.impl;
 
@@ -50,6 +50,7 @@ import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TriggerCommandTransaction;
 import org.eclipse.emf.transaction.util.TriggerCommand;
 import org.eclipse.emf.workspace.EMFCommandOperation;
+import org.eclipse.emf.workspace.IResourceUndoContextPolicy;
 import org.eclipse.emf.workspace.IWorkspaceCommandStack;
 import org.eclipse.emf.workspace.ResourceUndoContext;
 import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
@@ -75,7 +76,10 @@ public class WorkspaceCommandStackImpl
 	
 	private final IOperationHistory history;
 	private DomainListener domainListener;
-	private Set<Resource> historyAffectedResources;
+	
+	private IResourceUndoContextPolicy undoContextPolicy = IResourceUndoContextPolicy.DEFAULT;
+	private IUndoableOperation currentOperation;
+	private Set<Resource> historyAffectedResources; 
 	
 	private final IUndoContext defaultContext = new UndoContext() {
 	    @Override
@@ -435,6 +439,29 @@ public class WorkspaceCommandStackImpl
 		historyAffectedResources = null;
 		mostRecentOperation = null;
 	}
+	
+	/**
+	 * Obtains my resource undo-context policy.
+	 * 
+	 * @return my resource undo-context policy
+	 * 
+	 * @since 1.3
+	 */
+	public IResourceUndoContextPolicy getResourceUndoContextPolicy() {
+		return undoContextPolicy;
+	}
+	
+	/**
+	 * Sets my resource undo-context policy.
+	 * 
+	 * @param policy
+	 *            my new policy, or <code>null</code> to restore the default
+	 * 
+	 * @since 1.3
+	 */
+	public void setResourceUndoContextPolicy(IResourceUndoContextPolicy policy) {
+		this.undoContextPolicy = policy;
+	}
 
 	/**
 	 * A listener on the editing domain and operation history that tracks
@@ -454,6 +481,7 @@ public class WorkspaceCommandStackImpl
 				case OperationHistoryEvent.ABOUT_TO_EXECUTE :
 					// set up to remember affected resources in case we make EMF
 					// changes
+					currentOperation = operation;
 					historyAffectedResources = new java.util.HashSet<Resource>();
 					break;
 				case OperationHistoryEvent.DONE :
@@ -469,6 +497,7 @@ public class WorkspaceCommandStackImpl
 						}
 					}
 
+					currentOperation = null;
 					historyAffectedResources = null;
 
 					if (operation.hasContext(getDefaultUndoContext())) {
@@ -478,6 +507,7 @@ public class WorkspaceCommandStackImpl
 				case OperationHistoryEvent.OPERATION_NOT_OK :
 					// just forget about the context because this operation
 					// failed
+					currentOperation = null;
 					historyAffectedResources = null;
 					break;
 				case OperationHistoryEvent.UNDONE :
@@ -498,20 +528,8 @@ public class WorkspaceCommandStackImpl
 		public void resourceSetChanged(ResourceSetChangeEvent event) {
             IUndoableOperation operation = null;
             
-            Transaction tx = event.getTransaction();
-            if (tx != null) {
-                operation = (IUndoableOperation) tx.getOptions().get(
-                    EMFWorkspacePlugin.OPTION_OWNING_OPERATION);
-            }
-            
-            Set<Resource> affectedResources = ResourceUndoContext.getAffectedResources(
-                event.getNotifications());
-            
 			Set<Resource> unloaded = getUnloadedResources(event.getNotifications());
 			if (unloaded != null) {
-				// don't add these resources to the operation
-				affectedResources.removeAll(unloaded);
-				
                 // dispose their undo contexts
 				for (Resource next : unloaded) {
 					getOperationHistory().dispose(
@@ -519,25 +537,46 @@ public class WorkspaceCommandStackImpl
 							true, true, true);
 				}
 			}
-            
-            if ((operation != null) && !affectedResources.isEmpty()) {
-                // add any resource undo contexts to this operation that are
-                //   not already applied
-                for (Resource next : affectedResources) {
-                    ResourceUndoContext ctx = new ResourceUndoContext(
-                        getDomain(), next);
-                    
-                    if (!operation.hasContext(ctx)) {
-                        operation.addContext(ctx);
-                    }
-                }
+           
+            Transaction tx = event.getTransaction();
+            if (tx != null) {
+                operation = (IUndoableOperation) tx.getOptions().get(
+                    EMFWorkspacePlugin.OPTION_OWNING_OPERATION);
             }
             
-            if (historyAffectedResources != null) {
-				// there is an operation executing on our history that is
-				// affecting my editing domain. Remember the affected resources.
-            	historyAffectedResources.addAll(affectedResources);
-			}
+            if (operation == null) {
+            	operation = currentOperation;
+            }
+            
+            if (operation != null) {
+				Set<Resource> affectedResources = getResourceUndoContextPolicy()
+					.getContextResources(operation, event.getNotifications());
+	            
+				if (unloaded != null) {
+					// don't add these resources to the operation
+					affectedResources.removeAll(unloaded);
+				}
+	            
+	            if (!affectedResources.isEmpty()) {
+	                // add any resource undo contexts to this operation that are
+	                //   not already applied
+	                for (Resource next : affectedResources) {
+	                    ResourceUndoContext ctx = new ResourceUndoContext(
+	                        getDomain(), next);
+	                    
+	                    if (!operation.hasContext(ctx)) {
+	                        operation.addContext(ctx);
+	                    }
+	                }
+	            }
+	            
+	            if (historyAffectedResources != null) {
+					// there is an operation executing on our history that is
+					// affecting my editing domain. Remember the affected
+	            	// resources.
+	            	historyAffectedResources.addAll(affectedResources);
+				}
+            }
 		}
 		
 		/**
