@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bugs 234868, 245419, 245393
+ *   Zeligsoft - Bugs 234868, 245419, 245393, 250253
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.20 2008/09/21 21:18:28 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.21 2008/11/13 01:17:04 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -147,16 +147,22 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 				transaction = createTransaction(options);
 			}
 			
-			result.add(doExecute(monitor, info));
+			IStatus status = doExecute(monitor, info);
+			result.add(status);
 			
 			if (transaction != null) {
-				transaction.commit();
-				change = transaction.getChangeDescription();
-                
-                // ordinarily, we recursively dispose the root tx's change
-                shouldDisposeChange = transaction.getParent() == null;
-                
-				didCommit(transaction);
+				if ((status == null) || (status.getSeverity() < IStatus.ERROR)) {
+					transaction.commit();
+					change = transaction.getChangeDescription();
+	                
+	                // ordinarily, we recursively dispose the root tx's change
+	                shouldDisposeChange = transaction.getParent() == null;
+	                
+					didCommit(transaction);
+				} else {
+					((InternalTransaction) transaction).setStatus(status);
+					transaction.rollback();
+				}
 			}
 		} catch (InterruptedException e) {
 			Tracing.catching(AbstractEMFOperation.class, "execute", e); //$NON-NLS-1$

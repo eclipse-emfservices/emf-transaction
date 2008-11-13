@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 145877
+ *   Zeligsoft - Bugs 145877, 250253
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.20 2008/09/20 21:23:08 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.21 2008/11/13 01:16:55 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -33,6 +33,7 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.Tracing;
+import org.eclipse.emf.transaction.internal.l10n.Messages;
 import org.eclipse.emf.transaction.util.CommandChangeDescription;
 import org.eclipse.emf.transaction.util.CompositeChangeDescription;
 import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
@@ -571,6 +572,24 @@ public class TransactionImpl
                 if (validateEdit != null) {
         			validateEdit.finalizeForRollback();
                 }
+			}
+			
+			// ensure an appropriate transaction status for roll-back
+			IStatus status = getStatus();
+			if ((status == null) || status.isOK()) {
+				// generic error status for roll-back
+				setStatus(new Status(IStatus.ERROR, EMFTransactionPlugin
+					.getPluginId(), Messages.rollbackRequested));
+			} else if (status.getSeverity() < IStatus.ERROR) {
+				// make a multi-status for rollback error but preserving the
+				// original status
+				IStatus rbStatus = new Status(IStatus.ERROR,
+					EMFTransactionPlugin.getPluginId(),
+					Messages.rollbackRequested);
+
+				setStatus(new MultiStatus(EMFTransactionPlugin.getPluginId(),
+					rbStatus.getCode(), new IStatus[]{rbStatus, status},
+					rbStatus.getMessage(), null));
 			}
 		} finally {
 			rollingBack = false;

@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 250253
  *
  * </copyright>
  *
- * $Id: CompositeEMFOperationTest.java,v 1.5 2007/11/14 18:13:53 cdamus Exp $
+ * $Id: CompositeEMFOperationTest.java,v 1.6 2008/11/13 01:16:38 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -1621,6 +1622,159 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		assertEquals(originalBranchCount + 4, root.getBranches().size());
 		
 		commit();
+	}
+	
+	public void test_errorInNestedAEO_transactionNesting_250253() {
+		AbstractEMFOperationTest.RollbackListener l = new AbstractEMFOperationTest.RollbackListener();
+		l.install(domain);
+
+		try {
+			startReading();
+
+			int originalBranchCount = root.getBranches().size();
+			final Library[] shouldNotCreate = new Library[1];
+
+			commit();
+
+			IUndoContext ctx = new TestUndoContext();
+
+			// create a nested composite operation structure
+			CompositeEMFOperation composite = new CompositeEMFOperation(domain,
+				"Composite"); //$NON-NLS-1$
+
+			composite.add(new TestOperation(domain) {
+
+				@Override
+				protected void doExecute() {
+					// add a new library
+					root.getBranches().add(
+						EXTLibraryFactory.eINSTANCE.createLibrary());
+				}
+			});
+
+			composite.add(new TestOperation(domain) {
+
+				@Override
+				protected void doExecute() {
+					// add a new library
+					root.getBranches().add(
+						EXTLibraryFactory.eINSTANCE.createLibrary());
+
+					// then return an error status for some reason
+					setStatus(new Status(IStatus.ERROR,
+						"org.eclipse.emf.workspace.tests", "I want to fail")); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+			});
+			composite.add(new TestOperation(domain) {
+
+				@Override
+				protected void doExecute() {
+					// add a new library
+					shouldNotCreate[0] = EXTLibraryFactory.eINSTANCE
+						.createLibrary();
+					root.getBranches().add(shouldNotCreate[0]);
+				}
+			});
+
+			try {
+				composite.addContext(ctx);
+				history.execute(composite, new NullProgressMonitor(), null);
+			} catch (ExecutionException e) {
+				fail(e);
+			}
+			
+			l.assertRolledBack();
+
+			startReading();
+
+			// rollback didn't go wonky
+			assertEquals(originalBranchCount, root.getBranches().size());
+
+			// and we didn't even execute the third command
+			assertNull("Executed the third child command", shouldNotCreate[0]); //$NON-NLS-1$
+
+			commit();
+		} finally {
+			l.uninstall(domain);
+		}
+	}
+	
+	public void test_errorInNestedAEO_noTransactionNesting_250253() {
+		AbstractEMFOperationTest.RollbackListener l = new AbstractEMFOperationTest.RollbackListener();
+		l.install(domain);
+
+		try {
+			startReading();
+
+			int originalBranchCount = root.getBranches().size();
+			final Library[] shouldNotCreate = new Library[1];
+
+			commit();
+
+			IUndoContext ctx = new TestUndoContext();
+
+			// create a nested composite operation structure
+			CompositeEMFOperation composite = new CompositeEMFOperation(domain,
+				"Composite"); //$NON-NLS-1$
+
+			// tell the composite to reuse a single transaction
+			composite.setTransactionNestingEnabled(false);
+
+			composite.add(new TestOperation(domain) {
+
+				@Override
+				protected void doExecute() {
+					// add a new library
+					root.getBranches().add(
+						EXTLibraryFactory.eINSTANCE.createLibrary());
+				}
+			});
+
+			composite.add(new TestOperation(domain) {
+
+				@Override
+				protected void doExecute() {
+					// add a new library
+					root.getBranches().add(
+						EXTLibraryFactory.eINSTANCE.createLibrary());
+
+					// then return an error status for some reason
+					setStatus(new Status(IStatus.ERROR,
+						"org.eclipse.emf.workspace.tests", "I want to fail")); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+			});
+			composite.add(new TestOperation(domain) {
+
+				@Override
+				protected void doExecute() {
+					// add a new library
+					shouldNotCreate[0] = EXTLibraryFactory.eINSTANCE
+						.createLibrary();
+					root.getBranches().add(shouldNotCreate[0]);
+				}
+			});
+
+			try {
+				composite.addContext(ctx);
+				history.execute(composite, new NullProgressMonitor(), null);
+			} catch (ExecutionException e) {
+				fail(e);
+			}
+
+			l.assertRolledBack();
+
+			startReading();
+
+			// rollback didn't go wonky
+			assertEquals(originalBranchCount, root.getBranches().size());
+
+			// and we didn't even execute the third command
+			assertNull("Executed the third child command", shouldNotCreate[0]); //$NON-NLS-1$
+
+			commit();
+		} finally {
+			l.uninstall(domain);
+		}
 	}
 	
 	//

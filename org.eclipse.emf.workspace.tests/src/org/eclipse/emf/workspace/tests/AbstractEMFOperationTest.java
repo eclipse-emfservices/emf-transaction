@@ -9,12 +9,12 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bugs 218276, 245419, 245393
+ *   Zeligsoft - Bugs 218276, 245419, 245393, 250253
  *   IBM - Bug 245393
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperationTest.java,v 1.11 2008/09/21 21:18:39 cdamus Exp $
+ * $Id: AbstractEMFOperationTest.java,v 1.12 2008/11/13 01:16:38 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 
@@ -47,8 +47,11 @@ import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.TransactionalEditingDomainEvent;
+import org.eclipse.emf.transaction.TransactionalEditingDomainListenerImpl;
 import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
+import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.emf.workspace.AbstractEMFOperation;
 import org.eclipse.emf.workspace.CompositeEMFOperation;
 import org.eclipse.emf.workspace.tests.fixtures.ExternalDataCommand;
@@ -934,6 +937,32 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		}
 	}
 	
+	public void test_rollbackOnError_250253() {
+		RollbackListener l = new RollbackListener();
+		l.install(domain);
+
+		try {
+			new AbstractEMFOperation(domain, "Test error result") {
+
+				@Override
+				protected IStatus doExecute(IProgressMonitor monitor,
+						IAdaptable info)
+						throws ExecutionException {
+
+					return new Status(IStatus.ERROR,
+						"org.eclipse.emf.transaction.tests", "I want to fail");
+				}
+			}.execute(null, null);
+			
+			l.assertRolledBack();
+		} catch (ExecutionException e) {
+			fail("Shouldn't have an execution exception from a normal error return."
+				+ e.getLocalizedMessage());
+		} finally {
+			l.uninstall(domain);
+		}
+	}
+	
 	//
 	// Fixtures
 	//
@@ -1006,4 +1035,45 @@ public class AbstractEMFOperationTest extends AbstractTest {
             return null;
         }
     }
+    
+	public static class RollbackListener
+			extends TransactionalEditingDomainListenerImpl {
+
+		private int rollbackCount = 0;
+
+		public void install(TransactionalEditingDomain domain) {
+			TransactionUtil.getAdapter(domain,
+				TransactionalEditingDomain.Lifecycle.class)
+				.addTransactionalEditingDomainListener(this);
+		}
+
+		public void uninstall(TransactionalEditingDomain domain) {
+			TransactionUtil.getAdapter(domain,
+				TransactionalEditingDomain.Lifecycle.class)
+				.removeTransactionalEditingDomainListener(this);
+		}
+		
+		public void reset() {
+			rollbackCount = 0;
+		}
+
+		@Override
+		public void transactionClosed(TransactionalEditingDomainEvent event) {
+			if (event.getTransaction().getStatus().getSeverity() >= IStatus.ERROR) {
+				rollbackCount++;
+			}
+		}
+
+		public void assertRolledBack() {
+			assertEquals("No rollback occurred", 1, rollbackCount);
+		}
+
+		public void assertRollbacks(int expected) {
+			assertEquals("Wrong number of rollbacks", expected, rollbackCount);
+		}
+
+		public void assertNoRollbacks() {
+			assertEquals("Should not have any rollbacks", 0, rollbackCount);
+		}
+	}
 }

@@ -9,11 +9,11 @@
  * 
  * Contributors: 
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 145877
+ *   Zeligsoft - Bugs 145877, 250253
  *
  * </copyright>
  *
- * $Id: Messages.java,v 1.8 2008/09/20 21:23:08 cdamus Exp $
+ * $Id: Messages.java,v 1.9 2008/11/13 01:16:55 cdamus Exp $
  */
 package org.eclipse.emf.transaction.internal.l10n;
 
@@ -57,6 +57,8 @@ public class Messages
 	public static String reloadDuringUnload;
 	
 	public static String lifecycleListener;
+	
+	public static String rollbackRequested;
 	
 	static {
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
