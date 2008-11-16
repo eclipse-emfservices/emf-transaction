@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,14 +9,16 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 250498
  *
  * </copyright>
  *
- * $Id: BasicTransactionTest.java,v 1.6 2007/11/14 18:14:13 cdamus Exp $
+ * $Id: BasicTransactionTest.java,v 1.7 2008/11/16 13:23:44 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.Test;
@@ -33,10 +35,14 @@ import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
+import org.eclipse.emf.examples.extlibrary.Library;
+import org.eclipse.emf.transaction.ResourceSetListener;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.RunnableWithResult;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
@@ -573,6 +579,98 @@ public class BasicTransactionTest extends AbstractTest {
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		}
+	}
+	
+	public void test_readWrongThread_250498() {
+		final Object monitor = new Object();
+
+		ResourceSetListener l = new TriggerListener() {
+		
+			@Override
+			protected Command trigger(TransactionalEditingDomain domain,
+					Notification notification) {
+				// don't actually need to do anything
+				return null;
+			}
+		};
+		domain.addResourceSetListener(l);
+		
+		Thread t = new Thread(new Runnable() {
+
+			public void run() {
+				Transaction xa = null;
+
+				try {
+					synchronized (monitor) {
+						xa = ((InternalTransactionalEditingDomain) domain)
+							.startTransaction(false, null);
+
+						// do a bunch of stuff
+						for (Iterator<?> all = root.eAllContents(); all.hasNext();) {
+							Object next = all.next();
+							
+							if (next instanceof Book) {
+								Book book = (Book) next;
+								book.setTitle("123 " + book.getTitle()); //$NON-NLS-1$
+								
+								Library lib = (Library) book.eContainer();
+								if (!lib.getWriters().isEmpty()) {
+									book.setAuthor(lib.getWriters().get(0));
+								}
+							}
+						}
+						
+						// wake up the main thread
+						monitor.notifyAll();
+
+						// wait for the main thread to continue
+						monitor.wait();
+
+						// commit
+						try {
+							xa.commit();
+						} catch (RollbackException e) {
+							fail("Should not have rolled back: " + e.getLocalizedMessage()); //$NON-NLS-1$
+						} finally {
+							xa = null;
+						}
+					}
+				} catch (Exception e) {
+					fail(e);
+				} finally {
+					if (xa != null) {
+						xa.rollback();
+					}
+				}
+			}
+		});
+
+		try {
+			synchronized (monitor) {
+				t.start();
+
+				// wait for the thread to start its transaction
+				monitor.wait();
+			}
+
+			// cause notifications compatible with a read-only context
+			root
+				.eResource()
+				.getResourceSet()
+				.getResource(
+					URI
+						.createURI("platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore"), //$NON-NLS-1$
+					true);
+		} catch (Exception e) {
+			fail(e);
+		} finally {
+			// let the other thread exit
+			synchronized (monitor) {
+				monitor.notifyAll();
+			}
+			
+			domain.removeResourceSetListener(l);
 		}
 	}
 }

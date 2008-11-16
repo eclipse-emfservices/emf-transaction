@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 250498
  *
  * </copyright>
  *
- * $Id: TransactionChangeRecorder.java,v 1.7 2007/11/14 18:14:00 cdamus Exp $
+ * $Id: TransactionChangeRecorder.java,v 1.8 2008/11/16 13:23:38 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -31,6 +32,7 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.util.InternalEList;
 import org.eclipse.emf.transaction.NotificationFilter;
+import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.internal.Tracing;
@@ -303,9 +305,17 @@ public class TransactionChangeRecorder extends ChangeRecorder {
 		InternalTransaction tx = getEditingDomain().getActiveTransaction();
 		
 		if (tx != null) {
-			tx.add(notification);
+			if (tx.getOwner() == Thread.currentThread()) {
+				tx.add(notification);
+			} else if (Tracing
+				.shouldTrace(EMFTransactionDebugOptions.TRANSACTIONS)) {
+				
+				Tracing.trace("Read notification from thread " //$NON-NLS-1$
+					+ Thread.currentThread().getName() + " not appended to " //$NON-NLS-1$
+					+ tx);
+			}
 		} else {
-			// can't batch it
+			// can't batch it because there is no transaction to collect a batch
 			getEditingDomain().broadcastUnbatched(notification);
 		}
 	}
