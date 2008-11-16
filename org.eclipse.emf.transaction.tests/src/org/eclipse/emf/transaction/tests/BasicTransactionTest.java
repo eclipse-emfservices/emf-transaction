@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: BasicTransactionTest.java,v 1.7 2008/11/16 13:23:44 cdamus Exp $
+ * $Id: BasicTransactionTest.java,v 1.8 2008/11/16 14:02:11 cdamus Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -31,18 +31,20 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.edit.command.CommandParameter;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Library;
+import org.eclipse.emf.transaction.NotificationFilter;
+import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListener;
+import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.RunnableWithResult;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
-import org.eclipse.emf.transaction.TransactionalEditingDomain;
-import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
@@ -584,18 +586,46 @@ public class BasicTransactionTest extends AbstractTest {
 	
 	public void test_readWrongThread_250498() {
 		final Object monitor = new Object();
+		final List<Notification> readNotifications = new java.util.ArrayList<Notification>();
 
-		ResourceSetListener l = new TriggerListener() {
-		
+		ResourceSetListener l = new ResourceSetListenerImpl() {
+
 			@Override
-			protected Command trigger(TransactionalEditingDomain domain,
-					Notification notification) {
-				// don't actually need to do anything
-				return null;
+			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
+					throws RollbackException {
+
+				Command result = null;
+
+				// a simple trigger command to fish for interference in the
+				// notifications list
+				for (Notification next : event.getNotifications()) {
+					if ((next.getNotifier() instanceof Book)
+						&& (next.getFeature() == EXTLibraryPackage.Literals.BOOK__TITLE)) {
+						Command cmd = domain.createCommand(SetCommand.class,
+							new CommandParameter(next.getNotifier(), next
+								.getFeature(), 123));
+
+						result = (result == null)
+							? cmd
+							: result.chain(cmd);
+					}
+				}
+
+				return result;
+			}
+
+			@Override
+			public void resourceSetChanged(ResourceSetChangeEvent event) {
+				// gather the read events
+				for (Notification next : event.getNotifications()) {
+					if (NotificationFilter.READ.matches(next)) {
+						readNotifications.add(next);
+					}
+				}
 			}
 		};
 		domain.addResourceSetListener(l);
-		
+
 		Thread t = new Thread(new Runnable() {
 
 			public void run() {
@@ -607,20 +637,21 @@ public class BasicTransactionTest extends AbstractTest {
 							.startTransaction(false, null);
 
 						// do a bunch of stuff
-						for (Iterator<?> all = root.eAllContents(); all.hasNext();) {
+						for (Iterator<?> all = root.eAllContents(); all
+							.hasNext();) {
 							Object next = all.next();
-							
+
 							if (next instanceof Book) {
 								Book book = (Book) next;
 								book.setTitle("123 " + book.getTitle()); //$NON-NLS-1$
-								
+
 								Library lib = (Library) book.eContainer();
 								if (!lib.getWriters().isEmpty()) {
 									book.setAuthor(lib.getWriters().get(0));
 								}
 							}
 						}
-						
+
 						// wake up the main thread
 						monitor.notifyAll();
 
@@ -639,8 +670,15 @@ public class BasicTransactionTest extends AbstractTest {
 				} catch (Exception e) {
 					fail(e);
 				} finally {
-					if (xa != null) {
-						xa.rollback();
+					try {
+						if (xa != null) {
+							xa.rollback();
+						}
+					} finally {
+						synchronized (monitor) {
+							// wake up the main thread again
+							monitor.notifyAll();
+						}
 					}
 				}
 			}
@@ -652,24 +690,33 @@ public class BasicTransactionTest extends AbstractTest {
 
 				// wait for the thread to start its transaction
 				monitor.wait();
-			}
 
-			// cause notifications compatible with a read-only context
-			root
-				.eResource()
-				.getResourceSet()
-				.getResource(
-					URI
-						.createURI("platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore"), //$NON-NLS-1$
-					true);
+				// cause notifications compatible with a read-only context
+				root
+					.eResource()
+					.getResourceSet()
+					.getResource(
+						URI
+							.createURI("platform:/plugin/org.eclipse.emf.ecore/model/Ecore.ecore"), //$NON-NLS-1$
+						true);
+
+				// let the other thread try to commit
+				monitor.notifyAll();
+
+				// and wait for it
+				monitor.wait();
+
+				assertEquals(
+					"Got foreign notifications", 0, readNotifications.size()); //$NON-NLS-1$
+			}
 		} catch (Exception e) {
 			fail(e);
 		} finally {
-			// let the other thread exit
+			// just in case, let threads complete
 			synchronized (monitor) {
 				monitor.notifyAll();
 			}
-			
+
 			domain.removeResourceSetListener(l);
 		}
 	}
