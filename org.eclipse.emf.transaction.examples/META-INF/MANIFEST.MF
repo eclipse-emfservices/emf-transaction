@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %Plugin.name
 Bundle-SymbolicName: org.eclipse.emf.transaction.examples;singleton:=true
-Bundle-Version: 1.2.0.qualifier
+Bundle-Version: 1.2.100.qualifier
 Bundle-Vendor: %Plugin.providerName
 Bundle-Localization: plugin
 Eclipse-LazyStart: true
@@ -13,5 +13,6 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.2.0,4.0.0)",
  org.eclipse.ui.ide;bundle-version="[3.2.0,4.0.0)"
 Bundle-Activator: org.eclipse.emf.transaction.examples.internal.TransactionExamplesPlugin
 Export-Package: org.eclipse.emf.transaction.examples.internal;x-internal:=true,
+ org.eclipse.emf.transaction.examples.internal.l10n;x-internal:=true,
  org.eclipse.emf.transaction.examples.internal.wizard;x-internal:=true
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
