@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bugs 177642, 145877
+ *   Zeligsoft - Bugs 177642, 145877, 245446
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.19 2008/09/20 21:23:08 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.20 2008/11/30 16:38:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -56,6 +56,7 @@ import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.internal.l10n.Messages;
 import org.eclipse.emf.transaction.util.Adaptable;
+import org.eclipse.emf.transaction.util.BasicTransactionOptionMetadataRegistry;
 import org.eclipse.emf.transaction.util.Lock;
 import org.eclipse.emf.transaction.util.TransactionUtil;
 
@@ -68,6 +69,7 @@ import org.eclipse.emf.transaction.util.TransactionUtil;
  * <ul>
  *   <li>{@link TransactionalEditingDomain.DefaultOptions}</li>
  *   <li>{@link TransactionalEditingDomain.Lifecycle} (since 1.3)</li>
+ *   <li>{@link Transaction.Option.Registry} (since 1.3)</li>
  * </ul>
  *
  * @author Christian W. Damus (cdamus)
@@ -112,6 +114,7 @@ public class TransactionalEditingDomainImpl
 	    TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS);
 	
 	private LifecycleImpl lifecycle;
+	private Transaction.OptionMetadata.Registry optionMetadata;
 	
 	/**
 	 * Initializes me with my adapter factory, command stack, and resource set.
@@ -931,7 +934,9 @@ public class TransactionalEditingDomainImpl
 	public <T> T getAdapter(Class<? extends T> adapterType) {
 	    T result;
 	    
-	    if (adapterType == DefaultOptions.class) {
+	    if (adapterType == Transaction.OptionMetadata.Registry.class) {
+	        result = (T) getOptionMetadata();
+	    } else if (adapterType == DefaultOptions.class) {
 	        result = (T) this;
 	    } else if (adapterType == Lifecycle.class) {
 	        result = (T) getLifecycle();
@@ -1012,6 +1017,34 @@ public class TransactionalEditingDomainImpl
 	 */
 	protected LifecycleImpl createLifecycle() {
 		return new LifecycleImpl();
+	}
+	
+	/**
+	 * Obtains my lazily-created transaction option metadata registry.
+	 * 
+	 * @return my option metadata registry
+	 * 
+	 * @since 1.3
+	 */
+	protected synchronized final Transaction.OptionMetadata.Registry getOptionMetadata() {
+		if (optionMetadata == null) {
+			optionMetadata = createOptionMetadataRegistry();
+		}
+
+		return optionMetadata;
+	}
+
+	/**
+	 * Creates a new transaction option metadata registry.
+	 * Subclasses may override to create their own implementation, although it
+	 * would hardly seem interesting to do so.
+	 * 
+	 * @return a new option metadata registry
+	 * 
+	 * @since 1.3
+	 */
+	protected Transaction.OptionMetadata.Registry createOptionMetadataRegistry() {
+		return new BasicTransactionOptionMetadataRegistry();
 	}
 	
 	//

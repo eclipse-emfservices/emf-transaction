@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 218276
+ *   Zeligsoft - Bugs 218276, 245446
  *   
  * </copyright>
  *
- * $Id: RecordingCommand.java,v 1.8 2008/08/13 13:24:41 cdamus Exp $
+ * $Id: RecordingCommand.java,v 1.9 2008/11/30 16:38:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -49,13 +49,6 @@ import org.eclipse.emf.transaction.util.TransactionUtil;
 public abstract class RecordingCommand
 		extends AbstractCommand
 		implements ConditionalRedoCommand {
-	
-	/**
-	 * An internal option that identifies the {@link Command} that a transaction
-	 * was created to execute.
-	 */
-	// TODO(1.3): Move to TransactionImpl class
-	static final String OPTION_EXECUTING_COMMAND = "executing_command"; //$NON-NLS-1$
 	
 	private final TransactionalEditingDomain domain;
 	private Transaction transaction;
@@ -238,20 +231,22 @@ public abstract class RecordingCommand
 	}
 	
 	/**
-	 * Queries whether I am a nested command, not executing as the rot command
+	 * Queries whether I am a nested command, not executing as the root command
 	 * of the active transaction.
 	 * 
 	 * @return whether I am not the root command being executed in a transaction
 	 */
 	private boolean isNestedCommand() {
 		boolean result = false;
-		
+
 		Transaction tx = getActiveTransaction();
 		if (tx != null) {
-			Object rootCommand = tx.getOptions().get(OPTION_EXECUTING_COMMAND);
+			Object rootCommand = tx.getOptions().get(
+				TransactionImpl.OPTION_EXECUTING_COMMAND);
+			
 			result = (rootCommand != null) && !rootCommand.equals(this);
 		}
-		
+
 		return result;
 	}
 	

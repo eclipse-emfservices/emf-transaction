@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation, Zeligoft Inc., and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,21 +9,26 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 240775
+ *   Zeligsoft - Bugs 240775, 245446
  *
  * </copyright>
  *
- * $Id: WorkspaceEditingDomainFactory.java,v 1.5 2008/11/02 18:43:21 cdamus Exp $
+ * $Id: WorkspaceEditingDomainFactory.java,v 1.6 2008/11/30 16:37:48 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
 import org.eclipse.core.commands.operations.IOperationHistory;
+import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.core.commands.operations.OperationHistoryFactory;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
+import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
+import org.eclipse.emf.transaction.util.BasicTransactionOptionMetadata;
+import org.eclipse.emf.transaction.util.BasicTransactionOptionMetadataRegistry;
 import org.eclipse.emf.workspace.impl.WorkspaceCommandStackImpl;
+import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
 
 /**
  * <p>
@@ -46,6 +51,14 @@ public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImp
 	 */
 	public static final WorkspaceEditingDomainFactory INSTANCE =
 		new WorkspaceEditingDomainFactory();
+	
+	static {
+		BasicTransactionOptionMetadataRegistry reg = (BasicTransactionOptionMetadataRegistry) Transaction.OptionMetadata.Registry.INSTANCE;
+
+		reg.register(new BasicTransactionOptionMetadata(
+			EMFWorkspacePlugin.OPTION_OWNING_OPERATION, true, true,
+			IUndoableOperation.class, null));
+	}
 	
 	/**
 	 * Initializes me.
@@ -88,7 +101,7 @@ public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImp
 	 * 
 	 * @return the new editing domain
 	 */
-	public TransactionalEditingDomain createEditingDomain(IOperationHistory history) {
+	public synchronized TransactionalEditingDomain createEditingDomain(IOperationHistory history) {
 		WorkspaceCommandStackImpl stack = new WorkspaceCommandStackImpl(history);
 		stack.setResourceUndoContextPolicy(getResourceUndoContextPolicy());
 		
@@ -111,7 +124,7 @@ public class WorkspaceEditingDomainFactory extends TransactionalEditingDomainImp
 	 * 
 	 * @return the new editing domain
 	 */
-	public TransactionalEditingDomain createEditingDomain(ResourceSet rset, IOperationHistory history) {
+	public synchronized TransactionalEditingDomain createEditingDomain(ResourceSet rset, IOperationHistory history) {
 		WorkspaceCommandStackImpl stack = new WorkspaceCommandStackImpl(history);
 		stack.setResourceUndoContextPolicy(getResourceUndoContextPolicy());
 		

@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,16 +9,24 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 245446
  *
  * </copyright>
  *
- * $Id: Transaction.java,v 1.7 2007/11/14 18:14:01 cdamus Exp $
+ * $Id: Transaction.java,v 1.8 2008/11/30 16:38:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
 import java.util.Map;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.emf.common.command.Command;
+import org.eclipse.emf.transaction.impl.TransactionImpl;
+import org.eclipse.emf.transaction.internal.AllowChangePropagationBlockingOption;
+import org.eclipse.emf.transaction.internal.BlockChangePropagationOption;
+import org.eclipse.emf.transaction.internal.ValidateEditOption;
+import org.eclipse.emf.transaction.util.BasicTransactionOptionMetadata;
+import org.eclipse.emf.transaction.util.BasicTransactionOptionMetadataRegistry;
 import org.eclipse.emf.transaction.util.ValidateEditSupport;
 
 
@@ -187,7 +195,8 @@ public interface Transaction {
 	
 	/**
 	 * Obtains the special options with which I was created.  The options
-	 * (map keys) are defined by the {@link TransactionalEditingDomain} interface.
+	 * (map keys) are defined by the {@link #OPTION_NO_NOTIFICATIONS Transaction}
+	 * interface.
 	 * 
 	 * @return an unmodifiable view of my options
 	 */
@@ -310,4 +319,222 @@ public interface Transaction {
 	 * @return my status, most interesting after I have closed
 	 */
 	public IStatus getStatus();
+	
+	//
+	// Nested types
+	//
+
+	/**
+	 * <p>
+	 * An interface that allows clients to query certain meta-data about
+	 * transaction options.
+	 * </p>
+	 * <p>
+	 * This interface is not intended to be implemented by clients. Extend the
+	 * {@link BasicTransactionOptionMetadata} class, instead.
+	 * </p>
+	 * 
+	 * @noimplement This interface is not intended to be implemented by clients.
+	 * 
+	 * @author Christian W. Damus (cdamus)
+	 * 
+	 * @since 1.3
+	 * 
+	 * @see BasicTransactionOptionMetadata
+	 * @see Registry
+	 */
+	interface OptionMetadata {
+
+		/**
+		 * Obtains the key of the option that I describe. This is the key that
+		 * would be used in the options map of a transaction.
+		 * 
+		 * @return my option
+		 */
+		Object getOption();
+
+		/**
+		 * <p>
+		 * Queries whether the option is a tag, meaning that it adorns a
+		 * transaction with client-specific information but that it does not
+		 * otherwise affect the semantics (or behaviour) of the transaction.
+		 * </p>
+		 * <p>
+		 * Unrecognized options are assumed to be tags, because a transaction
+		 * would not be able to interpret their meaning.
+		 * </p>
+		 * 
+		 * @return <code>true</code> if the option key is a tag option or if it
+		 *         is not recognized by this meta-data instance;
+		 *         <code>false</code> if it is recognized and is known not to be
+		 *         a tag
+		 */
+		boolean isTag();
+
+		/**
+		 * <p>
+		 * Queries whether the option is inherited by nested transactions.
+		 * </p>
+		 * <p>
+		 * Unrecognized options are assumed to be inherited.
+		 * </p>
+		 * 
+		 * @return <code>true</code> if the option is inherited or if it is not
+		 *         recognized; <code>false</code> if it is not inherited
+		 */
+		boolean isHereditary();
+
+		/**
+		 * <p>
+		 * Obtains the type value of an option.
+		 * </p>
+		 * <p>
+		 * The type of an unrecognized option is assumed to be {@link Object}.
+		 * </p>
+		 * 
+		 * @return the default value of the option, or <code>Object</code> if it
+		 *         is not known
+		 */
+		Class<?> getType();
+
+		/**
+		 * <p>
+		 * Obtains the default value of an option.
+		 * </p>
+		 * <p>
+		 * The default value of an unrecognized option is assumed to be
+		 * <code>null</code>.
+		 * </p>
+		 * 
+		 * @return the default value of the option, or <code>null</code> if it
+		 *         is not known
+		 */
+		Object getDefaultValue();
+
+		/**
+		 * Gets the value (implicit/default or explicit) of my option in the
+		 * specified map.
+		 * 
+		 * @param options
+		 *            an options map
+		 * 
+		 * @return my value in the map
+		 */
+		Object getValue(Map<?, ?> options);
+		
+		/**
+		 * Queries whether the specified map has a setting for my option.
+		 * 
+		 * @param options
+		 *            an options map
+		 * @return whether it has a setting for my option
+		 */
+		boolean isSet(Map<?, ?> options);
+
+		/**
+		 * Queries whether the specified options maps have the same value of my
+		 * option, whether that be implicit or explicit. That is, this method
+		 * accounts for default values and such complex cases as the
+		 * {@link Transaction#OPTION_VALIDATE_EDIT} in which values of two
+		 * different types may mean the same thing.
+		 * 
+		 * @param options1
+		 *            an options map
+		 * @param options2
+		 *            another options map
+		 * 
+		 * @return whether the two maps have the same setting of my option
+		 */
+		boolean sameSetting(Map<?, ?> options1, Map<?, ?> options2);
+
+		/**
+		 * Updates the options map of a child transaction to inherit the setting
+		 * in a parent transaction, if it is a hereditary option and the child
+		 * does not already have a setting for it.
+		 * 
+		 * @param parentOptions
+		 *            the options map to inherit a value from. It is conceivable
+		 *            that inheritance of an option may depend on more than one
+		 *            option in this parent map
+		 * @param childOptions
+		 *            the map that is to inherit the option setting
+		 * @param force
+		 *            whether to inherit the option anyway despite that it is
+		 *            not hereditary. This is used for application of default
+		 *            options, and can be ignored by the implementor if
+		 *            necessary. Also, clients must not use this parameter to
+		 *            attempt to override an existing child setting; a
+		 *            well-behaved option will not do that
+		 */
+		void inherit(Map<?, ?> parentOptions, Map<Object, Object> childOptions,
+				boolean force);
+		
+		/**
+		 * <p>
+		 * A registry of metadata describing transaction options.  The default
+		 * implementation of the {@link TransactionalEditingDomain} interface
+		 * provides a transaction option registry as an adapter.  Access to the
+		 * registry is thread-safe.
+		 * </p>
+		 * <p>
+		 * This interface is not intended to be implemented by clients.
+		 * </p>
+		 * 
+		 * @noimplement This interface is not intended to be implemented by
+		 *              clients.
+		 * @author Christian W. Damus (cdamus)
+		 * 
+		 * @since 1.3
+		 */
+		interface Registry {
+
+			/**
+			 * The shared transaction option metadata registry.
+			 */
+			Registry INSTANCE = new BasicTransactionOptionMetadataRegistry(null) {
+
+				private static final long serialVersionUID = 1L;
+
+				{
+					// the options that we know
+					register(BasicTransactionOptionMetadata.newBoolean(
+						Transaction.OPTION_NO_NOTIFICATIONS, false));
+					register(BasicTransactionOptionMetadata.newBoolean(
+						Transaction.OPTION_NO_TRIGGERS, false));
+					register(BasicTransactionOptionMetadata.newBoolean(
+						Transaction.OPTION_NO_VALIDATION, false));
+					register(BasicTransactionOptionMetadata.newBoolean(
+						Transaction.OPTION_NO_UNDO, false));
+					register(BasicTransactionOptionMetadata.newBoolean(
+						Transaction.OPTION_UNPROTECTED, false));
+					register(BasicTransactionOptionMetadata.newBoolean(
+						Transaction.OPTION_IS_UNDO_REDO_TRANSACTION, false));
+
+					register(new ValidateEditOption());
+					register(new BasicTransactionOptionMetadata(
+						Transaction.OPTION_VALIDATE_EDIT_CONTEXT));
+
+					register(BasicTransactionOptionMetadata.newBoolean(
+						TransactionImpl.OPTION_IS_TRIGGER_TRANSACTION, false));
+					register(new AllowChangePropagationBlockingOption());
+					register(new BlockChangePropagationOption());
+					register(new BasicTransactionOptionMetadata(
+						TransactionImpl.OPTION_EXECUTING_COMMAND, true, false,
+						Command.class, null));
+				}
+			};
+
+			/**
+			 * Obtains a metadata object describing the specified transaction
+			 * option. For unrecognized options, a default meta-data is provided
+			 * that gives reasonable answers.
+			 * 
+			 * @param option
+			 *            an option key
+			 * @return the option meta-data (never <code>null</code>)
+			 */
+			Transaction.OptionMetadata getOptionMetadata(Object option);
+		}
+
+	}
 }

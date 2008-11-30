@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 218276
+ *   Zeligsoft - Bugs 218276, 245446
  *
  * </copyright>
  *
- * $Id: EMFCommandTransaction.java,v 1.5 2008/08/13 13:24:41 cdamus Exp $
+ * $Id: EMFCommandTransaction.java,v 1.6 2008/11/30 16:38:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -32,13 +32,6 @@ import org.eclipse.emf.common.command.Command;
  */
 public class EMFCommandTransaction
 	extends TransactionImpl {
-	
-	/**
-	 * An internal option that identifies the {@link Command} that a transaction
-	 * was created to execute.
-	 */
-	// TODO(1.3): Move to TransactionImpl class
-	static final String OPTION_EXECUTING_COMMAND = "executing_command"; //$NON-NLS-1$
 
 	private final Command command;
 

@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bugs 145877, 250253
+ *   Zeligsoft - Bugs 145877, 250253, 245446
  *
  * </copyright>
  *
- * $Id: TransactionImpl.java,v 1.21 2008/11/13 01:16:55 cdamus Exp $
+ * $Id: TransactionImpl.java,v 1.22 2008/11/30 16:38:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -74,7 +74,16 @@ public class TransactionImpl
      * executing trigger commands.
      */
     public static final String OPTION_IS_TRIGGER_TRANSACTION = "is_trigger_transaction"; //$NON-NLS-1$
-    
+	
+	/**
+	 * An internal option that identifies the {@link Command} that a transaction
+	 * was created to execute, in the case that it is an
+	 * {@link EMFCommandTransaction}.
+	 * 
+	 * @since 1.3
+	 */
+	public static final String OPTION_EXECUTING_COMMAND = "executing_command"; //$NON-NLS-1$
+   
 	/**
 	 * The transaction options that should be used when undoing/redoing changes
 	 * on the command stack.  Undo and redo must not perform triggers because
@@ -832,26 +841,20 @@ public class TransactionImpl
 	private void inheritOptions(Transaction parent) {
         
 	    // if we have no parent transaction, then we are a root and we "inherit"
-	    // the editing domain's default transaction options
-        Map<?, ?> parentOptions = (parent == null) ?
+	    // the editing domain's default transaction options.  In the root case,
+		// we don't consider whether an option is hereditary because, of course,
+		// we aren't actually inheriting it from any other transaction
+		final boolean isRoot = parent == null;
+        Map<?, ?> parentOptions = isRoot ?
         	getDefaultOptions(getEditingDomain()) : parent.getOptions();
         
         if (parentOptions != null) {
-            for (Map.Entry<?, ?> next : parentOptions.entrySet()) {
-                Object option = next.getKey();
-                
-                if (ALLOW_CHANGE_PROPAGATION_BLOCKING.equals(option)) {
-                    // Do not inherit the allow block option if we have the
-                    // block option applied
-                    if (!mutableOptions.containsKey(BLOCK_CHANGE_PROPAGATION)) {
-                        mutableOptions.put(option, next.getValue());
-                    }
-                } else if (BLOCK_CHANGE_PROPAGATION.equals(option)) {
-                    // don't inherit the block option!
-                } else if (!mutableOptions.containsKey(option)) {
-                    // overridden by child transaction options
-                    mutableOptions.put(option, next.getValue());
-                }
+			Transaction.OptionMetadata.Registry reg = TransactionUtil
+				.getTransactionOptionRegistry(getEditingDomain());
+			
+            for (Object option : parentOptions.keySet()) {
+				reg.getOptionMetadata(option).inherit(parentOptions,
+					mutableOptions, isRoot);
             }            
         }
 	}

@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2006, 2007 IBM Corporation and others.
+ * Copyright (c) 2006, 2008 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Zeligsoft - Bug 245446
  *
  * </copyright>
  *
- * $Id: TransactionUtil.java,v 1.7 2007/11/14 18:14:00 cdamus Exp $
+ * $Id: TransactionUtil.java,v 1.8 2008/11/30 16:38:08 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -352,4 +353,29 @@ public class TransactionUtil {
     	
     	return (RunnableWithResult<T>) domain.createPrivilegedRunnable(runnable);
     }
+    
+	/**
+	 * Gets the best transaction-option registry available for the specified
+	 * editing <tt>domain</tt>. Usually, it will be a registry that is local to
+	 * that domain, but it may be the
+	 * {@linkplain Transaction.OptionMetadata.Registry#INSTANCE shared instance}
+	 * under extreme circumstances.
+	 * 
+	 * @param domain
+	 *            an editing domain
+	 * @return its transaction options registry, never <code>null</code>
+	 * 
+	 * @since 1.3
+	 */
+	public static Transaction.OptionMetadata.Registry getTransactionOptionRegistry(
+			TransactionalEditingDomain domain) {
+		Transaction.OptionMetadata.Registry result = getAdapter(domain,
+			Transaction.OptionMetadata.Registry.class);
+
+		if (result == null) {
+			result = Transaction.OptionMetadata.Registry.INSTANCE;
+		}
+
+		return result;
+	}
 }

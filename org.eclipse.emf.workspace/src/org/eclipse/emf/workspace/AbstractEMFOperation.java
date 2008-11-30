@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: AbstractEMFOperation.java,v 1.21 2008/11/13 01:17:04 cdamus Exp $
+ * $Id: AbstractEMFOperation.java,v 1.22 2008/11/30 16:37:48 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -203,13 +203,38 @@ public abstract class AbstractEMFOperation extends AbstractOperation {
 	 */
 	private boolean optionsDiffer(Map<?, ?> options) {
 		boolean result = true;
-		
-		Transaction active =
-			((InternalTransactionalEditingDomain) getEditingDomain()).getActiveTransaction();
+
+		Transaction active = ((InternalTransactionalEditingDomain) getEditingDomain())
+			.getActiveTransaction();
 		if ((active != null) && !active.isReadOnly()) {
-			result = !active.getOptions().equals(options);
+			Transaction.OptionMetadata.Registry reg = TransactionUtil
+				.getTransactionOptionRegistry(getEditingDomain());
+
+			result = false; // let's look for a difference
+			Map<?, ?> activeOptions = active.getOptions();
+
+			// iterate the options passed in that would be applied to the
+			// nested transaction, because if the active (to-be parent)
+			// specifies more options, then they would be inherited, anyway
+			for (Map.Entry<?, ?> next : options.entrySet()) {
+				Object option = next.getKey();
+
+				Transaction.OptionMetadata metadata = reg
+					.getOptionMetadata(option);
+
+				// tags don't force child transactions. Clients would have
+				// to disable nesting if it really matters to them, or else
+				// override the option meta-data in their editing domain's
+				// local registry
+				if (!metadata.isTag()
+					&& !metadata.sameSetting(options, activeOptions)) {
+
+					result = true;
+					break;
+				}
+			}
 		}
-		
+
 		return result;
 	}
     
