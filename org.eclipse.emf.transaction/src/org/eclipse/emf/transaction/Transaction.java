@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: Transaction.java,v 1.8 2008/11/30 16:38:08 cdamus Exp $
+ * $Id: Transaction.java,v 1.9 2008/12/03 14:48:13 cdamus Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -335,6 +335,7 @@ public interface Transaction {
 	 * </p>
 	 * 
 	 * @noimplement This interface is not intended to be implemented by clients.
+	 * @noextend This interface is not intended to be extended by clients.
 	 * 
 	 * @author Christian W. Damus (cdamus)
 	 * 
@@ -482,6 +483,8 @@ public interface Transaction {
 		 * 
 		 * @noimplement This interface is not intended to be implemented by
 		 *              clients.
+		 * @noextend This interface is not intended to be extended by clients.
+		 * 
 		 * @author Christian W. Damus (cdamus)
 		 * 
 		 * @since 1.3
