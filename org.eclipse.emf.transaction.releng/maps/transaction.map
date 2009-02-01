@@ -21,11 +21,11 @@ feature@org.eclipse.emf.workspace=v200901271819,:pserver:anonymous@dev.eclipse.o
 feature@org.eclipse.emf.workspace.doc=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.workspace.doc-feature
 feature@org.eclipse.emf.workspace.examples=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.workspace.examples-feature
 
-plugin@org.eclipse.emf.transaction=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction
+plugin@org.eclipse.emf.transaction=v200902010221,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction
 plugin@org.eclipse.emf.transaction.ui=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.transaction.ui
 plugin@org.eclipse.emf.transaction.doc=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.transaction.doc
 plugin@org.eclipse.emf.transaction.examples=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.transaction.examples
-plugin@org.eclipse.emf.transaction.tests=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.transaction.tests
+plugin@org.eclipse.emf.transaction.tests=v200902010221,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.transaction.tests
 
 plugin@org.eclipse.emf.workspace=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.workspace
 plugin@org.eclipse.emf.workspace.ui=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.workspace.ui
