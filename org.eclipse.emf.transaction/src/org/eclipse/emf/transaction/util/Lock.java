@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
+ * Copyright (c) 2005, 2009 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,11 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *   Zeligsoft - Bug 248717
+ *   Zeligsoft - Bugs 248717, 262175
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.13 2008/10/09 00:45:14 cdamus Exp $
+ * $Id: Lock.java,v 1.14 2009/02/01 02:17:24 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -338,9 +338,9 @@ public class Lock {
 
         final Job currentJob = jobmgr.currentJob();
         final ISchedulingRule jobRule;
-        if ((currentJob != null) && (currentJob.getRule() != null)) {
-            // running as a job on a scheduling rule? Cannot use
-            // JobManager.beginRule() to show the "UI blocked" dialog
+        if (currentJob != null) {
+            // running as a job? Cannot use JobManager.beginRule() to show the
+        	// "UI blocked" dialog
             jobRule = null;
         } else {
             jobRule = new AcquireRule();

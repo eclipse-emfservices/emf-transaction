@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2009 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,20 +9,26 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Boris Gruschko - Bug 262175
  *
  * </copyright>
  *
- * $Id: LockTest.java,v 1.5 2007/11/14 18:14:13 cdamus Exp $
+ * $Id: LockTest.java,v 1.6 2009/02/01 02:17:34 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util.tests;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.CountDownLatch;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
@@ -640,6 +646,85 @@ public class LockTest extends TestCase {
 			fail(e);
 		} finally {
 			domain.dispose();
+		}
+	}
+	
+	public void test_uiSafeWaitForAcquire_explicitJob_beginRule_262175() {
+		final TransactionalEditingDomain domain =
+			TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+		
+		final CountDownLatch	latch = new CountDownLatch(1);
+		
+		lock = getLock(domain);
+		
+		final boolean[]	status = {false};
+		
+		Job	job	=	new Job("TestJob") { //$NON-NLS-1$
+			
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+
+				// test rule
+				ISchedulingRule rule = new ISchedulingRule() {
+
+					public boolean contains(ISchedulingRule rule) {
+						return rule == this;
+					}
+
+					public boolean isConflicting(ISchedulingRule rule) {
+						return rule == this;
+					}
+				};
+				
+				// simulates ownership of a rule
+				Job.getJobManager().beginRule(rule, new NullProgressMonitor());
+				
+				try {
+					latch.countDown();
+					lock.uiSafeAcquire(false);
+					
+					synchronized(status) {
+						status[0] = true;
+					}
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				} finally {
+					lock.release();
+					Job.getJobManager().endRule(rule);
+				}
+				
+				return Status.OK_STATUS;
+			}
+		};
+		
+		try {
+			lock.acquire(true);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		
+		try {
+		
+			job.schedule();
+			
+			latch.await();
+			
+			Thread.sleep(1000); // make sure the Job entered the wait for this.lock
+			
+			lock.release();
+		
+			try {
+				job.join();
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		
+		} catch (InterruptedException e) {
+			fail(e);
+		} finally {
+			synchronized(status) {
+				assertTrue("Job did not acquire a rule", status[0]); //$NON-NLS-1$
+			}
 		}
 	}
     
