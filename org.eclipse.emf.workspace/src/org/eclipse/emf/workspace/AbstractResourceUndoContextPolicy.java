@@ -1,7 +1,7 @@
 /**
  * <copyright>
  * 
- * Copyright (c) 2008 Zeligsoft Inc. and others.
+ * Copyright (c) 2008, 2009 Zeligsoft Inc., Christian W. Damus, and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  * 
  * Contributors:
  *   Zeligsoft - Initial API and implementation
+ *   Christian W. Damus - Bug 264220
  * 
  * </copyright>
  *
- * $Id: AbstractResourceUndoContextPolicy.java,v 1.1 2008/11/02 18:43:21 cdamus Exp $
+ * $Id: AbstractResourceUndoContextPolicy.java,v 1.2 2009/02/10 04:04:35 cdamus Exp $
  */
 
 package org.eclipse.emf.workspace;
@@ -235,14 +236,18 @@ public abstract class AbstractResourceUndoContextPolicy
 		switch (notification.getEventType()) {
 			case Notification.SET :
 			case Notification.UNSET :
-				if (oldValue != null) {
+				// bug 264220: in case of UNSET of a multi-valued reference,
+				// the old and new values could be Booleans, for the extra
+				// notification of change to the is-set state of the reference
+				// (a previous REMOVE_MANY indicated the clearing of the list)
+				if (oldValue instanceof EObject) {
 					resource = ((EObject) oldValue).eResource();
 
 					if (resource != null) {
 						resources.add(resource);
 					}
 				}
-				if (newValue != null) {
+				if (newValue instanceof EObject) {
 					resource = ((EObject) newValue).eResource();
 
 					if (resource != null) {

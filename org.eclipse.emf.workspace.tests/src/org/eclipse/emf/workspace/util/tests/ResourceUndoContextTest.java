@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2009 IBM Corporation, Christian W. Damus, and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Christian W. Damus - Bug 264220
  *
  * </copyright>
  *
- * $Id: ResourceUndoContextTest.java,v 1.4 2007/11/14 18:13:54 cdamus Exp $
+ * $Id: ResourceUndoContextTest.java,v 1.5 2009/02/10 04:04:39 cdamus Exp $
  */
 package org.eclipse.emf.workspace.util.tests;
 
@@ -26,6 +27,9 @@ import junit.framework.TestSuite;
 
 import org.eclipse.core.commands.operations.DefaultOperationHistory;
 import org.eclipse.emf.common.notify.Notification;
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.ecore.EFactory;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
@@ -38,8 +42,10 @@ import org.eclipse.emf.examples.extlibrary.Employee;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.eclipse.emf.workspace.IResourceUndoContextPolicy;
 import org.eclipse.emf.workspace.ResourceUndoContext;
 import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
+import org.eclipse.emf.workspace.tests.fixtures.TestPackageBuilder;
 
 /**
  * Tests the {@link ResourceUndoContext} class.
@@ -57,6 +63,8 @@ public class ResourceUndoContextTest extends TestCase {
 	private Resource res3;
 	
 	private Listener listener;
+	
+	private TestPackageBuilder packageBuilder;
 	
 	public ResourceUndoContextTest(String name) {
 		super(name);
@@ -224,6 +232,40 @@ public class ResourceUndoContextTest extends TestCase {
 		assertFalse(affected.contains(null));
 	}
 	
+	public void test_unsettableManyReference_264220() {
+		EFactory factory = packageBuilder.getPackage().getEFactoryInstance();
+		
+		EObject anA = factory.create(packageBuilder.getA());
+		EObject aB = factory.create(packageBuilder.getB());
+		EObject anotherB = factory.create(packageBuilder.getB());
+		
+		anA.eAdapters().add(listener);
+		res1.getContents().add(aB);
+		res2.getContents().add(anotherB);
+		
+		// do some linking of objects
+		@SuppressWarnings("unchecked")
+		EList<EObject> bs = (EList<EObject>) anA.eGet(packageBuilder.getA_b());
+		bs.add(aB);
+		bs.add(anotherB);
+		
+		// start over with the event gathering, on a clean slate
+		listener.notifications.clear();
+
+		// now, unset the unsettable reference
+		anA.eUnset(packageBuilder.getA_b());
+		
+		try {
+			Set<Resource> expectedResources = new java.util.HashSet<Resource>();
+			expectedResources.add(res1);
+			expectedResources.add(res2);
+			assertEquals(expectedResources, IResourceUndoContextPolicy.DEFAULT
+				.getContextResources(null, listener.notifications));
+		} catch (ClassCastException e) {
+			fail("Should not get CCE in the resource undo-context policy"); //$NON-NLS-1$
+		}
+	}
+	
 	//
 	// Fixture methods
 	//
@@ -251,11 +293,15 @@ public class ResourceUndoContextTest extends TestCase {
 		
 		listener = new Listener();
 		rset.eAdapters().add(listener);
+		
+		packageBuilder = new TestPackageBuilder();
 	}
 	
 	@Override
 	protected void tearDown()
 		throws Exception {
+		
+		packageBuilder.dispose();
 		
 		listener = null;
 		
