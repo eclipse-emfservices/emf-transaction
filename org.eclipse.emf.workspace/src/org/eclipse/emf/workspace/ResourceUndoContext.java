@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation and others.
+ * Copyright (c) 2005, 2009 IBM Corporation, Christian W. Damus, and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,11 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Christian W. Damus - Bug 264220
  *
  * </copyright>
  *
- * $Id: ResourceUndoContext.java,v 1.6 2008/02/04 14:26:18 cdamus Exp $
+ * $Id: ResourceUndoContext.java,v 1.6.2.1 2009/02/10 04:17:35 cdamus Exp $
  */
 package org.eclipse.emf.workspace;
 
@@ -212,14 +213,18 @@ public final class ResourceUndoContext
 		switch (notification.getEventType()) {
 		case Notification.SET:
 		case Notification.UNSET:
-			if (oldValue != null) {
+			// bug 264220: in case of UNSET of a multi-valued reference,
+			// the old and new values could be Booleans, for the extra
+			// notification of change to the is-set state of the reference
+			// (a previous REMOVE_MANY indicated the clearing of the list)
+			if (oldValue instanceof EObject) {
                 resource = ((EObject) oldValue).eResource();
                 
                 if (resource != null) {
                     resources.add(resource);
                 }
 			}
-			if (newValue != null) {
+			if (newValue instanceof EObject) {
                 resource = ((EObject) newValue).eResource();
                 
                 if (resource != null) {
