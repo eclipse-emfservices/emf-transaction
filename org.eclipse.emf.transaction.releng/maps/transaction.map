@@ -31,7 +31,7 @@ plugin@org.eclipse.emf.workspace=v200902100422,:pserver:anonymous@dev.eclipse.or
 plugin@org.eclipse.emf.workspace.ui=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/plugins/org.eclipse.emf.workspace.ui
 plugin@org.eclipse.emf.workspace.doc=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/doc/org.eclipse.emf.workspace.doc
 plugin@org.eclipse.emf.workspace.examples.library.editor=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.workspace.examples.library.editor
-plugin@org.eclipse.emf.workspace.examples=v200901271819,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.workspace.examples
+plugin@org.eclipse.emf.workspace.examples=v200903190036,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.workspace.examples
 plugin@org.eclipse.emf.workspace.tests=v200902100422,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.workspace.tests
 
 !*** All-in-one data integrity frameworks features
