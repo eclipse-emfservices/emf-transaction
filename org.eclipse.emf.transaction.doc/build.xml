@@ -63,16 +63,15 @@
 
 	<target name="build.jars" depends="init" description="Build all the jars for the plug-in: ${docPlugin}.">
 		<!-- Execute a shell script that will create an ant javadoc script and then run it for us -->
-<!--		
-        <exec executable="sh">
+
+		<exec executable="sh">
 			<arg value="build/antJavadoc.sh"/>
-			<arg value="${eclipse.home}/../eclipse"/>
+			<arg value="${eclipse.home}/../../../eclipse"/>
 		</exec>
 		
 		<antcall target="convertSchemaToHtml"/>
 		
 		<antcall target="build.index"/>
-		-->
 	</target>
 
 	<target name="build.index" depends="init" description="Builds search index for the plug-in" if="eclipse.running">
