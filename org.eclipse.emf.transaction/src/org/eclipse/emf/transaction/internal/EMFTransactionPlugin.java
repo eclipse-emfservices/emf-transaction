@@ -12,7 +12,7 @@
  *
  * </copyright>
  *
- * $Id: EMFTransactionPlugin.java,v 1.3 2007/11/14 18:14:01 cdamus Exp $
+ * $Id: EMFTransactionPlugin.java,v 1.4 2009/08/11 09:25:19 bgruschko Exp $
  */
 package org.eclipse.emf.transaction.internal;
 
@@ -59,7 +59,12 @@ public class EMFTransactionPlugin extends EMFPlugin {
 	 * @return my plug-in unique ID
 	 */
 	public static String getPluginId() {
-		return getPlugin().getBundle().getSymbolicName();
+		if (!EMFPlugin.IS_ECLIPSE_RUNNING) {
+			return "org.eclipse.emf.transaction"; //$NON-NLS-1$
+		}
+		else {
+			return getPlugin().getBundle().getSymbolicName();
+		}
 	}
 
 	/**
