@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.20 2008/11/30 16:38:08 cdamus Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.21 2009/08/11 11:21:08 bgruschko Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -29,6 +29,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.emf.common.EMFPlugin;
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Adapter;
 import org.eclipse.emf.common.notify.AdapterFactory;
@@ -53,10 +54,12 @@ import org.eclipse.emf.transaction.TransactionalEditingDomainListener;
 import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
+import org.eclipse.emf.transaction.internal.ITransactionLock;
 import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.internal.l10n.Messages;
 import org.eclipse.emf.transaction.util.Adaptable;
 import org.eclipse.emf.transaction.util.BasicTransactionOptionMetadataRegistry;
+import org.eclipse.emf.transaction.util.EmptyLock;
 import org.eclipse.emf.transaction.util.Lock;
 import org.eclipse.emf.transaction.util.TransactionUtil;
 
@@ -93,8 +96,8 @@ public class TransactionalEditingDomainImpl
 	private final Map<Object, Object> defaultTransactionOptionsRO = Collections
         .unmodifiableMap(defaultTransactionOptions);
 	
-	private final Lock transactionLock = new Lock();
-	private final Lock writeLock = new Lock();
+	private ITransactionLock transactionLock = null;
+	private ITransactionLock writeLock = null;
 	
 	private final List<ResourceSetListener> precommitListeners =
 		new java.util.ArrayList<ResourceSetListener>();
@@ -167,6 +170,16 @@ public class TransactionalEditingDomainImpl
 	 * Initializes my state.
 	 */
 	private void initialize() {
+		synchronized (this) {
+			if ( EMFPlugin.IS_ECLIPSE_RUNNING ) {
+				transactionLock = new Lock();
+				writeLock = new Lock();
+			} else {
+				transactionLock = new EmptyLock();
+				writeLock = new EmptyLock();
+			}
+		}
+		
 		((InternalTransactionalCommandStack) commandStack).setEditingDomain(this);
 		recorder = createChangeRecorder(resourceSet);
 		validator = TransactionValidator.NULL;
@@ -860,8 +873,8 @@ public class TransactionalEditingDomainImpl
 		Thread current = Thread.currentThread();
 			
 		// transfer the locks to the current thread
-		transactionLock.new Access() {/*empty block*/}.transfer(current);
-		writeLock.new Access() {/*empty block*/}.transfer(current);
+		transactionLock.checkedTransfer(current);
+		writeLock.checkedTransfer(current);
 		}
 		
 	// Documentation copied from the inherited specification
@@ -874,8 +887,8 @@ public class TransactionalEditingDomainImpl
 		Thread owner = runnable.getOwner();
 		
 		// transfer the locks to their previous owner
-		transactionLock.new Access() {/*empty block*/}.transfer(owner);
-		writeLock.new Access() {/*empty block*/}.transfer(owner);
+		transactionLock.checkedTransfer(owner);
+		writeLock.checkedTransfer(owner);
 		}
 		
 	// Documentation copied from the inherited specification

@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.14 2009/02/01 02:17:24 cdamus Exp $
+ * $Id: Lock.java,v 1.15 2009/08/11 11:21:08 bgruschko Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.transaction.internal.EMFTransactionDebugOptions;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
+import org.eclipse.emf.transaction.internal.ITransactionLock;
 import org.eclipse.emf.transaction.internal.Tracing;
 import org.eclipse.emf.transaction.internal.l10n.Messages;
 
@@ -71,7 +72,7 @@ import org.eclipse.emf.transaction.internal.l10n.Messages;
  *
  * @author Christian W. Damus (cdamus)
  */
-public class Lock {
+public class Lock implements ITransactionLock {
 	private static final IJobManager jobmgr = Job.getJobManager();
 	
 	private static long nextId = 0;
@@ -122,10 +123,8 @@ public class Lock {
 		}
 	}
 
-	/**
-	 * Queries the current owner of the lock.
-	 * 
-	 * @return the thread that owns me, or <code>null</code> if I am available
+	/* (non-Javadoc)
+	 * @see org.eclipse.emf.transaction.util.ITransactionLock#getOwner()
 	 */
 	public Thread getOwner() {
 		// note that there is no need to synchronize this method because, if
@@ -135,14 +134,8 @@ public class Lock {
 		return owner;
 	}
 	
-	/**
-	 * Queries the depth to which I am acquired by the calling thread.  This is
-	 * the number of times the calling thread has acquired me and not yet
-	 * released.  Note that if the calling thread does not own me, I appear to
-	 * have a depth of zero.  Acquiring in this case will wait for the owning
-	 * thread to finish releasing.
-	 * 
-	 * @return my depth
+	/* (non-Javadoc)
+	 * @see org.eclipse.emf.transaction.util.ITransactionLock#getDepth()
 	 */
 	public int getDepth() {
 		// note that there is no need to synchronize this method because, if
@@ -156,49 +149,15 @@ public class Lock {
 		return depth;
 	}
 
-	/**
-	 * Acquires me, waiting as long as necessary or until I am interrupted.
-	 * if I already own this lock, then its lock depth is increased.  That means
-	 * one more call to {@link #release()} for me to make.
-	 * <p>
-	 * <b>Note:</b>  The current thread must not own my monitor when it calls
-	 * this method, otherwise it will cause deadlock.  Deadlock would be
-	 * guaranteed because every thread waits on a different object that is
-	 * not me, so my monitor is <b>not</b> released when the calling thread
-	 * blocks.
-	 * </p>
-	 * 
-	 * @param exclusive <code>true</code> if the current thread needs exclusive
-	 *     access (i.e., no other threads may currently be
-	 *     {@link #yield() yielding} me); <code>false</code>, otherwise
-	 *     
-	 * @throws InterruptedException on interruption of the calling thread
+	/* (non-Javadoc)
+	 * @see org.eclipse.emf.transaction.util.ITransactionLock#acquire(boolean)
 	 */
 	public void acquire(boolean exclusive) throws InterruptedException {
 		acquire(0L, exclusive);
 	}
 
-	/**
-	 * Attempts to acquire me, timing out after the specified number of millis.
-	 * <p>
-	 * <b>Note:</b>  The current thread must not own my monitor when it calls
-	 * this method, otherwise it will cause deadlock.  Deadlock would be
-	 * guaranteed because every thread waits on a different object that is
-	 * not me, so my monitor is <b>not</b> released when the calling thread
-	 * blocks.
-	 * </p>
-	 * 
-	 * @param timeout the number of milliseconds to wait before giving up on
-	 *     the lock, or <code>0</code> to wait as long as necessary
-	 * @param exclusive <code>true</code> if the current thread needs exclusive
-	 *     access (i.e., no other threads may currently be
-	 *     {@link #yield() yielding} me); <code>false</code>, otherwise
-	 *     
-	 * @return <code>true</code> if the caller successfully acquired me;
-	 *    <code>false</code> if it did not within the <code>timeout</code>
-	 *    
-     * @throws IllegalArgumentException if <code>timeout</code> is negative
-	 * @throws InterruptedException on interruption of the calling thread
+	/* (non-Javadoc)
+	 * @see org.eclipse.emf.transaction.util.ITransactionLock#acquire(long, boolean)
 	 */
 	public boolean acquire(long timeout, boolean exclusive) throws InterruptedException {
 		if (timeout < 0) {
@@ -304,30 +263,8 @@ public class Lock {
 		return result;
 	}
 
-	/**
-	 * Attempts to acquire me (without a timeout) in a manner that is safe to
-	 * execute on the UI thread.  This ensures that, in an Eclipse UI
-	 * environment, if the UI thread is blocked waiting for me, the Job Manager
-	 * will show the block dialog to inform the user of what is happening.
-	 * <p>
-	 * If this method is called from a thread that is running as a Job, then
-	 * it behaves identically to {@link #acquire(boolean)}.
-	 * </p>
-	 * <p>
-	 * <b>Note:</b>  The current thread must not own my monitor when it calls
-	 * this method, otherwise it will cause deadlock.  Deadlock would be
-	 * guaranteed because every thread waits on a different object that is
-	 * not me, so my monitor is <b>not</b> released when the calling thread
-	 * blocks.
-	 * </p>
-	 * 
-	 * @param exclusive <code>true</code> if the current thread needs exclusive
-	 *     access (i.e., no other threads may currently be
-	 *     {@link #yield() yielding} me); <code>false</code>, otherwise
-	 * 
-	 * @throws InterruptedException in case of interrupt while waiting
-	 *     or if the user cancels the lock-acquisition job that is blocking
-	 *     the UI thread
+	/* (non-Javadoc)
+	 * @see org.eclipse.emf.transaction.util.ITransactionLock#uiSafeAcquire(boolean)
 	 */
 	public void uiSafeAcquire(boolean exclusive) throws InterruptedException {
         // Only try the special acquiring procedure for Display thread and when
@@ -576,11 +513,8 @@ public class Lock {
 		}
 	}
 	
-	/**
-	 * Releases me.  Note that my depth may still be positive, in which case
-	 * I would need to be released again (recursively).
-	 * 
-	 * @throws IllegalStateException if the calling thread does not own me
+	/* (non-Javadoc)
+	 * @see org.eclipse.emf.transaction.util.ITransactionLock#release()
 	 */
 	public synchronized void release() {
 		if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
@@ -635,16 +569,8 @@ public class Lock {
 		return yielders.isEmpty();
 	}
 	
-	/**
-	 * Temporarily yields the lock to another thread that does not require
-	 * exclusive access, if any such thread exists.  Note that, if this method
-	 * returns <code>true</code>, then the caller must actually
-     * {@linkplain #release() release}
-	 * me before another thread can take me.  It then resumes by acquiring me
-	 * again, layer.
-	 * 
-	 * @return <code>true</code> if the lock was successfully yielded to another
-	 *     thread; <code>false</code>, otherwise
+	/* (non-Javadoc)
+	 * @see org.eclipse.emf.transaction.util.ITransactionLock#yield()
 	 */
 	public synchronized boolean yield() {
 		boolean result = waiting.size() > waiting.exclusiveCount();
@@ -733,6 +659,13 @@ public class Lock {
 		return "Lock[id=" + id + ", depth=" + depth //$NON-NLS-1$ //$NON-NLS-2$
 			+ ", owner=" + ((lastKnownOwner == null) ? null : lastKnownOwner.getName()) //$NON-NLS-1$
 			+ ", waiting=" + waiting + ']'; //$NON-NLS-1$
+	}
+	
+	/**
+	 * @since 1.4
+	 */
+	public void checkedTransfer(Thread thread) {
+		new Access() {}.transfer(thread);
 	}
 	
 	/**
@@ -941,8 +874,9 @@ public class Lock {
 			String name = getClass().getName();
 			String packageName = name.substring(0, name.lastIndexOf('.') + 1);
 			
-			if (!"org.eclipse.emf.transaction.impl.".equals(packageName)) { //$NON-NLS-1$
+			if ( !packageName.startsWith("org.eclipse.emf.transaction")) { //$NON-NLS-1$
 				throw new IllegalArgumentException("Illegal subclass"); //$NON-NLS-1$
+				
 			}
 		}
 	}
