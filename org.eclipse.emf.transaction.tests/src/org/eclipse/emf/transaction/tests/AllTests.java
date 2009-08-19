@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: AllTests.java,v 1.13 2008/10/09 00:45:16 cdamus Exp $
+ * $Id: AllTests.java,v 1.14 2009/08/19 09:37:29 bgruschko Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -63,6 +63,7 @@ public class AllTests
         suite.addTest(JobManagerSuspensionDeadlockTest.suite());
 		suite.addTest(PerformanceTest.suite());
 		suite.addTest(MemoryLeakTest.suite());
+		suite.addTest(RecordingCommandTest.suite());
 		return suite;
 	}
 

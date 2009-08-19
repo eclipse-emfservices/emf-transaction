@@ -13,7 +13,7 @@
  *   
  * </copyright>
  *
- * $Id: RecordingCommand.java,v 1.9 2008/11/30 16:38:08 cdamus Exp $
+ * $Id: RecordingCommand.java,v 1.10 2009/08/19 09:37:24 bgruschko Exp $
  */
 package org.eclipse.emf.transaction;
 
@@ -128,9 +128,13 @@ public abstract class RecordingCommand
         }
         
         try {
+        	preExecute();
+        	
     		// invoke the subclass before getting the transaction, because if an
     		//    exception occurs, we don't want to be undoable
     		doExecute();
+    		
+    		postExecute();
     		
     		transaction = internalDomain.getActiveTransaction();
         } finally {        
@@ -148,6 +152,22 @@ public abstract class RecordingCommand
                 }
             }
         }
+	}
+	
+	/**
+	 * Will be called prior to {@link RecordingCommand#doExecute()}.
+	 * @since 1.4
+	 */
+	protected void preExecute() {
+		
+	}
+	
+	/**
+	 * Will be called after {@link RecordingCommand#doExecute()}.
+	 * @since 1.4
+	 */
+	protected void postExecute() {
+		
 	}
 
 	/**
