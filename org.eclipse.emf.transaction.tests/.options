@@ -1,4 +1,0 @@
-# Debugging options for the org.eclipse.emf.transaction.tests plug-in
-
-# Turn on general debugging for the org.eclipse.emf.transaction.tests plug-in
-org.eclipse.emf.transaction.tests/debug=true
