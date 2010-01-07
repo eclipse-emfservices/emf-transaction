@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: TransactionalEditingDomainImpl.java,v 1.21 2009/08/11 11:21:08 bgruschko Exp $
+ * $Id: TransactionalEditingDomainImpl.java,v 1.22 2010/01/07 15:29:51 bgruschko Exp $
  */
 package org.eclipse.emf.transaction.impl;
 
@@ -118,6 +118,8 @@ public class TransactionalEditingDomainImpl
 	
 	private LifecycleImpl lifecycle;
 	private Transaction.OptionMetadata.Registry optionMetadata;
+	
+	private boolean disposed	=	false;
 	
 	/**
 	 * Initializes me with my adapter factory, command stack, and resource set.
@@ -893,50 +895,55 @@ public class TransactionalEditingDomainImpl
 		
 	// Documentation copied from the inherited specification
 	public void dispose() {
-		// this will fail if we are statically registered
-		//    (in which case it is not permitted to dispose)
-		if (getID() != null) {
-			EditingDomainManager.getInstance().assertDynamicallyRegistered(
-				getID());
-		}
-		
-		getLifecycle().fireLifecycleEvent(
-			TransactionalEditingDomainEvent.EDITING_DOMAIN_DISPOSING, null);
-		
-		// clear resource-set listeners (and notify them) on disposal
-		Set<ResourceSetListener> rsetListeners = new java.util.HashSet<ResourceSetListener>();
-		rsetListeners.addAll(aggregatePrecommitListeners);
-		rsetListeners.addAll(precommitListeners);
-		rsetListeners.addAll(postcommitListeners);
-		
-		for (ResourceSetListener next : rsetListeners) {
-			if (next instanceof ResourceSetListener.Internal) {
-				((ResourceSetListener.Internal) next).unsetTarget(this);
+		if ( !disposed ) {
+			
+			// this will fail if we are statically registered
+			//    (in which case it is not permitted to dispose)
+			if (getID() != null) {
+				EditingDomainManager.getInstance().assertDynamicallyRegistered(
+					getID());
 			}
+			
+			disposed = true;
+		
+			getLifecycle().fireLifecycleEvent(
+				TransactionalEditingDomainEvent.EDITING_DOMAIN_DISPOSING, null);
+			
+			// clear resource-set listeners (and notify them) on disposal
+			Set<ResourceSetListener> rsetListeners = new java.util.HashSet<ResourceSetListener>();
+			rsetListeners.addAll(aggregatePrecommitListeners);
+			rsetListeners.addAll(precommitListeners);
+			rsetListeners.addAll(postcommitListeners);
+			
+			for (ResourceSetListener next : rsetListeners) {
+				if (next instanceof ResourceSetListener.Internal) {
+					((ResourceSetListener.Internal) next).unsetTarget(this);
+				}
+			}
+			
+			// clear listeners after notification so that they cannot add themselves
+			// back again during the call-back
+			aggregatePrecommitListeners.clear();
+			precommitListeners.clear();
+			postcommitListeners.clear();
+			getLifecycle().dispose();
+			
+			// only clear my ID after notifying listeners, because they may
+			// need to key on it
+			setID(null);
+			
+			activeTransaction = null;
+			
+			recorder.dispose();
+			recorder = null;
+			validator = null;
+			
+			getTransactionalCommandStack().dispose();
+			commandStack = null;
+			
+			// disconnect the resource set from the editing domain
+			((FactoryImpl) Factory.INSTANCE).unmapResourceSet(this);
 		}
-		
-		// clear listeners after notification so that they cannot add themselves
-		// back again during the call-back
-		aggregatePrecommitListeners.clear();
-		precommitListeners.clear();
-		postcommitListeners.clear();
-		getLifecycle().dispose();
-		
-		// only clear my ID after notifying listeners, because they may
-		// need to key on it
-		setID(null);
-		
-		activeTransaction = null;
-		
-		recorder.dispose();
-		recorder = null;
-		validator = null;
-		
-		getTransactionalCommandStack().dispose();
-		commandStack = null;
-		
-		// disconnect the resource set from the editing domain
-		((FactoryImpl) Factory.INSTANCE).unmapResourceSet(this);
 	}
 
 	public Map<Object, Object> getUndoRedoOptions() {
