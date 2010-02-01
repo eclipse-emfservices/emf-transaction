@@ -34,12 +34,6 @@ plugin@org.eclipse.emf.workspace.examples.library.editor=v200901271819,:pserver:
 plugin@org.eclipse.emf.workspace.examples=v200903190036,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/examples/org.eclipse.emf.workspace.examples
 plugin@org.eclipse.emf.workspace.tests=v20091215-1213,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/tests/org.eclipse.emf.workspace.tests
 
-!*** All-in-one data integrity frameworks features
-
-feature@org.eclipse.emf.emfqtv.all.sdk=v20090819-1300,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/emfqtv/org.eclipse.emf.emfqtv.all.sdk-feature
-feature@org.eclipse.emf.emfqtv.all=v20090819-1300,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf.transaction/emfqtv/org.eclipse.emf.emfqtv.all-feature
-
-
 !*** EMF Examples plugins
 plugin@org.eclipse.emf.examples.library=R2_3_1RC,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf/examples/org.eclipse.emf.examples.library
 plugin@org.eclipse.emf.examples.library.edit=R2_3_1RC,:pserver:anonymous@dev.eclipse.org:/cvsroot/modeling,,org.eclipse.emf/org.eclipse.emf/examples/org.eclipse.emf.examples.library.edit

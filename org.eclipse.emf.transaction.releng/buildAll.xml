@@ -114,24 +114,6 @@ propertyName=propertyValue
 
 		<echo-timestamp />
 
-		<!-- build all-SDK (includes only the 3-1 feature definitions; no nested content) -->
-		<zip destfile="${buildDirectory}/${buildLabel}/${allSDKZip}" update="true">
-			<zipfileset src="${buildDirectory}/${buildLabel}/${allZip}"
-				    dirmode="775" filemode="664"
-				    id="allSDKZipFiles"
-				    includes="**/features/org.eclipse.emf.emfqtv.all*,
-				              **/features/org.eclipse.emf.emfqtv.all*/**"
-				    excludes="**/*.pack.gz,
-				              **/pack.properties,
-				              **/features/*.jar,
-				              **/plugins/*.source_*.jar" />
-			<zipfileset src="${buildDirectory}/${buildLabel}/${allZip}"
-				    dirmode="775" filemode="664"
-				    id="rootfiles"
-				    includes="**/eclipse/epl-v10.html,
-				              **/eclipse/notice.html" />
-		</zip>
-
 		<!-- build SDK -->
 		<zip destfile="${buildDirectory}/${buildLabel}/${SDKZip}" update="true">
 			<zipfileset src="${buildDirectory}/${buildLabel}/${allZip}"
@@ -170,16 +152,6 @@ propertyName=propertyValue
 			</zipfileset>
 			<zipfileset refid="rootfiles" />
 		</zip>
-
-		<!-- build all-runtime (includes only the 3-1 feature definition; no nested content) -->
-		<zip destfile="${buildDirectory}/${buildLabel}/${projectName}-qtv-all-runtime-${buildAlias}.zip" update="true">
-			<zipfileset src="${buildDirectory}/${buildLabel}/${allSDKZip}"
-				    dirmode="775" filemode="664"
-				    includes="**/org.eclipse.emf.emfqtv.all_*,
-				              **/org.eclipse.emf.emfqtv.all_*/**" />
-			<zipfileset refid="rootfiles" />
-		</zip>
-
 
 		<!-- build examples -->
 		<zip destfile="${buildDirectory}/${buildLabel}/${examplesZip}" update="true">
