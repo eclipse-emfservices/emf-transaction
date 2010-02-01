@@ -64,7 +64,6 @@ propertyName=propertyValue
 		<!-- required for signing & repackaging master zip into smaller zips -->
 		<property name="masterZip" value="${projectName}-${subprojectName}-Master-${buildAlias}.zip" />
 		<property name="allZip" value="${projectName}-${subprojectName}-ALL-${buildAlias}.zip" />
-		<property name="allSDKZip" value="${projectName}-qtv-all-SDK-${buildAlias}.zip" />
 		<property name="SDKZip" value="${projectName}-${subprojectName}-SDK-${buildAlias}.zip" />
 		<property name="examplesZip" value="${projectName}-${subprojectName}-examples-${buildAlias}.zip" />
 		<property name="java15-home" value="/opt/sun-java2-5.0" />
@@ -140,17 +139,31 @@ propertyName=propertyValue
 
 		<!-- build runtime -->
 		<zip destfile="${buildDirectory}/${buildLabel}/${projectName}-${subprojectName}-runtime-${buildAlias}.zip" update="true">
-			<zipfileset src="${buildDirectory}/${buildLabel}/${SDKZip}" dirmode="775" filemode="664" id="runtimeFiles" excludes="**/org.eclipse.*.example*, **/org.eclipse.*.example*/**, **/org.eclipse.*.sdk*, **/org.eclipse.*.sdk*/**, **/org.eclipse.*.doc*, **/org.eclipse.*.doc*/*, **/org.eclipse.*.source*, **/org.eclipse.*.source*/**, **/*src.zip">
-				<include name="**/org.eclipse.emf.transaction_*" />
-				<include name="**/org.eclipse.emf.transaction_*/**" />
-				<include name="**/org.eclipse.emf.transaction.ui_*" />
-				<include name="**/org.eclipse.emf.transaction.ui_*/**" />
-				<include name="**/org.eclipse.emf.workspace_*" />
-				<include name="**/org.eclipse.emf.workspace_*/**" />
-				<include name="**/org.eclipse.emf.workspace.ui_*" />
-				<include name="**/org.eclipse.emf.workspace.ui_*/**" />
-			</zipfileset>
-			<zipfileset refid="rootfiles" />
+			<zipfileset src="${buildDirectory}/${buildLabel}/${SDKZip}"
+				    dirmode="775" filemode="664"
+				    id="runtimeFiles"
+				    excludes="**/org.eclipse.*.example*,
+				              **/org.eclipse.*.example*/**,
+				              **/org.eclipse.*.sdk*,
+				              **/org.eclipse.*.sdk*/**,
+				              **/org.eclipse.*.doc*,
+				              **/org.eclipse.*.doc*/*,
+				              **/org.eclipse.*.source*,
+				              **/org.eclipse.*.source*/**,
+				              **/*src.zip"
+				    includes="**/org.eclipse.emf.transaction_*,
+				              **/org.eclipse.emf.transaction_*/**,
+				              **/org.eclipse.emf.transaction.ui_*,
+				              **/org.eclipse.emf.transaction.ui_*/**,
+				              **/org.eclipse.emf.workspace_*,
+				              **/org.eclipse.emf.workspace_*/**,
+				              **/org.eclipse.emf.workspace.ui_*,
+				              **/org.eclipse.emf.workspace.ui_*/**" />
+			<zipfileset src="${buildDirectory}/${buildLabel}/${SDKZip}"
+			        dirmode="775" filemode="664"
+			        id="rootfiles"
+			        includes="**/eclipse/epl-v10.html
+				              **/eclipse/notice.html" />
 		</zip>
 
 		<!-- build examples -->
