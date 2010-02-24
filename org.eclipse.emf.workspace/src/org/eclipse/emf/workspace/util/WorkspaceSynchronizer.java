@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
+ * Copyright (c) 2005, 2010 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -15,7 +15,7 @@
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.11 2008/08/13 13:24:44 cdamus Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.12 2010/02/24 21:10:23 ahunter Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -262,6 +262,9 @@ public final class WorkspaceSynchronizer {
 	 * @see #getUnderlyingFile(Resource)
 	 */
 	public static IFile getFile(Resource resource) {
+		if (resource == null) {
+			return null;
+		}
         ResourceSet rset = resource.getResourceSet();
         
         return getFile(
