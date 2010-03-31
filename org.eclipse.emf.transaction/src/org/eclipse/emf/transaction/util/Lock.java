@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2009 IBM Corporation, Zeligsoft Inc., and others.
+ * Copyright (c) 2005, 2010 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -13,7 +13,7 @@
  *
  * </copyright>
  *
- * $Id: Lock.java,v 1.15 2009/08/11 11:21:08 bgruschko Exp $
+ * $Id: Lock.java,v 1.16 2010/03/31 21:01:56 ahunter Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -305,11 +305,12 @@ public class Lock implements ITransactionLock {
         }
 
         // loop until the lock is acquired
-        AcquireJob job = new AcquireJob(current, exclusive);
+    	AcquireJob job = new AcquireJob(current, exclusive);
         job.setRule(jobRule);
         while (!acquired) {
             Object sync = job.getSync();
             ILock jobLock = job.getILock();
+            job.aborted = false;
 
             synchronized (sync) {
                 if (Tracing.shouldTrace(EMFTransactionDebugOptions.LOCKING)) {
@@ -386,7 +387,12 @@ public class Lock implements ITransactionLock {
                             }
 
                             // try again quickly
-                            acquired = acquire(250L, exclusive);
+                            try {
+                            	acquired = acquire(250L, exclusive);
+                            } catch (InterruptedException e) {
+                            	Thread.interrupted();
+                            	// ignore the exception
+                            }
                         } else {
                             acquired = getOwner() == current;
 
