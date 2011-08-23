@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2010 IBM Corporation, Zeligsoft Inc. and others.
+ * Copyright (c) 2005, 2011 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,10 +12,11 @@
  *   Geoff Martin - Fix deletion of resource that has markers
  *   Zeligsoft - Bug 233004
  *   Christian Vogt - Bug 235634
+ *   Mariot Chauvin - Bug 351813
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.12 2010/02/24 21:10:23 ahunter Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.12.4.1 2011/08/23 21:50:01 ahunter Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -333,6 +334,9 @@ public final class WorkspaceSynchronizer {
             }
             MyArchiveURLConnection archiveURLConnection = new MyArchiveURLConnection(uri.toString());
             result = getFile(URI.createURI(archiveURLConnection.getNestedURI()), converter, considerArchives);
+        } else if (uri.isPlatformPlugin()) {
+            /* resource with platform plug-in URI could not be in the workspace */
+            return result;
         } else if (uri.isPlatformResource()) {
             IPath path = new Path(uri.toPlatformString(true));
             result = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
