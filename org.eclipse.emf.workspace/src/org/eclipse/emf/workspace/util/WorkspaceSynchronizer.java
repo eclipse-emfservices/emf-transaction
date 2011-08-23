@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2010 IBM Corporation, Zeligsoft Inc. and others.
+ * Copyright (c) 2005, 2011 IBM Corporation, Zeligsoft Inc. and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -12,10 +12,12 @@
  *   Geoff Martin - Fix deletion of resource that has markers
  *   Zeligsoft - Bug 233004
  *   Christian Vogt - Bug 235634
+ *   Mariot Chauvin - Bug 351813
+ *   Martin Fluegge - Bug 333690
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.12 2010/02/24 21:10:23 ahunter Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.13 2011/08/23 22:08:39 ahunter Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -24,6 +26,7 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.List;
 
+import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -333,6 +336,9 @@ public final class WorkspaceSynchronizer {
             }
             MyArchiveURLConnection archiveURLConnection = new MyArchiveURLConnection(uri.toString());
             result = getFile(URI.createURI(archiveURLConnection.getNestedURI()), converter, considerArchives);
+        } else if (uri.isPlatformPlugin()) {
+            /* resource with platform plug-in URI could not be in the workspace */
+            return result;
         } else if (uri.isPlatformResource()) {
             IPath path = new Path(uri.toPlatformString(true));
             result = ResourcesPlugin.getWorkspace().getRoot().getFile(path);
@@ -353,12 +359,16 @@ public final class WorkspaceSynchronizer {
         
         if ((result == null) && !uri.isRelative()) {
             try {
-                IFile[] files = ResourcesPlugin.getWorkspace().getRoot()
-                        .findFilesForLocationURI(new java.net.URI(uri.toString()));
-                if (files.length > 0) {
-                    // set the result to be the first file found
-                    result = files[0];
-                }
+            	java.net.URI location = new java.net.URI(uri.toString());
+
+            	if (hasRegisteredEFS(location)) {
+            		IFile[] files = ResourcesPlugin.getWorkspace().getRoot()
+            				.findFilesForLocationURI(new java.net.URI(uri.toString()));
+            		if (files.length > 0) {
+            			// set the result to be the first file found
+            			result = files[0];
+            		}
+            	}
             } catch (URISyntaxException e) {
                 // won't get this because EMF provides a well-formed URI
             }
@@ -367,6 +377,18 @@ public final class WorkspaceSynchronizer {
         return result;
     }
 	
+    private static boolean hasRegisteredEFS(java.net.URI location) {
+      	  try {
+              if(EFS.getStore(location)!=null){
+                return true;
+              }
+      	  } catch(CoreException ex) {
+      	    
+      	    return false;
+      	  }
+          return false;
+    }
+    
 	/**
 	 * Starts a synchronizer listening to resource change events.
 	 * 
