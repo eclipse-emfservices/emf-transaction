@@ -13,10 +13,11 @@
  *   Zeligsoft - Bug 233004
  *   Christian Vogt - Bug 235634
  *   Mariot Chauvin - Bug 351813
+ *   Martin Fluegge - Bug 333690
  *
  * </copyright>
  *
- * $Id: WorkspaceSynchronizer.java,v 1.12.4.1 2011/08/23 21:50:01 ahunter Exp $
+ * $Id: WorkspaceSynchronizer.java,v 1.12.4.2 2011/08/23 21:57:56 ahunter Exp $
  */
 package org.eclipse.emf.workspace.util;
 
@@ -25,6 +26,7 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.List;
 
+import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
@@ -357,12 +359,16 @@ public final class WorkspaceSynchronizer {
         
         if ((result == null) && !uri.isRelative()) {
             try {
-                IFile[] files = ResourcesPlugin.getWorkspace().getRoot()
-                        .findFilesForLocationURI(new java.net.URI(uri.toString()));
-                if (files.length > 0) {
-                    // set the result to be the first file found
-                    result = files[0];
-                }
+            	java.net.URI location = new java.net.URI(uri.toString());
+
+            	if (hasRegisteredEFS(location)) {
+            		IFile[] files = ResourcesPlugin.getWorkspace().getRoot()
+            				.findFilesForLocationURI(new java.net.URI(uri.toString()));
+            		if (files.length > 0) {
+            			// set the result to be the first file found
+            			result = files[0];
+            		}
+            	}
             } catch (URISyntaxException e) {
                 // won't get this because EMF provides a well-formed URI
             }
@@ -371,6 +377,18 @@ public final class WorkspaceSynchronizer {
         return result;
     }
 	
+    private static boolean hasRegisteredEFS(java.net.URI location) {
+      	  try {
+              if(EFS.getStore(location)!=null){
+                return true;
+              }
+      	  } catch(CoreException ex) {
+      	    
+      	    return false;
+      	  }
+          return false;
+    }
+    
 	/**
 	 * Starts a synchronizer listening to resource change events.
 	 * 
