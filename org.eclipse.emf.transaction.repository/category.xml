@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.eclipse.emf.transaction_1.7.0.qualifier.jar" id="org.eclipse.emf.transaction" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.transaction.doc_1.7.0.qualifier.jar" id="org.eclipse.emf.transaction.doc" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.transaction.examples_1.7.0.qualifier.jar" id="org.eclipse.emf.transaction.examples" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.transaction.examples.source_1.7.0.qualifier.jar" id="org.eclipse.emf.transaction.examples.source" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.transaction.master_1.7.0.qualifier.jar" id="org.eclipse.emf.transaction.master" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.transaction.sdk_1.7.0.qualifier.jar" id="org.eclipse.emf.transaction.sdk" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.transaction.source_1.7.0.qualifier.jar" id="org.eclipse.emf.transaction.source" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.transaction.tests_1.7.0.qualifier.jar" id="org.eclipse.emf.transaction.tests" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.workspace_1.7.0.qualifier.jar" id="org.eclipse.emf.workspace" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.workspace.doc_1.7.0.qualifier.jar" id="org.eclipse.emf.workspace.doc" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.workspace.examples_1.7.0.qualifier.jar" id="org.eclipse.emf.workspace.examples" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.workspace.examples.source_1.7.0.qualifier.jar" id="org.eclipse.emf.workspace.examples.source" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <feature url="features/org.eclipse.emf.workspace.source_1.7.0.qualifier.jar" id="org.eclipse.emf.workspace.source" version="1.7.0.qualifier">
+      <category name="emf-transaction"/>
+   </feature>
+   <category-def name="emf-transaction" label="EMF Transaction">
+      <description>
+         EMF Transaction runtime, SDK, examples, and sources
+      </description>
+   </category-def>
+</site>
