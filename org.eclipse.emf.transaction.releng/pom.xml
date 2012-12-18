@@ -178,12 +178,12 @@
 		<repository>
 			<id>emf query</id>
 			<layout>p2</layout>
-			<url>http://download.eclipse.org/modeling/emf/emf-query/updates/milestones</url>
+			<url>http://download.eclipse.org/modeling/emf/query/updates/milestones</url>
 		</repository>
 		<repository>
 			<id>emf validation</id>
 			<layout>p2</layout>
-			<url>http://download.eclipse.org/modeling/emf/emf-validation/updates/milestones</url>
+			<url>http://download.eclipse.org/modeling/emf/validation/updates/milestones</url>
 		</repository>
 	</repositories>
 
