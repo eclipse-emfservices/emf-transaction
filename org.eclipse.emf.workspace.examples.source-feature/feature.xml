@@ -44,13 +44,6 @@ http://www.eclipse.org/legal/epl-v10.html
    </url>
 
    <plugin
-         id="org.eclipse.emf.workspace.examples.source"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="org.eclipse.emf.workspace.examples.library.editor.source"
          download-size="0"
          install-size="0"
