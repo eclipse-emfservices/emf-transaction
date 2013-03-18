@@ -10,6 +10,6 @@
   </parent>
   <groupId>org.eclipse.emf.transaction.plugins</groupId>
   <artifactId>org.eclipse.emf.workspace.tests</artifactId>
-  <version>1.3.0-SNAPSHOT</version>
+  <version>1.7.0-SNAPSHOT</version>
   <packaging>eclipse-test-plugin</packaging>
 </project>
