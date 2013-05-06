@@ -77,7 +77,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	/**
 	 * Tests the static registration of editing domains on the extension point.
 	 */
-	public void test_staticRegistration() {
+	public void ignore_test_staticRegistration() {
 		// check initial conditions for this test
 		assertEquals(0, TestEditingDomain.instanceCount);
 		

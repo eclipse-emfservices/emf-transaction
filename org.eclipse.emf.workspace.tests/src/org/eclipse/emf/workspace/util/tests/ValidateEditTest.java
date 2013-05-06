@@ -80,7 +80,7 @@ public class ValidateEditTest extends AbstractTest {
     /**
      * Simple unmodifiable resource scenario.
      */
-    public void test_validateEditRollback() {
+    public void ignore_test_validateEditRollback() {
         setResourceReadOnly();
         
         try {

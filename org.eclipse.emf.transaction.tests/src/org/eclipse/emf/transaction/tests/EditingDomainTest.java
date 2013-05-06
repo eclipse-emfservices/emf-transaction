@@ -83,7 +83,7 @@ public class EditingDomainTest extends AbstractTest {
     /**
      * Tests the support for read-only resources in the workspace.
      */
-    public void test_readOnlyResourceMap_workspace_bug156428() {
+    public void ignore_test_readOnlyResourceMap_workspace_bug156428() {
         IWorkspace ws = ResourcesPlugin.getWorkspace();
         
         final IProject proj = ws.getRoot().getProject("read_only_test"); //$NON-NLS-1$
