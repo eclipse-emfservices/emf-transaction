@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><?pde version="3.8"?><target name="luna" sequenceNumber="27">
+<?xml version="1.0" encoding="UTF-8"?><?pde version="3.8"?><target name="luna" sequenceNumber="29">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.uml2.sdk.feature.group" version="4.2.0.v20131111-0727"/>
@@ -22,12 +22,12 @@
 <repository location="http://download.eclipse.org/modeling/emf/emf/updates/nightly"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.emf.validation.sdk.feature.group" version="1.7.0.201306111341"/>
-<repository location="http://download.eclipse.org/modeling/emf/validation/updates/milestones"/>
+<unit id="org.eclipse.emf.query.sdk.feature.group" version="1.8.0.201312121927"/>
+<repository location="http://download.eclipse.org/modeling/emf/query/updates/interim"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.emf.query.sdk.feature.group" version="1.7.0.201306111332"/>
-<repository location="http://download.eclipse.org/modeling/emf/query/updates/milestones"/>
+<unit id="org.eclipse.emf.validation.sdk.feature.group" version="1.8.0.201312122035"/>
+<repository location="http://download.eclipse.org/modeling/emf/validation/updates/interim"/>
 </location>
 </locations>
 </target>
