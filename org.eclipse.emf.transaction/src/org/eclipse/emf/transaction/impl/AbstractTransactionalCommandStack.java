@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2007 IBM Corporation and others.
+ * Copyright (c) 2007, 2013 IBM Corporation and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -239,6 +239,22 @@ public abstract class AbstractTransactionalCommandStack
      */
     protected void basicExecute(Command command) {
         super.execute(command);
+    }
+    
+    /**
+     * Provides access to the {@link BasicCommandStack} implementation of the
+     * {@link #redo()} method in order to enable subclasses to override redo.
+     */
+    protected void basicRedo() {
+        super.redo();
+    }
+    
+    /**
+     * Provides access to the {@link BasicCommandStack} implementation of the
+     * {@link #undo()} method in order to enable subclasses to override undo.
+     */
+    protected void basicUndo() {
+        super.undo();
     }
 
     /**
