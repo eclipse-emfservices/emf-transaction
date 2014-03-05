@@ -106,7 +106,7 @@ if [ "$dropFiles" != y -a "$dropFiles" != n ]; then
 fi
 echo "Generating update-site and SDK drop files: $dropFiles"
 
-if [ -z "$dropFilesLabel" -a "$dropFiles" = y ]; then
+if [ -z "$dropFilesLabel" -a "$dropFiles" = y -a "$buildType" != i ]; then
 	echo -n "Please enter a drop files label to append to the version (e.g. M5, RC1) or leave empty to skip this [<empty>]:"
 	read dropFilesLabel
 fi
