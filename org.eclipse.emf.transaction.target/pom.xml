@@ -42,7 +42,7 @@
 										<artifact>
 											<file>emf-transaction.target</file>
 											<type>target</type>
-											<classifier>mars</classifier>
+											<classifier>emf-transaction</classifier>
 										</artifact>
 									</artifacts>
 								</configuration>
