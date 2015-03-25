@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2007 IBM Corporation and others.
+ * Copyright (c) 2005, 2015 IBM Corporation, Christian W. Damus, and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +9,9 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
+ *   Christian W. Damus - Bug 460206
  *
  * </copyright>
- *
- * $Id: CompositeChangeDescription.java,v 1.7 2007/11/14 18:14:00 cdamus Exp $
  */
 package org.eclipse.emf.transaction.util;
 
@@ -20,6 +19,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 
 import org.eclipse.emf.common.util.BasicEList;
 import org.eclipse.emf.common.util.BasicEMap;
@@ -49,6 +49,8 @@ public class CompositeChangeDescription
 	private final List<ChangeDescription> changes =
 		new java.util.ArrayList<ChangeDescription>();
 	
+	private List<ChangeDescription> detached;
+	
 	/**
 	 * Queries whether I have no composed change descriptions.
 	 * 
@@ -56,7 +58,7 @@ public class CompositeChangeDescription
 	 *     <code>true</code>, otherwise
 	 */
 	public final boolean isEmpty() {
-		return changes.isEmpty();
+		return changes.isEmpty() && ((detached == null) || detached.isEmpty());
 	}
 	
 	/**
@@ -64,15 +66,44 @@ public class CompositeChangeDescription
 	 */
 	public final void clear() {
 		changes.clear();
+		detached = null;
+		
+		objectChanges = null;
+		objectsToDetach = null;
+		objectsToAttach = null;
+		resourceChanges = null;
+	}
+	
+	/**
+	 * Detaches my composed change descriptions, leaving just the aggregate change model for informational purposes
+	 * (I will not undo/redo anything, but I describe a bunch of changes).  This is useful for maintaining a record
+	 * of changes that are encapsulated by some other means (such as, for example, in regular EMF commands that know
+	 * how to undo/redo themselves).
+	 * 
+	 * @since 1.9
+	 */
+	public final void detach() {
+		if (detached == null) {
+			detached = new java.util.ArrayList<ChangeDescription>(changes);
+		} else {
+			detached.addAll(changes);
+		}
+		
+		changes.clear();
 	}
     
     /**
      * Disposes my children, recursively.
      */
     void dispose() {
-        for (ChangeDescription next : changes) {
-            TransactionUtil.dispose(next);
-        }
+		for (ChangeDescription next : changes) {
+			TransactionUtil.dispose(next);
+		}
+		if (detached != null) {
+			for (ChangeDescription next : detached) {
+				TransactionUtil.dispose(next);
+			}
+		}
     }
 	
 	/**
@@ -105,6 +136,7 @@ public class CompositeChangeDescription
 		}
 		
 		changes.clear();
+		detached = null;
 	}
 
 	// Documentation copied from the inherited method
@@ -135,29 +167,62 @@ public class CompositeChangeDescription
 				for (ChangeDescription next : other.changes) {
 					add(next);
 				}
+				if (other.detached != null) {
+					for (ChangeDescription next : other.detached) {
+						addDetached(next);
+					}
+				}
 			} else {
 				changes.add(change);
-				
-				if (objectChanges != null) {
-					// already computed object changes.  Keep them up-to-date
-					objectChanges.addAll(change.getObjectChanges());
-				}
-				
-				if (objectsToAttach != null) {
-					// already computed objects to attach.  Keep them up-to-date
-					objectsToAttach.addAll(change.getObjectsToAttach());
-				}
-				
-				if (objectsToDetach != null) {
-					// already computed objects to detach.  Keep them up-to-date
-					objectsToDetach.addAll(change.getObjectsToDetach());
-				}
-				
-				if (resourceChanges != null) {
-					// already computed resource changes.  Keep them up-to-date
-					resourceChanges.addAll(change.getResourceChanges());
-				}
+				appendChanges(change);
 			}
+		}
+	}
+	
+	/**
+	 * Adds a detached change description to me.
+	 * 
+	 * @param change a detached change description to add
+	 */
+	private void addDetached(ChangeDescription change) {
+		if (!isEmpty(change)) {
+			// automatically flatten composites
+			if (change instanceof CompositeChangeDescription) {
+				CompositeChangeDescription other = ((CompositeChangeDescription) change);
+				
+				for (ChangeDescription next : other.changes) {
+					// The composite is detached, so also are these
+					addDetached(next);
+				}
+				if (other.detached != null) {
+					for (ChangeDescription next : other.detached) {
+						addDetached(next);
+					}
+				}
+			} else {
+				if (detached == null) {
+					detached = new java.util.ArrayList<ChangeDescription>();
+				}
+				detached.add(change);
+				appendChanges(change);
+			}
+		}
+	}
+	
+	private void appendChanges(ChangeDescription change) {
+		if (objectChanges != null) {
+			// already computed object changes.  Keep them up-to-date
+			objectChanges.addAll(change.getObjectChanges());
+		}
+		
+		if (objectsToAttach != null) {
+			// already computed objects to attach.  Keep them up-to-date
+			objectsToAttach.addAll(change.getObjectsToAttach());
+		}
+		
+		if (resourceChanges != null) {
+			// already computed resource changes.  Keep them up-to-date
+			resourceChanges.addAll(change.getResourceChanges());
 		}
 	}
 	
@@ -203,24 +268,32 @@ public class CompositeChangeDescription
 	}
 
 	/**
-	 * My objects to attach are the concatenation of the changes in my composed
+	 * My objects to detach are the union of the changes in my composed
 	 * descriptions.
 	 */
 	@Override
 	public EList<EObject> getObjectsToDetach() {
-		if (objectsToDetach == null) {
-			objectsToDetach = new BasicEList<EObject>();
-			
-			for (ChangeDescription next : changes) {
-				objectsToDetach.addAll(next.getObjectsToDetach());
+		// The core change description computes objects to detach from
+		// the objects changes and resource changes. The algorithm doesn't
+		// work when these lists are concatenated from composed change
+		// descriptions, so we let each child compute its objects to
+		// detach and take the union
+		Set<EObject> result = new java.util.LinkedHashSet<EObject>();
+		
+		for (ChangeDescription next : changes) {
+			result.addAll(next.getObjectsToDetach());
+		}
+		if (detached != null) {
+			for (ChangeDescription next : detached) {
+				result.addAll(next.getObjectsToDetach());
 			}
 		}
 		
-		return objectsToDetach;
+		return new BasicEList<EObject>(result);
 	}
 
 	/**
-	 * My objects to detach are the concatenation of the changes in my composed
+	 * My objects to attach are the concatenation of the changes in my composed
 	 * descriptions.
 	 */
 	@Override

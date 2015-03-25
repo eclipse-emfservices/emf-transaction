@@ -1,7 +1,7 @@
 /**
  * <copyright>
  *
- * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc., and others.
+ * Copyright (c) 2005, 2015 IBM Corporation, Zeligsoft Inc., and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,10 +10,9 @@
  * Contributors:
  *   IBM - Initial API and implementation
  *   Zeligsoft - Bugs 145877, 248717
+ *   Christian W. Damus - Bug 460206
  *
  * </copyright>
- *
- * $Id: AllTests.java,v 1.14 2009/08/19 09:37:29 bgruschko Exp $
  */
 package org.eclipse.emf.transaction.tests;
 
@@ -58,12 +57,13 @@ public class AllTests
 		suite.addTest(EditingDomainRegistryTest.suite());
 		suite.addTest(AbstractMultithreadTest.suite());
 		suite.addTest(PrivilegedRunnableTest.suite());
-        suite.addTest(EditingDomainValidatorTest.suite());
-        suite.addTest(ValidateEditTest.suite());
-        suite.addTest(JobManagerSuspensionDeadlockTest.suite());
+		suite.addTest(EditingDomainValidatorTest.suite());
+		suite.addTest(ValidateEditTest.suite());
+		suite.addTest(JobManagerSuspensionDeadlockTest.suite());
+		suite.addTest(RecordingCommandTest.suite());
+		suite.addTest(ChangeDescriptionTest.suite());
 		suite.addTest(PerformanceTest.suite());
 		suite.addTest(MemoryLeakTest.suite());
-		suite.addTest(RecordingCommandTest.suite());
 		return suite;
 	}
 
