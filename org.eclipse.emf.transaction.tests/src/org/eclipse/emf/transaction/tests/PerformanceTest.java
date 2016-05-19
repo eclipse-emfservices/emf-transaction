@@ -510,8 +510,10 @@ public class PerformanceTest extends AbstractTest {
 		Collections.sort(timings);
 		
 		for (int i = 0; i < OUTLIERS / 2; i++) {
-			System.out.println("Remove high timing: " + timings.remove(timings.size() - 1)); //$NON-NLS-1$
-			System.out.println("Remove low timing : " + timings.remove(0)); //$NON-NLS-1$
+			if (timings.size() > 1) {
+				System.out.println("Remove high timing: " + timings.remove(timings.size() - 1)); //$NON-NLS-1$
+				System.out.println("Remove low timing : " + timings.remove(0)); //$NON-NLS-1$
+			}
 		}
 	}
 	
