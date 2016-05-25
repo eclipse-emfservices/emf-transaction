@@ -130,13 +130,10 @@ else
 	echo "`date +%Y-%m-%d-%H:%M:%S` version is now $version"
 fi
 				
-cp eclipse/epl-v10.html drops/eclipse
-cp eclipse/notice.html drops/eclipse
 cd drops
 
 # emf transaction SDK
 zip -r ../$localDropDir/emf-transaction-SDK-$version.zip \
-	eclipse/epl-v10.html eclipse/notice.html \
 	eclipse/features/org.eclipse.emf.transaction_* \
 	eclipse/features/org.eclipse.emf.transaction.doc_* \
 	eclipse/features/org.eclipse.emf.transaction.sdk_* \
@@ -157,7 +154,6 @@ echo "`date +%Y-%m-%d-%H:%M:%S` Created emf-transaction-SDK-$version.zip"
 			
 # emf-transaction runtime
 zip -r ../$localDropDir/emf-transaction-runtime-$version.zip \
-	eclipse/epl-v10.html eclipse/notice.html \
 	eclipse/features/org.eclipse.emf.transaction_* \
 	eclipse/features/org.eclipse.emf.workspace_* \
 	eclipse/plugins/org.eclipse.emf.transaction_* \
@@ -169,7 +165,6 @@ echo "`date +%Y-%m-%d-%H:%M:%S` Created emf-transaction-runtime-$version.zip"
 			
 # emf-transaction examples
 zip -r ../$localDropDir/emf-transaction-examples-$version.zip \
-	eclipse/epl-v10.html eclipse/notice.html \
 	eclipse/features/org.eclipse.emf.transaction.examples_* \
 	eclipse/features/org.eclipse.emf.transaction.examples.source_* \
 	eclipse/features/org.eclipse.emf.workspace.examples_* \
@@ -185,7 +180,6 @@ echo "`date +%Y-%m-%d-%H:%M:%S` Created emf-transaction-examples-$version.zip"
 			
 # emf-transaction automated-tests
 zip -r ../$localDropDir/emf-transaction-automated-tests-$version.zip \
-	eclipse/epl-v10.html eclipse/notice.html \
 	eclipse/features/org.eclipse.emf.transaction.tests_* \
 	eclipse/plugins/org.eclipse.emf.transaction.tests_* \
 	eclipse/plugins/org.eclipse.emf.workspace.tests_*
