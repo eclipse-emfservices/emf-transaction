@@ -6,13 +6,13 @@
 	<parent>
 		<groupId>org.eclipse.emf.transaction</groupId>
 		<artifactId>org.eclipse.emf.transaction.releng</artifactId>
-		<version>1.10.0-SNAPSHOT</version>
+		<version>1.11.0-SNAPSHOT</version>
 		<relativePath>../org.eclipse.emf.transaction.releng/pom.xml</relativePath>
 	</parent>
 	<packaging>pom</packaging>
 	<artifactId>org.eclipse.emf.transaction.target</artifactId>
 	<groupId>org.eclipse.emf.transaction</groupId>
-	<version>1.10.0-SNAPSHOT</version>
+	<version>1.11.0-SNAPSHOT</version>
 
 	<properties>
 		<build-helper-version>1.3</build-helper-version>
