@@ -190,6 +190,7 @@ public class TransactionChangeRecorder extends ChangeRecorder {
 		case Notification.ADD_MANY:
 		case Notification.REMOVE:
 		case Notification.REMOVE_MANY:
+		case Notification.MOVE:
 			Resource sourceRes = null;
 			Object notifier = notification.getNotifier();
 			
