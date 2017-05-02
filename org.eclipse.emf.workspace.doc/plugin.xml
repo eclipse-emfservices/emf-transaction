@@ -4,7 +4,7 @@
  <!-- ============================= -->
  <!-- Define TOCs                   -->
  <!-- ============================= -->
-
+<!--
    <extension
          point="org.eclipse.help.toc">
       <toc file="topics_Overviews.xml" />
@@ -13,14 +13,16 @@
       <toc file="topics_Reference.xml" />
       <index path="index"/>
    </extension>
-   
+-->   
  <!-- ============================= -->
  <!-- Define Javadoc locations      -->
  <!-- ============================= -->
+<!--
   <extension point="org.eclipse.pde.core.javadoc">
-      <javadoc path="references/javadoc"> <!-- defaults to reference/api -->
+      <javadoc path="references/javadoc">
           <plugin id="org.eclipse.emf.workspace"/>
           <plugin id="org.eclipse.emf.workspace.ui"/>
       </javadoc>
   </extension>
+-->
 </plugin>
