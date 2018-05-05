@@ -1,7 +1,5 @@
 /**
- * <copyright>
- *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2018 IBM Corporation, Christian W. Damus, and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +7,7 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *
- * </copyright>
- *
- * $Id: ReadWriteOperationTest.java,v 1.2 2006/10/10 14:31:40 cdamus Exp $
+ *   Christian W. Damus - bug 149982
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
@@ -361,8 +356,13 @@ public class ReadWriteOperationTest
 			//   waiting, the interrupter thread will try to interrupt it
 			writeThd1.run();
 			
-			assertFalse(writeThd1.isFailed());
-			assertTrue(writeThd1.isExecuted());
+			// if the thread failed, assert that it was  because it was interrupted not
+			// in the timed wait phase but in the beginning of the special job rule
+			if (writeThd1.isFailed()) {
+				assertTrue(writeThd1.failedIn("org.eclipse.core.internal.jobs.JobManager"));
+			} else {
+				assertTrue(writeThd1.isExecuted());
+			}
 		} finally {			
 			interrupter.die();
 			Thread.interrupted();  // don't interfere with the following tests

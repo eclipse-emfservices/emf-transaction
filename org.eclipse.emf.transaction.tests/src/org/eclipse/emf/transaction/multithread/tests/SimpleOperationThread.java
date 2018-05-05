@@ -1,7 +1,5 @@
 /**
- * <copyright>
- *
- * Copyright (c) 2005, 2006 IBM Corporation and others.
+ * Copyright (c) 2005, 2018 IBM Corporation, Christian W. Damus, and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -9,10 +7,7 @@
  *
  * Contributors:
  *   IBM - Initial API and implementation
- *
- * </copyright>
- *
- * $Id: SimpleOperationThread.java,v 1.3 2006/10/10 14:31:40 cdamus Exp $
+ *   Christian W. Damus - bug 149982
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
@@ -25,7 +20,7 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
  * @author mgoyal
  */
 class SimpleOperationThread
-	extends Thread {
+		extends Thread {
 
 	// start time.
 	protected long startTime = -1;
@@ -33,11 +28,14 @@ class SimpleOperationThread
 	// end time
 	protected long endTime = -1;
 
-	// flag to determing if execution succeeded.
+	// flag to determine if execution succeeded.
 	protected boolean isExecuted = false;
 
 	// flag to determine if execution failed.
 	private boolean isFailed = false;
+
+	// the cause of failure, if it was a throwable
+	private Throwable causeOfFailure;
 
 	// Notify Object
 	Object notifyObject = null;
@@ -46,7 +44,7 @@ class SimpleOperationThread
 	Object waitObject = null;
 
 	private final TransactionalEditingDomain domain;
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -96,16 +94,42 @@ class SimpleOperationThread
 	public synchronized boolean isFailed() {
 		return isFailed;
 	}
-	
+
+	/**
+	 * Queries whether the thread failed due to an exception in the given class.
+	 * 
+	 * @param className
+	 *            a class name
+	 * @return {@code true} if execution failed in some method of the named class;
+	 *         {@code false} otherwise
+	 */
+	public synchronized boolean failedIn(String className) {
+		boolean result = false;
+
+		// Check the causes, too (exp. for the case of InterruptedException caused
+		// by an exception in the Lock.uiSafeAcquire() method)
+		out: for (Throwable t = causeOfFailure; t != null; t = t.getCause() == t ? null : t.getCause()) {
+			for (StackTraceElement next : t.getStackTrace()) {
+				if (className.equals(next.getClassName())) {
+					result = true;
+					break out;
+				}
+			}
+		}
+
+		return result;
+	}
+
 	protected synchronized final void setFailed(Throwable t) {
+		causeOfFailure = t;
 		isFailed = true;
 		t.printStackTrace();
 	}
-	
+
 	protected final TransactionalEditingDomain getDomain() {
 		return domain;
 	}
-	
+
 	protected final TransactionalCommandStack getCommandStack() {
 		return (TransactionalCommandStack) domain.getCommandStack();
 	}

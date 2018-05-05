@@ -1,7 +1,5 @@
 /**
- * <copyright>
- *
- * Copyright (c) 2005, 2010 IBM Corporation, Zeligsoft Inc., and others.
+ * Copyright (c) 2005, 2018 IBM Corporation, Zeligsoft Inc., Christian W. Damus, and others.
  * All rights reserved.   This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -10,10 +8,7 @@
  * Contributors:
  *   IBM - Initial API and implementation
  *   Zeligsoft - Bugs 248717, 262175
- *
- * </copyright>
- *
- * $Id: Lock.java,v 1.16 2010/03/31 21:01:56 ahunter Exp $
+ *   Christian W. Damus - bug 149982
  */
 package org.eclipse.emf.transaction.util;
 
@@ -422,6 +417,7 @@ public class Lock implements ITransactionLock {
                 // user canceled.  Interrupt
                 Thread.interrupted();
                 InterruptedException exc = new InterruptedException();
+                exc.initCause(e);
                 Tracing.throwing(Lock.class, "uiSafeAcquire", exc); //$NON-NLS-1$
                 throw exc;
             } catch (IllegalArgumentException e) {
@@ -434,6 +430,7 @@ public class Lock implements ITransactionLock {
                 InterruptedException exc = (e.getLocalizedMessage() != null) ? new InterruptedException(
                     e.getLocalizedMessage())
                     : new InterruptedException();
+                exc.initCause(e);
                 Tracing.throwing(Lock.class, "uiSafeAcquire", exc); //$NON-NLS-1$
                 throw exc;
             } finally {
