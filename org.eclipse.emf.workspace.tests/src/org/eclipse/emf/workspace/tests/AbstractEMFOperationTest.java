@@ -1,20 +1,15 @@
 /**
- * <copyright>
- *
  * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
- * All rights reserved.   This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *   IBM - Initial API and implementation
  *   Zeligsoft - Bugs 218276, 245419, 245393, 250253, 247691 (restore method accessibility)
  *   IBM - Bugs 245393, 247691
- *
- * </copyright>
- *
- * $Id: AbstractEMFOperationTest.java,v 1.13 2008/11/30 16:37:52 cdamus Exp $
  */
 package org.eclipse.emf.workspace.tests;
 

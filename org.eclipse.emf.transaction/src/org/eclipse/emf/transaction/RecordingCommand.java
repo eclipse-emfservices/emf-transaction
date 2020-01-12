@@ -1,19 +1,14 @@
 /**
- * <copyright>
- *
  * Copyright (c) 2005, 2008 IBM Corporation, Zeligsoft Inc. and others.
- * All rights reserved.   This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *   IBM - Initial API and implementation
  *   Zeligsoft - Bugs 218276, 245446
- *   
- * </copyright>
- *
- * $Id: RecordingCommand.java,v 1.10 2009/08/19 09:37:24 bgruschko Exp $
  */
 package org.eclipse.emf.transaction;
 

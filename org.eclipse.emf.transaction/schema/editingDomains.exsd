@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="org.eclipse.emf.transaction">
+<schema targetNamespace="org.eclipse.emf.transaction" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appInfo>
          <meta.schema plugin="org.eclipse.emf.transaction" id="editingDomains" name="EMF Transaction Editing Domains"/>
@@ -12,6 +12,11 @@ multiple applications.
    </annotation>
 
    <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
       <complexType>
          <sequence>
             <element ref="editingDomain" minOccurs="1" maxOccurs="unbounded"/>
@@ -114,14 +119,6 @@ the &lt;code&gt;org.eclipse.emf.transaction.TransactionalEditingDomain.Factory&l
       </documentation>
    </annotation>
 
-   <annotation>
-      <appInfo>
-         <meta.section type="implementation"/>
-      </appInfo>
-      <documentation>
-         
-      </documentation>
-   </annotation>
 
    <annotation>
       <appInfo>
@@ -129,10 +126,12 @@ the &lt;code&gt;org.eclipse.emf.transaction.TransactionalEditingDomain.Factory&l
       </appInfo>
       <documentation>
          Copyright (c) 2005, 2006  IBM Corporation and others.&lt;br&gt;
- All rights reserved. This program and the accompanying materials 
- are made available under the terms of the Eclipse Public License v1.0 
- which accompanies this distribution, and is available at 
- &lt;a href=&quot;http://www.eclipse.org/legal/epl-v10.html&quot;&gt;http://www.eclipse.org/legal/epl-v10.html&lt;/a&gt;
+This program and the accompanying materials are made
+available under the terms of the Eclipse Public License 2.0
+which is available at &lt;a href=&quot;https://www.eclipse.org/legal/epl-2.0/&quot;&gt;https://www.eclipse.org/legal/epl-2.0/&lt;/a&gt;
+
+SPDX-License-Identifier: EPL-2.0
+
       </documentation>
    </annotation>
 

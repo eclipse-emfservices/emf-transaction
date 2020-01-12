@@ -1,20 +1,15 @@
 /**
- * <copyright>
  * Copyright (c) 2008 Innovations Softwaretechnologie GmbH, Zeligsoft Inc., and others.
- * All rights reserved.   This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  * 
  * Contributors:
  *   Innovations Softwaretechnologie - Initial API and implementation
  *   Zeligsoft - Bug 248717 (ensure that a failure does not hang the suite)
- * 
- * </copyright>
- *
- * $Id: JobManagerSuspensionDeadlockTest.java,v 1.1 2008/10/09 00:45:16 cdamus Exp $
  */
-
 package org.eclipse.emf.transaction.tests;
 
 import junit.framework.Test;

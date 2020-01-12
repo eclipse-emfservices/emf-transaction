@@ -1,11 +1,10 @@
 /**
- * <copyright>
- *
  * Copyright (c) 2005, 2011 IBM Corporation, Zeligsoft Inc. and others.
- * All rights reserved.   This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
+ * This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License 2.0
+ * which is available at https://www.eclipse.org/legal/epl-2.0/
+ *
+ * SPDX-License-Identifier: EPL-2.0
  *
  * Contributors:
  *   IBM - Initial API and implementation
@@ -14,10 +13,6 @@
  *   Christian Vogt - Bug 235634
  *   Mariot Chauvin - Bug 351813
  *   Martin Fluegge - Bug 333690
- *
- * </copyright>
- *
- * $Id: WorkspaceSynchronizer.java,v 1.13 2011/08/23 22:08:39 ahunter Exp $
  */
 package org.eclipse.emf.workspace.util;
 
