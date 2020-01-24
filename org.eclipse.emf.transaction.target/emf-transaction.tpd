@@ -36,7 +36,3 @@ location UML2-5.3 "http://download.eclipse.org/modeling/mdt/uml2/updates/5.3" {
 location EMF-Validation-1.11 "http://download.eclipse.org/modeling/emf/validation/updates/releases" {
     org.eclipse.emf.validation.sdk.feature.group [1.11.0.201706061352,1.11.0.201706061352]
 }
-
-location EMF-Query-1.11 "http://download.eclipse.org/modeling/emf/query/updates/releases" {
-    org.eclipse.emf.query.sdk.feature.group [1.10.0.201606071631,1.10.0.201606071631]
-}

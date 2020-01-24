@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?pde?>
 <!-- generated with https://github.com/eclipse-cbi/targetplatform-dsl -->
-<target name="emf-transaction" sequenceNumber="1578841555">
+<target name="emf-transaction" sequenceNumber="1579501236">
   <locations>
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
       <unit id="org.eclipse.license.feature.group" version="2.0.2.v20181016-2210"/>
@@ -39,10 +39,6 @@
     <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
       <unit id="org.eclipse.emf.validation.sdk.feature.group" version="1.11.0.201706061352"/>
       <repository id="EMF-Validation-1.11" location="http://download.eclipse.org/modeling/emf/validation/updates/releases"/>
-    </location>
-    <location includeMode="planner" includeAllPlatforms="false" includeSource="true" includeConfigurePhase="false" type="InstallableUnit">
-      <unit id="org.eclipse.emf.query.sdk.feature.group" version="1.10.0.201606071631"/>
-      <repository id="EMF-Query-1.11" location="http://download.eclipse.org/modeling/emf/query/updates/releases"/>
     </location>
   </locations>
 </target>
