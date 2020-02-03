@@ -11,8 +11,8 @@
   <!-- this is the parent POM from which all modules inherit common settings -->
   <properties>
     <tycho-version>1.6.0</tycho-version>
-    <cbi-plugins.version>1.1.5</cbi-plugins.version>
-    <antrun-version>1.6</antrun-version>
+    <cbi-plugins.version>1.1.7</cbi-plugins.version>
+    <antrun-version>1.8</antrun-version>
     <maven.test.failure.ignore>true</maven.test.failure.ignore>
     <platform>oxygen</platform>
   </properties>
