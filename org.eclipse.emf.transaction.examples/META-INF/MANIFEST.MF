@@ -16,3 +16,4 @@ Export-Package: org.eclipse.emf.transaction.examples.internal;x-internal:=true,
  org.eclipse.emf.transaction.examples.internal.l10n;x-internal:=true,
  org.eclipse.emf.transaction.examples.internal.wizard;x-internal:=true
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Automatic-Module-Name: org.eclipse.emf.transaction.examples

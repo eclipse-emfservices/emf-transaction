@@ -19,3 +19,4 @@ Export-Package: org.eclipse.emf.workspace,
  org.eclipse.emf.workspace.internal.l10n;x-friends:="org.eclipse.emf.workspace.tests",
  org.eclipse.emf.workspace.util
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Automatic-Module-Name: org.eclipse.emf.workspace

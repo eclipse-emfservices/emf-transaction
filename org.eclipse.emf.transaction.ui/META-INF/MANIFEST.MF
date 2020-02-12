@@ -15,3 +15,4 @@ Export-Package: org.eclipse.emf.transaction.ui.internal;x-internal:=true,
  org.eclipse.emf.transaction.ui.provider,
  org.eclipse.emf.transaction.ui.view
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Automatic-Module-Name: org.eclipse.emf.transaction.ui
