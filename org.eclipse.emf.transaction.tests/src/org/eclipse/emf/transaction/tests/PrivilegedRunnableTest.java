@@ -13,7 +13,7 @@ package org.eclipse.emf.transaction.tests;
 
 import java.util.List;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
