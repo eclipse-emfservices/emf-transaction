@@ -18,12 +18,6 @@ location EMF-2.13 "https://download.eclipse.org/modeling/emf/emf/updates/2.13" {
     org.eclipse.emf.ecore.edit.feature.group [2.9.0.v20170609-0928,2.9.0.v20170609-0928]
 }
 
-location Orbit-Oxygen.1a "https://download.eclipse.org/tools/orbit/downloads/drops/R20170919201930/repository" {
-    org.hamcrest [1.1.0.v20090501071000,1.1.0.v20090501071000]
-    org.hamcrest.text.source [1.1.0.v20090501071000,1.1.0.v20090501071000]
-    org.hamcrest.text [1.1.0.v20090501071000,1.1.0.v20090501071000]
-}
-
 location OCL-6.3 "https://download.eclipse.org/modeling/mdt/ocl/updates/releases/6.3.0" {
     org.eclipse.ocl.feature.group [3.7.0.v20170522-1736,3.7.0.v20170522-1736]
 }
