@@ -11,6 +11,9 @@
  */
 package org.eclipse.emf.transaction.tests.fixtures;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.eclipse.emf.common.notify.AdapterFactory;
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.ecore.EObject;
@@ -40,9 +43,9 @@ public class TestValidationEditingDomain extends TransactionalEditingDomainImpl 
 		super(adapterFactory);
 	}
 
-	public static int readWriteValidatorHitCount = 0;
+	public static AtomicInteger readWriteValidatorHitCount = new AtomicInteger(0);
 	
-	public static boolean enableCustomValidator = false;
+	public static AtomicBoolean enableCustomValidator = new AtomicBoolean(false);
 					
 	public static class FactoryImpl extends TransactionalEditingDomainImpl.FactoryImpl {
 
@@ -84,8 +87,8 @@ public class TestValidationEditingDomain extends TransactionalEditingDomainImpl 
 		public class TestReadWriteValidatorImpl extends ReadWriteValidatorImpl {
 			@Override
 			protected IValidator<Notification> createValidator() {
-				if (enableCustomValidator) {
-					readWriteValidatorHitCount++;
+				if (enableCustomValidator.get()) {
+					readWriteValidatorHitCount.incrementAndGet();
 					ILiveValidator validator = ModelValidationService.getInstance().newValidator(
 						EvaluationMode.LIVE);
 					validator.addConstraintFilter(new IConstraintFilter() {

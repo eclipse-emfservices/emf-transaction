@@ -53,14 +53,14 @@ public class EditingDomainValidatorTest extends AbstractTest {
 	 * Tests overriding of validators in editing domain
 	 */
 	public void test_createValidators_177643() {	
-		TestValidationEditingDomain.enableCustomValidator = true;
+		TestValidationEditingDomain.enableCustomValidator.set(true);
 		
 		startWriting();
 		Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 		book.setTitle("New Title"); //$NON-NLS-1$
 		commit();
-		assertEquals(1, TestValidationEditingDomain.readWriteValidatorHitCount);
+		assertEquals(1, TestValidationEditingDomain.readWriteValidatorHitCount.get());
 		
-		TestValidationEditingDomain.enableCustomValidator = false;
+		TestValidationEditingDomain.enableCustomValidator.set(false);
 	}
 }
