@@ -30,7 +30,7 @@ The official builds are run in the Eclipse Foundation's infrastructure, at https
 Update Sites (p2 repositories) are available at:
 * https://download.eclipse.org/modeling/emf/transaction/updates/interim: nightly builds
 * https://download.eclipse.org/modeling/emf/transaction/updates/milestones: milestone builds
-* https://download.eclipse.org/modeling/emf/transaction/updates/milestones: official releases
+* https://download.eclipse.org/modeling/emf/transaction/updates/releases: official releases
 
 ### License
 
