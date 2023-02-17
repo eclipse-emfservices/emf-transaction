@@ -19,5 +19,5 @@ Export-Package: org.eclipse.emf.transaction.multithread.tests,
  org.eclipse.emf.transaction.tests.fixtures,
  org.eclipse.emf.transaction.util.tests
 Bundle-Activator: org.eclipse.emf.transaction.tests.TestsPlugin
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: org.eclipse.emf.transaction.tests

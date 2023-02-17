@@ -15,5 +15,5 @@ Bundle-Activator: org.eclipse.emf.transaction.examples.internal.TransactionExamp
 Export-Package: org.eclipse.emf.transaction.examples.internal;x-internal:=true,
  org.eclipse.emf.transaction.examples.internal.l10n;x-internal:=true,
  org.eclipse.emf.transaction.examples.internal.wizard;x-internal:=true
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: org.eclipse.emf.transaction.examples

@@ -2,6 +2,11 @@
 
 This page describes the noteworthy improvements provided by each release of Eclipse EMF Transaction.
 
+## 1.14.0 (unreleased)
+
+* Remove support for target platforms older than 2020-09
+* Move to Java 11 as minimum version (the version needed by 2020-09)
+
 ## 1.13.0
 
 * Releng improvements

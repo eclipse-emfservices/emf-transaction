@@ -18,5 +18,5 @@ Export-Package: org.eclipse.emf.workspace,
  org.eclipse.emf.workspace.internal;x-friends:="org.eclipse.emf.workspace.tests",
  org.eclipse.emf.workspace.internal.l10n;x-friends:="org.eclipse.emf.workspace.tests",
  org.eclipse.emf.workspace.util
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: org.eclipse.emf.workspace
