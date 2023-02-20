@@ -119,8 +119,8 @@ public class LongRunningReadAction extends Action {
 						CONSOLE,
 						NLS.bind(
 								Messages.readJob_msg,
-								new Integer(id),
-								new Integer(i)));
+								Integer.valueOf(id),
+								Integer.valueOf(i)));
 				for (int j = 0; j < 5; j++) {
 	                try {
 	                    Thread.sleep(100);

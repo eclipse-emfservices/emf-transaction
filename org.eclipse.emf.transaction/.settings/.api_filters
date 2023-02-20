@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.eclipse.emf.transaction" version="2">
+    <resource path="src/org/eclipse/emf/transaction/util/BasicTransactionOptionMetadata.java" type="org.eclipse.emf.transaction.util.BasicTransactionOptionMetadata">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="OptionMetadata"/>
+                <message_argument value="BasicTransactionOptionMetadata"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/eclipse/emf/transaction/util/BasicTransactionOptionMetadataRegistry.java" type="org.eclipse.emf.transaction.util.BasicTransactionOptionMetadataRegistry">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="Registry"/>
+                <message_argument value="BasicTransactionOptionMetadataRegistry"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/eclipse/emf/transaction/util/EmptyLock.java" type="org.eclipse.emf.transaction.util.EmptyLock">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="ITransactionLock"/>
+                <message_argument value="EmptyLock"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/eclipse/emf/transaction/util/Lock.java" type="org.eclipse.emf.transaction.util.Lock">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="ITransactionLock"/>
+                <message_argument value="Lock"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

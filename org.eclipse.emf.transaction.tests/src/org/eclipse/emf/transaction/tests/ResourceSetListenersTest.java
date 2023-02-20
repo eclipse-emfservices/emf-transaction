@@ -209,7 +209,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 			notification = notifications.get(2);
 			assertSame(book, notification.getNotifier());
 			assertSame(EXTLibraryPackage.eINSTANCE.getBook_Pages(), notification.getFeature());
-			assertEquals(new Integer(500), notification.getNewValue());
+			assertEquals(Integer.valueOf(500), notification.getNewValue());
 		} catch (Exception e) {
 			fail(e);
 		}
