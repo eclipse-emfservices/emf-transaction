@@ -32,6 +32,16 @@ Update Sites (p2 repositories) are available at:
 * https://download.eclipse.org/modeling/emf/transaction/updates/milestones: milestone builds
 * https://download.eclipse.org/modeling/emf/transaction/updates/releases: official releases
 
+| Version             | Repository URL                                                                       |
+|:--------------------|:-------------------------------------------------------------------------------------|
+| **1.13.0** (latest) | https://download.eclipse.org/modeling/emf/transaction/updates/releases/R202208110935 |
+| 1.12.0              | https://download.eclipse.org/modeling/emf/transaction/updates/releases/R201805140824 |
+| 1.11.0              | https://download.eclipse.org/modeling/emf/transaction/updates/releases/R201706061339 |
+| 1.10.0              | https://download.eclipse.org/modeling/emf/transaction/updates/releases/R201606071900 |
+| 1.9.0               | https://download.eclipse.org/modeling/emf/transaction/updates/releases/R201506010221 |
+| 1.8.0               | https://download.eclipse.org/modeling/emf/transaction/updates/releases/R201405281451 |
+| 1.7.0               | https://download.eclipse.org/modeling/emf/transaction/updates/releases/R201306111400 |
+
 ### License
 
 [Eclipse Public License 2.0](https://www.eclipse.org/legal/epl-2.0/)
