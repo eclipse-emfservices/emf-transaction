@@ -12,5 +12,5 @@ Bundle-Activator: org.eclipse.emf.workspace.ui.internal.EMFWorkbenchUIPlugin$Imp
 Bundle-Vendor: %Plugin.providerName
 Export-Package: org.eclipse.emf.workspace.ui.actions,
  org.eclipse.emf.workspace.ui.internal;x-internal:=true
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Automatic-Module-Name: org.eclipse.emf.workspace.ui
