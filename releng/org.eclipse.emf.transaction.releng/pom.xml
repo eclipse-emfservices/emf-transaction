@@ -51,6 +51,12 @@
 							<goal>plugin-source</goal>
 						</goals>
 					</execution>
+					<execution>
+						<id>feature-source</id>
+						<goals>
+							<goal>feature-source</goal>
+						</goals>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>
@@ -103,6 +109,28 @@
 					</environments>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-p2-repository-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<configuration>
+					<includeAllSources>true</includeAllSources>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-p2-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<executions>
+					<execution>
+						<id>attach-p2-metadata</id>
+						<phase>package</phase>
+						<goals>
+							<goal>p2-metadata</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -128,25 +156,25 @@
 				</plugins>
 			</build>
 		</profile>
-	    <profile>
-	      <id>about-mappings</id>
-	      <activation>
-	        <file>
-	          <exists>about.mappings</exists>
-	        </file>
-	      </activation>
-	      <build>
-	        <resources>
-	          <resource>
-	            <directory>.</directory>
-	            <filtering>true</filtering>
-	            <includes>
-	              <include>about.mappings</include>
-	            </includes>
-	          </resource>
-	        </resources>
-	      </build>
-      </profile>
+		<profile>
+			<id>about-mappings</id>
+			<activation>
+				<file>
+					<exists>about.mappings</exists>
+				</file>
+			</activation>
+			<build>
+				<resources>
+					<resource>
+						<directory>.</directory>
+						<filtering>true</filtering>
+						<includes>
+							<include>about.mappings</include>
+						</includes>
+					</resource>
+				</resources>
+			</build>
+		</profile>
 	</profiles>
 
 	<pluginRepositories>
@@ -170,15 +198,11 @@
 		<module>../../tests/org.eclipse.emf.transaction.tests</module>
 		<module>../../tests/org.eclipse.emf.workspace.tests</module>
 		<module>../../features/org.eclipse.emf.transaction-feature</module>
-		<module>../../features/org.eclipse.emf.transaction.source-feature</module>
 		<module>../../features/org.eclipse.emf.workspace-feature</module>
-		<module>../../features/org.eclipse.emf.workspace.source-feature</module>
 		<module>../../features/org.eclipse.emf.transaction.examples-feature</module>
-		<module>../../features/org.eclipse.emf.transaction.examples.source-feature</module>
 		<module>../../features/org.eclipse.emf.workspace.doc-feature</module>
 		<module>../../features/org.eclipse.emf.transaction.doc-feature</module>
 		<module>../../features/org.eclipse.emf.workspace.examples-feature</module>
-		<module>../../features/org.eclipse.emf.workspace.examples.source-feature</module>
 		<module>../../features/org.eclipse.emf.transaction.tests-feature</module>
 		<module>../../features/org.eclipse.emf.transaction.sdk-feature</module>
 		<module>../../features/org.eclipse.emf.transaction.master-feature</module>
