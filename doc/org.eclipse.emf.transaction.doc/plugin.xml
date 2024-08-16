@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
 <plugin>
-  <!--
    <extension
          point="org.eclipse.help.toc">
       <toc
@@ -14,11 +13,9 @@
  <!-- ============================= -->
  <!-- Define TOCs                   -->
  <!-- ============================= -->
- <!--
  <extension point="org.eclipse.help.toc">
    <toc file="topics_Reference.xml"/>
  </extension>
--->
  <!-- ============================= -->
  <!-- Define Javadoc locations      -->
  <!-- ============================= -->
@@ -29,5 +26,5 @@
           <plugin id="org.eclipse.emf.transaction.ui"/>
       </javadoc>
   </extension>
- -->
+-->
 </plugin>
