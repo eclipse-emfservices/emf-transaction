@@ -38,6 +38,7 @@ public class AbstractMultithreadTest
 		suite.addTest(ReadOperationTest.suite());
 		suite.addTest(WriteOperationTest.suite());
 		suite.addTest(ReadWriteOperationTest.suite());
+		suite.addTest(EMFTransansactionTest.suite());
 
 		return suite;
 	}
