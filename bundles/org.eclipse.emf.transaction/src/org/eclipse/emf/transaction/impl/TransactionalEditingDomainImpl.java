@@ -98,15 +98,9 @@ public class TransactionalEditingDomainImpl
 		new java.util.ArrayList<ResourceSetListener>();
 	private final List<ResourceSetListener> aggregatePrecommitListeners =
 		new java.util.ArrayList<ResourceSetListener>();
-	private final List<ResourceSetListener> postcommitListeners =
-		new java.util.ArrayList<ResourceSetListener>();
-	
-	// reusable notification list and event for unbatched change events
-	private final List<Notification> unbatchedNotifications =
-		new java.util.ArrayList<Notification>(1);
-	private final ResourceSetChangeEvent unbatchedChangeEvent =
-		new ResourceSetChangeEvent(this, null, unbatchedNotifications);
-	
+	private final List<ResourceSetListener> postcommitListeners = 
+			new java.util.ArrayList<ResourceSetListener>();
+
 	// this is editable by clients for backwards compatibility with 1.1
 	private final Map<Object, Object> undoRedoOptions = new java.util.HashMap<Object, Object>(
 	    TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS);
@@ -114,8 +108,8 @@ public class TransactionalEditingDomainImpl
 	private LifecycleImpl lifecycle;
 	private Transaction.OptionMetadata.Registry optionMetadata;
 	
-	private boolean disposed	=	false;
-	
+	private boolean disposed = false;
+
 	/**
 	 * Initializes me with my adapter factory, command stack, and resource set.
 	 * 
@@ -806,20 +800,24 @@ public class TransactionalEditingDomainImpl
 	// Documentation copied from the inherited specification
 	public void broadcastUnbatched(Notification notification) {
 		final ResourceSetListener[] listeners = getPostcommitListeners();
-		
-		unbatchedNotifications.add(notification);
-		
+
+		final List<Notification> notifications = Collections.singletonList(notification);
+
 		try {
 			runExclusive(new Runnable() {
 				public void run() {
 					for (ResourceSetListener element : listeners) {
 						try {
 							List<Notification> filtered = FilterManager.getInstance().selectUnbatched(
-									unbatchedNotifications,
+									notifications,
 									element.getFilter());
 							
 							if (!filtered.isEmpty()) {
-								element.resourceSetChanged(unbatchedChangeEvent);
+								element.resourceSetChanged(
+										new ResourceSetChangeEvent(
+												TransactionalEditingDomainImpl.this,
+												null,
+												filtered));
 							}
 						} catch (Exception e) {
 							Tracing.catching(TransactionalEditingDomainImpl.class, "broadcastUnbatched", e); //$NON-NLS-1$
@@ -842,9 +840,6 @@ public class TransactionalEditingDomainImpl
 				Messages.postcommitInterrupted,
 				e);
 			EMFTransactionPlugin.INSTANCE.log(status);
-		} finally {
-			// remove the unbatched notification from our reusable cache
-			unbatchedNotifications.remove(0);
 		}
 	}
 	
