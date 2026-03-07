@@ -11,7 +11,7 @@
 
 	<!-- this is the parent POM from which all modules inherit common settings -->
 	<properties>
-		<tycho-version>4.0.13</tycho-version>
+		<tycho-version>5.0.2</tycho-version>
 		<cbi-plugins.version>1.3.2</cbi-plugins.version>
 		<maven.test.failure.ignore>true</maven.test.failure.ignore>
 		<platform>2024-12</platform>
