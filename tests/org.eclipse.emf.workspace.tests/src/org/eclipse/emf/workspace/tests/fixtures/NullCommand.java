@@ -24,12 +24,13 @@ public class NullCommand extends AbstractCommand {
 	protected boolean prepare() {
 		return true;
 	}
-	
+
 	/** Does nothing. */
+	@Override
 	public void execute() {
 		// nothing to do
 	}
-	
+
 	/** Does nothing. */
 	@Override
 	public void undo() {
@@ -37,6 +38,7 @@ public class NullCommand extends AbstractCommand {
 	}
 
 	/** Does nothing. */
+	@Override
 	public void redo() {
 		// nothing to do
 	}

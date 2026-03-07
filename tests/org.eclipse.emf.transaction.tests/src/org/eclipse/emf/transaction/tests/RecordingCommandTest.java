@@ -11,12 +11,12 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertEquals;
 
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.junit.Test;
 
 /**
  * Tests for the recording command.
@@ -25,23 +25,19 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
  *
  */
 public class RecordingCommandTest extends AbstractTest {
-	
-	public static Test suite() {
-		return new TestSuite(RecordingCommandTest.class, "Recording Command Tests"); //$NON-NLS-1$
-	}
-	
+	@Test
 	public void testPrePostDoExecute() {
 		TransactionalEditingDomain domain = createEditingDomain(new ResourceSetImpl());
-		
+
 		_RecordingCommand cmd = new _RecordingCommand(domain);
-		
+
 		domain.getCommandStack().execute(cmd);
-		
+
 		assertEquals(1, cmd.preExecuteCalled);
 		assertEquals(2, cmd.doExecuteCalled);
 		assertEquals(3, cmd.postExecuteCalled);
 	}
-	
+
 	private final class _RecordingCommand extends RecordingCommand {
 		public int preExecuteCalled = 0;
 		public int doExecuteCalled = 0;

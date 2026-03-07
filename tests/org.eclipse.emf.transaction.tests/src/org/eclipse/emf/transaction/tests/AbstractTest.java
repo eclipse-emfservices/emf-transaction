@@ -11,6 +11,10 @@
  */
 package org.eclipse.emf.transaction.tests;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -18,8 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import junit.framework.TestCase;
 
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileInfo;
@@ -51,6 +53,9 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.validation.model.IConstraintStatus;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 import org.osgi.framework.Bundle;
 
 /**
@@ -58,8 +63,7 @@ import org.osgi.framework.Bundle;
  * 
  * @author Christian W. Damus (cdamus)
  */
-public class AbstractTest
-	extends TestCase {
+public class AbstractTest {
 	
 	public static final boolean DEBUGGING = TestsPlugin.instance.isDebugging();
 	
@@ -71,31 +75,23 @@ public class AbstractTest
 	protected Resource testResource;
 	protected Library root;
 	
-	protected static final String PROJECT_NAME = "emftxtests"; //$NON-NLS-1$
-	protected static final String RESOURCE_NAME = "/" + PROJECT_NAME + "/testres.extlibrary";  //$NON-NLS-1$//$NON-NLS-2$
+	protected static final String PROJECT_NAME = "emftxtests"; 
+	protected static final String RESOURCE_NAME = "/" + PROJECT_NAME + "/testres.extlibrary";  
 
 	private final List<InternalTransaction> transactionStack =
 		new java.util.ArrayList<InternalTransaction>();
     
     private List<Runnable> tearDownActions;
 	
-	public AbstractTest() {
-		super();
-	}
-	
-	public AbstractTest(String name) {
-		super(name);
-	}
-	
 	//
 	// Test configuration methods
 	//
 	
-	@Override
-	protected final void setUp()
+	@Before
+	public void setUp()
 		throws Exception {
 		
-		trace("===> Begin : " + getName()); //$NON-NLS-1$
+		trace("===> Begin : " + this.getClass().getName()); 
 		
 		doSetUp();
 	}
@@ -116,14 +112,14 @@ public class AbstractTest
 		try {
 			Resource originalRes = rset.getResource(
 				URI.createURI(EmfTransactionTestsBundle.getEntry(
-					"/test_models/test_model.extlibrary").toString()), //$NON-NLS-1$
+					"/test_models/test_model.extlibrary").toString()), 
 					true);
 			originalRes.setURI(URI.createPlatformResourceURI(RESOURCE_NAME, true));
 			originalRes.save(Collections.EMPTY_MAP);
 			testResource = originalRes;
-			root = (Library) find("root"); //$NON-NLS-1$
+			root = (Library) find("root"); 
 		} catch (IOException e) {
-			fail("Failed to load test model: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Failed to load test model: " + e.getLocalizedMessage()); 
 			
 		}
 		
@@ -155,15 +151,15 @@ public class AbstractTest
         tearDownActions.add(action);
     }
     
-	@Override
-	protected final void tearDown()
+	@After
+	public final void tearDown()
 		throws Exception {
 		
 		try {
 			doTearDown();
 		} finally {
             processTearDownActions();
-            trace("===> End   : " + getName()); //$NON-NLS-1$
+            trace("===> End   : " + this.getClass().getName()); 
 		}
 	}
     
@@ -173,7 +169,7 @@ public class AbstractTest
                 try {
                     action.run();
                 } catch (Exception e) {
-                    System.err.println("Exception in tear-down action:"); //$NON-NLS-1$
+                    System.err.println("Exception in tear-down action:"); 
                     e.printStackTrace();
                 }
             }
@@ -225,7 +221,7 @@ public class AbstractTest
 			info.setAttribute(EFS.ATTRIBUTE_ARCHIVE, false);
 			store.putInfo(info, EFS.SET_ATTRIBUTES, null);
 		} catch (Exception e) {
-			fail("Failed to clean up test file: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Failed to clean up test file: " + e.getLocalizedMessage()); 
 		}
 	}
 	
@@ -245,7 +241,7 @@ public class AbstractTest
 			}
 			file.delete(true, null);
 		} catch (Exception e) {
-			fail("Failed to clean up test file: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Failed to clean up test file: " + e.getLocalizedMessage()); 
 		}
 	}
 	
@@ -269,7 +265,7 @@ public class AbstractTest
 			
 			project.delete(true, true, null);
 	} catch (Exception e) {
-			fail("Failed to clean up test project: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		Assert.fail("Failed to clean up test project: " + e.getLocalizedMessage()); 
 		}
 	}
 
@@ -289,7 +285,7 @@ public class AbstractTest
 		
 		try {
 			InputStream input =
-				EmfTransactionTestsBundle.getEntry("/test_models/" + name).openStream(); //$NON-NLS-1$
+				EmfTransactionTestsBundle.getEntry("/test_models/" + name).openStream(); 
 			
 			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(
 				new Path(PROJECT_NAME + '/' + name));
@@ -299,7 +295,7 @@ public class AbstractTest
 				URI.createPlatformResourceURI(file.getFullPath().toString(), true).toString());
 		} catch (Exception e) {
 			e.printStackTrace();
-			fail("Exception creating test resource: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Exception creating test resource: " + e.getLocalizedMessage()); 
 		}
 		
 		return result;
@@ -322,7 +318,7 @@ public class AbstractTest
 	 */
 	protected void fail(Exception e) {
 		e.printStackTrace();
-		fail("Should not have thrown: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		Assert.fail("Should not have thrown: " + e.getLocalizedMessage()); 
 	}
 	
 	/**
@@ -333,7 +329,7 @@ public class AbstractTest
 	 * @see #find(String)
 	 */
 	protected void assertFound(String name) {
-		assertNotNull("Did not find " + name, find(testResource, name)); //$NON-NLS-1$
+		assertNotNull("Did not find " + name, find(testResource, name)); 
 	}
 	
 	/**
@@ -348,7 +344,7 @@ public class AbstractTest
 	 * @see #find(Object, String)
 	 */
 	protected void assertFound(Object start, String name) {
-		assertNotNull("Did not find " + name, find(testResource, name)); //$NON-NLS-1$
+		assertNotNull("Did not find " + name, find(testResource, name)); 
 	}
 	
 	/**
@@ -359,7 +355,7 @@ public class AbstractTest
 	 * @see #find(String)
 	 */
 	protected void assertNotFound(String name) {
-		assertNull("Found " + name, find(testResource, name)); //$NON-NLS-1$
+		assertNull("Found " + name, find(testResource, name)); 
 	}
 	
 	/**
@@ -374,7 +370,7 @@ public class AbstractTest
 	 * @see #find(Object, String)
 	 */
 	protected void assertNotFound(Object start, String name) {
-		assertNull("Found " + name, find(testResource, name)); //$NON-NLS-1$
+		assertNull("Found " + name, find(testResource, name)); 
 	}
 	
 	/**
@@ -452,7 +448,7 @@ public class AbstractTest
 	 * @return the parts between the slashes
 	 */
 	private String[] tokenize(String qname) {
-		return qname.split("/"); //$NON-NLS-1$
+		return qname.split("/"); 
 	}
 	
 	/**
@@ -496,7 +492,7 @@ public class AbstractTest
 		public String casePerson(Person object) {
 			if (object.getFirstName() == null) {
 				if (object.getLastName() == null) {
-					return ""; //$NON-NLS-1$
+					return ""; 
 				} else {
 					return object.getLastName();
 				}
@@ -514,7 +510,7 @@ public class AbstractTest
 
 		@Override
 		public String defaultCase(EObject object) {
-			return ""; //$NON-NLS-1$
+			return ""; 
 		}
 	}
 	

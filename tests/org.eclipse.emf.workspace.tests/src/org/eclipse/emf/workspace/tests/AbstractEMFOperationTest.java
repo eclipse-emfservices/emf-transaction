@@ -13,12 +13,16 @@
  */
 package org.eclipse.emf.workspace.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IUndoContext;
@@ -58,6 +62,7 @@ import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultNameTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.TestListener;
 import org.eclipse.emf.workspace.tests.fixtures.TestOperation;
 import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
+import org.junit.Assert;
 
 
 /**
@@ -65,17 +70,9 @@ import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
  *
  * @author Christian W. Damus (cdamus)
  */
-@SuppressWarnings("nls")
 public class AbstractEMFOperationTest extends AbstractTest {
-
-	public AbstractEMFOperationTest(String name) {
-		super(name);
-	}
 	
-	public static Test suite() {
-		return new TestSuite(AbstractEMFOperationTest.class, "EMF Operation Tests"); //$NON-NLS-1$
-	}
-	
+	@org.junit.Test
 	public void test_execute_undo_redo() {
         UndoRedoResourceSetListener listener = new UndoRedoResourceSetListener();
         domain.addResourceSetListener(listener);
@@ -84,13 +81,13 @@ public class AbstractEMFOperationTest extends AbstractTest {
         
 		startReading();
 		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book"); 
 		assertNotNull(book);
 		final String oldTitle = book.getTitle();
 		final Writer oldAuthor = book.getAuthor();
 		
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final String newTitle = "New Title"; 
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); 
 		assertNotNull(newAuthor);
 		
 		commit();
@@ -158,8 +155,9 @@ public class AbstractEMFOperationTest extends AbstractTest {
 	 * Tests that trigger commands are executed correctly when executing operations,
 	 * including undo and redo, where those triggers do non-EMF work.
 	 */
+	@org.junit.Test
 	public void test_triggerCommands_nonEMF() {
-		final String[] externalData = new String[] {"..."}; //$NON-NLS-1$
+		final String[] externalData = new String[] {"..."}; 
 		
 		// one trigger sets the external data
 		domain.addResourceSetListener(new TriggerListener() {
@@ -188,7 +186,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 				assertNull(newLibrary[0].getName());
 				assertTrue(newLibrary[0].getBranches().isEmpty());
 				
-				newLibrary[0].setName("New Library"); //$NON-NLS-1$
+				newLibrary[0].setName("New Library"); 
 			}};
 		
 		try {
@@ -200,8 +198,8 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		
 		startReading();
 		
-		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
-		assertEquals("New Library", externalData[0]); //$NON-NLS-1$
+		assertEquals("New Library", newLibrary[0].getName()); 
+		assertEquals("New Library", externalData[0]); 
 		
 		commit();
 
@@ -216,7 +214,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		
 		// verify that the changes were undone
 		assertFalse(root.getBranches().contains(newLibrary[0]));
-		assertEquals("...", externalData[0]); //$NON-NLS-1$
+		assertEquals("...", externalData[0]); 
 		
 		commit();
 		
@@ -231,8 +229,8 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		
 		// verify that the changes were redone
 		assertTrue(root.getBranches().contains(newLibrary[0]));
-		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
-		assertEquals("New Library", externalData[0]); //$NON-NLS-1$
+		assertEquals("New Library", newLibrary[0].getName()); 
+		assertEquals("New Library", externalData[0]); 
 		
 		commit();
 	}
@@ -241,6 +239,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 	 * Tests that trigger commands are executed correctly when executing operations,
 	 * including undo and redo.
 	 */
+	@org.junit.Test
 	public void test_triggerCommands() {
 		// one trigger sets default library names
 		domain.addResourceSetListener(new LibraryDefaultNameTrigger());
@@ -272,9 +271,9 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		
 		startReading();
 		
-		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
+		assertEquals("New Library", newLibrary[0].getName()); 
 		assertEquals(1, newLibrary[0].getBooks().size());
-		assertEquals("New Book", newLibrary[0].getBooks().get(0).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary[0].getBooks().get(0).getTitle()); 
 		
 		commit();
 
@@ -303,9 +302,9 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		
 		// verify that the changes were redone
 		assertTrue(root.getBranches().contains(newLibrary[0]));
-		assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
+		assertEquals("New Library", newLibrary[0].getName()); 
 		assertEquals(1, newLibrary[0].getBooks().size());
-		assertEquals("New Book", newLibrary[0].getBooks().get(0).getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", newLibrary[0].getBooks().get(0).getTitle()); 
 		
 		commit();
 	}
@@ -314,6 +313,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 	 * Tests that a command resulting from a pre-commit (trigger) listener will,
 	 * itself, trigger further changes.
 	 */
+	@org.junit.Test
 	public void test_triggerCommands_cascading() {
 		// add the trigger to create a default book in a new library
 		domain.addResourceSetListener(new LibraryDefaultBookTrigger());
@@ -348,7 +348,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		// the book is created by the first trigger
 		assertEquals(1, newLibrary[0].getBooks().size());
 		Book book = newLibrary[0].getBooks().get(0);
-		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", book.getTitle()); 
 		
 		// the publication date is created by the cascaded trigger
 		assertNotNull(book.getPublicationDate());
@@ -382,7 +382,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		assertTrue(root.getBranches().contains(newLibrary[0]));
 		assertEquals(1, newLibrary[0].getBooks().size());
 		book = newLibrary[0].getBooks().get(0);
-		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", book.getTitle()); 
 		assertNotNull(book.getPublicationDate());
 		
 		commit();
@@ -391,16 +391,17 @@ public class AbstractEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests that validation correctly rolls back changes and fails execution.
 	 */
+	@org.junit.Test
 	public void test_validation() {
 		startReading();
 		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book"); 
 		assertNotNull(book);
 		final String oldTitle = book.getTitle();
 		final Writer oldAuthor = book.getAuthor();
 		
 		final String newTitle = null; // will fail validation
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); 
 		assertNotNull(newAuthor);
 		
 		commit();
@@ -444,14 +445,15 @@ public class AbstractEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests the application of options to the transaction used for executing.
 	 */
+	@org.junit.Test
 	public void test_options_124741() {
 		startReading();
 		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book"); 
 		assertNotNull(book);
 		
 		final String newTitle = null; // would cause validation failure
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); 
 		assertNotNull(newAuthor);
 		
 		commit();
@@ -510,9 +512,10 @@ public class AbstractEMFOperationTest extends AbstractTest {
 	 * of an AbstractEMFOperation, the active transactions are rolled back in
 	 * the correct sequence.
 	 */
+	@org.junit.Test
 	public void test_rollbackNestingTransactionOnException_135673() {
-		CompositeEMFOperation outer = new CompositeEMFOperation(domain, ""); //$NON-NLS-1$
-		AbstractEMFOperation inner = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
+		CompositeEMFOperation outer = new CompositeEMFOperation(domain, ""); 
+		AbstractEMFOperation inner = new AbstractEMFOperation(domain, "") { 
 			@Override
 			public boolean canExecute() {
 				return true;
@@ -525,9 +528,9 @@ public class AbstractEMFOperationTest extends AbstractTest {
 					((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 					((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 				} catch (Exception e) {
-					fail("Failed to start nested transaction: " + e.getLocalizedMessage()); //$NON-NLS-1$
+					Assert.fail("Failed to start nested transaction: " + e.getLocalizedMessage()); 
 				}
-				throw new TestError("intentional error"); //$NON-NLS-1$
+				throw new TestError("intentional error"); 
 			}};
 			
 		outer.add(inner);
@@ -535,21 +538,22 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		try {
 			outer.execute(new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
-			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Unexpected exception: " + e.getLocalizedMessage()); 
 		} catch (TestError error) {
 			// success case -- error was not masked by IllegalStateException
 		} catch (IllegalArgumentException e) {
-			fail("Rolled back out of order: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Rolled back out of order: " + e.getLocalizedMessage()); 
 		}
 	}
 	
+	@org.junit.Test
 	public void test_undoRedoNonEMFOperationWithEMFChanges_155268() {
-		final CompositeEMFOperation comp = new CompositeEMFOperation(domain, ""); //$NON-NLS-1$
+		final CompositeEMFOperation comp = new CompositeEMFOperation(domain, ""); 
 		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book"); 
 		assertNotNull(book);
 		
-		final AbstractEMFOperation emfOperation = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
+		final AbstractEMFOperation emfOperation = new AbstractEMFOperation(domain, "") { 
 			@Override
 			public boolean canExecute() {
 				return true;
@@ -559,7 +563,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
 				throws ExecutionException {
 				
-				book.setTitle("155268"); //$NON-NLS-1$
+				book.setTitle("155268"); 
 				
 				return Status.OK_STATUS;
 			}
@@ -620,7 +624,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 			}
 		};
 		
-		AbstractEMFOperation root = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
+		AbstractEMFOperation root = new AbstractEMFOperation(domain, "") { 
 			@Override
 			public boolean canExecute() {
 				return true;
@@ -641,46 +645,47 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		try {
 			root.execute(new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
-			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Unexpected exception: " + e.getLocalizedMessage()); 
 		} catch (TestError error) {
 			// success case -- error was not masked by IllegalStateException
 		} catch (IllegalArgumentException e) {
-			fail("Rolled back out of order: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Rolled back out of order: " + e.getLocalizedMessage()); 
 		}
 		
-		assertEquals(book.getTitle(),"155268"); //$NON-NLS-1$
+		assertEquals(book.getTitle(),"155268"); 
 		
 		try {
 			root.undo(new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
-			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Unexpected exception: " + e.getLocalizedMessage()); 
 		} catch (TestError error) {
 			// success case -- error was not masked by IllegalStateException
 		} catch (IllegalArgumentException e) {
-			fail("Rolled back out of order: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Rolled back out of order: " + e.getLocalizedMessage()); 
 		}
 		
-		assertFalse("155268".equals(book.getTitle())); //$NON-NLS-1$
+		assertFalse("155268".equals(book.getTitle())); 
 		
 		try {
 			root.redo(new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
-			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Unexpected exception: " + e.getLocalizedMessage()); 
 		} catch (TestError error) {
 			// success case -- error was not masked by IllegalStateException
 		} catch (IllegalArgumentException e) {
-			fail("Rolled back out of order: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Rolled back out of order: " + e.getLocalizedMessage()); 
 		}
 		
-		assertEquals(book.getTitle(),"155268"); //$NON-NLS-1$
+		assertEquals(book.getTitle(),"155268"); 
 	}
     
     /**
      * Tests that execute/undo/redo are contented with <code>null</code> as the
      * progress monitor.
      */
+	@org.junit.Test
     public void test_nullProgressMonitors_bug150033() {
-        IUndoableOperation operation = new AbstractEMFOperation(domain, "Test") { //$NON-NLS-1$
+        IUndoableOperation operation = new AbstractEMFOperation(domain, "Test") { 
         
             @Override
 			protected IStatus doUndo(IProgressMonitor monitor, IAdaptable info)
@@ -711,30 +716,31 @@ public class AbstractEMFOperationTest extends AbstractTest {
        try {
            operation.execute(null, null);
        } catch (Exception e) {
-           fail("Should not have failed to execute with null monitor: " + e.getLocalizedMessage()); //$NON-NLS-1$
+           Assert.fail("Should not have failed to execute with null monitor: " + e.getLocalizedMessage()); 
        }
        
        try {
            operation.undo(null, null);
        } catch (Exception e) {
-           fail("Should not have failed to undo with null monitor: " + e.getLocalizedMessage()); //$NON-NLS-1$
+           Assert.fail("Should not have failed to undo with null monitor: " + e.getLocalizedMessage()); 
        }
            
        try {
            operation.redo(null, null);
        } catch (Exception e) {
-           fail("Should not have failed to redo with null monitor: " + e.getLocalizedMessage()); //$NON-NLS-1$
+           Assert.fail("Should not have failed to redo with null monitor: " + e.getLocalizedMessage()); 
        }
     }
     
     /**
      * Tests that recording-commands used as triggers are not undone twice.
      */
+	@org.junit.Test
     public void test_undoWithRecordingCommandTrigger_218276() {
-    	final Book[] book = new Book[] {(Book) find("root/Root Book")}; //$NON-NLS-1$
+    	final Book[] book = new Book[] {(Book) find("root/Root Book")}; 
     	final int newCopies = 30;
     	
-    	final RecordingCommand trigger = new RecordingCommand(domain, "Test Trigger") { //$NON-NLS-1$
+    	final RecordingCommand trigger = new RecordingCommand(domain, "Test Trigger") { 
 		
 			@Override
 			protected void doExecute() {
@@ -765,7 +771,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		try {
 			domain.addResourceSetListener(listener);
 			
-			final String newTitle = "New Title"; //$NON-NLS-1$
+			final String newTitle = "New Title"; 
 			
 			IUndoableOperation op = new TestOperation(domain) {
 				@Override
@@ -776,15 +782,15 @@ public class AbstractEMFOperationTest extends AbstractTest {
 
 			op.execute(null, null);
 			
-			assertEquals("Wrong number of copies on execute", newCopies, book[0].getCopies()); //$NON-NLS-1$
+			assertEquals("Wrong number of copies on execute", newCopies, book[0].getCopies()); 
 			
 			op.undo(null, null);
 			
-			assertFalse("Wrong number of copies on undo", book[0].getCopies() == newCopies); //$NON-NLS-1$
+			assertFalse("Wrong number of copies on undo", book[0].getCopies() == newCopies); 
 			
 			op.redo(null, null);
 			
-			assertEquals("Wrong number of copies on redo", newCopies, book[0].getCopies()); //$NON-NLS-1$
+			assertEquals("Wrong number of copies on redo", newCopies, book[0].getCopies()); 
 		} catch (ExecutionException e) {
 			fail(e);
 		} finally {
@@ -795,6 +801,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
     /**
      * Tests the API for changing options after construction of the operation.
      */
+	@org.junit.Test
     public void test_setOptions_245419() {
 		startReading();
 		
@@ -847,7 +854,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		assertFalse(oper.canSetOptions());
 		try {
 			oper.setOptions(options);
-			fail("Should not have been able to set options");
+			Assert.fail("Should not have been able to set options");
 		} catch (IllegalStateException e) {
 			// success
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -864,7 +871,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		assertFalse(oper.canSetOptions());
 		try {
 			oper.setOptions(options);
-			fail("Should not have been able to set options");
+			Assert.fail("Should not have been able to set options");
 		} catch (IllegalStateException e) {
 			// success
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -881,7 +888,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		assertFalse(oper.canSetOptions());
 		try {
 			oper.setOptions(options);
-			fail("Should not have been able to set options");
+			Assert.fail("Should not have been able to set options");
 		} catch (IllegalStateException e) {
 			// success
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -892,9 +899,10 @@ public class AbstractEMFOperationTest extends AbstractTest {
 	 * Tests that execution of an AbstractEMFOperation can be made to reuse the
 	 * active transaction.
 	 */
+	@org.junit.Test
 	public void test_executeInActiveTransaction_245393() {
 		IUndoableOperation operation = new AbstractEMFOperation(domain,
-			"Test_executeInActiveTransaction") { //$NON-NLS-1$
+			"Test_executeInActiveTransaction") { 
 
 			@Override
 			protected IStatus doExecute(IProgressMonitor monitor,
@@ -904,7 +912,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 				final Transaction outer = ((InternalTransactionalEditingDomain) getEditingDomain())
 					.getActiveTransaction();
 				AbstractEMFOperation delegate = new AbstractEMFOperation(
-					domain, "Test_executeInActiveTransaction_delegate") { //$NON-NLS-1$
+					domain, "Test_executeInActiveTransaction_delegate") { 
 
 					@Override
 					protected IStatus doExecute(IProgressMonitor monitor,
@@ -930,10 +938,11 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		try {
 			operation.execute(new NullProgressMonitor(), null);
 		} catch (Exception e) {
-			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Unexpected exception: " + e.getLocalizedMessage()); 
 		}
 	}
 	
+	@org.junit.Test
 	public void test_rollbackOnError_250253() {
 		RollbackListener l = new RollbackListener();
 		l.install(domain);
@@ -953,7 +962,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 			
 			l.assertRolledBack();
 		} catch (ExecutionException e) {
-			fail("Shouldn't have an execution exception from a normal error return."
+			Assert.fail("Shouldn't have an execution exception from a normal error return."
 				+ e.getLocalizedMessage());
 		} finally {
 			l.uninstall(domain);
@@ -964,16 +973,17 @@ public class AbstractEMFOperationTest extends AbstractTest {
 	 * Tests that child operations reuse their parent's transaction when the parent 
 	 * has the {@link Transaction#OPTION_VALIDATE_EDIT} option, but the child does not.
 	 */
-    public void test_inheritValidateEditOption_247691() {
+	@org.junit.Test
+   public void test_inheritValidateEditOption_247691() {
 
 		final CompositeEMFOperation outer = new CompositeEMFOperation(domain,
-			"outer", //$NON-NLS-1$
+			"outer", 
 			Collections.singletonMap(Transaction.OPTION_VALIDATE_EDIT,
 				Boolean.TRUE));
 
 		outer.setTransactionNestingEnabled(false);
 
-		AbstractEMFOperation inner = new AbstractEMFOperation(domain, "inner") { //$NON-NLS-1$
+		AbstractEMFOperation inner = new AbstractEMFOperation(domain, "inner") { 
 
 			@Override
 			public boolean canExecute() {
@@ -989,13 +999,13 @@ public class AbstractEMFOperationTest extends AbstractTest {
 				
 				try {
 					getTransactionMethod = AbstractEMFOperation.class
-						.getDeclaredMethod("getTransaction", new Class[0]); //$NON-NLS-1$
+						.getDeclaredMethod("getTransaction", new Class[0]); 
 					getTransactionMethod.setAccessible(true);
 					Object outerTransaction = getTransactionMethod.invoke(
 						outer, new Object[0]);
 					Object innerTransaction = getTransactionMethod.invoke(this,
 						new Object[0]);
-					assertTrue("Should have reused the parent transaction", //$NON-NLS-1$
+					assertTrue("Should have reused the parent transaction", 
 						innerTransaction == null
 							|| innerTransaction == outerTransaction);
 					return Status.OK_STATUS;
@@ -1015,7 +1025,7 @@ public class AbstractEMFOperationTest extends AbstractTest {
 		try {
 			outer.execute(new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
-			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Unexpected exception: " + e.getLocalizedMessage()); 
 		}
 	}
 	

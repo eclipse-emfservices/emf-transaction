@@ -27,34 +27,34 @@ public class ExternalDataOperation extends AbstractOperation {
 	private String[] externalData;
 	private String oldValue;
 	private String newValue;
-	
+
 	public ExternalDataOperation(String[] externalData, String newValue) {
-		super("Change External Data"); //$NON-NLS-1$
-		
+		super("Change External Data");
+
 		this.externalData = externalData;
 		this.newValue = newValue;
 	}
-	
+
 	@Override
 	public IStatus execute(IProgressMonitor monitor, IAdaptable info) {
 		// change the external (non-EMF) data
 		oldValue = externalData[0];
 		externalData[0] = newValue;
-		
+
 		return Status.OK_STATUS;
 	}
-	
+
 	@Override
 	public IStatus undo(IProgressMonitor monitor, IAdaptable info) {
 		externalData[0] = oldValue;
-		
+
 		return Status.OK_STATUS;
 	}
-	
+
 	@Override
 	public IStatus redo(IProgressMonitor monitor, IAdaptable info) {
 		externalData[0] = newValue;
-		
+
 		return Status.OK_STATUS;
 	}
 }

@@ -5,7 +5,7 @@
  * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *   Christian W. Damus - Initial API and implementation
  */
@@ -25,10 +25,9 @@ import org.eclipse.emf.ecore.EcoreFactory;
  * The package is a dynamically created EPackage, is registered with the package
  * registry, and should be {@linkplain #dispose() disposed} at the conclusion of
  * the test.
- * 
+ *
  * @author Christian W. Damus (cdamus)
  */
-@SuppressWarnings("nls")
 public class TestPackageBuilder {
 
 	protected EPackage package_;
@@ -42,7 +41,7 @@ public class TestPackageBuilder {
 
 	/**
 	 * Obtains my package, building it first if necessary.
-	 * 
+	 *
 	 * @return my package
 	 */
 	public EPackage getPackage() {
@@ -52,15 +51,15 @@ public class TestPackageBuilder {
 
 		return package_;
 	}
-	
+
 	public EClass getA() {
 		return (EClass) getPackage().getEClassifier("A");
 	}
-	
+
 	public EClass getB() {
 		return (EClass) getPackage().getEClassifier("B");
 	}
-	
+
 	public EReference getA_b() {
 		return (EReference) getA().getEStructuralFeature("b");
 	}
@@ -73,8 +72,7 @@ public class TestPackageBuilder {
 			EPackage.Registry.INSTANCE.remove(package_.getNsURI());
 
 			// dispose the package
-			for (Iterator<EObject> iter = package_.eAllContents(); iter
-				.hasNext();) {
+			for (Iterator<EObject> iter = package_.eAllContents(); iter.hasNext();) {
 				iter.next().eAdapters().clear();
 			}
 			package_.eAdapters().clear();
@@ -88,12 +86,12 @@ public class TestPackageBuilder {
 		package_.setName("emfwbtestpkg");
 		package_.setNsPrefix("wbtest");
 		package_.setNsURI("http://www.eclipse.org/emf/test/WorkbenchTestPackage");
-		
+
 		EClass a = eClass("A");
 		EClass b = eClass("B");
-		
+
 		crossReference(a, "b", b, true, true);
-		
+
 		// register the package
 		EPackage.Registry.INSTANCE.put(package_.getNsURI(), package_);
 	}
@@ -105,23 +103,19 @@ public class TestPackageBuilder {
 		return result;
 	}
 
-	protected EReference crossReference(EClass owner, String name, EClass type,
-			boolean isMany, boolean unsettable) {
+	protected EReference crossReference(EClass owner, String name, EClass type, boolean isMany, boolean unsettable) {
 
-		return eReference(owner, name, type, 0,
-			ETypedElement.UNBOUNDED_MULTIPLICITY, false, unsettable);
+		return eReference(owner, name, type, 0, ETypedElement.UNBOUNDED_MULTIPLICITY, false, unsettable);
 	}
 
-	protected EReference containment(EClass owner, String name, EClass type,
-			boolean isMany) {
+	protected EReference containment(EClass owner, String name, EClass type, boolean isMany) {
 
-		return eReference(owner, name, type, 0,
-			ETypedElement.UNBOUNDED_MULTIPLICITY, true, false);
+		return eReference(owner, name, type, 0, ETypedElement.UNBOUNDED_MULTIPLICITY, true, false);
 	}
 
-	protected EReference eReference(EClass owner, String name, EClass type,
-			int lower, int upper, boolean containment, boolean unsettable) {
-		
+	protected EReference eReference(EClass owner, String name, EClass type, int lower, int upper, boolean containment,
+			boolean unsettable) {
+
 		EReference result = EcoreFactory.eINSTANCE.createEReference();
 		result.setName(name);
 		owner.getEStructuralFeatures().add(result);

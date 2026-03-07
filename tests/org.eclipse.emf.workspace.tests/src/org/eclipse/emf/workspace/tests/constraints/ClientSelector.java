@@ -19,9 +19,9 @@ import org.eclipse.emf.workspace.tests.AbstractTest;
  *
  * @author Christian W. Damus (cdamus)
  */
-public class ClientSelector
-	implements IClientSelector {
-	
+public class ClientSelector implements IClientSelector {
+
+	@Override
 	public boolean selects(Object object) {
 		return AbstractTest.validationEnabled;
 	}

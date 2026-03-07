@@ -16,33 +16,31 @@ import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
 
 /**
  * A simple abstract command requiring subclasses to implement only the
- * {@link org.eclipse.emf.common.command.Command#execute()} method.
- * Does not implement redo.
+ * {@link org.eclipse.emf.common.command.Command#execute()} method. Does not
+ * implement redo.
  *
  * @author Christian W. Damus (cdamus)
  */
-public abstract class TestCommand
-	extends AbstractCommand {
+public abstract class TestCommand extends AbstractCommand {
 
 	@Override
 	protected boolean prepare() {
 		return true;
 	}
-	
+
 	@Override
 	public void undo() {
 		// do nothing
 	}
-	
+
+	@Override
 	public void redo() {
 		// do nothing
 	}
-	
-	public static abstract class Redoable
-			extends TestCommand
-			implements ConditionalRedoCommand {
-		
-		
+
+	public static abstract class Redoable extends TestCommand implements ConditionalRedoCommand {
+
+		@Override
 		public boolean canRedo() {
 			return true;
 		}

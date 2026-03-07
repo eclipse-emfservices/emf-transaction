@@ -27,60 +27,54 @@ public class NullOperation extends AbstractOperation {
 	private final boolean isExecutable;
 	private final boolean isUndoable;
 	private final boolean isRedoable;
-	
+
 	public NullOperation() {
 		this(true, true, true);
 	}
-	
+
 	public NullOperation(boolean isExecutable) {
 		this(isExecutable, true, true);
 	}
-	
+
 	public NullOperation(boolean isExecutable, boolean isUndoable) {
 		this(isExecutable, isUndoable, true);
 	}
-	
+
 	public NullOperation(boolean isExecutable, boolean isUndoable, boolean isRedoable) {
-		super("Null"); //$NON-NLS-1$
+		super("Null");
 
 		this.isExecutable = isExecutable;
 		this.isUndoable = isUndoable;
 		this.isRedoable = isRedoable;
 	}
-	
+
 	@Override
 	public boolean canExecute() {
 		return isExecutable;
 	}
-	
+
 	@Override
 	public boolean canUndo() {
 		return isUndoable;
 	}
-	
+
 	@Override
 	public boolean canRedo() {
 		return isRedoable;
 	}
-	
-	// Documentation copied from the inherited specification
+
 	@Override
-	public IStatus execute(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		return Status.OK_STATUS;
 	}
 
-	// Documentation copied from the inherited specification
 	@Override
-	public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		return Status.OK_STATUS;
 	}
 
-	// Documentation copied from the inherited specification
 	@Override
-	public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
+	public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		return Status.OK_STATUS;
 	}
 }

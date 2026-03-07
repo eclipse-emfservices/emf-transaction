@@ -25,28 +25,24 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 
 /**
- * Example implementation of a non-EMF composite that might contain nested
- * EMF operations.
+ * Example implementation of a non-EMF composite that might contain nested EMF
+ * operations.
  *
  * @author Christian W. Damus (cdamus)
  */
-public class NonEMFCompositeOperation
-		extends AbstractOperation
-		implements ICompositeOperation {
-	
-	private final List<IUndoableOperation> children = new java.util.ArrayList<IUndoableOperation>();
-	
+public class NonEMFCompositeOperation extends AbstractOperation implements ICompositeOperation {
+
+	private final List<IUndoableOperation> children = new java.util.ArrayList<>();
+
 	public NonEMFCompositeOperation() {
-		super("Non-EMF Composite"); //$NON-NLS-1$
+		super("Non-EMF Composite");
 	}
-	
-	// Documentation copied from the inherited specification
+
 	@Override
-	public IStatus execute(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
-		
+	public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+
 		monitor.beginTask(getLabel(), children.size());
-		
+
 		try {
 			for (IUndoableOperation next : children) {
 				next.execute(new SubProgressMonitor(monitor, 1), info);
@@ -54,17 +50,15 @@ public class NonEMFCompositeOperation
 		} finally {
 			monitor.done();
 		}
-		
+
 		return Status.OK_STATUS;
 	}
 
-	// Documentation copied from the inherited specification
 	@Override
-	public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
-		
+	public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+
 		monitor.beginTask(getLabel(), children.size());
-		
+
 		try {
 			for (IUndoableOperation next : children) {
 				next.redo(new SubProgressMonitor(monitor, 1), info);
@@ -72,33 +66,32 @@ public class NonEMFCompositeOperation
 		} finally {
 			monitor.done();
 		}
-		
+
 		return Status.OK_STATUS;
 	}
 
-	// Documentation copied from the inherited specification
 	@Override
-	public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-			throws ExecutionException {
-		
+	public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+
 		monitor.beginTask(getLabel(), children.size());
-		
+
 		try {
-			for (ListIterator<IUndoableOperation> iter = children.listIterator(children.size());
-					iter.hasPrevious();) {
+			for (ListIterator<IUndoableOperation> iter = children.listIterator(children.size()); iter.hasPrevious();) {
 				iter.previous().undo(new SubProgressMonitor(monitor, 1), info);
 			}
 		} finally {
 			monitor.done();
 		}
-		
+
 		return Status.OK_STATUS;
 	}
 
+	@Override
 	public void add(IUndoableOperation operation) {
 		children.add(operation);
 	}
-	
+
+	@Override
 	public void remove(IUndoableOperation operation) {
 		children.remove(operation);
 	}

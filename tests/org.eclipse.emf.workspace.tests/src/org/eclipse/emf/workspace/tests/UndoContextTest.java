@@ -11,11 +11,11 @@
  */
 package org.eclipse.emf.workspace.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Collections;
 import java.util.Set;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IUndoContext;
@@ -30,6 +30,7 @@ import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.workspace.ResourceUndoContext;
 import org.eclipse.emf.workspace.tests.fixtures.TestOperation;
 import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
+import org.junit.Test;
 
 
 /**
@@ -39,18 +40,11 @@ import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
  */
 public class UndoContextTest extends AbstractTest {
 
-	public UndoContextTest(String name) {
-		super(name);
-	}
-	
-	public static Test suite() {
-		return new TestSuite(UndoContextTest.class, "Undo Context Tests"); //$NON-NLS-1$
-	}
-	
 	/**
 	 * Tests determination of undo context from local changes (in attributes and
 	 * references).
 	 */
+	@Test
 	public void test_localChanges() {
 		startReading();
 		
@@ -89,6 +83,7 @@ public class UndoContextTest extends AbstractTest {
 	 * Tests determination of undo context from remote changes (in attributes and
 	 * references).
 	 */
+	@Test
 	public void test_remoteChanges() {
 		Resource res2 = new ResourceImpl();
 		Library lib2 = EXTLibraryFactory.eINSTANCE.createLibrary();

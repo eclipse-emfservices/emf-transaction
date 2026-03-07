@@ -29,37 +29,32 @@ import org.eclipse.emf.transaction.TriggerListener;
  */
 public class LibraryDefaultBookTrigger extends TriggerListener {
 	private final boolean isAggregate;
-	
+
 	public LibraryDefaultBookTrigger() {
 		this(false);
 	}
-	
+
 	public LibraryDefaultBookTrigger(boolean isAggregate) {
-		super(NotificationFilter.createFeatureFilter(
-					EXTLibraryPackage.eINSTANCE.getLibrary_Branches()).and(
-							NotificationFilter.createEventTypeFilter(
-									Notification.ADD)));
-		
+		super(NotificationFilter.createFeatureFilter(EXTLibraryPackage.eINSTANCE.getLibrary_Branches())
+				.and(NotificationFilter.createEventTypeFilter(Notification.ADD)));
+
 		this.isAggregate = isAggregate;
 	}
-	
+
 	@Override
 	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 		Command result = null;
-		
+
 		Library newLibrary = (Library) notification.getNewValue();
 		if ((newLibrary.getBooks().isEmpty())) {
 			Book newBook = EXTLibraryFactory.eINSTANCE.createBook();
-			newBook.setTitle("New Book"); //$NON-NLS-1$
-			result = new AddCommand(
-					domain,
-					newLibrary.getBooks(),
-					newBook);
+			newBook.setTitle("New Book");
+			result = new AddCommand(domain, newLibrary.getBooks(), newBook);
 		}
-		
+
 		return result;
 	}
-	
+
 	@Override
 	public boolean isAggregatePrecommitListener() {
 		return isAggregate;

@@ -23,30 +23,32 @@ public class ExternalDataCommand extends AbstractCommand {
 	private String[] externalData;
 	private String oldValue;
 	private String newValue;
-	
+
 	public ExternalDataCommand(String[] externalData, String newValue) {
-		super("Change External Data"); //$NON-NLS-1$
-		
+		super("Change External Data");
+
 		this.externalData = externalData;
 		this.newValue = newValue;
 	}
-	
+
 	@Override
 	protected boolean prepare() {
 		return true;
 	}
-	
+
+	@Override
 	public void execute() {
 		// change the external (non-EMF) data
 		oldValue = externalData[0];
 		externalData[0] = newValue;
 	}
-	
+
 	@Override
 	public void undo() {
 		externalData[0] = oldValue;
 	}
-	
+
+	@Override
 	public void redo() {
 		externalData[0] = newValue;
 	}

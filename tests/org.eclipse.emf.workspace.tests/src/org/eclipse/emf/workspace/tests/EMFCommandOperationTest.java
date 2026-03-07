@@ -12,8 +12,11 @@
  */
 package org.eclipse.emf.workspace.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IUndoContext;
@@ -43,6 +46,7 @@ import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultBookTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultNameTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.TestCommand;
 import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
+import org.junit.Test;
 
 
 /**
@@ -52,14 +56,8 @@ import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
  */
 public class EMFCommandOperationTest extends AbstractTest {
 
-	public EMFCommandOperationTest(String name) {
-		super(name);
-	}
 	
-	public static Test suite() {
-		return new TestSuite(EMFCommandOperationTest.class, "EMF Command Operation Tests"); //$NON-NLS-1$
-	}
-	
+	@Test
 	public void test_execute_undo_redo() {
 		startReading();
 		
@@ -138,6 +136,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 	 * Tests that trigger commands are executed correctly when executing operations,
 	 * including undo and redo.
 	 */
+	@Test
 	public void test_triggerCommands() {
 		// one trigger sets default library names
 		domain.addResourceSetListener(new LibraryDefaultNameTrigger());
@@ -208,6 +207,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 	 * Tests that a command resulting from a pre-commit (trigger) listener will,
 	 * itself, trigger further changes.
 	 */
+	@Test
 	public void test_triggerCommands_cascading() {
 		// add the trigger to create a default book in a new library
 		domain.addResourceSetListener(new LibraryDefaultBookTrigger());
@@ -282,6 +282,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 	/**
 	 * Tests that an EMF Command Operation works well with recording commands.
 	 */
+	@Test
 	public void test_RecordingCommand_execute_undo_redo() {
 		startReading();
 		
@@ -357,6 +358,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 	 * Tests that trigger commands on recording commands are correctly undone, by
 	 * the recording command, itself (which records the entire transaction).
 	 */
+	@Test
 	public void test_RecordingCommand_triggerCommands() {
 		// one trigger sets default library names
 		domain.addResourceSetListener(new LibraryDefaultNameTrigger());
@@ -427,6 +429,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 	/**
 	 * Tests that validation correctly rolls back changes and fails execution.
 	 */
+	@Test
 	public void test_validation() {
 		startReading();
 		
@@ -486,6 +489,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 	 * Tests that the the <code>EMFCommandOperation</code> tests its wrapped
 	 * command for redoability.
 	 */
+	@Test
 	public void test_nonredoableCommand_138287() {
 		Command cmd = new TestCommand.Redoable() {
 			public void execute() {
@@ -510,6 +514,7 @@ public class EMFCommandOperationTest extends AbstractTest {
 	 * Tests that the <code>EMFCommandOperation</code> tests its wrapped trigger
 	 * command for redoability.
 	 */
+	@Test
 	public void test_nonredoableTriggerCommand_138287() {
 		// add a trigger command that is not redoable
 		domain.addResourceSetListener(new TriggerListener() {
@@ -546,7 +551,8 @@ public class EMFCommandOperationTest extends AbstractTest {
      * Tests that recording-commands used as triggers are not undone twice when
      * executing a recording-command on the command-stack.
      */
-    public void test_undoRecordingCommandWithRecordingCommandTrigger_218276() {
+   @Test
+   public void test_undoRecordingCommandWithRecordingCommandTrigger_218276() {
     	final Book[] book = new Book[] {(Book) find("root/Root Book")}; //$NON-NLS-1$
     	final int newCopies = 30;
     	
@@ -610,6 +616,7 @@ public class EMFCommandOperationTest extends AbstractTest {
      * when executing recording-commands that are nested in some compound
      * command that is executed on the command-stack.
      */
+	@Test
     public void test_undoNestedRecordingCommandWithRecordingCommandTrigger_218276() {
     	final Book[] book = new Book[] {(Book) find("root/Root Book")}; //$NON-NLS-1$
     	final int newCopies = 30;

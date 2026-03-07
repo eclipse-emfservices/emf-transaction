@@ -31,98 +31,92 @@ import org.eclipse.emf.workspace.IWorkspaceCommandStack;
  * Example implementation of an EMF operation that implements the operation
  * history's notion of an "open composite." This additionally has the property
  * of being self-opening (it opens itself when it is executed).
- * 
+ *
  * @author Christian W. Damus (cdamus)
  */
-public class SelfOpeningEMFCompositeOperation
-    extends AbstractEMFOperation
-    implements ICompositeOperation {
+public class SelfOpeningEMFCompositeOperation extends AbstractEMFOperation implements ICompositeOperation {
 
-    private final List<IUndoableOperation> children = new java.util.ArrayList<IUndoableOperation>();
+	private final List<IUndoableOperation> children = new java.util.ArrayList<>();
 
-    public SelfOpeningEMFCompositeOperation(TransactionalEditingDomain domain) {
-        super(domain, "EMF Composite"); //$NON-NLS-1$
-    }
+	public SelfOpeningEMFCompositeOperation(TransactionalEditingDomain domain) {
+		super(domain, "EMF Composite");
+	}
 
-    @Override
-	protected final IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
-        throws ExecutionException {
+	@Override
+	protected final IStatus doExecute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 
-        IStatus result;
+		IStatus result;
 
-        IOperationHistory history = ((IWorkspaceCommandStack) getEditingDomain()
-            .getCommandStack()).getOperationHistory();
+		IOperationHistory history = ((IWorkspaceCommandStack) getEditingDomain().getCommandStack())
+				.getOperationHistory();
 
-        // open myself
-        history.openOperation(this, IOperationHistory.EXECUTE);
+		// open myself
+		history.openOperation(this, IOperationHistory.EXECUTE);
 
-        try {
-            result = doExecute(history, monitor, info);
+		try {
+			result = doExecute(history, monitor, info);
 
-            history.closeOperation(true, false, IOperationHistory.EXECUTE);
-        } catch (RuntimeException e) {
-            history.closeOperation(false, false, IOperationHistory.EXECUTE);
-            throw e;
-        }
+			history.closeOperation(true, false, IOperationHistory.EXECUTE);
+		} catch (RuntimeException e) {
+			history.closeOperation(false, false, IOperationHistory.EXECUTE);
+			throw e;
+		}
 
-        return result;
-    }
+		return result;
+	}
 
-    /**
-     * Overridden by subclasses to do stuff, usually including nested executions
-     * of operations on the supplied history.
-     * 
-     * @param history
-     *            the history on which I am open and executing
-     * @param monitor
-     *            a progress monitor
-     * @param info
-     *            an info or <code>null</code>
-     * 
-     * @return status of delegated execution
-     * @throws ExecutionException
-     *             if necessary
-     */
-    protected IStatus doExecute(IOperationHistory history,
-            IProgressMonitor monitor, IAdaptable info)
-        throws ExecutionException {
+	/**
+	 * Overridden by subclasses to do stuff, usually including nested executions of
+	 * operations on the supplied history.
+	 *
+	 * @param history the history on which I am open and executing
+	 * @param monitor a progress monitor
+	 * @param info    an info or <code>null</code>
+	 *
+	 * @return status of delegated execution
+	 * @throws ExecutionException if necessary
+	 */
+	protected IStatus doExecute(IOperationHistory history, IProgressMonitor monitor, IAdaptable info)
+			throws ExecutionException {
 
-        return Status.OK_STATUS;
-    }
+		return Status.OK_STATUS;
+	}
 
-    public void add(IUndoableOperation operation) {
-        children.add(operation);
-        updateContexts();
-    }
+	@Override
+	public void add(IUndoableOperation operation) {
+		children.add(operation);
+		updateContexts();
+	}
 
-    public void remove(IUndoableOperation operation) {
-        children.remove(operation);
-        updateContexts();
-    }
+	@Override
+	public void remove(IUndoableOperation operation) {
+		children.remove(operation);
+		updateContexts();
+	}
 
-    /**
-     * Obtains the children that have been added to me by nested executions.
-     * 
-     * @return my children
-     */
-    public List<IUndoableOperation> getChildren() {
-        return children;
-    }
+	/**
+	 * Obtains the children that have been added to me by nested executions.
+	 *
+	 * @return my children
+	 */
+	public List<IUndoableOperation> getChildren() {
+		return children;
+	}
 
-    private void updateContexts() {
-        IUndoContext[] current = getContexts();
-        for (int i = 0; i < current.length; i++) {
-            removeContext(current[i]);
-        }
-        
-        Set<IUndoContext> newContexts = new java.util.HashSet<IUndoContext>();
-        for (IUndoableOperation child : children) {
-            IUndoContext[] next = child.getContexts();
-            for (IUndoContext ctx : next) {
-                if (!newContexts.add(ctx)) {
-                    addContext(ctx);
-                }
-            }
-        }
-    }
+	private void updateContexts() {
+		IUndoContext[] current = getContexts();
+		for (IUndoContext element : current) {
+			removeContext(element);
+		}
+
+		Set<IUndoContext> newContexts = new java.util.HashSet<>();
+		for (IUndoableOperation child : children) {
+			IUndoContext[] next = child.getContexts();
+			for (IUndoContext ctx : next) {
+				if (!newContexts.add(ctx)) {
+					addContext(ctx);
+				}
+			}
+		}
+	}
 }

@@ -12,27 +12,23 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.edit.provider.ReflectiveItemProviderAdapterFactory;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
+import org.junit.Test;
 
 /**
  * Tests that transactions do not dead-lock when the Eclipse Job Manager is
  * suspended.
  */
 @SuppressWarnings("nls")
-public class JobManagerSuspensionDeadlockTest extends TestCase {
+public class JobManagerSuspensionDeadlockTest {
 
-	public static Test suite() {
-		return new TestSuite(JobManagerSuspensionDeadlockTest.class,
-			"JobManager Suspension Dead-lock Tests");
-	}
-
+	@Test
 	public void testDeadlock()
 			throws Exception {
 		

@@ -17,27 +17,25 @@ import org.eclipse.emf.validation.EMFEventType;
 import org.eclipse.emf.validation.IValidationContext;
 
 /**
- * Constraint used for testing transaction validation scenarios.
- * Requires books to have non-<code>null</code>, non-empty titles.
+ * Constraint used for testing transaction validation scenarios. Requires books
+ * to have non-<code>null</code>, non-empty titles.
  *
  * @author Christian W. Damus (cdamus)
  */
-public class BookTitleConstraint
-	extends AbstractModelConstraint {
+public class BookTitleConstraint extends AbstractModelConstraint {
 
 	@Override
 	public IStatus validate(IValidationContext ctx) {
 		EMFEventType eType = ctx.getEventType();
-		
+
 		if (eType != EMFEventType.NULL) {
 			Object newValue = ctx.getFeatureNewValue();
-			
-			if (newValue == null
-				|| ((String)newValue).length() == 0) {
+
+			if (newValue == null || ((String) newValue).isEmpty()) {
 				return ctx.createFailureStatus();
 			}
 		}
-		
+
 		return ctx.createSuccessStatus();
 	}
 }

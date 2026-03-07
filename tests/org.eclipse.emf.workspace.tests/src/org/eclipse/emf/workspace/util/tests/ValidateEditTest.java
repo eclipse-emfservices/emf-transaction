@@ -10,11 +10,12 @@
  *   IBM - Initial API and implementation
  */
 package org.eclipse.emf.workspace.util.tests;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.eclipse.core.resources.ResourceAttributes;
 import org.eclipse.core.runtime.CoreException;
@@ -27,6 +28,8 @@ import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.emf.workspace.tests.AbstractTest;
 import org.eclipse.emf.workspace.tests.fixtures.TestCommand;
 import org.eclipse.emf.workspace.util.WorkspaceValidateEditSupport;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 /**
@@ -48,19 +51,12 @@ public class ValidateEditTest extends AbstractTest {
                 fail(e);
             }
         }};
-	
-	public ValidateEditTest(String name) {
-		super(name);
-	}
-	
-	public static Test suite() {
-		return new TestSuite(ValidateEditTest.class, "Validate-Edit Support Tests"); //$NON-NLS-1$
-	}
 
 	/**
 	 * A control test for a scenario in which validateEdit will find all
 	 * resources to be modifiable.
 	 */
+  	@Test
 	public void test_noValidateEditRequired() {
         try {
             getCommandStack().execute(cmd, null);
@@ -81,7 +77,7 @@ public class ValidateEditTest extends AbstractTest {
         try {
             getCommandStack().execute(cmd, null);
             
-            fail("Should have rolled back"); //$NON-NLS-1$
+            Assert.fail("Should have rolled back"); //$NON-NLS-1$
         } catch (RollbackException e) {
             // success
             System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$

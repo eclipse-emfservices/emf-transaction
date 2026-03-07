@@ -12,14 +12,18 @@
  */
 package org.eclipse.emf.workspace.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.ListIterator;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.AbstractOperation;
@@ -48,6 +52,8 @@ import org.eclipse.emf.workspace.tests.fixtures.NonEMFCompositeOperation;
 import org.eclipse.emf.workspace.tests.fixtures.NullOperation;
 import org.eclipse.emf.workspace.tests.fixtures.TestOperation;
 import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 /**
@@ -58,19 +64,11 @@ import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
 public class CompositeEMFOperationTest extends AbstractTest {
 	private static IStatus ERROR_STATUS =
 		new Status(IStatus.ERROR, "bogus", 1, "no message", null); //$NON-NLS-1$ //$NON-NLS-2$
-	
-	public CompositeEMFOperationTest(String name) {
-		super(name);
-	}
-	
-	public static Test suite() {
-		return new TestSuite(CompositeEMFOperationTest.class, "Composite EMF Operation Tests"); //$NON-NLS-1$
-	}
-	
 	/**
 	 * Tests that the undo contexts of the composite correctly aggregate the
 	 * contexts of the children that it contains.
 	 */
+	@Test
 	public void test_contexts() {
 		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
 		
@@ -131,6 +129,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	 * contexts of the children that it contains, when manipulating the children
 	 * using a list iterator.
 	 */
+	@Test
 	public void test_contexts_listIterator_125151() {
 		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
 		
@@ -197,6 +196,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests the aggregation of canExecute() from child operations.
 	 */
+	@Test
 	public void test_canExecute() {
 		CompositeEMFOperation composite = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
 		CompositeEMFOperation composite2 = new CompositeEMFOperation(domain, "Composite"); //$NON-NLS-1$
@@ -216,6 +216,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests the aggregation of canUndo() from child operations.
 	 */
+	@Test
 	public void test_canUndo() {
 		IUndoContext ctx = new TestUndoContext();
 		
@@ -247,6 +248,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests the aggregation of canRedo() from child operations.
 	 */
+	@Test
 	public void test_canRedo() {
 		IUndoContext ctx = new TestUndoContext();
 		
@@ -284,6 +286,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		assertFalse(history.canRedo(ctx));
 	}
 	
+	@Test
 	public void test_execute_undo_redo() {
 		startReading();
 		
@@ -374,6 +377,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	 * nesting of non-EMF transactions with change descriptions encapsulating
 	 * non-EMF changes.
 	 */
+	@Test
 	public void test_execute_undo_redo_nested() {
 		startReading();
 		
@@ -477,6 +481,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	 * check the correct nesting of non-EMF transactions with change
 	 * descriptions encapsulating non-EMF changes.
 	 */
+	@Test
 	public void test_rollback_nested() {
 		startReading();
 		
@@ -553,6 +558,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	 * Tests that trigger commands are executed correctly when executing composite
 	 * operations, including undo and redo.
 	 */
+	@Test
 	public void test_triggerCommands() {
 		// one trigger sets default library names
 		domain.addResourceSetListener(new LibraryDefaultNameTrigger());
@@ -644,6 +650,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	 * contributed only to the top-level transaction (which otherwise has no
 	 * changes of its own).
 	 */
+	@Test
 	public void test_triggerCommands_aggregate() {
 		// one trigger sets default library names
 		domain.addResourceSetListener(new LibraryDefaultNameTrigger(true));
@@ -720,6 +727,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests that validation correctly rolls back changes and fails execution.
 	 */
+	@Test
 	public void test_validation() {
 		startReading();
 		
@@ -788,6 +796,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests error detection during execution.
 	 */
+	@Test
 	public void test_execute_error_123614() {
 		IUndoContext ctx = new TestUndoContext();
 		
@@ -824,6 +833,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests cancel-status detection during execution.
 	 */
+	@Test
 	public void test_execute_cancel_123614() {
 		IUndoContext ctx = new TestUndoContext();
 		
@@ -860,6 +870,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests monitor-cancel detection during execution.
 	 */
+	@Test
 	public void test_execute_cancelMonitor_123614() {
 		IUndoContext ctx = new TestUndoContext();
 		
@@ -896,6 +907,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests error detection during undo.
 	 */
+	@Test
 	public void test_undo_error_123614() {
 		IUndoContext ctx = new TestUndoContext();
 		
@@ -949,6 +961,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests cancel-status detection during undo.
 	 */
+	@Test
 	public void test_undo_cancel_123614() {
 		IUndoContext ctx = new TestUndoContext();
 		
@@ -1002,6 +1015,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests monitor-cancel detection during undo.
 	 */
+	@Test
 	public void test_undo_cancelMonitor_123614() {
 		IUndoContext ctx = new TestUndoContext();
 		
@@ -1055,6 +1069,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests error detection during redo.
 	 */
+	@Test
 	public void test_redo_error_123614() {
 		IUndoContext ctx = new TestUndoContext();
 		
@@ -1125,6 +1140,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests cancel-status detection during redo.
 	 */
+	@Test
 	public void test_redo_cancel_123614() {
 		IUndoContext ctx = new TestUndoContext();
 		
@@ -1195,6 +1211,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests monitor-cancel detection during redo.
 	 */
+	@Test
 	public void test_redo_cancelMonitor_123614() {
 		IUndoContext ctx = new TestUndoContext();
 		
@@ -1266,6 +1283,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	 * Tests that an pure EMF composite operation can use a single, unnested,
 	 * transaction.
 	 */
+	@Test
 	public void test_noTransactionNesting_pureEMF_135545() {
 		TransactionCapture capture = new TransactionCapture();
 		domain.addResourceSetListener(capture);
@@ -1377,6 +1395,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	 * unnested, transaction as much as possible (some nesting must still occur
 	 * to account for non-EMF changes).
 	 */
+	@Test
 	public void test_noTransactionNesting_mixed_135545() {
 		TransactionCapture capture = new TransactionCapture();
 		domain.addResourceSetListener(capture);
@@ -1501,6 +1520,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 	/**
 	 * Tests that an EMF operation with different options forces nesting.
 	 */
+	@Test
 	public void test_noTransactionNesting_differentOptions_135545() {
 		TransactionCapture capture = new TransactionCapture();
 		domain.addResourceSetListener(capture);
@@ -1619,6 +1639,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		commit();
 	}
 	
+	@Test
 	public void test_errorInNestedAEO_transactionNesting_250253() {
 		AbstractEMFOperationTest.RollbackListener l = new AbstractEMFOperationTest.RollbackListener();
 		l.install(domain);
@@ -1694,6 +1715,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 		}
 	}
 	
+	@Test
 	public void test_errorInNestedAEO_noTransactionNesting_250253() {
 		AbstractEMFOperationTest.RollbackListener l = new AbstractEMFOperationTest.RollbackListener();
 		l.install(domain);
@@ -1790,7 +1812,7 @@ public class CompositeEMFOperationTest extends AbstractTest {
 			changes.setAccessible(true);
 			result = (Collection<ChangeDescription>) changes.get(composite);
 		} catch (Exception e) {
-			fail("Could not access private changes field of CompositeChangeDescription: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Could not access private changes field of CompositeChangeDescription: " + e.getLocalizedMessage()); //$NON-NLS-1$
 		}
 		return result;
 	}

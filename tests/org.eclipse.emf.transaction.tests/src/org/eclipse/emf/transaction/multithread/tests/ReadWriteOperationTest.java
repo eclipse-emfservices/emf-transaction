@@ -12,31 +12,25 @@
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.Test;
 
 /**
  * Testcase for testing read and write operation scheduling scenarios
  * 
  * @author mgoyal
  */
-public class ReadWriteOperationTest
-	extends AbstractMultithreadTest {
-
-	public static Test suite() {
-		return new TestSuite(ReadWriteOperationTest.class, "Concurrent Reader and Writer Thread Tests"); //$NON-NLS-1$
-	}
+public class ReadWriteOperationTest extends AbstractMultithreadTest {
 
 	/**
-	 *  Tests scheduling of complex Read write scenarios.
+	 * Tests scheduling of complex Read write scenarios.
 	 */
-	public void testComplexSimultaneousReadsWrites() {
+	@Test public void testComplexSimultaneousReadsWrites() {
 		Object notifier = new Object();
-		NestedReadInWriteThread readInWriteThread1 = new NestedReadInWriteThread(
-			getDomain(), null, notifier);
-		NestedReadInWriteThread readInWriteThread2 = new NestedReadInWriteThread(
-			getDomain(), null, notifier);
+		NestedReadInWriteThread readInWriteThread1 = new NestedReadInWriteThread(getDomain(), null, notifier);
+		NestedReadInWriteThread readInWriteThread2 = new NestedReadInWriteThread(getDomain(), null, notifier);
 
 		synchronized (notifier) {
 			try {
@@ -62,8 +56,7 @@ public class ReadWriteOperationTest
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!readInWriteThread1.isAlive()
-				&& !readInWriteThread2.isAlive())
+			if (!readInWriteThread1.isAlive() && !readInWriteThread2.isAlive())
 				done = true;
 		}
 
@@ -78,9 +71,9 @@ public class ReadWriteOperationTest
 	}
 
 	/**
-	 * Tests scheduling of simultaneous read and write operation  
+	 * Tests scheduling of simultaneous read and write operation
 	 */
-	public void testSimultaneousReadsWrites() {
+	@Test public void testSimultaneousReadsWrites() {
 		Object notifier = new Object();
 		WriteThread writeThread1 = new WriteThread(getDomain(), null, notifier);
 		WriteThread writeThread2 = new WriteThread(getDomain(), null, notifier);
@@ -130,8 +123,7 @@ public class ReadWriteOperationTest
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!writeThread1.isAlive() && !writeThread2.isAlive()
-				&& !readThread1.isAlive() && !readThread2.isAlive())
+			if (!writeThread1.isAlive() && !writeThread2.isAlive() && !readThread1.isAlive() && !readThread2.isAlive())
 				done = true;
 		}
 
@@ -144,23 +136,23 @@ public class ReadWriteOperationTest
 		assertTrue(writeThread1.isExecuted());
 		assertTrue(writeThread2.isExecuted());
 		assertTrue(Constants.occurredBefore(writeThread2, writeThread1)
-			|| Constants.occurredAfter(writeThread2, writeThread1));
+				|| Constants.occurredAfter(writeThread2, writeThread1));
 		assertTrue(Constants.occurredBefore(writeThread2, readThread2)
-			|| Constants.occurredAfter(writeThread2, readThread2));
+				|| Constants.occurredAfter(writeThread2, readThread2));
 		assertTrue(Constants.occurredBefore(writeThread2, readThread1)
-			|| Constants.occurredAfter(writeThread2, readThread1));
+				|| Constants.occurredAfter(writeThread2, readThread1));
 		assertTrue(Constants.occurredBefore(readThread2, readThread1)
-			|| Constants.occurredAfter(readThread2, readThread1));
+				|| Constants.occurredAfter(readThread2, readThread1));
 		assertTrue(Constants.occurredBefore(readThread2, writeThread1)
-			|| Constants.occurredAfter(readThread2, writeThread1));
+				|| Constants.occurredAfter(readThread2, writeThread1));
 		assertTrue(Constants.occurredBefore(readThread1, writeThread1)
-			|| Constants.occurredAfter(readThread1, writeThread1));
+				|| Constants.occurredAfter(readThread1, writeThread1));
 	}
 
 	/**
-	 *  Tests Scheduling of Nested Read in Write Operation
+	 * Tests Scheduling of Nested Read in Write Operation
 	 */
-	public void testNestedReadInWrite() {
+	@Test public void testNestedReadInWrite() {
 		NestedReadInWriteThread readInWriteThd = new NestedReadInWriteThread(getDomain());
 		readInWriteThd.start();
 
@@ -179,22 +171,18 @@ public class ReadWriteOperationTest
 		assertFalse(readInWriteThd.isFailed());
 		assertTrue(readInWriteThd.isInnerExecuted());
 		assertTrue(readInWriteThd.isExecuted());
-		
+
 		// CWD: Cannot assert that the elapsed time was >= Constants.SLEEP_TIME
-		//    because the J9 VM always sleeps to short when SLEEP_TIME < 500
-		assertTrue((readInWriteThd.getEndTime() - readInWriteThd
-			.getInnerEndTime()) > 0);
+		// because the J9 VM always sleeps to short when SLEEP_TIME < 500
+		assertTrue((readInWriteThd.getEndTime() - readInWriteThd.getInnerEndTime()) > 0);
 	}
 
 	/**
-	 *  Tests scheduling of long running read with write operation.
+	 * Tests scheduling of long running read with write operation.
 	 */
-	public void testLongRunningReadWithWrites() {
+	@Test public void testLongRunningReadWithWrites() {
 		Object notifier = new Object();
-		LongRunningReadThread longReadThread = new LongRunningReadThread(
-			getDomain(),
-			null,
-			notifier);
+		LongRunningReadThread longReadThread = new LongRunningReadThread(getDomain(), null, notifier);
 		ReadThread readThd1 = new ReadThread(getDomain(), null, notifier);
 		ReadThread readThd2 = new ReadThread(getDomain(), null, notifier);
 		WriteThread writeThd1 = new WriteThread(getDomain(), null, notifier);
@@ -252,9 +240,8 @@ public class ReadWriteOperationTest
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!longReadThread.isAlive() && !readThd1.isAlive()
-				&& !readThd2.isAlive() && !readThd3.isAlive()
-				&& !writeThd1.isAlive())
+			if (!longReadThread.isAlive() && !readThd1.isAlive() && !readThd2.isAlive() && !readThd3.isAlive()
+					&& !writeThd1.isAlive())
 				done = true;
 		}
 
@@ -276,45 +263,42 @@ public class ReadWriteOperationTest
 		// running thread.
 		// Verify readThd1 and readThd2 didn't execute simultaneously
 		// Verify writeThd1 and readThd3 didn't execute simulatenously
-		//		System.out.println((readThd1.getStartTime() -
+		// System.out.println((readThd1.getStartTime() -
 		// longReadThread.getStartTime()));
-		//		System.out.println(readThd2.getStartTime() -
+		// System.out.println(readThd2.getStartTime() -
 		// longReadThread.getStartTime());
-		//		System.out.println(longReadThread.getEndTime() -
+		// System.out.println(longReadThread.getEndTime() -
 		// readThd1.getEndTime());
-		//		System.out.println(longReadThread.getEndTime() -
+		// System.out.println(longReadThread.getEndTime() -
 		// readThd2.getEndTime());
-		//		System.out.println(readThd1.getStartTime() -
+		// System.out.println(readThd1.getStartTime() -
 		// readThd2.getStartTime());
-		//		System.out.println(writeThd1.getStartTime() -
+		// System.out.println(writeThd1.getStartTime() -
 		// longReadThread.getEndTime());
-		//		System.out.println(readThd3.getStartTime() -
+		// System.out.println(readThd3.getStartTime() -
 		// longReadThread.getEndTime());
-		//		System.out.println(readThd3.getStartTime() -
+		// System.out.println(readThd3.getStartTime() -
 		// writeThd1.getStartTime());
 		assertTrue(!Constants.occurIntersect(longReadThread, readThd1));
 		assertTrue(!Constants.occurIntersect(longReadThread, readThd2));
-		assertTrue(Constants.occurredAfter(readThd1, readThd2)
-			|| Constants.occurredBefore(readThd1, readThd2));
+		assertTrue(Constants.occurredAfter(readThd1, readThd2) || Constants.occurredBefore(readThd1, readThd2));
 		assertTrue("Read yielded to a write", //$NON-NLS-1$
-			(Constants.occurredBefore(longReadThread, writeThd1) || Constants
-			.occurredAfter(longReadThread, writeThd1))
-			&& !Constants.occurredDuring(longReadThread, writeThd1));
+				(Constants.occurredBefore(longReadThread, writeThd1)
+						|| Constants.occurredAfter(longReadThread, writeThd1))
+						&& !Constants.occurredDuring(longReadThread, writeThd1));
 		assertTrue(!Constants.occurIntersect(longReadThread, readThd3));
 	}
 
 	/**
-	 *  Tests that the lock implementation does not allow interruption of the
-	 *  UI thread during timed waits.
+	 * Tests that the lock implementation does not allow interruption of the UI
+	 * thread during timed waits.
 	 */
+	@Test
 	public void test_interruptionOfUIThread_149982() {
 		Object notifier = new Object();
-		LongRunningReadThread longReadThread = new LongRunningReadThread(
-			getDomain(),
-			null,
-			notifier);
+		LongRunningReadThread longReadThread = new LongRunningReadThread(getDomain(), null, notifier);
 		WriteThread writeThd1 = new WriteThread(getDomain());
-		
+
 		synchronized (notifier) {
 			try {
 				longReadThread.start();
@@ -327,46 +311,48 @@ public class ReadWriteOperationTest
 		final Thread uiThread = Thread.currentThread();
 		class Interrupter implements Runnable {
 			private volatile boolean dead;
-			
+
 			public void run() {
 				while (!dead) {
 					uiThread.interrupt();
-					
+
 					try {
 						Thread.sleep(50L);
 					} catch (InterruptedException e) {
-						// don't care.  Just interrupt the UI again!
+						// don't care. Just interrupt the UI again!
 					}
 				}
 			}
-			
+
 			void die() {
 				dead = true;
-			}};
-			
+			}
+		}
+		;
+
 		Interrupter interrupter = new Interrupter();
 		Thread interrupterThread = new Thread(interrupter);
 		interrupterThread.setDaemon(true);
 		interrupterThread.start();
-		
+
 		try {
 			// for good measure, interrupt the "UI thread" now
 			uiThread.interrupt();
-			
-			// run this one on the UI thread.  It will have to wait, and while it is
-			//   waiting, the interrupter thread will try to interrupt it
+
+			// run this one on the UI thread. It will have to wait, and while it is
+			// waiting, the interrupter thread will try to interrupt it
 			writeThd1.run();
-			
-			// if the thread failed, assert that it was  because it was interrupted not
+
+			// if the thread failed, assert that it was because it was interrupted not
 			// in the timed wait phase but in the beginning of the special job rule
 			if (writeThd1.isFailed()) {
 				assertTrue(writeThd1.failedIn("org.eclipse.core.internal.jobs.JobManager"));
 			} else {
 				assertTrue(writeThd1.isExecuted());
 			}
-		} finally {			
+		} finally {
 			interrupter.die();
-			Thread.interrupted();  // don't interfere with the following tests
+			Thread.interrupted(); // don't interfere with the following tests
 		}
 	}
 }

@@ -11,11 +11,15 @@
  */
 package org.eclipse.emf.transaction.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.lang.ref.WeakReference;
 import java.util.List;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.util.URI;
@@ -23,6 +27,8 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 /**
@@ -31,22 +37,15 @@ import org.eclipse.emf.transaction.tests.fixtures.TestListener;
  * @author Christian W. Damus (cdamus)
  */
 public class EditingDomainRegistryTest extends AbstractTest {
-	private static final String TEST_DOMAIN1 = "org.eclipse.emf.transaction.tests.TestDomain1"; //$NON-NLS-1$
-	private static final String TEST_DOMAIN2 = "org.eclipse.emf.transaction.tests.TestDomain2"; //$NON-NLS-1$
-	private static final String TEST_DOMAIN3 = "org.eclipse.emf.transaction.tests.TestDomain3"; //$NON-NLS-1$
-	private static final String TEST_DOMAIN4 = "org.eclipse.emf.transaction.tests.TestDomain4"; //$NON-NLS-1$
-	
-	public EditingDomainRegistryTest(String name) {
-		super(name);
-	}
-
-	public static Test suite() {
-		return new TestSuite(EditingDomainRegistryTest.class, "Editing Domain Registry Tests"); //$NON-NLS-1$
-	}
+	private static final String TEST_DOMAIN1 = "org.eclipse.emf.transaction.tests.TestDomain1"; 
+	private static final String TEST_DOMAIN2 = "org.eclipse.emf.transaction.tests.TestDomain2"; 
+	private static final String TEST_DOMAIN3 = "org.eclipse.emf.transaction.tests.TestDomain3"; 
+	private static final String TEST_DOMAIN4 = "org.eclipse.emf.transaction.tests.TestDomain4"; 
 
 	/**
 	 * Tests dynamically adding and removing domains in the registry.
 	 */
+	@Test
 	public void test_dynamicAddRemove() {
 		assertNull(domain.getID());
 		
@@ -86,9 +85,9 @@ public class EditingDomainRegistryTest extends AbstractTest {
 		// cannot remove statically registered domains
 		try {
 			TransactionalEditingDomain.Registry.INSTANCE.remove(TEST_DOMAIN1);
-			fail("Should have thrown IllegalArgumentException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalArgumentException"); 
 		} catch (IllegalArgumentException e) {
-			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			trace("Got expected exception: " + e.getLocalizedMessage()); 
 		}
 		
 		// check that it is not recreated by another get call
@@ -101,90 +100,93 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	/**
 	 * Tests the replacement of a domain under an ID with another.
 	 */
+	@Test
 	public void test_replaceDomain() {
 		TransactionalEditingDomain domain1 = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.foo"); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.foo"); 
 		assertNull(domain1);
 		
 		domain1 = new TestEditingDomain.FactoryImpl().createEditingDomain();
 		assertNotNull(domain1);
 		TransactionalEditingDomain.Registry.INSTANCE.add(
-				"org.eclipse.emf.transaction.tests.foo", //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.foo", 
 				domain1);
 		
 		// check that we successfully registered domain1
 		assertSame(
 				domain1,
 				TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-						"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
+						"org.eclipse.emf.transaction.tests.foo")); 
 		
 		// create another domain and register it under the same ID
 		TransactionalEditingDomain domain2 = new TestEditingDomain.FactoryImpl().createEditingDomain();
 		TransactionalEditingDomain.Registry.INSTANCE.add(
-				"org.eclipse.emf.transaction.tests.foo", //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.foo", 
 				domain2);
 		
 		// check that we successfully replaced domain1
 		assertSame(
 				domain2,
 				TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-						"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
+						"org.eclipse.emf.transaction.tests.foo")); 
 		
-		TransactionalEditingDomain.Registry.INSTANCE.remove("org.eclipse.emf.transaction.tests.foo"); //$NON-NLS-1$
+		TransactionalEditingDomain.Registry.INSTANCE.remove("org.eclipse.emf.transaction.tests.foo"); 
 	}
 	
 	/**
 	 * Tests the automatic re-registration of a domain when its ID is changed.
 	 */
+	@Test
 	public void test_changeDomainId() {
 		TransactionalEditingDomain domain1 = new TestEditingDomain.FactoryImpl().createEditingDomain();
 		assertNotNull(domain1);
-		domain1.setID("org.eclipse.emf.transaction.tests.foo"); //$NON-NLS-1$
+		domain1.setID("org.eclipse.emf.transaction.tests.foo"); 
 		
 		// not yet registered
 		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.foo")); 
 		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.bar")); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.bar")); 
 		
 		// register it
 		TransactionalEditingDomain.Registry.INSTANCE.add(
-				"org.eclipse.emf.transaction.tests.foo", //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.foo", 
 				domain1);
 		assertNotNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.foo")); 
 		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.bar")); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.bar")); 
 		
 		// change the ID
-		domain1.setID("org.eclipse.emf.transaction.tests.bar"); //$NON-NLS-1$
+		domain1.setID("org.eclipse.emf.transaction.tests.bar"); 
 		
 		// automatically re-registered
 		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.foo")); 
 		assertNotNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.bar")); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.bar")); 
 		
 		// remove
 		TransactionalEditingDomain.Registry.INSTANCE.remove(domain1.getID());
 		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.foo")); 
 		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.bar")); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.bar")); 
 		
 		// change the ID back
-		domain1.setID("org.eclipse.emf.transaction.tests.foo"); //$NON-NLS-1$
+		domain1.setID("org.eclipse.emf.transaction.tests.foo"); 
 		
 		// didn't re-register itself this time
 		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.bar")); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.bar")); 
 		assertNull(TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.foo")); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.foo")); 
 	}
 	
 	/**
 	 * Tests the attachment and detachment of registered listeners to editing domains.
 	 */
+	@Test
 	public void test_listenerRegistration_singleDomain_multipleListeners() {
 		TransactionalEditingDomain domain3 = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				TEST_DOMAIN3);
@@ -203,7 +205,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 			domain3.runExclusive(new Runnable() {
 				public void run() {
 					finalDomain3.getResourceSet().createResource(
-							URI.createFileURI("/tmp/dummy.extlibrary")); //$NON-NLS-1$
+							URI.createFileURI("/tmp/dummy.extlibrary")); 
 				}});
 		} catch (Exception e) {
 			fail(e);
@@ -244,6 +246,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	/**
 	 * Tests the attachment and detachment of registered listeners to editing domains.
 	 */
+	@Test
 	public void test_listenerRegistration_multiDomains_singleListener() {
 		TransactionalEditingDomain domain3 = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				TEST_DOMAIN3);
@@ -269,7 +272,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 			domain3.runExclusive(new Runnable() {
 				public void run() {
 					finalDomain3.getResourceSet().createResource(
-							URI.createFileURI("/tmp/dummy.extlibrary")); //$NON-NLS-1$
+							URI.createFileURI("/tmp/dummy.extlibrary")); 
 				}});
 		} catch (Exception e) {
 			fail(e);
@@ -292,7 +295,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 			domain4.runExclusive(new Runnable() {
 				public void run() {
 					finalDomain4.getResourceSet().createResource(
-							URI.createFileURI("/tmp/dummy.extlibrary")); //$NON-NLS-1$
+							URI.createFileURI("/tmp/dummy.extlibrary")); 
 				}});
 		} catch (Exception e) {
 			fail(e);
@@ -327,6 +330,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	/**
 	 * Tests the attachment and detachment of registered listeners to editing domains.
 	 */
+	@Test
 	public void test_listenerRegistration_universalListener() {
 		TransactionalEditingDomain domain3 = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
 				TEST_DOMAIN3);
@@ -352,7 +356,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 			domain3.runExclusive(new Runnable() {
 				public void run() {
 					finalDomain3.getResourceSet().createResource(
-							URI.createFileURI("/tmp/dummy.extlibrary")); //$NON-NLS-1$
+							URI.createFileURI("/tmp/dummy.extlibrary")); 
 				}});
 		} catch (Exception e) {
 			fail(e);
@@ -375,7 +379,7 @@ public class EditingDomainRegistryTest extends AbstractTest {
 			domain4.runExclusive(new Runnable() {
 				public void run() {
 					finalDomain4.getResourceSet().createResource(
-							URI.createFileURI("/tmp/dummy.extlibrary")); //$NON-NLS-1$
+							URI.createFileURI("/tmp/dummy.extlibrary")); 
 				}});
 		} catch (Exception e) {
 			fail(e);
@@ -403,10 +407,11 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	 * Tests that we can omit the factory class in the editing domain
 	 * registration to use the default shared factory instance.
 	 */
+	@Test
 	public void test_registerDefaultFactory_136674() {
 		TransactionalEditingDomain defaultDomain =
 			TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(
-				"org.eclipse.emf.transaction.tests.TestDefaultFactoryDomain1"); //$NON-NLS-1$
+				"org.eclipse.emf.transaction.tests.TestDefaultFactoryDomain1"); 
 		assertNotNull(defaultDomain);
 	}
 	
@@ -454,3 +459,4 @@ public class EditingDomainRegistryTest extends AbstractTest {
 	}
 	
 }
+

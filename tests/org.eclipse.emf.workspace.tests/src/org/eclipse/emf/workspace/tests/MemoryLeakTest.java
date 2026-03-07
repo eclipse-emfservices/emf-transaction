@@ -11,11 +11,12 @@
  */
 package org.eclipse.emf.workspace.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Iterator;
 import java.util.List;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IUndoContext;
@@ -45,6 +46,8 @@ import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.workspace.AbstractEMFOperation;
 import org.eclipse.emf.workspace.EMFOperationCommand;
 import org.eclipse.emf.workspace.ResourceUndoContext;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 /**
@@ -54,15 +57,7 @@ import org.eclipse.emf.workspace.ResourceUndoContext;
  */
 public class MemoryLeakTest extends AbstractTest {
 
-	public MemoryLeakTest(String name) {
-		super(name);
-	}
-	
-	public static Test suite() {
-		return new TestSuite(MemoryLeakTest.class, "Memory Leak (GC) Tests"); //$NON-NLS-1$
-	}
-    
-    /**
+	/**
      * <p>
      * Tests that the change descriptions that recorded execution, undo, and
      * redo of the removal of an element that has an ECrossReferenceAdapter
@@ -77,7 +72,8 @@ public class MemoryLeakTest extends AbstractTest {
      * history directly.
      * </p>
      */
-    public void test_crossReferenceAdapter_undoredo_normalCommands() {
+	@Test
+	public void test_crossReferenceAdapter_undoredo_normalCommands() {
         // attach a cross-reference adapter to the resource set
         ECrossReferenceAdapter xrefAdapter = new ECrossReferenceAdapter();
         domain.getResourceSet().eAdapters().add(xrefAdapter);
@@ -141,6 +137,7 @@ public class MemoryLeakTest extends AbstractTest {
      * history directly.
      * </p>
      */
+	@Test
     public void test_crossReferenceAdapter_undoredo_recordingCommands() {
         // attach a cross-reference adapter to the resource set
         ECrossReferenceAdapter xrefAdapter = new ECrossReferenceAdapter();
@@ -197,6 +194,7 @@ public class MemoryLeakTest extends AbstractTest {
      * history directly.
      * </p>
      */
+	@Test
     public void test_crossReferenceAdapter_undoredo_normalTriggerCommands() {
         // attach a cross-reference adapter to the resource set
         ECrossReferenceAdapter xrefAdapter = new ECrossReferenceAdapter();
@@ -277,6 +275,7 @@ public class MemoryLeakTest extends AbstractTest {
      * history directly.
      * </p>
      */
+	@Test
     public void test_crossReferenceAdapter_undoredo_recordingTriggerCommands() {
         // attach a cross-reference adapter to the resource set
         ECrossReferenceAdapter xrefAdapter = new ECrossReferenceAdapter();
@@ -341,6 +340,7 @@ public class MemoryLeakTest extends AbstractTest {
      * flushed.
      * </p>
      */
+	@Test
     public void test_crossReferenceAdapter_undoredo_operations() {
         // attach a cross-reference adapter to the resource set
         ECrossReferenceAdapter xrefAdapter = new ECrossReferenceAdapter();
@@ -369,7 +369,7 @@ public class MemoryLeakTest extends AbstractTest {
         try {
             history.execute(oper, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to execute operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+            Assert.fail("Failed to execute operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         
         // remove the resource undo context so that flush will dispose
@@ -383,12 +383,12 @@ public class MemoryLeakTest extends AbstractTest {
         try {
             history.undo(ctx, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to undo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to undo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         try {
             history.redo(ctx, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to redo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to redo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
@@ -411,6 +411,7 @@ public class MemoryLeakTest extends AbstractTest {
      * change description and its contents.
      * </p>
      */
+	@Test
     public void test_crossReferenceAdapter_undoredo_operationTriggerCommands() {
         // attach a cross-reference adapter to the resource set
         ECrossReferenceAdapter xrefAdapter = new ECrossReferenceAdapter();
@@ -457,7 +458,7 @@ public class MemoryLeakTest extends AbstractTest {
         try {
             history.execute(oper, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to execute operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to execute operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         
         // remove the resource undo context so that flush will dispose
@@ -471,12 +472,12 @@ public class MemoryLeakTest extends AbstractTest {
         try {
             history.undo(ctx, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to undo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to undo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         try {
             history.redo(ctx, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to redo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to redo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         
@@ -499,6 +500,7 @@ public class MemoryLeakTest extends AbstractTest {
      * change description and its contents.
      * </p>
      */
+	@Test
     public void test_crossReferenceAdapter_undoredo_operationTriggerOperations() {
         // attach a cross-reference adapter to the resource set
         ECrossReferenceAdapter xrefAdapter = new ECrossReferenceAdapter();
@@ -550,7 +552,7 @@ public class MemoryLeakTest extends AbstractTest {
         try {
             history.execute(oper, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to execute operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to execute operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         
         // remove the resource undo context so that flush will dispose
@@ -564,12 +566,12 @@ public class MemoryLeakTest extends AbstractTest {
         try {
             history.undo(ctx, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to undo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to undo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         try {
             history.redo(ctx, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to redo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to redo operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         assertTrue(level1.eAdapters().contains(xrefAdapter));
         

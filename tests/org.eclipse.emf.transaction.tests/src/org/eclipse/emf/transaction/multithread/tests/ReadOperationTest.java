@@ -11,24 +11,22 @@
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.Test;
 
 /**
  * Testcase for testing scheduling of Read operation scenarios
+ * 
  * @author mgoyal
  */
-public class ReadOperationTest
-	extends AbstractMultithreadTest {
-
-	public static Test suite() {
-		return new TestSuite(ReadOperationTest.class, "Reader Thread Tests"); //$NON-NLS-1$
-	}
+public class ReadOperationTest extends AbstractMultithreadTest {
 
 	/**
-	 *  Tests scheduling of simple read operation
+	 * Tests scheduling of simple read operation
 	 */
+	@Test
 	public void testReadOperation() {
 		ReadThread readThread1 = new ReadThread(getDomain());
 
@@ -50,8 +48,9 @@ public class ReadOperationTest
 	}
 
 	/**
-	 *  Tests scheduling of simultaneous read operations.
+	 * Tests scheduling of simultaneous read operations.
 	 */
+	@Test
 	public void testSimultaneousRead() {
 		Object notifier = new Object();
 		ReadThread readThread1 = new ReadThread(getDomain(), null, notifier);
@@ -90,12 +89,13 @@ public class ReadOperationTest
 		assertTrue(readThread1.isExecuted());
 		assertTrue(readThread2.isExecuted());
 		assertTrue(Constants.occurredBefore(readThread2, readThread1)
-			|| Constants.occurredAfter(readThread2, readThread1));
+				|| Constants.occurredAfter(readThread2, readThread1));
 	}
 
 	/**
-	 *  Tests scheduling of nested read operations.
+	 * Tests scheduling of nested read operations.
 	 */
+	@Test
 	public void testNestedReads() {
 		NestedReadThread readThread1 = new NestedReadThread(getDomain());
 		readThread1.start();
@@ -114,20 +114,17 @@ public class ReadOperationTest
 		assertFalse(readThread1.isFailed());
 		assertTrue(readThread1.isInnerExecuted());
 		assertTrue(readThread1.isExecuted());
-		assertTrue(Constants.occurredDuring(readThread1.getStartTime(),
-			readThread1.getEndTime(), readThread1.getInnerStartTime(),
-			readThread1.getInnerEndTime()));
+		assertTrue(Constants.occurredDuring(readThread1.getStartTime(), readThread1.getEndTime(),
+				readThread1.getInnerStartTime(), readThread1.getInnerEndTime()));
 	}
 
 	/**
-	 *  Tests scheduling of yielding read with other simultaneous read operations.
+	 * Tests scheduling of yielding read with other simultaneous read operations.
 	 */
+	@Test
 	public void testLongRunningYieldingRead() {
 		Object runNotifier = new Object();
-		LongRunningReadThread longReadThread = new LongRunningReadThread(
-			getDomain(),
-			null,
-			runNotifier);
+		LongRunningReadThread longReadThread = new LongRunningReadThread(getDomain(), null, runNotifier);
 		ReadThread readThd1 = new ReadThread(getDomain(), null, runNotifier);
 		ReadThread readThd2 = new ReadThread(getDomain(), null, runNotifier);
 		ReadThread readThd3 = new ReadThread(getDomain(), null, runNotifier);
@@ -164,7 +161,7 @@ public class ReadOperationTest
 				// nothing
 			}
 		}
-		
+
 		boolean done = false;
 		while (!done) {
 			try {
@@ -172,8 +169,7 @@ public class ReadOperationTest
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!longReadThread.isAlive() && !readThd1.isAlive()
-				&& !readThd2.isAlive() && !readThd3.isAlive())
+			if (!longReadThread.isAlive() && !readThd1.isAlive() && !readThd2.isAlive() && !readThd3.isAlive())
 				done = true;
 		}
 
@@ -199,26 +195,15 @@ public class ReadOperationTest
 	}
 
 	/**
-	 *  Tests cooperative scheduling of multiple yielding readers.
+	 * Tests cooperative scheduling of multiple yielding readers.
 	 */
+	@Test
 	public void testMultipleLongRunningYieldingReads() {
 		Object runNotifier = new Object();
-		LongRunningReadThread longReadThread1 = new LongRunningReadThread(
-			getDomain(),
-			null,
-			runNotifier);
-		LongRunningReadThread longReadThread2 = new LongRunningReadThread(
-			getDomain(),
-			null,
-			runNotifier);
-		LongRunningReadThread longReadThread3 = new LongRunningReadThread(
-			getDomain(),
-			null,
-			runNotifier);
-		LongRunningReadThread longReadThread4 = new LongRunningReadThread(
-			getDomain(),
-			null,
-			runNotifier);
+		LongRunningReadThread longReadThread1 = new LongRunningReadThread(getDomain(), null, runNotifier);
+		LongRunningReadThread longReadThread2 = new LongRunningReadThread(getDomain(), null, runNotifier);
+		LongRunningReadThread longReadThread3 = new LongRunningReadThread(getDomain(), null, runNotifier);
+		LongRunningReadThread longReadThread4 = new LongRunningReadThread(getDomain(), null, runNotifier);
 
 		synchronized (runNotifier) {
 			try {
@@ -246,10 +231,10 @@ public class ReadOperationTest
 		}
 		synchronized (runNotifier) {
 			// run this one directly in the UI thread to test that the UI-safe
-			//   acquiring actually causes the "UI blocked" dialog
+			// acquiring actually causes the "UI blocked" dialog
 			longReadThread4.run();
 		}
-		
+
 		boolean done = false;
 		while (!done) {
 			try {
@@ -257,8 +242,8 @@ public class ReadOperationTest
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!longReadThread1.isAlive() && !longReadThread2.isAlive()
-				&& !longReadThread3.isAlive() && !longReadThread4.isAlive())
+			if (!longReadThread1.isAlive() && !longReadThread2.isAlive() && !longReadThread3.isAlive()
+					&& !longReadThread4.isAlive())
 				done = true;
 		}
 
@@ -270,9 +255,9 @@ public class ReadOperationTest
 		assertTrue(longReadThread2.isExecuted());
 		assertTrue(longReadThread3.isExecuted());
 		assertTrue(longReadThread4.isExecuted());
-		
+
 		// at least two of the threads should have yielded to other readers,
-		//   which is indicated by having yielded for at least a sleep time
+		// which is indicated by having yielded for at least a sleep time
 		int yielded = 0;
 		if (longReadThread1.timeYielded >= Constants.SLEEP_TIME) {
 			yielded++;
