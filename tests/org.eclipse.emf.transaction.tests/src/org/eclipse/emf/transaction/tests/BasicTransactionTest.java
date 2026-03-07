@@ -12,12 +12,15 @@
  */
 package org.eclipse.emf.transaction.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.emf.common.command.Command;
@@ -43,23 +46,17 @@ import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionStatusCodes;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
-
+import org.junit.Assert;
+import org.junit.Test;
 
 
 public class BasicTransactionTest extends AbstractTest {
-
-	public BasicTransactionTest(String name) {
-		super(name);
-	}
-	
-	public static Test suite() {
-		return new TestSuite(BasicTransactionTest.class, "Basic Transaction Tests"); //$NON-NLS-1$
-	}
 
 	/**
 	 * Tests that read transactions are not actually enforced for EList initialization,
 	 * etc.
 	 */
+	@Test
 	public void test_read() {
 		try {
 			// should be able to read with running exclusive, as we cannot
@@ -73,6 +70,7 @@ public class BasicTransactionTest extends AbstractTest {
 	/**
 	 * Tests that we can read in a read-only transaction.
 	 */
+	@Test
 	public void test_read_readOnlyTransaction() {
 		// should be able to read in a read-only transaction
 		startReading();
@@ -85,6 +83,7 @@ public class BasicTransactionTest extends AbstractTest {
 	/**
 	 * Tests that we can read in a read-write transaction.
 	 */
+	@Test
 	public void test_read_readWriteTransaction() {
 		// should be able to read in a read/write transaction
 		startWriting();
@@ -97,6 +96,7 @@ public class BasicTransactionTest extends AbstractTest {
 	/**
 	 * Tests that we can read in a <code>runExclusive()</code> runnable.
 	 */
+	@Test
 	public void test_read_exclusive() {
 		try {
 			// should be able to read exclusively
@@ -109,7 +109,7 @@ public class BasicTransactionTest extends AbstractTest {
 			
 			assertNotNull(book[0]);
 		} catch (InterruptedException e) {
-			fail("Should not be interrupted"); //$NON-NLS-1$
+			Assert.fail("Should not be interrupted"); //$NON-NLS-1$
 		} catch (Exception e) {
 			fail(e);
 		}
@@ -119,6 +119,7 @@ public class BasicTransactionTest extends AbstractTest {
 	 * Tests that nested <code>runExclusive()</code> runnables do not open
 	 * (superfluous) nested transactions.
 	 */
+	@Test
 	public void test_read_exclusive_nested() {
 		try {
 			domain.runExclusive(new Runnable() {
@@ -140,19 +141,19 @@ public class BasicTransactionTest extends AbstractTest {
 											assertNull(active.getParent());
 										}});
 								} catch (InterruptedException e) {
-									fail("Should not be interrupted"); //$NON-NLS-1$
+									Assert.fail("Should not be interrupted"); //$NON-NLS-1$
 								} catch (Exception e) {
 									fail(e);
 								}
 							}});
 					} catch (InterruptedException e) {
-						fail("Should not be interrupted"); //$NON-NLS-1$
+						Assert.fail("Should not be interrupted"); //$NON-NLS-1$
 					} catch (Exception e) {
 						fail(e);
 					}
 				}});
 		} catch (InterruptedException e) {
-			fail("Should not be interrupted"); //$NON-NLS-1$
+			Assert.fail("Should not be interrupted"); //$NON-NLS-1$
 		} catch (Exception e) {
 			fail(e);
 		}
@@ -161,6 +162,7 @@ public class BasicTransactionTest extends AbstractTest {
 	/**
 	 * Tests that we cannot write without a write transaction.
 	 */
+	@Test
 	public void test_write() {
 		startReading();
 		
@@ -173,7 +175,7 @@ public class BasicTransactionTest extends AbstractTest {
 			book.setTitle("New Title"); //$NON-NLS-1$
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -185,6 +187,7 @@ public class BasicTransactionTest extends AbstractTest {
 	/**
 	 * Tests that we cannot write in a read-only transaction.
 	 */
+	@Test
 	public void test_write_readOnlytransaction() {
 		try {
 			startReading();
@@ -195,7 +198,7 @@ public class BasicTransactionTest extends AbstractTest {
 			book.setTitle("New Title"); //$NON-NLS-1$
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -209,6 +212,7 @@ public class BasicTransactionTest extends AbstractTest {
 	/**
 	 * Tests that we can write in a read-write transaction.
 	 */
+	@Test
 	public void test_write_readWritetransaction() {
 		try {
 			startWriting();
@@ -235,6 +239,7 @@ public class BasicTransactionTest extends AbstractTest {
 	 * currently has a write transaction open.  Also tests that the thread that
 	 * had the valid write transaction is aborted.
 	 */
+	@Test
 	public void test_write_wrongThread() {
 		final Object monitor = new Object();
 		
@@ -256,7 +261,7 @@ public class BasicTransactionTest extends AbstractTest {
 						// attempt commit.  Should roll back because of abort
 						try {
 							xa.commit();
-							fail("Should have thrown RollbackException"); //$NON-NLS-1$
+							Assert.fail("Should have thrown RollbackException"); //$NON-NLS-1$
 						} catch (RollbackException e) {
 							// success
 							trace("Got expected rollback: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -287,7 +292,7 @@ public class BasicTransactionTest extends AbstractTest {
 			book.setTitle("New Title"); //$NON-NLS-1$
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -304,6 +309,7 @@ public class BasicTransactionTest extends AbstractTest {
 	/**
 	 * Tests that we can use the command stack to execute a writing command.
 	 */
+	@Test
 	public void test_write_command() {
 		startReading();
 		
@@ -335,6 +341,7 @@ public class BasicTransactionTest extends AbstractTest {
 	 * Tests that we can load and unload resources (having contents) without a write
 	 * transaction.
 	 */
+	@Test
 	public void test_loadUnloadDuringRead() throws Exception {
 		// create a new domain that hasn't yet loaded the test resource
 		doTearDown();
@@ -423,6 +430,7 @@ public class BasicTransactionTest extends AbstractTest {
 	 * Tests that changes to the contents of a loaded resource may not be performed
 	 * in a read transaction.
 	 */
+	@Test
 	public void test_resourceContentsChanges_read() {
 		try {
 			startReading();
@@ -430,7 +438,7 @@ public class BasicTransactionTest extends AbstractTest {
 			testResource.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -445,6 +453,7 @@ public class BasicTransactionTest extends AbstractTest {
 	 * Tests that changes to the contents of a loaded resource may be performed
 	 * in a write transaction.
 	 */
+	@Test
 	public void test_resourceContentsChanges_write() {
 		try {
 			startWriting();
@@ -460,6 +469,7 @@ public class BasicTransactionTest extends AbstractTest {
 	/**
 	 * Tests that we cannot add a root to a newly created resource in a read transaction.
 	 */
+	@Test
 	public void test_newResourceContentsChanges_read() {
 		try {
 			startReading();
@@ -471,7 +481,7 @@ public class BasicTransactionTest extends AbstractTest {
 			res.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -485,6 +495,7 @@ public class BasicTransactionTest extends AbstractTest {
 	/**
 	 * Tests that we can add a root to a newly created resource in a write transaction.
 	 */
+	@Test
 	public void test_newResourceContentsChanges_write() {
 		try {
 			startWriting();
@@ -505,6 +516,7 @@ public class BasicTransactionTest extends AbstractTest {
 	 * Tests that a RunnableWithResult has its status set correctly when it is
 	 * rolled back due to concurrent write.
 	 */
+	@Test
 	public void test_concurrentWrite_runnable() {
 		final Object monitor = new Object();
 		
@@ -550,6 +562,7 @@ public class BasicTransactionTest extends AbstractTest {
 	/**
 	 * Tests that we cannot close a transaction that is already closed.
 	 */
+	@Test
 	public void test_closedTransaction_close() {
 		// should be able to read in a read-only transaction
 		startReading();
@@ -560,7 +573,7 @@ public class BasicTransactionTest extends AbstractTest {
 			tx.commit();
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -572,13 +585,14 @@ public class BasicTransactionTest extends AbstractTest {
 			tx.rollback();
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
 		}
 	}
 	
+	@Test
 	public void test_readWrongThread_250498() {
 		final Object monitor = new Object();
 		final List<Notification> readNotifications = new java.util.ArrayList<Notification>();
@@ -657,7 +671,7 @@ public class BasicTransactionTest extends AbstractTest {
 						try {
 							xa.commit();
 						} catch (RollbackException e) {
-							fail("Should not have rolled back: " + e.getLocalizedMessage()); //$NON-NLS-1$
+							Assert.fail("Should not have rolled back: " + e.getLocalizedMessage()); //$NON-NLS-1$
 						} finally {
 							xa = null;
 						}

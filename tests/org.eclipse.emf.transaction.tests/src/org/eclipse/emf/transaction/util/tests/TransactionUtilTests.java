@@ -11,8 +11,8 @@
  */
 package org.eclipse.emf.transaction.util.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
@@ -22,6 +22,7 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.tests.AbstractTest;
 import org.eclipse.emf.transaction.util.TransactionUtil;
+import org.junit.Test;
 
 /**
  * Tests the {@link TransactionUtil} class.
@@ -29,58 +30,55 @@ import org.eclipse.emf.transaction.util.TransactionUtil;
  * @author Christian W. Damus (cdamus)
  */
 public class TransactionUtilTests extends AbstractTest {
-	public TransactionUtilTests(String name) {
-		super(name);
-	}
 
-	public static Test suite() {
-		return new TestSuite(TransactionUtilTests.class, "TransactionUtil Tests"); //$NON-NLS-1$
-	}
-	
 	/**
 	 * Tests the <code>getEditingDomain(EObject)</code> method.
 	 */
+	@Test
 	public void test_getEditingDomain_EObject() {
 		assertSame(domain, TransactionUtil.getEditingDomain(root));
-		assertNull(TransactionUtil.getEditingDomain(
-				EXTLibraryFactory.eINSTANCE.createLibrary()));
+		assertNull(TransactionUtil.getEditingDomain(EXTLibraryFactory.eINSTANCE.createLibrary()));
 	}
-	
+
 	/**
 	 * Tests the <code>getEditingDomain(Resource)</code> method.
 	 */
+	@Test
 	public void test_getEditingDomain_Resource() {
 		assertSame(domain, TransactionUtil.getEditingDomain(testResource));
 		assertNull(TransactionUtil.getEditingDomain(new ResourceImpl()));
 	}
-	
+
 	/**
 	 * Tests the <code>getEditingDomain(ResourceSet)</code> method.
 	 */
+	@Test
 	public void test_getEditingDomain_ResourceSet() {
 		assertSame(domain, TransactionUtil.getEditingDomain(testResource.getResourceSet()));
 		assertNull(TransactionUtil.getEditingDomain(new ResourceSetImpl()));
 	}
-	
+
 	/**
 	 * Tests the <code>getEditingDomain(Object)</code> method.
 	 */
+	@Test
 	public void test_getEditingDomain_Object() {
 		assertSame(domain, TransactionUtil.getEditingDomain((Object) root));
 		assertSame(domain, TransactionUtil.getEditingDomain((Object) testResource));
 		assertSame(domain, TransactionUtil.getEditingDomain((Object) testResource.getResourceSet()));
-		
+
 		startReading();
 		Transaction tx = commit();
 		assertSame(domain, TransactionUtil.getEditingDomain(tx));
-		
+
 		assertSame(domain, TransactionUtil.getEditingDomain(domain));
-		
+
 		IEditingDomainProvider edp = new IEditingDomainProvider() {
 			public EditingDomain getEditingDomain() {
 				return domain;
-			}};
-			
+			}
+		};
+
 		assertSame(domain, TransactionUtil.getEditingDomain(edp));
 	}
 }

@@ -12,12 +12,10 @@
  */
 package org.eclipse.emf.transaction.tests;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.util.Collections;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import org.eclipse.emf.common.command.BasicCommandStack;
 import org.eclipse.emf.common.command.Command;
@@ -45,13 +43,16 @@ import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * A test case for https://bugs.eclipse.org/bugs/show_bug.cgi?id=460206
  * 
  * @author <a href="mailto:esteban.dugueperoux@obeo.fr">Esteban Dugueperoux</a>
  */
-public class ChangeDescriptionTest extends TestCase {
+public class ChangeDescriptionTest {
 
 	private File tempFile;
 
@@ -61,13 +62,8 @@ public class ChangeDescriptionTest extends TestCase {
 
 	private EPackage rootEPackage1;
 
-	public static Test suite() {
-		return new TestSuite(ChangeDescriptionTest.class, "Change Description Tests"); //$NON-NLS-1$
-	}
-
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
+	@Before
+	public void setUp() throws Exception {
 		resourceSet = new ResourceSetImpl();
 		Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put("ecore", new EcoreResourceFactoryImpl());
 		tempFile = File.createTempFile("test", ".ecore");
@@ -77,10 +73,21 @@ public class ChangeDescriptionTest extends TestCase {
 		resource.getContents().add(rootEPackage1);
 	}
 
+	@After
+	public void tearDown() {
+		rootEPackage1 = null;
+		resource = null;
+		resourceSet = null;
+		tempFile.delete();
+		tempFile = null;
+	}
+
+	@Test
 	public void testChangeDescriptionInNonEMFTEditingDomain1() {
 		testChangeDescriptionInNonEMFTEditingDomain(rootEPackage1);
 	}
 
+	@Test
 	public void testChangeDescriptionInNonEMFTEditingDomain2() {
 		EPackage rootEPackage2 = EcoreFactory.eINSTANCE.createEPackage();
 		resource.getContents().add(rootEPackage2);
@@ -88,7 +95,8 @@ public class ChangeDescriptionTest extends TestCase {
 	}
 
 	private void testChangeDescriptionInNonEMFTEditingDomain(EPackage targetOfSecondEClass) {
-		ComposedAdapterFactory.Descriptor.Registry registry = EMFEditPlugin.getComposedAdapterFactoryDescriptorRegistry();
+		ComposedAdapterFactory.Descriptor.Registry registry = EMFEditPlugin
+				.getComposedAdapterFactoryDescriptorRegistry();
 		AdapterFactory adapterFactory = new ComposedAdapterFactory(registry);
 		BasicCommandStack commandStack = new BasicCommandStack();
 		EditingDomain domain = new AdapterFactoryEditingDomain(adapterFactory, commandStack, resourceSet);
@@ -99,7 +107,8 @@ public class ChangeDescriptionTest extends TestCase {
 		changeRecorder.beginRecording(changeDescription, Collections.singleton(resourceSet));
 		EClass eClass = EcoreFactory.eINSTANCE.createEClass();
 		Command addCmd = AddCommand.create(domain, rootEPackage1, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, eClass);
-		addCmd = addCmd.chain(AddCommand.create(domain, targetOfSecondEClass, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, EcoreFactory.eINSTANCE.createEClass()));
+		addCmd = addCmd.chain(AddCommand.create(domain, targetOfSecondEClass,
+				EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, EcoreFactory.eINSTANCE.createEClass()));
 		domain.getCommandStack().execute(addCmd);
 
 		changeRecorder.endRecording();
@@ -110,10 +119,12 @@ public class ChangeDescriptionTest extends TestCase {
 		changeRecorder.dispose();
 	}
 
+	@Test
 	public void testChangeDescriptionInEMFTEditingDomain1() {
 		testChangeDescriptionInEMFTEditingDomain(rootEPackage1);
 	}
 
+	@Test
 	public void testChangeDescriptionInEMFTEditingDomain2() {
 		EPackage rootEPackage2 = EcoreFactory.eINSTANCE.createEPackage();
 		resource.getContents().add(rootEPackage2);
@@ -121,7 +132,8 @@ public class ChangeDescriptionTest extends TestCase {
 	}
 
 	private void testChangeDescriptionInEMFTEditingDomain(EPackage targetOfPrecommit) {
-		TransactionalEditingDomain domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain(resourceSet);
+		TransactionalEditingDomain domain = TransactionalEditingDomain.Factory.INSTANCE
+				.createEditingDomain(resourceSet);
 
 		ChangeRecorder changeRecorder = new ChangeRecorder(resourceSet);
 
@@ -161,11 +173,12 @@ public class ChangeDescriptionTest extends TestCase {
 
 		@Override
 		public Command transactionAboutToCommit(ResourceSetChangeEvent event) throws RollbackException {
-			if(!added) {
+			if (!added) {
 				added = true;
 				EClass eClass = EcoreFactory.eINSTANCE.createEClass();
 				eClass.setName("EClassFromPrecommit");
-				return AddCommand.create(getTarget(), rootEPackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS, eClass);
+				return AddCommand.create(getTarget(), rootEPackage, EcorePackage.Literals.EPACKAGE__ECLASSIFIERS,
+						eClass);
 			}
 			return null;
 
@@ -180,16 +193,6 @@ public class ChangeDescriptionTest extends TestCase {
 			changeDescription = null;
 		}
 
-	}
-
-	@Override
-	protected void tearDown() throws Exception {
-		rootEPackage1 = null;
-		resource = null;
-		resourceSet = null;
-		tempFile.delete();
-		tempFile = null;
-		super.tearDown();
 	}
 
 }

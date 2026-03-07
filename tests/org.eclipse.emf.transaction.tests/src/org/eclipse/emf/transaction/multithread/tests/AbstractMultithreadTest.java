@@ -11,65 +11,37 @@
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.AbstractTest;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  * Abstract JUnit test suite for the <em>EMF-TX API</em> multi-threading tests.
  * 
  * @author Christian W. Damus (cdamus)
  */
-public class AbstractMultithreadTest
-	extends TestCase {
+public class AbstractMultithreadTest {
 
 	private TransactionalEditingDomain domain = null;
-	
-	public AbstractMultithreadTest() {
-		super(""); //$NON-NLS-1$
-	}
 
-	public static Test suite() {
-		TestSuite suite = new TestSuite("Multi-threading Tests"); //$NON-NLS-1$
-
-		suite.addTest(ReadOperationTest.suite());
-		suite.addTest(WriteOperationTest.suite());
-		suite.addTest(ReadWriteOperationTest.suite());
-		suite.addTest(EMFTransansactionTest.suite());
-
-		return suite;
-	}
-	
 	//
 	// Fixture methods
 	//
-	
+
 	protected TransactionalEditingDomain getDomain() {
 		return domain;
 	}
-	
-	@Override
-	protected void setUp()
-		throws Exception {
-		
-		AbstractTest.trace("===> Begin : " + getName()); //$NON-NLS-1$
-		
-		super.setUp();
-		
+
+	@Before
+	public void setUp() throws Exception {
+		AbstractTest.trace("===> Begin : " + this.getClass().getName());
 		domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
 	}
-	
-	@Override
-	protected void tearDown()
-		throws Exception {
-		
+
+	@After
+	public void tearDown() throws Exception {
 		domain = null;
-		
-		AbstractTest.trace("===> End   : " + getName()); //$NON-NLS-1$
-		
-		super.tearDown();
+		AbstractTest.trace("===> End   : " + this.getClass().getName());
 	}
 }

@@ -27,25 +27,20 @@ import org.eclipse.emf.transaction.TriggerListener;
  */
 public class ItemDefaultPublicationDateTrigger extends TriggerListener {
 	public ItemDefaultPublicationDateTrigger() {
-		super(NotificationFilter.createFeatureFilter(
-					EXTLibraryPackage.eINSTANCE.getLibrary_Stock()).and(
-							NotificationFilter.createEventTypeFilter(
-									Notification.ADD)));
+		super(NotificationFilter.createFeatureFilter(EXTLibraryPackage.eINSTANCE.getLibrary_Stock())
+				.and(NotificationFilter.createEventTypeFilter(Notification.ADD)));
 	}
-	
+
 	@Override
 	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 		Command result = null;
-		
+
 		Item newItem = (Item) notification.getNewValue();
 		if (newItem.getPublicationDate() == null) {
-			result= new SetCommand(
-					domain,
-					newItem,
-					EXTLibraryPackage.eINSTANCE.getItem_PublicationDate(),
+			result = new SetCommand(domain, newItem, EXTLibraryPackage.eINSTANCE.getItem_PublicationDate(),
 					new java.util.Date());
 		}
-		
+
 		return result;
 	}
 }

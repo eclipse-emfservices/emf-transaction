@@ -11,11 +11,12 @@
  */
 package org.eclipse.emf.workspace.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Collections;
 import java.util.List;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.eclipse.emf.common.command.Command;
 import org.eclipse.emf.common.notify.Notification;
@@ -32,6 +33,8 @@ import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.workspace.tests.fixtures.TestListener;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 /**
@@ -42,18 +45,11 @@ import org.eclipse.emf.workspace.tests.fixtures.TestListener;
  */
 public class BasicWorkbenchTest extends AbstractTest {
 
-	public BasicWorkbenchTest(String name) {
-		super(name);
-	}
-	
-	public static Test suite() {
-		return new TestSuite(BasicWorkbenchTest.class, "Basic Workbench Integration Tests"); //$NON-NLS-1$
-	}
-
 	/**
 	 * Tests that read transactions are not actually enforced for EList initialization,
 	 * etc.
 	 */
+	@Test
 	public void test_read() {
 		try {
 			// should be able to read with running exclusive, as we cannot
@@ -67,6 +63,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	/**
 	 * Tests that we can read in a read-only transaction.
 	 */
+	@org.junit.Test
 	public void test_read_readOnlyTransaction() {
 		// should be able to read in a read-only transaction
 		startReading();
@@ -79,6 +76,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	/**
 	 * Tests that we can read in a read-write transaction.
 	 */
+	@org.junit.Test
 	public void test_read_readWriteTransaction() {
 		// should be able to read in a read/write transaction
 		startWriting();
@@ -91,6 +89,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	/**
 	 * Tests that we can read in a <code>runExclusive()</code> runnable.
 	 */
+	@org.junit.Test
 	public void test_read_exclusive() {
 		try {
 			// should be able to read exclusively
@@ -103,7 +102,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 			
 			assertNotNull(book[0]);
 		} catch (InterruptedException e) {
-			fail("Should not be interrupted"); //$NON-NLS-1$
+			Assert.fail("Should not be interrupted"); //$NON-NLS-1$
 		} catch (Exception e) {
 			fail(e);
 		}
@@ -112,6 +111,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	/**
 	 * Tests that we cannot write without a write transaction.
 	 */
+	@org.junit.Test
 	public void test_write() {
 		startReading();
 		
@@ -124,7 +124,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 			book.setTitle("New Title"); //$NON-NLS-1$
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -136,6 +136,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	/**
 	 * Tests that we cannot write in a read-only transaction.
 	 */
+	@org.junit.Test
 	public void test_write_readOnlytransaction() {
 		try {
 			startReading();
@@ -146,7 +147,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 			book.setTitle("New Title"); //$NON-NLS-1$
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -160,6 +161,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	/**
 	 * Tests that we can write in a read-write transaction.
 	 */
+	@org.junit.Test
 	public void test_write_readWritetransaction() {
 		try {
 			startWriting();
@@ -185,6 +187,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	 * Tests that we cannot write from a different thread than the thread that
 	 * currently has a write transaction open.
 	 */
+	@org.junit.Test
 	public void test_write_wrongThread() {
 		final Object monitor = new Object();
 		
@@ -226,7 +229,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 			book.setTitle("New Title"); //$NON-NLS-1$
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -243,6 +246,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	/**
 	 * Tests that we can use the command stack to execute a writing command.
 	 */
+	@org.junit.Test
 	public void test_write_command() {
 		startReading();
 		
@@ -274,6 +278,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	 * Tests that we can load and unload resources (having contents) without a write
 	 * transaction.
 	 */
+	@org.junit.Test
 	public void test_loadUnloadDuringRead() throws Exception {
 		// create a new domain that hasn't yet loaded the test resource
 		doTearDown();
@@ -362,6 +367,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	 * Tests that changes to the contents of a loaded resource may not be performed
 	 * in a read transaction.
 	 */
+	@org.junit.Test
 	public void test_resourceContentsChanges_read() {
 		try {
 			startReading();
@@ -369,7 +375,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 			testResource.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -384,6 +390,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	 * Tests that changes to the contents of a loaded resource may be performed
 	 * in a write transaction.
 	 */
+	@org.junit.Test
 	public void test_resourceContentsChanges_write() {
 		try {
 			startWriting();
@@ -399,6 +406,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	/**
 	 * Tests that we cannot add a root to a newly created resource in a read transaction.
 	 */
+	@org.junit.Test
 	public void test_newResourceContentsChanges_read() {
 		try {
 			startReading();
@@ -410,7 +418,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 			res.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 			
 			// should have thrown
-			fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 		} catch (IllegalStateException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -424,6 +432,7 @@ public class BasicWorkbenchTest extends AbstractTest {
 	/**
 	 * Tests that we can add a root to a newly created resource in a write transaction.
 	 */
+	@org.junit.Test
 	public void test_newResourceContentsChanges_write() {
 		try {
 			startWriting();

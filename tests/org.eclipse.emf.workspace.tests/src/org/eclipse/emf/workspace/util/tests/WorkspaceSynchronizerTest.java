@@ -12,11 +12,13 @@
  */
 package org.eclipse.emf.workspace.util.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
 import java.util.Map;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -40,6 +42,8 @@ import org.eclipse.emf.validation.marker.MarkerUtil;
 import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
 import org.eclipse.emf.workspace.tests.AbstractTest;
 import org.eclipse.emf.workspace.util.WorkspaceSynchronizer;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Tests the {@link WorkspaceSynchronizer} class.
@@ -51,18 +55,10 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	
 	private WorkspaceSynchronizer synch;
 	private TestDelegate delegate;
-	
-	public WorkspaceSynchronizerTest(String name) {
-		super(name);
-	}
-
-	public static Test suite() {
-		return new TestSuite(WorkspaceSynchronizerTest.class, "Workspace Synchronizer Tests"); //$NON-NLS-1$
-	}
-	
 	/**
 	 * Tests the static getFile() utility method.
 	 */
+	@Test
 	public void test_getFile() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
 		
@@ -76,6 +72,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	/**
 	 * Tests the static getUnderlyingFile() utility method.
 	 */
+	@Test
 	public void test_getUnderlyingFile_163291() {
 		Resource archiveResource = new ResourceImpl();
 		archiveResource.setURI(URI.createURI("archive:platform:/resource" + RESOURCE_NAME + "!/foo"));
@@ -105,6 +102,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	/**
 	 * Tests the getFile() with file: URI.
 	 */
+	@Test
 	public void test_getFile_fileURI_156772() {
 		String path = ResourcesPlugin.getWorkspace().getRoot().getLocation().append(RESOURCE_NAME).toString();
 		
@@ -121,6 +119,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	/**
 	 * Tests the getFile() with URI that can be normalized to a platform URI.
 	 */
+	@Test
 	public void test_getFile_normalization_156772() {
 		testResource.getResourceSet().getURIConverter().getURIMap().put(
 				URI.createURI("pathmap://FOO"), //$NON-NLS-1$
@@ -139,6 +138,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	 * Tests that resource deletion is correctly reported to the delegate to
 	 * handle.
 	 */
+	@Test
 	public void test_deletion() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
 		
@@ -160,6 +160,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	 * Tests that resource change is correctly reported to the delegate to
 	 * handle.
 	 */
+	@Test
 	public void test_change() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
 		
@@ -181,6 +182,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	 * Tests that resource move is correctly reported to the delegate to
 	 * handle (this is actually a rename scenario).
 	 */
+	@Test
 	public void test_move() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
 		IPath newPath = file.getFullPath().removeLastSegments(1).append(
@@ -207,6 +209,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	 * Tests that multiple changes in the same editing domain are reported
 	 * correctly to the delegate.
 	 */
+	@Test
 	public void test_multipleChanges() {
 		final IFile file = WorkspaceSynchronizer.getFile(testResource);
 		final IFile[] copies = new IFile[2];
@@ -288,6 +291,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	/**
 	 * Tests the default response to resource deletion.
 	 */
+	@Test
 	public void test_defaultDeleteBehaviour() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
 		
@@ -313,6 +317,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	 * Tests the default response to resource change.  Note that the default
 	 * test resource URI does not require any URI-encoding.
 	 */
+	@Test
 	public void test_defaultChangeBehaviour() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
 		
@@ -340,6 +345,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	/**
 	 * Tests the default response to a resource move.
 	 */
+	@Test
 	public void test_defaultMoveBehaviour() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
 		IPath newPath = file.getFullPath().removeLastSegments(1).append(
@@ -366,6 +372,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	/**
 	 * Checks that URIs are decoded when constructing file paths.
 	 */
+	@Test
 	public void test_getFileWithEncodedURI_128315() {
 		final String filePath = "/My Project/some dir/file.foo"; //$NON-NLS-1$
 		final String encoded = "platform:/resource/My%20Project/some%20dir/file.foo"; //$NON-NLS-1$
@@ -387,6 +394,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	 * in the workspace <code>IResource</code> when the <code>Resource</code>'s
 	 * URI is not encoded but should have been.
 	 */
+	@Test
 	public void test_synchResourceWithUnencodedURI_197291() {
 	    // don't encode the URI
 	    Resource res = createTestResource(TEST_RESOURCE_NAME,
@@ -421,6 +429,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
      * in the workspace <code>IResource</code> when the <code>Resource</code>'s
      * URI is encoded (and needed to be).
      */
+	@Test
     public void test_synchResourceWithEncodedURI_197291() {
         // *do* encode the URI
         Resource res = createTestResource(TEST_RESOURCE_NAME,
@@ -455,6 +464,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
      * in the workspace <code>IResource</code> when the <code>Resource</code>'s
      * URI is not encoded but should have been.
      */
+	@Test
     public void test_synchMovedResourceWithUnencodedURI_197291() {
         // don't encode the URI
         Resource res = createTestResource(TEST_RESOURCE_NAME,
@@ -494,6 +504,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
      * in the workspace <code>IResource</code> when the <code>Resource</code>'s
      * URI is encoded (and needed to be).
      */
+	@Test
     public void test_synchMoveResourceWithEncodedURI_197291() {
         // do encode the URI
         Resource res = createTestResource(TEST_RESOURCE_NAME,
@@ -532,6 +543,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
      * Tests the response to resource deletion when the deleted resource also
      * had markers.
      */
+	@Test
     public void test_resourceDeletedThatHadMarkers_207306() {
         IFile file = WorkspaceSynchronizer.getFile(testResource);
         
@@ -560,6 +572,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
         assertFalse(testResource.isLoaded());
     }
     
+	@Test
     public void test_deleteProjectAndDisposeSynchronizer_233004() {
     	final IStatus[] logged = new IStatus[1];
     	
@@ -595,12 +608,12 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 			Thread.sleep(1000);
 			
 			if (logged[0] != null) {
-				fail("Should not have logged: " + logged[0].getException());
+				Assert.fail("Should not have logged: " + logged[0].getException());
 			}
 		} catch (CoreException e) {
-			fail("Failed to delete project: " + e.getLocalizedMessage());
+			Assert.fail("Failed to delete project: " + e.getLocalizedMessage());
 		} catch (InterruptedException e) {
-			fail("Test interrupted in sleep");
+			Assert.fail("Test interrupted in sleep");
 		} finally {
 			EMFWorkspacePlugin.getPlugin().getLog().removeLogListener(log);
 			ResourcesPlugin.getWorkspace().removeResourceChangeListener(listener);

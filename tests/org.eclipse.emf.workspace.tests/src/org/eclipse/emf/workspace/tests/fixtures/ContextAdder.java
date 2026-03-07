@@ -27,11 +27,12 @@ public class ContextAdder implements IOperationHistoryListener {
 	public ContextAdder(IUndoContext contextToAdd) {
 		context = contextToAdd;
 	}
-	
+
 	/**
 	 * Adds my context to an operation when it is done then removes me from the
 	 * history.
 	 */
+	@Override
 	public void historyNotification(OperationHistoryEvent event) {
 		switch (event.getEventType()) {
 		case OperationHistoryEvent.DONE:

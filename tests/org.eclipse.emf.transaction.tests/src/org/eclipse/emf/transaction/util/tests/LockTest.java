@@ -12,12 +12,13 @@
  */
 package org.eclipse.emf.transaction.util.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.lang.reflect.Field;
 import java.util.concurrent.CountDownLatch;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -31,29 +32,26 @@ import org.eclipse.emf.transaction.tests.AbstractTest;
 import org.eclipse.emf.transaction.tests.fixtures.JobListener;
 import org.eclipse.emf.transaction.util.Lock;
 import org.eclipse.ui.PlatformUI;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Tests the {@link Lock} class.
  *
  * @author Christian W. Damus (cdamus)
  */
-public class LockTest extends TestCase {
+public class LockTest {
 	
 	private Lock lock;
 	private Object monitor;
 	private volatile boolean interrupted;
 	
-	public LockTest(String name) {
-		super(name);
-	}
-
-	public static Test suite() {
-		return new TestSuite(LockTest.class, "Transaction Lock Tests"); //$NON-NLS-1$
-	}
-
 	/**
 	 * Tests that the depth of an unacquired lock is zero.
 	 */
+	@Test
 	public void test_depth() {
 		assertNull(lock.getOwner());
 		assertEquals(0, lock.getDepth());
@@ -62,6 +60,7 @@ public class LockTest extends TestCase {
 	/**
 	 * Tests that a thread can acquire and release the lock.
 	 */
+	@Test
 	public void test_acquire() {
 		try {
 			lock.acquire(false);
@@ -77,6 +76,7 @@ public class LockTest extends TestCase {
 	 * Tests that a thread attempting to acquire will wait for a thread
 	 * that owns the lock to release it.
 	 */
+	@Test
 	public void test_waitForAcquire() {
 		Thread t = new Thread(new Runnable() {
 			public void run() {
@@ -90,7 +90,7 @@ public class LockTest extends TestCase {
 					
 					Thread.sleep(1000);
 				} catch (Exception e) {
-					fail();
+					Assert.fail();
 				} finally {
 					if (lock != null) {
 						lock.release();
@@ -123,6 +123,7 @@ public class LockTest extends TestCase {
 	/**
 	 * Tests the timeout capability of acquiring.
 	 */
+	@Test
 	public void test_waitForAcquire_timeout() {
 		Thread t = new Thread(new Runnable() {
 			public void run() {
@@ -136,7 +137,7 @@ public class LockTest extends TestCase {
 					
 					Thread.sleep(5000);
 				} catch (Exception e) {
-					fail();
+					Assert.fail();
 				} finally {
 					if (lock != null) {
 						// will be cleared already by tearDown()
@@ -168,6 +169,7 @@ public class LockTest extends TestCase {
 	 * Tests that when the UI thread attempts to acquire, liveness is maintained
 	 * as the UI thread continues to process sync runnables.
 	 */
+	@Test
 	public void test_uiSafeWaitForAcquire() {
 		if (!PlatformUI.isWorkbenchRunning()) {
 			// can only execute this test case in a workbench
@@ -199,7 +201,7 @@ public class LockTest extends TestCase {
 					
 					Thread.sleep(longInterval);
 				} catch (Exception e) {
-					fail();
+					Assert.fail();
 				} finally {
 					if (lock != null) {
 						lock.release();
@@ -236,6 +238,7 @@ public class LockTest extends TestCase {
 	 * Tests that a non-exclusive thread can yield to another non-exclusive
 	 * thread.
 	 */
+	@Test
 	public void test_yield() {
 		final boolean token[] = new boolean[1];
 		
@@ -254,7 +257,7 @@ public class LockTest extends TestCase {
 						monitor.notify();
 					}
 				} catch (Exception e) {
-					fail();
+					Assert.fail();
 				} finally {
 					if (lock != null) {
 						lock.release();
@@ -296,6 +299,7 @@ public class LockTest extends TestCase {
 	/**
 	 * Tests that a non-exclusive thread cannot yield to an exclusive thread.
 	 */
+	@Test
 	public void test_yieldExclusion() {
 		final boolean token[] = new boolean[1];
 		
@@ -314,7 +318,7 @@ public class LockTest extends TestCase {
 						monitor.notify();
 					}
 				} catch (Exception e) {
-					fail();
+					Assert.fail();
 				} finally {
 					if (lock != null) {
 						lock.release();
@@ -352,6 +356,7 @@ public class LockTest extends TestCase {
 	/**
 	 * Tests that a thread cannot yield when no other threads are waiting.
 	 */
+	@Test
 	public void test_yield_noneWaiting() {
 		try {
 			lock.acquire(false);
@@ -368,6 +373,7 @@ public class LockTest extends TestCase {
 	 * Tests for correct propagation of thread interrupt from the acquire()
 	 * method.
 	 */
+	@Test
 	public void test_interrupt_acquire() {
 		Thread t = new Thread(new Runnable() {
 			public void run() {
@@ -382,7 +388,7 @@ public class LockTest extends TestCase {
 					// pass
 					interrupted = true;
 				} catch (Exception e) {
-					fail();
+					Assert.fail();
 				}
 			}});
 		
@@ -415,12 +421,13 @@ public class LockTest extends TestCase {
 	 * Tests for correct propagation of thread interrupt from the acquire()
 	 * method when the thread is already interrupted upon entering it.
 	 */
+	@Test
 	public void test_interrupt_acquire_alreadyInterrupted() {
 		try {
 			Thread.currentThread().interrupt();
 			lock.acquire(false);
 			
-			fail("Should have thrown InterruptedException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown InterruptedException"); //$NON-NLS-1$
 		} catch (InterruptedException e) {
 			// pass
 			AbstractTest.trace("Got the expected InterruptedException"); //$NON-NLS-1$
@@ -433,6 +440,7 @@ public class LockTest extends TestCase {
 	 * Tests for correct propagation of thread interrupt when the AcquireJob
 	 * of a uiSafeAcquire() call is interrupted.
 	 */
+	@Test
 	public void test_interrupt_uiSafeAcquire_jobInterrupted() {
 		Thread t = new Thread(new Runnable() {
 			public void run() {
@@ -496,6 +504,7 @@ public class LockTest extends TestCase {
 	 * Tests for correct propagation of thread interrupt when the acquire job
 	 * of a uiSafeAcquire() is cancelled.
 	 */
+	@Test
 	public void test_interrupt_uiSafeAcquire_jobCancelled() {
 		Thread t = new Thread(new Runnable() {
 			public void run() {
@@ -510,7 +519,7 @@ public class LockTest extends TestCase {
 					// pass
 					interrupted = true;
 				} catch (Exception e) {
-					fail();
+					Assert.fail();
 				}
 			}});
 		
@@ -555,6 +564,7 @@ public class LockTest extends TestCase {
 	 * Tests that when the UI thread attempts to acquire, liveness is maintained
 	 * even if the UI thread is running an implicit job.
 	 */
+	@Test
 	public void test_uiSafeWaitForAcquire_implicitJob_bug162141() {
 		if (!PlatformUI.isWorkbenchRunning()) {
 			// can only execute this test case in a workbench
@@ -602,7 +612,7 @@ public class LockTest extends TestCase {
 					
 					Thread.sleep(longInterval);
 				} catch (Exception e) {
-					fail();
+					Assert.fail();
 				} finally {
 					if (lock != null) {
 						lock.release();
@@ -644,6 +654,7 @@ public class LockTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void test_uiSafeWaitForAcquire_explicitJob_beginRule_262175() {
 		final TransactionalEditingDomain domain =
 			TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
@@ -728,6 +739,7 @@ public class LockTest extends TestCase {
      * with an AcquireJob getting and transfering the lock after we've already
      * given up.
      */
+	@Test
     public void test_uiSafeWaitForAcquire_beginRuleThrows_bug205857() {
         final ISchedulingRule rule = ResourcesPlugin.getWorkspace().getRoot();
         
@@ -746,7 +758,7 @@ public class LockTest extends TestCase {
                     }
                     
                     lock.uiSafeAcquire(false);
-                    fail("Should have thrown InterruptedException"); //$NON-NLS-1$
+                    Assert.fail("Should have thrown InterruptedException"); //$NON-NLS-1$
                 } catch (InterruptedException e) {
                     // success
                     System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -791,7 +803,7 @@ public class LockTest extends TestCase {
             
             Thread owner = lock.getOwner();
             if (owner != null) {
-                fail("Lock still owned by thread " + owner.getName()); //$NON-NLS-1$
+            	Assert.fail("Lock still owned by thread " + owner.getName()); //$NON-NLS-1$
             }
         } catch (Exception e) {
             fail(e);
@@ -805,25 +817,25 @@ public class LockTest extends TestCase {
 	// Fixture methods
 	//
 	
-	@Override
-	protected void setUp()
+	@Before
+	public void setUp()
 		throws Exception {
 		
-		AbstractTest.trace("===> Begin : " + getName()); //$NON-NLS-1$
+		AbstractTest.trace("===> Begin : " + this.getClass().getName()); //$NON-NLS-1$
 		
 		lock = new Lock();
 		monitor = new Object();
 	}
 	
-	@Override
-	protected void tearDown()
+	@After
+	public void tearDown()
 		throws Exception {
 		
 		lock = null;
 		monitor = null;
 		interrupted = false;
 		
-		AbstractTest.trace("===> End   : " + getName()); //$NON-NLS-1$
+		AbstractTest.trace("===> End   : " + this.getClass().getName()); //$NON-NLS-1$
 	}
 	
 	/**
@@ -833,7 +845,7 @@ public class LockTest extends TestCase {
 	 */
 	protected void fail(Exception e) {
 		e.printStackTrace();
-		fail("Should not have thrown: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		Assert.fail("Should not have thrown: " + e.getLocalizedMessage()); //$NON-NLS-1$
 	}
 	
 	/**
@@ -855,7 +867,7 @@ public class LockTest extends TestCase {
 			
 			result = (Lock) field.get(domain);
 		} catch (Exception e) {
-			fail("Could not access transactionLock field: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Could not access transactionLock field: " + e.getLocalizedMessage()); //$NON-NLS-1$
 		} finally {
 			if (field != null) {
 				field.setAccessible(false);

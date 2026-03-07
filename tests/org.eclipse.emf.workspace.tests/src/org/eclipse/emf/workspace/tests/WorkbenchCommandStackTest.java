@@ -13,12 +13,17 @@
  */
 package org.eclipse.emf.workspace.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.EventObject;
 import java.util.List;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.AbstractOperation;
@@ -64,6 +69,7 @@ import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultNameTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LogCapture;
 import org.eclipse.emf.workspace.tests.fixtures.NullCommand;
 import org.eclipse.emf.workspace.tests.fixtures.SelfOpeningEMFCompositeOperation;
+import org.junit.Assert;
 
 
 /**
@@ -74,18 +80,11 @@ import org.eclipse.emf.workspace.tests.fixtures.SelfOpeningEMFCompositeOperation
 public class WorkbenchCommandStackTest extends AbstractTest {
 
 	private IUndoContext defaultContext;
-	
-	public WorkbenchCommandStackTest(String name) {
-		super(name);
-	}
-	
-	public static Test suite() {
-		return new TestSuite(WorkbenchCommandStackTest.class, "Command Stack Tests"); //$NON-NLS-1$
-	}
-	
+
 	/**
 	 * Tests basic execution.
 	 */
+	@Test
 	public void test_execute() {
 		Command cmd = new NullCommand();
 		
@@ -105,6 +104,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 	/**
 	 * Tests undo/redo support.
 	 */
+	@Test
 	public void test_undo_redo() {
 		Command cmd = new NullCommand();
 		
@@ -136,6 +136,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 	/**
 	 * Tests most-recent-command support.
 	 */
+	@Test
 	public void test_mostRecentCommand() {
 		Command cmd = new NullCommand();
 		
@@ -173,6 +174,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 	/**
 	 * Tests flush support.
 	 */
+	@Test
 	public void test_flush() {
 		getCommandStack().execute(new NullCommand());
 		getCommandStack().execute(new NullCommand());
@@ -190,6 +192,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		assertEquals(0, operations.length);
 	}
 	
+	@Test
 	public void test_flushingOnResourceUnload() {
 		Command cmd = new SetCommand(
 				domain,
@@ -224,6 +227,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		assertEquals(0, operations.length);
 	}
 	
+	@Test
 	public void testUndoContextPropagationFromTriggerListeners() {
 		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 		final IUndoContext undoContext = new UndoContext();
@@ -285,7 +289,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 			op.execute(new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			e.printStackTrace();
-			fail();
+			Assert.fail();
 		}
 		
 		assertNotNull(op.getContexts());
@@ -300,7 +304,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 			OperationHistoryFactory.getOperationHistory().execute(op, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			e.printStackTrace();
-			fail();
+			Assert.fail();
 		}
 		
         assertNotNull(op.getContexts());
@@ -312,6 +316,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         op.removeContext(resCtx);
 	}
 	
+	@Test
 	public void testSaveIsDoneAPIs() {
 		TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 		final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml")); //$NON-NLS-1$
@@ -358,7 +363,8 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		assertTrue(stack.isSaveNeeded());
 	}
     
-    public void test_isSaveNeeded_214325() {
+ 	@Test
+   public void test_isSaveNeeded_214325() {
         TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
         final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml")); //$NON-NLS-1$
         
@@ -398,7 +404,8 @@ public class WorkbenchCommandStackTest extends AbstractTest {
      * Test that run-time exceptions in a trigger command cause rollback of
      * the whole transaction.
      */
-    public void test_triggerRollback_146853() {
+	@Test
+   public void test_triggerRollback_146853() {
         final RuntimeException error = new RuntimeException();
         
         ResourceSetListener testListener = new TriggerListener() {
@@ -443,6 +450,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
      * rollback of the whole transaction, without any log message (because it
      * is a normal condition).
      */
+	@Test
     public void test_triggerRollback_cancel_146853() {
         final RuntimeException error = new OperationCanceledException();
         
@@ -488,6 +496,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
      * Test that run-time exceptions in a trigger command cause rollback of
      * the whole transaction when executing an AbstractEMFOperation.
      */
+	@Test
     public void test_triggerRollback_operation_146853() {
         final RuntimeException error = new RuntimeException();
         
@@ -517,7 +526,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 	            
 	            assertEquals(IStatus.ERROR, status.getSeverity());
             } catch (ExecutionException e) {
-            	fail("Execution failed: " + e.getLocalizedMessage()); //$NON-NLS-1$
+            	Assert.fail("Execution failed: " + e.getLocalizedMessage()); //$NON-NLS-1$
             }
             
             // verify that rollback occurred
@@ -534,6 +543,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
      * rollback of the whole transaction, without any log message (because it
      * is a normal condition) when executing an AbstractEMFOperation.
      */
+	@Test
     public void test_triggerRollback_operation_cancel_146853() {
         final RuntimeException error = new OperationCanceledException();
         
@@ -563,7 +573,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 	            
 	            assertEquals(IStatus.CANCEL, status.getSeverity());
             } catch (ExecutionException e) {
-            	fail("Execution failed: " + e.getLocalizedMessage()); //$NON-NLS-1$
+            	Assert.fail("Execution failed: " + e.getLocalizedMessage()); //$NON-NLS-1$
             }
             
             // verify that rollback occurred
@@ -580,6 +590,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
      * that in this case it is able correctly to capture its changes for
      * undo/redo.
      */
+	@Test
     public void test_recordingCommandsAsTriggers_bug157103() {
         // one trigger sets default library names
         domain.addResourceSetListener(new LibraryDefaultNameTrigger() {
@@ -618,7 +629,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
             // add a new library.  Our trigger will set a default name
             history.execute(operation, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to execute test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to execute test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         
         startReading();
@@ -630,7 +641,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         try {
             history.undo(ctx, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to undo test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to undo test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         
         assertFalse(root.getBranches().contains(newLibrary[0]));
@@ -640,7 +651,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         try {
             history.redo(ctx, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to redo test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to redo test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
         
         assertTrue(root.getBranches().contains(newLibrary[0]));
@@ -652,7 +663,8 @@ public class WorkbenchCommandStackTest extends AbstractTest {
      * listeners are notified again that the stack is changed, so that they
      * will correctly update themselves if necessary.
      */
-    public void test_rollbackNotifiesCommandStackListeners_175725() {
+	@Test
+   public void test_rollbackNotifiesCommandStackListeners_175725() {
         class TestCSL implements CommandStackListener {
             int invocationCount = 0;
             public void commandStackChanged(EventObject event) {
@@ -684,6 +696,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         assertFalse("Should not have an undo command", stack.canUndo()); //$NON-NLS-1$
     }
 	
+	@Test
     public void test_undoRedoNotifyListeners_173839() {
         class TestCSL implements CommandStackListener {
             int invocationCount = 0;
@@ -730,6 +743,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
      * Tests that we do not lose track of affected resources when executing
      * operations within open composites (nested operation execution).
      */
+	@Test
     public void test_nestedExecutionInOpenComposite_203352() {
         SelfOpeningEMFCompositeOperation operation = new SelfOpeningEMFCompositeOperation(
             domain) {
@@ -757,7 +771,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
         try {
             history.execute(operation, null, null);
         } catch (ExecutionException e) {
-            fail("Failed to execute test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
+        	Assert.fail("Failed to execute test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
         }
 
         IUndoContext expected = new ResourceUndoContext(domain, testResource);
@@ -768,6 +782,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
      * Tests that whatever operation is currently executing while changes occur
      * in some resource, is tagged with an undo context for that resource.
      */
+	@Test
 	public void test_nestedExecutionInAbstractOperation_244654() {
 		AbstractOperation operation = new AbstractOperation("Test") { //$NON-NLS-1$
 
@@ -810,7 +825,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		try {
 			history.execute(operation, null, null);
 		} catch (ExecutionException e) {
-			fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assert.fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
 		}
 
 		IUndoContext expected = new ResourceUndoContext(domain, testResource);

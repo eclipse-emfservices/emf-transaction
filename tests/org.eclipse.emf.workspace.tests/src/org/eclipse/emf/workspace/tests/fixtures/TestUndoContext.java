@@ -20,17 +20,12 @@ import org.eclipse.core.commands.operations.IUndoContext;
  */
 public class TestUndoContext implements IUndoContext {
 
-	/**
-	 * Initializes me.
-	 */
-	public TestUndoContext() {
-		super();
-	}
-
+	@Override
 	public String getLabel() {
-		return "Testing"; //$NON-NLS-1$
+		return "Testing"; 
 	}
 
+	@Override
 	public boolean matches(IUndoContext context) {
 		return context == this;
 	}

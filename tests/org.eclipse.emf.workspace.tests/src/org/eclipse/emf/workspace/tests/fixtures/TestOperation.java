@@ -27,33 +27,32 @@ import org.eclipse.emf.workspace.AbstractEMFOperation;
  *
  * @author Christian W. Damus (cdamus)
  */
-public abstract class TestOperation
-	extends AbstractEMFOperation {
+public abstract class TestOperation extends AbstractEMFOperation {
 
 	private IStatus status = Status.OK_STATUS;
-	
+
 	public TestOperation(TransactionalEditingDomain domain) {
-		super(domain, "Testing"); //$NON-NLS-1$
+		super(domain, "Testing");
 	}
 
 	public TestOperation(TransactionalEditingDomain domain, Map<?, ?> options) {
-		super(domain, "Testing", options); //$NON-NLS-1$
+		super(domain, "Testing", options);
 	}
 
 	@Override
 	protected final IStatus doExecute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 		doExecute();
-		
+
 		return getStatus();
 	}
-	
+
 	protected final IStatus getStatus() {
 		return status;
 	}
-	
+
 	protected final void setStatus(IStatus status) {
 		this.status = status;
 	}
-	
+
 	protected abstract void doExecute() throws ExecutionException;
 }

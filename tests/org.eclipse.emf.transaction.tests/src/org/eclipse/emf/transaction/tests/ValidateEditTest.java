@@ -11,11 +11,13 @@
  */
 package org.eclipse.emf.transaction.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collection;
 import java.util.Collections;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
 
 import org.eclipse.core.resources.ResourceAttributes;
 import org.eclipse.core.runtime.CoreException;
@@ -30,7 +32,8 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.emf.transaction.util.ValidateEditSupport;
-
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * Tests validate-edit support.
@@ -38,221 +41,217 @@ import org.eclipse.emf.transaction.util.ValidateEditSupport;
  * @author Christian W. Damus (cdamus)
  */
 public class ValidateEditTest extends AbstractTest {
-    
-    private static final String newTitle = "New Title"; //$NON-NLS-1$
-    
-    private Book book;
-    
-    private final Command setTitle = new TestCommand() {
-        @Override
+
+	private static final String newTitle = "New Title";
+
+	private Book book;
+
+	private final Command setTitle = new TestCommand() {
+		@Override
 		public boolean canExecute() {
-            // command isn't executable if owner's resource is read-only
-            return true; 
-        }
-        
-        public void execute() {
-            try {
-                book.setTitle(newTitle);
-            } catch (Exception e) {
-                fail(e);
-            }
-        }};
-    
-    private final Command clearTitle = new TestCommand() {
-        @Override
+			// command isn't executable if owner's resource is read-only
+			return true;
+		}
+
+		public void execute() {
+			try {
+				book.setTitle(newTitle);
+			} catch (Exception e) {
+				fail(e);
+			}
+		}
+	};
+
+	private final Command clearTitle = new TestCommand() {
+		@Override
 		public boolean canExecute() {
-            // command isn't executable if owner's resource is read-only
-            return true; 
-        }
-        
-        public void execute() {
-            try {
-                book.setTitle(null);
-            } catch (Exception e) {
-                fail(e);
-            }
-        }};
-	
-	public ValidateEditTest(String name) {
-		super(name);
-	}
-	
-	public static Test suite() {
-		return new TestSuite(ValidateEditTest.class, "Validate-Edit Support Tests"); //$NON-NLS-1$
+			// command isn't executable if owner's resource is read-only
+			return true;
+		}
+
+		public void execute() {
+			try {
+				book.setTitle(null);
+			} catch (Exception e) {
+				fail(e);
+			}
+		}
+	};
+
+	/**
+	 * A control test for a scenario in which validateEdit will find all resources
+	 * to be modifiable.
+	 */
+	@Test
+	public void test_noValidateEditRequired() {
+		try {
+			getCommandStack().execute(setTitle, null);
+
+			assertTitleChanged();
+			assertResourceDirty();
+		} catch (Exception e) {
+			fail(e);
+		}
 	}
 
 	/**
-	 * A control test for a scenario in which validateEdit will find all
-	 * resources to be modifiable.
+	 * Simple unmodifiable resource scenario.
 	 */
-	public void test_noValidateEditRequired() {
-        try {
-            getCommandStack().execute(setTitle, null);
-            
-            assertTitleChanged();
-            assertResourceDirty();
-        } catch (Exception e) {
-            fail(e);
-        }
+	public void ignore_test_validateEditRollback() {
+		setResourceReadOnly();
+
+		try {
+			getCommandStack().execute(setTitle, null);
+
+			Assert.fail("Should have rolled back");
+		} catch (RollbackException e) {
+			// success
+			System.out.println("Got expected exception: " + e.getLocalizedMessage());
+		} catch (Exception e) {
+			fail(e);
+		}
+
+		assertTitleNotChanged();
+		assertResourceNotDirty();
 	}
 
-    /**
-     * Simple unmodifiable resource scenario.
-     */
-    public void ignore_test_validateEditRollback() {
-        setResourceReadOnly();
-        
-        try {
-            getCommandStack().execute(setTitle, null);
-            
-            fail("Should have rolled back"); //$NON-NLS-1$
-        } catch (RollbackException e) {
-            // success
-            System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
-        } catch (Exception e) {
-            fail(e);
-        }
-        
-        assertTitleNotChanged();
-        assertResourceNotDirty();
-    }
-    
-    /**
-     * Custom validate-edit implementation.
-     */
-    public void test_customValidateEditSupport() {
-        final boolean[] token = new boolean[1];
-        
-        setValidateEdit(new ValidateEditSupport.Default() {
-            @Override
-			protected IStatus doValidateEdit(Transaction transaction,
-                    Collection<? extends Resource> resources, Object context) {
-                token[0] = true;
-                return Status.CANCEL_STATUS;
-            }});
-        
-        try {
-            getCommandStack().execute(setTitle, null);
-            
-            fail("Should have rolled back"); //$NON-NLS-1$
-        } catch (RollbackException e) {
-            // success
-            System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
-        } catch (Exception e) {
-            fail(e);
-        }
-        
-        assertTrue("Custom validation not invoked", token[0]); //$NON-NLS-1$
-        assertTitleNotChanged();
-        assertResourceNotDirty();
-    }
+	/**
+	 * Custom validate-edit implementation.
+	 */
+	@Test
+	public void test_customValidateEditSupport() {
+		final boolean[] token = new boolean[1];
 
-    /**
-     * Scenario in which validateEdit will find all resources to be modifiable
-     * but in which we also have a live validation failure.
-     */
-    public void test_liveValidationFailure_validateEditOK() {
-        try {
-            getCommandStack().execute(clearTitle, null);
-            
-            fail("Should have rolled back"); //$NON-NLS-1$
-        } catch (RollbackException e) {
-            // success
-            System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
-        } catch (Exception e) {
-            fail(e);
-        }
-    }
+		setValidateEdit(new ValidateEditSupport.Default() {
+			@Override
+			protected IStatus doValidateEdit(Transaction transaction, Collection<? extends Resource> resources,
+					Object context) {
+				token[0] = true;
+				return Status.CANCEL_STATUS;
+			}
+		});
 
-    /**
-     * Unmodifiable resource scenario in which we also have a live validation
-     * failure.
-     */
-    public void test_validationRollback_validateEditFails() {
-        setResourceReadOnly();
-        
-        try {
-            getCommandStack().execute(clearTitle, null);
-            
-            fail("Should have rolled back"); //$NON-NLS-1$
-        } catch (RollbackException e) {
-            // success
-            System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
-        } catch (Exception e) {
-            fail(e);
-        }
-        
-        assertResourceNotDirty();
-    }
-	
+		try {
+			getCommandStack().execute(setTitle, null);
+
+			Assert.fail("Should have rolled back");
+		} catch (RollbackException e) {
+			// success
+			System.out.println("Got expected exception: " + e.getLocalizedMessage());
+		} catch (Exception e) {
+			fail(e);
+		}
+
+		assertTrue("Custom validation not invoked", token[0]);
+		assertTitleNotChanged();
+		assertResourceNotDirty();
+	}
+
+	/**
+	 * Scenario in which validateEdit will find all resources to be modifiable but
+	 * in which we also have a live validation failure.
+	 */
+	@Test
+	public void test_liveValidationFailure_validateEditOK() {
+		try {
+			getCommandStack().execute(clearTitle, null);
+
+			Assert.fail("Should have rolled back");
+		} catch (RollbackException e) {
+			// success
+			System.out.println("Got expected exception: " + e.getLocalizedMessage());
+		} catch (Exception e) {
+			fail(e);
+		}
+	}
+
+	/**
+	 * Unmodifiable resource scenario in which we also have a live validation
+	 * failure.
+	 */
+	@Test
+	public void test_validationRollback_validateEditFails() {
+		setResourceReadOnly();
+
+		try {
+			getCommandStack().execute(clearTitle, null);
+
+			Assert.fail("Should have rolled back");
+		} catch (RollbackException e) {
+			// success
+			System.out.println("Got expected exception: " + e.getLocalizedMessage());
+		} catch (Exception e) {
+			fail(e);
+		}
+
+		assertResourceNotDirty();
+	}
+
 	//
 	// Fixture methods
 	//
-	
+
 	@Override
-	protected void doSetUp()
-		throws Exception {
-		
+	protected void doSetUp() throws Exception {
+
 		super.doSetUp();
-        
-        // enable validation
+
+		// enable validation
 		ValidationRollbackTest.validationEnabled = true;
-		
+
 		setValidateEdit(Boolean.TRUE);
-		
+
 		// default validate-edit implementation depends on mod tracking
 		testResource.setTrackingModification(true);
-		
-        startReading();
-        book = (Book) find("root/Root Book"); //$NON-NLS-1$
-        commit();
-        assertNotNull(book);
+
+		startReading();
+		book = (Book) find("root/Root Book");
+		commit();
+		assertNotNull(book);
 	}
-	
+
 	@Override
-	protected void doTearDown()
-		throws Exception {
-		
+	protected void doTearDown() throws Exception {
+
 		book = null;
-        
-        // disable validation
+
+		// disable validation
 		ValidationRollbackTest.validationEnabled = false;
-		
+
 		super.doTearDown();
 	}
-	
+
 	void setResourceReadOnly() {
-        ResourceAttributes attr = new ResourceAttributes();
-        attr.setReadOnly(true);
-        
-        try {
-            file.setResourceAttributes(attr);
-        } catch (CoreException e) {
-            fail(e);
-        }
+		ResourceAttributes attr = new ResourceAttributes();
+		attr.setReadOnly(true);
+
+		try {
+			file.setResourceAttributes(attr);
+		} catch (CoreException e) {
+			fail(e);
+		}
 	}
-	
+
 	void setValidateEdit(Object optionValue) {
-        TransactionalEditingDomain.DefaultOptions defaults = TransactionUtil
-            .getAdapter(domain, TransactionalEditingDomain.DefaultOptions.class);
-        
-        defaults.setDefaultTransactionOptions(Collections.singletonMap(
-            Transaction.OPTION_VALIDATE_EDIT, optionValue));
+		TransactionalEditingDomain.DefaultOptions defaults = TransactionUtil.getAdapter(domain,
+				TransactionalEditingDomain.DefaultOptions.class);
+
+		defaults.setDefaultTransactionOptions(Collections.singletonMap(Transaction.OPTION_VALIDATE_EDIT, optionValue));
 	}
-	
+
 	void assertTitleChanged() {
-	    assertEquals(newTitle, book.getTitle());
+		assertEquals(newTitle, book.getTitle());
 	}
-	
+
 	void assertTitleNotChanged() {
-	    assertFalse(newTitle.equals(book.getTitle()));
+		assertFalse(newTitle.equals(book.getTitle()));
 	}
-    
-    void assertResourceDirty() {
-        assertTrue("Resource not dirty", testResource.isModified()); //$NON-NLS-1$
-    }
-    
-    void assertResourceNotDirty() {
-        assertFalse("Resource is dirty", testResource.isModified()); //$NON-NLS-1$
-    }
+
+	void assertResourceDirty() {
+		assertTrue("Resource not dirty", testResource.isModified());
+	}
+
+	void assertResourceNotDirty() {
+		assertFalse("Resource is dirty", testResource.isModified());
+	}
 }

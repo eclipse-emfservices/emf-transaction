@@ -12,8 +12,12 @@
  */
 package org.eclipse.emf.workspace.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.AbstractOperation;
@@ -38,6 +42,7 @@ import org.eclipse.emf.workspace.tests.fixtures.ContextAdder;
 import org.eclipse.emf.workspace.tests.fixtures.ExternalDataOperation;
 import org.eclipse.emf.workspace.tests.fixtures.TestOperation;
 import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
+import org.junit.Assert;
 
 
 /**
@@ -47,14 +52,6 @@ import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
  */
 public class EMFOperationCommandTest extends AbstractTest {
 
-	public EMFOperationCommandTest(String name) {
-		super(name);
-	}
-	
-	public static Test suite() {
-		return new TestSuite(EMFOperationCommandTest.class, "EMF Operation Command Tests"); //$NON-NLS-1$
-	}
-	
 	/**
 	 * Tests execution, undo, and redo of operations wrapped within an
 	 * EMF command.
@@ -277,7 +274,7 @@ public class EMFOperationCommandTest extends AbstractTest {
 			history.addOperationHistoryListener(new ContextAdder(ctx));
 			getCommandStack().execute(cmd, null);
 			
-			fail("Should have thrown RollbackException"); //$NON-NLS-1$
+			Assert.fail("Should have thrown RollbackException"); //$NON-NLS-1$
 		} catch (RollbackException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -489,7 +486,7 @@ public class EMFOperationCommandTest extends AbstractTest {
 			book.setCopies(book.getCopies() + 30);
 			commitWithRollback();  // should roll back due to trigger
 			
-			fail("Should have rolled back."); //$NON-NLS-1$
+			Assert.fail("Should have rolled back."); //$NON-NLS-1$
 		} catch (RollbackException rbe) {
 			// success
 			System.out.println("Got expected exception: " + rbe.getLocalizedMessage()); //$NON-NLS-1$
@@ -528,7 +525,7 @@ public class EMFOperationCommandTest extends AbstractTest {
 			book.setCopies(book.getCopies() + 30);
 			commitWithRollback();  // should roll back due to trigger
 			
-			fail("Should have rolled back."); //$NON-NLS-1$
+			Assert.fail("Should have rolled back."); //$NON-NLS-1$
 		} catch (RollbackException rbe) {
 			// success
 			System.out.println("Got expected exception: " + rbe.getLocalizedMessage()); //$NON-NLS-1$
@@ -579,7 +576,7 @@ public class EMFOperationCommandTest extends AbstractTest {
 			book.setCopies(book.getCopies() + 30);
 			commitWithRollback();  // should roll back due to trigger
 			
-			fail("Should have rolled back."); //$NON-NLS-1$
+			Assert.fail("Should have rolled back."); //$NON-NLS-1$
 		} catch (RollbackException rbe) {
 			// success
 			System.out.println("Got expected exception: " + rbe.getLocalizedMessage()); //$NON-NLS-1$
@@ -634,12 +631,12 @@ public class EMFOperationCommandTest extends AbstractTest {
 			try {
 				op.execute(null, null);
 			} catch (ExecutionException e) {
-				fail("Should not fail to execute: " + e.getLocalizedMessage()); //$NON-NLS-1$
+				Assert.fail("Should not fail to execute: " + e.getLocalizedMessage()); //$NON-NLS-1$
 			}
 			
 			try {
 				op.undo(null, null);
-				fail("Should have failed to undo."); //$NON-NLS-1$
+				Assert.fail("Should have failed to undo."); //$NON-NLS-1$
 			} catch (ExecutionException e) {
 				// success
 				System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -695,18 +692,18 @@ public class EMFOperationCommandTest extends AbstractTest {
 			try {
 				op.execute(null, null);
 			} catch (ExecutionException e) {
-				fail("Should not fail to execute: " + e.getLocalizedMessage()); //$NON-NLS-1$
+				Assert.fail("Should not fail to execute: " + e.getLocalizedMessage()); //$NON-NLS-1$
 			}
 			
 			try {
 				op.undo(null, null);
 			} catch (ExecutionException e) {
-				fail("Should not fail to undo: " + e.getLocalizedMessage()); //$NON-NLS-1$
+				Assert.fail("Should not fail to undo: " + e.getLocalizedMessage()); //$NON-NLS-1$
 			}
 			
 			try {
 				op.redo(null, null);
-				fail("Should have failed to redo."); //$NON-NLS-1$
+				Assert.fail("Should have failed to redo."); //$NON-NLS-1$
 			} catch (ExecutionException e) {
 				// success
 				System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$

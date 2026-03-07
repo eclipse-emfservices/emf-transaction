@@ -11,26 +11,23 @@
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.Test;
 
 /**
  * Testcase for testing scheduling of Write Operation scenarios
+ * 
  * @author mgoyal
- *  
+ * 
  */
-public class WriteOperationTest
-	extends AbstractMultithreadTest {
-
-	public static Test suite() {
-		return new TestSuite(WriteOperationTest.class, "Writer Thread Tests"); //$NON-NLS-1$
-	}
+public class WriteOperationTest extends AbstractMultithreadTest {
 
 	/**
-	 *  Tests scheduling of simple write operation.
+	 * Tests scheduling of simple write operation.
 	 */
-	public void testWriteOperation() {
+	@Test public void testWriteOperation() {
 		WriteThread writeThread1 = new WriteThread(getDomain());
 
 		writeThread1.start();
@@ -50,9 +47,9 @@ public class WriteOperationTest
 	}
 
 	/**
-	 *  Tests scheduling of two simultaneous write operations.
+	 * Tests scheduling of two simultaneous write operations.
 	 */
-	public void testSimultaneousWrites() {
+	@Test public void testSimultaneousWrites() {
 		Object notifier = new Object();
 		WriteThread writeThread1 = new WriteThread(getDomain(), null, notifier);
 		WriteThread writeThread2 = new WriteThread(getDomain(), null, notifier);
@@ -90,12 +87,13 @@ public class WriteOperationTest
 		assertTrue(writeThread1.isExecuted());
 		assertTrue(writeThread2.isExecuted());
 		assertTrue(Constants.occurredAfter(writeThread1, writeThread2)
-			|| Constants.occurredBefore(writeThread1, writeThread2));
+				|| Constants.occurredBefore(writeThread1, writeThread2));
 	}
 
 	/**
 	 * Tests scheduling of Nested Write Operations.
 	 */
+	@Test
 	public void testNestedWrites() {
 		NestedWriteThread writeThread1 = new NestedWriteThread(getDomain());
 		writeThread1.start();
@@ -114,9 +112,8 @@ public class WriteOperationTest
 		assertFalse(writeThread1.isFailed());
 		assertTrue(writeThread1.isInnerExecuted());
 		assertTrue(writeThread1.isExecuted());
-		assertTrue(Constants.occurredDuring(writeThread1.getStartTime(),
-			writeThread1.getEndTime(), writeThread1.getInnerStartTime(),
-			writeThread1.getInnerEndTime()));
+		assertTrue(Constants.occurredDuring(writeThread1.getStartTime(), writeThread1.getEndTime(),
+				writeThread1.getInnerStartTime(), writeThread1.getInnerEndTime()));
 	}
 
 }

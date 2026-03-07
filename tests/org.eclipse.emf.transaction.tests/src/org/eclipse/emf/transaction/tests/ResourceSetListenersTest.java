@@ -13,6 +13,13 @@
  */
 package org.eclipse.emf.transaction.tests;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
 
 import org.eclipse.emf.common.command.Command;
@@ -37,9 +44,8 @@ import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultBookTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultNameTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 /**
@@ -50,19 +56,12 @@ import junit.framework.TestSuite;
 public class ResourceSetListenersTest extends AbstractTest {
 	
 	private TestListener listener;
-	
-	public ResourceSetListenersTest(String name) {
-		super(name);
-	}
-	
-	public static Test suite() {
-		return new TestSuite(ResourceSetListenersTest.class, "Resource Set Listener Framework Tests"); //$NON-NLS-1$
-	}
 
 
 	/**
 	 * Tests that simple changes are propagated to post-commit listeners.
 	 */
+	@Test
 	public void test_postcommit() {
 		try {
 			
@@ -98,6 +97,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * Tests that changes from nested transactions are propagated to post-commit
 	 * listeners and that nested transactions do not fire postcommit.
 	 */
+	@Test
 	public void test_postcommit_nestedChange() {
 		try {
 			startReading();
@@ -153,6 +153,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * Tests that changes from nested transactions are propagated to post-commit
 	 * listeners in the correct thread-serial order.
 	 */
+	@Test
 	public void test_postcommit_ordering() {
 		try {
 			startReading();
@@ -218,6 +219,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	/**
 	 * Tests that post-commit listeners can read, but not write.
 	 */
+	@Test
 	public void test_postcommit_readOnly() {
 		startReading();
 		
@@ -246,7 +248,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 							// do nothing
 						}});
 					
-					fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+					Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 				} catch (Exception e) {
 					// success
 					trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -256,7 +258,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 					// cannot make ad hoc changes
 					book.setCategory(BookCategory.BIOGRAPHY_LITERAL);
 					
-					fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+					Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 				} catch (Exception e) {
 					// success
 					trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -284,6 +286,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	/**
 	 * Tests that simple changes are propagated to pre-commit listeners.
 	 */
+	@Test
 	public void test_precommit() {
 		try {
 			startReading();
@@ -322,6 +325,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * Tests that changes from nested transactions are not propagated to pre-commit
 	 * listeners by the outer transaction.
 	 */
+	@Test
 	public void test_precommit_nestedChange() {
 		try {
 			startReading();
@@ -365,6 +369,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * Tests that changes from nested transactions are not propagated to pre-commit
 	 * listeners, but not including previous changes of the outer transaction.
 	 */
+	@Test
 	public void test_precommit_nestedChange2() {
 		try {
 			startReading();
@@ -435,6 +440,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	/**
 	 * Tests that pre-commit listeners can read, but not write.
 	 */
+	@Test
 	public void test_precommit_readOnly() {
 		startReading();
 		
@@ -463,7 +469,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 							// do nothing
 						}});
 					
-					fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+					Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 				} catch (Exception e) {
 					// success
 					trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -473,7 +479,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 					// cannot make ad hoc changes
 					book.setCategory(BookCategory.BIOGRAPHY_LITERAL);
 					
-					fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+					Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 				} catch (Exception e) {
 					// success
 					trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -504,6 +510,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * Tests that pre-commit listeners cannot maliciously (or accidentally)
 	 * close the transaction that is committing.
 	 */
+	@Test
 	public void test_precommit_cannotClose() {
 		startReading();
 		
@@ -518,7 +525,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 				try {
 					// cannot commit the transaction while it is committing
 					event.getTransaction().commit();
-					fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+					Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 				} catch (Exception e) {
 					// success
 					trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -527,7 +534,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 				try {
 					// cannot commit the transaction while it is committing
 					event.getTransaction().rollback();
-					fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+					Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
 				} catch (Exception e) {
 					// success
 					trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
@@ -558,6 +565,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * Tests that trigger commands are executed correctly, and that they can
 	 * avoid feed-back.
 	 */
+	@Test
 	public void test_triggerCommands() {
 		// one trigger sets default library names
 		domain.addResourceSetListener(new LibraryDefaultNameTrigger());
@@ -589,6 +597,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * Tests that a command resulting from a pre-commit (trigger) listener will,
 	 * itself, trigger further changes.
 	 */
+	@Test
 	public void test_triggerCommands_cascading() {
 		// add the trigger to create a default book in a new library
 		domain.addResourceSetListener(new LibraryDefaultBookTrigger());
@@ -623,6 +632,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * Tests that post-commit listeners get not only the notifications generated
 	 * by the transaction, itself, but also by its trigger commands.
 	 */
+	@Test
 	public void test_postcommitIncludesTriggerChanges() {
 		// add the trigger to create a default book in a new library
 		domain.addResourceSetListener(new LibraryDefaultBookTrigger());
@@ -657,6 +667,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	/**
 	 * Tests that simple changes are propagated to post-commit listeners.
 	 */
+	@Test
 	public void test_unbatchedNotifications() {
 		try {
 			// don't start any transaction, but cause notifications
@@ -685,6 +696,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * listeners are, themselves, batched and sent around again to the
 	 * listeners.
 	 */
+	@Test
 	public void test_readNotifications_cascading() {
 		final Resource[] newRes = new Resource[1];
 		
@@ -741,6 +753,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * root-level read/write transaction commits, with all of the notifications
 	 * from the transaction and any nested transactions.
 	 */
+	@Test
 	public void test_precommit_aggregated_121508() {
 		try {
 			class AggregatedListener extends TestListener {
@@ -821,6 +834,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * Tests that changes made by aggregated pre-commit listeners are fed back
 	 * into those listeners again.
 	 */
+	@Test
 	public void test_precommit_aggregatedCascade_121508() {
 		try {
 			final String newTitle1 = "New Title1"; //$NON-NLS-1$
@@ -908,6 +922,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * even in the case of a transaction rolling back, where the resource change
 	 * is a URI change.
 	 */
+	@Test
 	public void test_rollback_resourceChangePropagation_uri_145321() {
 		class ResourceListener extends DemultiplexingListener {
 			boolean wasCalled;
@@ -949,6 +964,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * Tests that, when non-undoable changes such as resource loads do not occur
 	 * during a transaction that was rolled back, listeners are not invoked.
 	 */
+	@Test
 	public void test_rollback_noEvents_145321() {
 		class ResourceListener extends DemultiplexingListener {
 			private final ResourceSet interestingResourceSet;
@@ -974,7 +990,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 						break;
 					}
 				} else if (notifier == interestingBook) {
-					fail("Should not have received notification of contents change"); //$NON-NLS-1$
+					Assert.fail("Should not have received notification of contents change"); //$NON-NLS-1$
 				}
 			}
 		}
@@ -1004,6 +1020,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * even in the case of a transaction rolling back, where the resource change
 	 * is a created change.
 	 */
+	@Test
 	public void test_rollback_resourceChangePropagation_created_145321() {
 		class ResourceListener extends DemultiplexingListener {
 			private final ResourceSet interestingResourceSet;
@@ -1029,7 +1046,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 						break;
 					}
 				} else if (notifier == interestingBook) {
-					fail("Should not have received notification of contents change"); //$NON-NLS-1$
+					Assert.fail("Should not have received notification of contents change"); //$NON-NLS-1$
 				}
 			}
 		}
@@ -1064,6 +1081,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * even in the case of a transaction rolling back, where the resource change
 	 * is a loaded change.
 	 */
+	@Test
 	public void test_rollback_resourceChangePropagation_loaded_145321() {
 		class ResourceListener extends DemultiplexingListener {
 			private final Resource interestingResource;
@@ -1089,7 +1107,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 						break;
 					}
 				} else if (notifier == interestingBook) {
-					fail("Should not have received notification of contents change"); //$NON-NLS-1$
+					Assert.fail("Should not have received notification of contents change"); //$NON-NLS-1$
 				}
 			}
 		}
@@ -1121,6 +1139,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 	 * even in the case of a transaction rolling back, where the resource change
 	 * is an unloaded change.
 	 */
+	@Test
 	public void test_rollback_resourceChangePropagation_unloaded_145321() {
 		class ResourceListener extends DemultiplexingListener {
 			private final Resource interestingResource;
@@ -1146,7 +1165,7 @@ public class ResourceSetListenersTest extends AbstractTest {
 						break;
 					}
 				} else if (notifier == interestingBook) {
-					fail("Should not have received notification of contents change"); //$NON-NLS-1$
+					Assert.fail("Should not have received notification of contents change"); //$NON-NLS-1$
 				}
 			}
 		}
@@ -1186,6 +1205,7 @@ public class ResourceSetListenersTest extends AbstractTest {
      * that in this case it is able correctly to capture its changes for
      * undo/redo.
      */
+	@Test
     public void test_recordingCommandsAsTriggers_bug157103() {
         // one trigger sets default library names
         domain.addResourceSetListener(new LibraryDefaultNameTrigger() {
@@ -1235,7 +1255,8 @@ public class ResourceSetListenersTest extends AbstractTest {
         assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
     }
     
-    public void test_internalListenerNotifications_177642() {
+	@Test
+   public void test_internalListenerNotifications_177642() {
     	class LocalListener extends ResourceSetListenerImpl {
     		private int setCount, unsetCount;
     		

@@ -11,13 +11,13 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertEquals;
 
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestValidationEditingDomain;
+import org.junit.Test;
 
 /**
  * Tests validator creation during transaction editing domain commit
@@ -26,17 +26,10 @@ import org.eclipse.emf.transaction.tests.fixtures.TestValidationEditingDomain;
  */
 public class EditingDomainValidatorTest extends AbstractTest {
 
-	private static final String TEST_DOMAIN1 = "org.eclipse.emf.transaction.tests.TestValidationDomain1"; //$NON-NLS-1$
+	private static final String TEST_DOMAIN1 = "org.eclipse.emf.transaction.tests.TestValidationDomain1"; 
 	
 	private static final TransactionalEditingDomain myDomain = TransactionalEditingDomain.Registry.INSTANCE.getEditingDomain(TEST_DOMAIN1);
 	
-	public EditingDomainValidatorTest(String name) {
-		super(name);
-	}
-	
-	public static Test suite() {
-		return new TestSuite(EditingDomainValidatorTest.class, "Editing Domain Validator Tests"); //$NON-NLS-1$
-	}
 	
 	/** May be overridden by subclasses to create non-default editing domains. */
 	@Override
@@ -52,13 +45,14 @@ public class EditingDomainValidatorTest extends AbstractTest {
 	/**
 	 * Tests overriding of validators in editing domain
 	 */
+	@Test
 	public void test_createValidators_177643() {	
 		TestValidationEditingDomain.enableCustomValidator.set(true);
 		int initialCount = TestValidationEditingDomain.readWriteValidatorHitCount.get();
 		
 		startWriting();
-		Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
-		book.setTitle("New Title"); //$NON-NLS-1$
+		Book book = (Book) find("root/Root Book"); 
+		book.setTitle("New Title"); 
 		commit();
 		assertEquals(initialCount + 1, TestValidationEditingDomain.readWriteValidatorHitCount.get());
 
