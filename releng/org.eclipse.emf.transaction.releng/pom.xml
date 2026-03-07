@@ -13,7 +13,7 @@
 	<properties>
 		<tycho-version>5.0.2</tycho-version>
 		<cbi-plugins.version>1.3.2</cbi-plugins.version>
-		<maven.test.failure.ignore>true</maven.test.failure.ignore>
+		<maven.test.failure.ignore>false</maven.test.failure.ignore>
 		<platform>2024-12</platform>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<tycho.scmUrl>scm:git:https://github.com/eclipse-emfservices/emf-transaction.git</tycho.scmUrl>
