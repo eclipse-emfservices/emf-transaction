@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2007 IBM Corporation and others.
+ * Copyright (c) 2007, 2026 IBM Corporation and others.
  * This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License 2.0
  * which is available at https://www.eclipse.org/legal/epl-2.0/
@@ -54,13 +54,14 @@ public class EditingDomainValidatorTest extends AbstractTest {
 	 */
 	public void test_createValidators_177643() {	
 		TestValidationEditingDomain.enableCustomValidator.set(true);
+		int initialCount = TestValidationEditingDomain.readWriteValidatorHitCount.get();
 		
 		startWriting();
 		Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
 		book.setTitle("New Title"); //$NON-NLS-1$
 		commit();
-		assertEquals(1, TestValidationEditingDomain.readWriteValidatorHitCount.get());
-		
+		assertEquals(initialCount + 1, TestValidationEditingDomain.readWriteValidatorHitCount.get());
+
 		TestValidationEditingDomain.enableCustomValidator.set(false);
 	}
 }
