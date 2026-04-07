@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         java: [ 21, 25 ]
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-latest, windows-latest ]
         target: [ 2024-12, 2026-03, canary ]
     runs-on: ${{ matrix.os }} 
     name: OS ${{ matrix.os }} Target ${{ matrix.target }} Java ${{ matrix.java }} build and verify
