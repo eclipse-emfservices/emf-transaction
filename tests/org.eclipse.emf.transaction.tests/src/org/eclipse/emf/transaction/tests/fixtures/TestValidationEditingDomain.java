@@ -38,15 +38,15 @@ import org.eclipse.emf.validation.service.ModelValidationService;
  * @author David Cummings (dcummin)
  */
 public class TestValidationEditingDomain extends TransactionalEditingDomainImpl {
-	
+
 	public TestValidationEditingDomain(AdapterFactory adapterFactory) {
 		super(adapterFactory);
 	}
 
 	public static AtomicInteger readWriteValidatorHitCount = new AtomicInteger(0);
-	
+
 	public static AtomicBoolean enableCustomValidator = new AtomicBoolean(false);
-					
+
 	public static class FactoryImpl extends TransactionalEditingDomainImpl.FactoryImpl {
 
 		@Override
@@ -54,9 +54,9 @@ public class TestValidationEditingDomain extends TransactionalEditingDomainImpl 
 			TransactionalEditingDomainImpl result = new TestValidationEditingDomain(
 					new ComposedAdapterFactory(
 						ComposedAdapterFactory.Descriptor.Registry.INSTANCE));
-			
+
 			result.setValidatorFactory(new TestValidatorFactory());
-			
+
 			mapResourceSet(result);
 
 			return result;
@@ -73,17 +73,19 @@ public class TestValidationEditingDomain extends TransactionalEditingDomainImpl 
 			// not used by the extension point
 			return null;
 		}
-		
+
 		public class TestValidatorFactory implements TransactionValidator.Factory {
+			@Override
 			public TransactionValidator createReadOnlyValidator() {
 				return new ReadOnlyValidatorImpl();
 			}
 
+			@Override
 			public TransactionValidator createReadWriteValidator() {
 				return new TestReadWriteValidatorImpl();
 			}
 		}
-		
+
 		public class TestReadWriteValidatorImpl extends ReadWriteValidatorImpl {
 			@Override
 			protected IValidator<Notification> createValidator() {
@@ -92,6 +94,7 @@ public class TestValidationEditingDomain extends TransactionalEditingDomainImpl 
 					ILiveValidator validator = ModelValidationService.getInstance().newValidator(
 						EvaluationMode.LIVE);
 					validator.addConstraintFilter(new IConstraintFilter() {
+						@Override
 						public boolean accept(IConstraintDescriptor constraint,
 								EObject target) {
 							return false;

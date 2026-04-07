@@ -11,14 +11,14 @@
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Testcase for testing scheduling of Read operation scenarios
- * 
+ *
  * @author mgoyal
  */
 public class ReadOperationTest extends AbstractMultithreadTest {
@@ -39,8 +39,9 @@ public class ReadOperationTest extends AbstractMultithreadTest {
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!readThread1.isAlive())
+			if (!readThread1.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(readThread1.isFailed());
@@ -80,8 +81,9 @@ public class ReadOperationTest extends AbstractMultithreadTest {
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!readThread1.isAlive() && !readThread2.isAlive())
+			if (!readThread1.isAlive() && !readThread2.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(readThread1.isFailed());
@@ -106,8 +108,9 @@ public class ReadOperationTest extends AbstractMultithreadTest {
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!readThread1.isAlive())
+			if (!readThread1.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(readThread1.isInnerFailed());
@@ -169,8 +172,9 @@ public class ReadOperationTest extends AbstractMultithreadTest {
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!longReadThread.isAlive() && !readThd1.isAlive() && !readThd2.isAlive() && !readThd3.isAlive())
+			if (!longReadThread.isAlive() && !readThd1.isAlive() && !readThd2.isAlive() && !readThd3.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(longReadThread.isFailed());
@@ -243,8 +247,9 @@ public class ReadOperationTest extends AbstractMultithreadTest {
 				// ignore this exception
 			}
 			if (!longReadThread1.isAlive() && !longReadThread2.isAlive() && !longReadThread3.isAlive()
-					&& !longReadThread4.isAlive())
+					&& !longReadThread4.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(longReadThread1.isFailed());

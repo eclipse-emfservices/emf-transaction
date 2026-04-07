@@ -12,11 +12,11 @@
  */
 package org.eclipse.emf.workspace.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IUndoContext;
@@ -46,8 +46,7 @@ import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultBookTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultNameTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.TestCommand;
 import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the {@link EMFCommandOperation} class.
@@ -56,49 +55,40 @@ import org.junit.Test;
  */
 public class EMFCommandOperationTest extends AbstractTest {
 
-	
 	@Test
 	public void test_execute_undo_redo() {
 		startReading();
-		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 		final String oldTitle = book.getTitle();
 		final Writer oldAuthor = book.getAuthor();
-		
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+
+		final String newTitle = "New Title";
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
-		
+
 		commit();
-		
+
 		IUndoContext ctx = new TestUndoContext();
-		
-		Command cmd = new SetCommand(
-				domain,
-				book,
-				EXTLibraryPackage.eINSTANCE.getBook_Title(),
-				newTitle);
-		cmd = cmd.chain(new AddCommand(
-				domain,
-				newAuthor,
-				EXTLibraryPackage.eINSTANCE.getWriter_Books(),
-				book));
+
+		Command cmd = new SetCommand(domain, book, EXTLibraryPackage.eINSTANCE.getBook_Title(), newTitle);
+		cmd = cmd.chain(new AddCommand(domain, newAuthor, EXTLibraryPackage.eINSTANCE.getWriter_Books(), book));
 		IUndoableOperation oper = new EMFCommandOperation(domain, cmd);
-		
+
 		try {
 			oper.addContext(ctx);
 			history.execute(oper, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were applied
 		assertSame(newTitle, book.getTitle());
 		assertSame(newAuthor, book.getAuthor());
-		
+
 		commit();
 
 		try {
@@ -107,31 +97,31 @@ public class EMFCommandOperationTest extends AbstractTest {
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were undone
 		assertSame(oldTitle, book.getTitle());
 		assertSame(oldAuthor, book.getAuthor());
-		
+
 		commit();
-		
+
 		try {
 			assertTrue(history.canRedo(ctx));
 			history.redo(ctx, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were redone
 		assertSame(newTitle, book.getTitle());
 		assertSame(newAuthor, book.getAuthor());
-		
+
 		commit();
 	}
-	
+
 	/**
 	 * Tests that trigger commands are executed correctly when executing operations,
 	 * including undo and redo.
@@ -140,35 +130,31 @@ public class EMFCommandOperationTest extends AbstractTest {
 	public void test_triggerCommands() {
 		// one trigger sets default library names
 		domain.addResourceSetListener(new LibraryDefaultNameTrigger());
-		
+
 		// another (distinct) trigger creates default books in new libraries
 		domain.addResourceSetListener(new LibraryDefaultBookTrigger());
-		
+
 		final Library newLibrary = EXTLibraryFactory.eINSTANCE.createLibrary();
-		
+
 		IUndoContext ctx = new TestUndoContext();
-		
-		// add a new library.  Our triggers will set a default name and book
-		Command cmd = new AddCommand(
-				domain,
-				root,
-				EXTLibraryPackage.eINSTANCE.getLibrary_Branches(),
-				newLibrary);
+
+		// add a new library. Our triggers will set a default name and book
+		Command cmd = new AddCommand(domain, root, EXTLibraryPackage.eINSTANCE.getLibrary_Branches(), newLibrary);
 		IUndoableOperation oper = new EMFCommandOperation(domain, cmd);
-		
+
 		try {
 			oper.addContext(ctx);
 			history.execute(oper, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
-		assertEquals("New Library", newLibrary.getName()); //$NON-NLS-1$
+
+		assertEquals("New Library", newLibrary.getName());
 		assertEquals(1, newLibrary.getBooks().size());
-		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle()); //$NON-NLS-1$
-		
+		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle());
+
 		commit();
 
 		try {
@@ -177,32 +163,32 @@ public class EMFCommandOperationTest extends AbstractTest {
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were undone
 		assertFalse(root.getBranches().contains(newLibrary));
-		
+
 		commit();
-		
+
 		try {
 			assertTrue(history.canRedo(ctx));
 			history.redo(ctx, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were redone
 		assertTrue(root.getBranches().contains(newLibrary));
-		assertEquals("New Library", newLibrary.getName()); //$NON-NLS-1$
+		assertEquals("New Library", newLibrary.getName());
 		assertEquals(1, newLibrary.getBooks().size());
-		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle()); //$NON-NLS-1$
-		
+		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle());
+
 		commit();
 	}
-	
+
 	/**
 	 * Tests that a command resulting from a pre-commit (trigger) listener will,
 	 * itself, trigger further changes.
@@ -211,39 +197,35 @@ public class EMFCommandOperationTest extends AbstractTest {
 	public void test_triggerCommands_cascading() {
 		// add the trigger to create a default book in a new library
 		domain.addResourceSetListener(new LibraryDefaultBookTrigger());
-		
+
 		// add another trigger that will set default publication dates for new items
 		domain.addResourceSetListener(new ItemDefaultPublicationDateTrigger());
-		
+
 		final Library newLibrary = EXTLibraryFactory.eINSTANCE.createLibrary();
-		
+
 		IUndoContext ctx = new TestUndoContext();
-		
-		// add a new library.  Our triggers will set a default name and book
-		Command cmd = new AddCommand(
-				domain,
-				root,
-				EXTLibraryPackage.eINSTANCE.getLibrary_Branches(),
-				newLibrary);
+
+		// add a new library. Our triggers will set a default name and book
+		Command cmd = new AddCommand(domain, root, EXTLibraryPackage.eINSTANCE.getLibrary_Branches(), newLibrary);
 		IUndoableOperation oper = new EMFCommandOperation(domain, cmd);
-		
+
 		try {
 			oper.addContext(ctx);
 			history.execute(oper, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// the book is created by the first trigger
 		assertEquals(1, newLibrary.getBooks().size());
 		Book book = newLibrary.getBooks().get(0);
-		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
-		
+		assertEquals("New Book", book.getTitle());
+
 		// the publication date is created by the cascaded trigger
 		assertNotNull(book.getPublicationDate());
-		
+
 		commit();
 
 		try {
@@ -252,75 +234,76 @@ public class EMFCommandOperationTest extends AbstractTest {
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were undone
 		assertFalse(root.getBranches().contains(newLibrary));
-		
+
 		commit();
-		
+
 		try {
 			assertTrue(history.canRedo(ctx));
 			history.redo(ctx, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were redone
 		assertTrue(root.getBranches().contains(newLibrary));
 		assertEquals(1, newLibrary.getBooks().size());
 		book = newLibrary.getBooks().get(0);
-		assertEquals("New Book", book.getTitle()); //$NON-NLS-1$
+		assertEquals("New Book", book.getTitle());
 		assertNotNull(book.getPublicationDate());
-		
+
 		commit();
 	}
-	
+
 	/**
 	 * Tests that an EMF Command Operation works well with recording commands.
 	 */
 	@Test
 	public void test_RecordingCommand_execute_undo_redo() {
 		startReading();
-		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 		final String oldTitle = book.getTitle();
 		final Writer oldAuthor = book.getAuthor();
-		
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+
+		final String newTitle = "New Title";
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
-		
+
 		commit();
-		
+
 		IUndoContext ctx = new TestUndoContext();
-		
+
 		Command cmd = new RecordingCommand(domain) {
 			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
 				newAuthor.getBooks().add(book);
-			}};
-			
+			}
+		};
+
 		IUndoableOperation oper = new EMFCommandOperation(domain, cmd);
-		
+
 		try {
 			oper.addContext(ctx);
 			history.execute(oper, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were applied
 		assertSame(newTitle, book.getTitle());
 		assertSame(newAuthor, book.getAuthor());
-		
+
 		commit();
 
 		try {
@@ -329,31 +312,31 @@ public class EMFCommandOperationTest extends AbstractTest {
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were undone
 		assertSame(oldTitle, book.getTitle());
 		assertSame(oldAuthor, book.getAuthor());
-		
+
 		commit();
-		
+
 		try {
 			assertTrue(history.canRedo(ctx));
 			history.redo(ctx, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were redone
 		assertSame(newTitle, book.getTitle());
 		assertSame(newAuthor, book.getAuthor());
-		
+
 		commit();
 	}
-	
+
 	/**
 	 * Tests that trigger commands on recording commands are correctly undone, by
 	 * the recording command, itself (which records the entire transaction).
@@ -362,36 +345,37 @@ public class EMFCommandOperationTest extends AbstractTest {
 	public void test_RecordingCommand_triggerCommands() {
 		// one trigger sets default library names
 		domain.addResourceSetListener(new LibraryDefaultNameTrigger());
-		
+
 		// another (distinct) trigger creates default books in new libraries
 		domain.addResourceSetListener(new LibraryDefaultBookTrigger());
-		
+
 		final Library newLibrary = EXTLibraryFactory.eINSTANCE.createLibrary();
-		
+
 		IUndoContext ctx = new TestUndoContext();
-		
-		// add a new library.  Our triggers will set a default name and book
+
+		// add a new library. Our triggers will set a default name and book
 		Command cmd = new RecordingCommand(domain) {
 			@Override
 			protected void doExecute() {
 				root.getBranches().add(newLibrary);
-			}};
-		
+			}
+		};
+
 		IUndoableOperation oper = new EMFCommandOperation(domain, cmd);
-		
+
 		try {
 			oper.addContext(ctx);
 			history.execute(oper, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
-		assertEquals("New Library", newLibrary.getName()); //$NON-NLS-1$
+
+		assertEquals("New Library", newLibrary.getName());
 		assertEquals(1, newLibrary.getBooks().size());
-		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle()); //$NON-NLS-1$
-		
+		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle());
+
 		commit();
 
 		try {
@@ -400,66 +384,58 @@ public class EMFCommandOperationTest extends AbstractTest {
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were undone
 		assertFalse(root.getBranches().contains(newLibrary));
-		
+
 		commit();
-		
+
 		try {
 			assertTrue(history.canRedo(ctx));
 			history.redo(ctx, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were redone
 		assertTrue(root.getBranches().contains(newLibrary));
-		assertEquals("New Library", newLibrary.getName()); //$NON-NLS-1$
+		assertEquals("New Library", newLibrary.getName());
 		assertEquals(1, newLibrary.getBooks().size());
-		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle()); //$NON-NLS-1$
-		
+		assertEquals("New Book", newLibrary.getBooks().get(0).getTitle());
+
 		commit();
 	}
-	
+
 	/**
 	 * Tests that validation correctly rolls back changes and fails execution.
 	 */
 	@Test
 	public void test_validation() {
 		startReading();
-		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 		final String oldTitle = book.getTitle();
 		final Writer oldAuthor = book.getAuthor();
-		
+
 		final String newTitle = null; // will fail validation
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
-		
+
 		commit();
-		
+
 		IUndoContext ctx = new TestUndoContext();
-		
-		Command cmd = new SetCommand(
-				domain,
-				book,
-				EXTLibraryPackage.eINSTANCE.getBook_Title(),
-				newTitle);
-		cmd = cmd.chain(new AddCommand(
-				domain,
-				newAuthor,
-				EXTLibraryPackage.eINSTANCE.getWriter_Books(),
-				book));
+
+		Command cmd = new SetCommand(domain, book, EXTLibraryPackage.eINSTANCE.getBook_Title(), newTitle);
+		cmd = cmd.chain(new AddCommand(domain, newAuthor, EXTLibraryPackage.eINSTANCE.getWriter_Books(), book));
 		IUndoableOperation oper = new EMFCommandOperation(domain, cmd);
-		
+
 		IStatus status = null;
-		
+
 		try {
 			validationEnabled = true;
 			oper.addContext(ctx);
@@ -469,25 +445,25 @@ public class EMFCommandOperationTest extends AbstractTest {
 		} finally {
 			validationEnabled = false;
 		}
-		
+
 		assertNotNull(status);
 		assertTrue(status.matches(IStatus.ERROR));
-		
+
 		status = findValidationStatus(status, IStatus.ERROR);
 		assertNotNull(status);
-		
+
 		startReading();
-		
+
 		// verify that the changes were rolled back
 		assertSame(oldTitle, book.getTitle());
 		assertSame(oldAuthor, book.getAuthor());
-		
+
 		commit();
 	}
-	
+
 	/**
-	 * Tests that the the <code>EMFCommandOperation</code> tests its wrapped
-	 * command for redoability.
+	 * Tests that the the <code>EMFCommandOperation</code> tests its wrapped command
+	 * for redoability.
 	 */
 	@Test
 	public void test_nonredoableCommand_138287() {
@@ -495,21 +471,22 @@ public class EMFCommandOperationTest extends AbstractTest {
 			public void execute() {
 				// nothing to do
 			}
-		
+
 			@Override
 			public boolean canRedo() {
 				return false;
-			}};
-		
+			}
+		};
+
 		getCommandStack().execute(cmd);
-		
+
 		assertTrue(getCommandStack().canUndo());
-		
+
 		getCommandStack().undo();
-		
+
 		assertFalse(getCommandStack().canRedo());
 	}
-	
+
 	/**
 	 * Tests that the <code>EMFCommandOperation</code> tests its wrapped trigger
 	 * command for redoability.
@@ -524,158 +501,162 @@ public class EMFCommandOperationTest extends AbstractTest {
 					public void execute() {
 						// nothing to do
 					}
-				
+
 					@Override
 					public boolean canRedo() {
 						return false;
-					}};
-			}});
-		
+					}
+				};
+			}
+		});
+
 		Library newLibrary = EXTLibraryFactory.eINSTANCE.createLibrary();
-		
+
 		// this command *is* implicitly redoable; it is the trigger that is not
-		Command cmd = AddCommand.create(
-				domain, root, EXTLibraryPackage.Literals.LIBRARY__BRANCHES,
-				newLibrary);
-		
+		Command cmd = AddCommand.create(domain, root, EXTLibraryPackage.Literals.LIBRARY__BRANCHES, newLibrary);
+
 		getCommandStack().execute(cmd);
-		
+
 		assertTrue(getCommandStack().canUndo());
-		
+
 		getCommandStack().undo();
-		
+
 		assertFalse(getCommandStack().canRedo());
 	}
-    
-    /**
-     * Tests that recording-commands used as triggers are not undone twice when
-     * executing a recording-command on the command-stack.
-     */
-   @Test
-   public void test_undoRecordingCommandWithRecordingCommandTrigger_218276() {
-    	final Book[] book = new Book[] {(Book) find("root/Root Book")}; //$NON-NLS-1$
-    	final int newCopies = 30;
-    	
-    	final RecordingCommand trigger = new RecordingCommand(domain, "Test Trigger") { //$NON-NLS-1$
-		
+
+	/**
+	 * Tests that recording-commands used as triggers are not undone twice when
+	 * executing a recording-command on the command-stack.
+	 */
+	@Test
+	public void test_undoRecordingCommandWithRecordingCommandTrigger_218276() {
+		final Book[] book = new Book[] { (Book) find("root/Root Book") };
+		final int newCopies = 30;
+
+		final RecordingCommand trigger = new RecordingCommand(domain, "Test Trigger") {
+
 			@Override
 			protected void doExecute() {
 				book[0].setCopies(newCopies);
-			}};
-    	
+			}
+		};
+
 		ResourceSetListener listener = new ResourceSetListenerImpl() {
 			@Override
 			public boolean isPrecommitOnly() {
 				return true;
 			}
-			
+
 			@Override
-			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
-					throws RollbackException {
-				
+			public Command transactionAboutToCommit(ResourceSetChangeEvent event) throws RollbackException {
+
 				CompoundCommand result = new CompoundCommand();
-				
+
 				for (Notification next : event.getNotifications()) {
 					if (next.getFeature() == EXTLibraryPackage.Literals.BOOK__TITLE) {
 						return trigger;
 					}
 				}
-				
+
 				return result;
-			}};
-		
+			}
+		};
+
 		try {
 			domain.addResourceSetListener(listener);
-			
-			final String newTitle = "New Title"; //$NON-NLS-1$
-			
-			getCommandStack().execute(new RecordingCommand(domain, "Test") { //$NON-NLS-1$
+
+			final String newTitle = "New Title";
+
+			getCommandStack().execute(new RecordingCommand(domain, "Test") {
 				@Override
 				protected void doExecute() {
 					book[0].setTitle(newTitle);
-				}});
-			
-			assertEquals("Wrong number of copies on execute", newCopies, book[0].getCopies()); //$NON-NLS-1$
-			
+				}
+			});
+
+			assertEquals(newCopies, book[0].getCopies(), "Wrong number of copies on execute");
+
 			getCommandStack().undo();
-			
-			assertFalse("Wrong number of copies on undo", book[0].getCopies() == newCopies); //$NON-NLS-1$
-			
+
+			assertFalse(book[0].getCopies() == newCopies, "Wrong number of copies on undo");
+
 			getCommandStack().redo();
-			
-			assertEquals("Wrong number of copies on redo", newCopies, book[0].getCopies()); //$NON-NLS-1$
+
+			assertEquals(newCopies, book[0].getCopies(), "Wrong number of copies on redo");
 		} catch (Exception e) {
 			fail(e);
 		} finally {
 			domain.removeResourceSetListener(listener);
 		}
-    }
-    
-    /**
-     * Tests that recording-commands used as triggers are not undone twice
-     * when executing recording-commands that are nested in some compound
-     * command that is executed on the command-stack.
-     */
+	}
+
+	/**
+	 * Tests that recording-commands used as triggers are not undone twice when
+	 * executing recording-commands that are nested in some compound command that is
+	 * executed on the command-stack.
+	 */
 	@Test
-    public void test_undoNestedRecordingCommandWithRecordingCommandTrigger_218276() {
-    	final Book[] book = new Book[] {(Book) find("root/Root Book")}; //$NON-NLS-1$
-    	final int newCopies = 30;
-    	
-    	final RecordingCommand trigger = new RecordingCommand(domain, "Test Trigger") { //$NON-NLS-1$
-		
+	public void test_undoNestedRecordingCommandWithRecordingCommandTrigger_218276() {
+		final Book[] book = new Book[] { (Book) find("root/Root Book") };
+		final int newCopies = 30;
+
+		final RecordingCommand trigger = new RecordingCommand(domain, "Test Trigger") {
+
 			@Override
 			protected void doExecute() {
 				book[0].setCopies(newCopies);
-			}};
-    	
+			}
+		};
+
 		ResourceSetListener listener = new ResourceSetListenerImpl() {
 			@Override
 			public boolean isPrecommitOnly() {
 				return true;
 			}
-			
+
 			@Override
-			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
-					throws RollbackException {
-				
+			public Command transactionAboutToCommit(ResourceSetChangeEvent event) throws RollbackException {
+
 				CompoundCommand result = new CompoundCommand();
-				
+
 				for (Notification next : event.getNotifications()) {
 					if (next.getFeature() == EXTLibraryPackage.Literals.BOOK__TITLE) {
 						return trigger;
 					}
 				}
-				
+
 				return result;
-			}};
-		
+			}
+		};
+
 		try {
 			domain.addResourceSetListener(listener);
-			
-			final String newTitle = "New Title"; //$NON-NLS-1$
-			
-			CompoundCommand cc = new CompoundCommand("Test"); //$NON-NLS-1$
-			cc.append(new RecordingCommand(domain, "Test") { //$NON-NLS-1$
+
+			final String newTitle = "New Title";
+
+			CompoundCommand cc = new CompoundCommand("Test");
+			cc.append(new RecordingCommand(domain, "Test") {
 				@Override
 				protected void doExecute() {
 					book[0].setTitle(newTitle);
-				}});
+				}
+			});
 
 			getCommandStack().execute(cc);
-			
-			assertEquals("Wrong number of copies on execute", newCopies, book[0].getCopies()); //$NON-NLS-1$
-			
+
+			assertEquals(newCopies, book[0].getCopies(), "Wrong number of copies on execute");
+
 			getCommandStack().undo();
-			
-			assertFalse("Wrong number of copies on undo", book[0].getCopies() == newCopies); //$NON-NLS-1$
-			
+
+			assertFalse(book[0].getCopies() == newCopies, "Wrong number of copies on undo");
+
 			getCommandStack().redo();
-			
-			assertEquals("Wrong number of copies on redo", newCopies, book[0].getCopies()); //$NON-NLS-1$
+
+			assertEquals(newCopies, book[0].getCopies(), "Wrong number of copies on redo");
 		} catch (Exception e) {
 			fail(e);
 		} finally {
 			domain.removeResourceSetListener(listener);
 		}
-    }
+	}
 }

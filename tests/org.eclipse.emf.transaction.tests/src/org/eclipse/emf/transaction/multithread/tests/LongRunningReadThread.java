@@ -20,7 +20,7 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
  */
 class LongRunningReadThread extends ReadThread {
 	long timeYielded = 0L;
-	
+
 	/**
 	 * Constructor
 	 * @param waitObject
@@ -37,6 +37,7 @@ class LongRunningReadThread extends ReadThread {
 	public void run() {
 		try {
 			getDomain().runExclusive(new Runnable() {
+				@Override
 				public void run() {
 					if(notifyObject != null) {
 						synchronized(notifyObject) {
@@ -53,12 +54,12 @@ class LongRunningReadThread extends ReadThread {
 							}
 						}
 					}
-					
+
 					startTime = System.currentTimeMillis();
 					for(int i = 0; i < 10; i++) {
 						try {
 							sleep(Constants.SLEEP_TIME);
-							
+
 							long startYield = System.currentTimeMillis();
 							getDomain().yield();
 							timeYielded += System.currentTimeMillis() - startYield;

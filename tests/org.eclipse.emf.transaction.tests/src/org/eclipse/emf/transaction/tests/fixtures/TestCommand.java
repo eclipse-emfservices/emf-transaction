@@ -28,21 +28,23 @@ public abstract class TestCommand
 	protected boolean prepare() {
 		return true;
 	}
-	
+
 	@Override
 	public void undo() {
 		// do nothing
 	}
-	
+
+	@Override
 	public void redo() {
 		// do nothing
 	}
-	
+
 	public static abstract class Redoable
 			extends TestCommand
 			implements ConditionalRedoCommand {
-		
-		
+
+
+		@Override
 		public boolean canRedo() {
 			return true;
 		}

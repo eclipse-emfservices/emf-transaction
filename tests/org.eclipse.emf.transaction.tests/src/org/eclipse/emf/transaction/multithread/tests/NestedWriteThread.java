@@ -11,14 +11,14 @@
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.Transaction;
+import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 
 /**
  * Thread representing write operation nested in a write operation.
- * 
+ *
  * @author mgoyal
  */
 class NestedWriteThread
@@ -26,7 +26,7 @@ class NestedWriteThread
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param waitObject
 	 * @param notifyObject
 	 */
@@ -35,13 +35,13 @@ class NestedWriteThread
 	}
 
 	/**
-	 * Default Constructor 
+	 * Default Constructor
 	 */
 	public NestedWriteThread(TransactionalEditingDomain domain) {
 		this(domain, null, null);
 	}
 
-	/** 
+	/**
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
@@ -66,7 +66,7 @@ class NestedWriteThread
 		try {
 			tx = ((InternalTransactionalEditingDomain) getDomain()).startTransaction(
 				false, null);
-			
+
 			startTime = System.currentTimeMillis();
 			try {
 				sleep(Constants.SLEEP_TIME);
@@ -74,29 +74,31 @@ class NestedWriteThread
 				// ignore this.
 			}
 			final boolean bWriting = true;
-			
+
 			try {
 				getCommandStack().execute(new TestCommand() {
-				
+
+					@Override
 					public void execute() {
 						innerStartTime = System.currentTimeMillis();
-						
+
 						try {
 							sleep(Constants.SLEEP_TIME);
 						} catch (InterruptedException e) {
 							// ignore this.
 						}
-						
-						if (bWriting && !isExecuted)
+
+						if (bWriting && !isExecuted) {
 							isInnerExecuted = true;
+						}
 						innerEndTime = System.currentTimeMillis();
 					}
-				
+
 				});
 			} catch (Exception e1) {
 				isInnerFailed = true;
 			}
-			
+
 			try {
 				sleep(Constants.SLEEP_TIME);
 			} catch (InterruptedException e) {

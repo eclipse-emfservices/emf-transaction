@@ -10,10 +10,11 @@
  *   IBM - Initial API and implementation
  */
 package org.eclipse.emf.workspace.util.tests;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
 
@@ -28,9 +29,8 @@ import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.emf.workspace.tests.AbstractTest;
 import org.eclipse.emf.workspace.tests.fixtures.TestCommand;
 import org.eclipse.emf.workspace.util.WorkspaceValidateEditSupport;
-import org.junit.Assert;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests validate-edit support.
@@ -38,119 +38,118 @@ import org.junit.Test;
  * @author Christian W. Damus (cdamus)
  */
 public class ValidateEditTest extends AbstractTest {
-    
-    private static final String newTitle = "New Title"; //$NON-NLS-1$
-    
-    private Book book;
-    
-    private final Command cmd = new TestCommand() {
-        public void execute() {
-            try {
-                book.setTitle(newTitle);
-            } catch (Exception e) {
-                fail(e);
-            }
-        }};
+
+	private static final String newTitle = "New Title";
+
+	private Book book;
+
+	private final Command cmd = new TestCommand() {
+		public void execute() {
+			try {
+				book.setTitle(newTitle);
+			} catch (Exception e) {
+				fail(e);
+			}
+		}
+	};
 
 	/**
-	 * A control test for a scenario in which validateEdit will find all
-	 * resources to be modifiable.
+	 * A control test for a scenario in which validateEdit will find all resources
+	 * to be modifiable.
 	 */
-  	@Test
+	@Test
 	public void test_noValidateEditRequired() {
-        try {
-            getCommandStack().execute(cmd, null);
-            
-            assertTitleChanged();
-            assertResourceDirty();
-        } catch (Exception e) {
-            fail(e);
-        }
+		try {
+			getCommandStack().execute(cmd, null);
+
+			assertTitleChanged();
+			assertResourceDirty();
+		} catch (Exception e) {
+			fail(e);
+		}
 	}
 
-    /**
-     * Simple unmodifiable resource scenario.
-     */
-    public void ignore_test_validateEditRollback() {
-        setResourceReadOnly();
-        
-        try {
-            getCommandStack().execute(cmd, null);
-            
-            Assert.fail("Should have rolled back"); //$NON-NLS-1$
-        } catch (RollbackException e) {
-            // success
-            System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
-        } catch (Exception e) {
-            fail(e);
-        }
-        
-        assertTitleNotChanged();
-        assertResourceNotDirty();
-    }
-	
+	/**
+	 * Simple unmodifiable resource scenario.
+	 */
+	public void ignore_test_validateEditRollback() {
+		setResourceReadOnly();
+
+		try {
+			getCommandStack().execute(cmd, null);
+
+			Assertions.fail("Should have rolled back");
+		} catch (RollbackException e) {
+			// success
+			System.out.println("Got expected exception: " + e.getLocalizedMessage());
+		} catch (Exception e) {
+			fail(e);
+		}
+
+		assertTitleNotChanged();
+		assertResourceNotDirty();
+	}
+
 	//
 	// Fixture methods
 	//
-	
+
 	@Override
-	protected void doSetUp()
-		throws Exception {
-		
+	protected void doSetUp() throws Exception {
+
 		super.doSetUp();
-		
+
 		setValidateEdit();
-		
+
 		// workspace validate-edit implementation depends on mod tracking
 		testResource.setTrackingModification(true);
-		
-        startReading();
-        book = (Book) find("root/Root Book"); //$NON-NLS-1$
-        commit();
-        assertNotNull(book);
+
+		startReading();
+		book = (Book) find("root/Root Book");
+		commit();
+		assertNotNull(book);
 	}
-	
+
 	@Override
-	protected void doTearDown()
-		throws Exception {
-		
+	protected void doTearDown() throws Exception {
+
 		book = null;
-		
+
 		super.doTearDown();
 	}
-	
+
 	void setResourceReadOnly() {
-        ResourceAttributes attr = new ResourceAttributes();
-        attr.setReadOnly(true);
-        
-        try {
-            file.setResourceAttributes(attr);
-        } catch (CoreException e) {
-            fail(e);
-        }
+		ResourceAttributes attr = new ResourceAttributes();
+		attr.setReadOnly(true);
+
+		try {
+			file.setResourceAttributes(attr);
+		} catch (CoreException e) {
+			fail(e);
+		}
 	}
-	
+
 	void setValidateEdit() {
-        TransactionalEditingDomain.DefaultOptions defaults = TransactionUtil
-            .getAdapter(domain, TransactionalEditingDomain.DefaultOptions.class);
-        
-        defaults.setDefaultTransactionOptions(Collections.singletonMap(
-            Transaction.OPTION_VALIDATE_EDIT, new WorkspaceValidateEditSupport()));
+		TransactionalEditingDomain.DefaultOptions defaults = TransactionUtil.getAdapter(domain,
+				TransactionalEditingDomain.DefaultOptions.class);
+
+		defaults.setDefaultTransactionOptions(
+				Collections.singletonMap(Transaction.OPTION_VALIDATE_EDIT, new WorkspaceValidateEditSupport()));
 	}
-	
+
 	void assertTitleChanged() {
-	    assertEquals(newTitle, book.getTitle());
+		assertEquals(newTitle, book.getTitle());
 	}
-	
+
 	void assertTitleNotChanged() {
-	    assertFalse(newTitle.equals(book.getTitle()));
+		assertFalse(newTitle.equals(book.getTitle()));
 	}
-	
+
 	void assertResourceDirty() {
-	    assertTrue("Resource not dirty", testResource.isModified()); //$NON-NLS-1$
+		assertTrue(testResource.isModified(), "Resource not dirty");
 	}
-    
-    void assertResourceNotDirty() {
-        assertFalse("Resource is dirty", testResource.isModified()); //$NON-NLS-1$
-    }
+
+	void assertResourceNotDirty() {
+		assertFalse(testResource.isModified(), "Resource is dirty");
+	}
 }

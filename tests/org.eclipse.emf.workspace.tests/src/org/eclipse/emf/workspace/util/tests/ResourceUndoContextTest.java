@@ -12,9 +12,9 @@
  */
 package org.eclipse.emf.workspace.util.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
 import java.util.List;
@@ -41,10 +41,10 @@ import org.eclipse.emf.workspace.IResourceUndoContextPolicy;
 import org.eclipse.emf.workspace.ResourceUndoContext;
 import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
 import org.eclipse.emf.workspace.tests.fixtures.TestPackageBuilder;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the {@link ResourceUndoContext} class.
@@ -255,7 +255,7 @@ public class ResourceUndoContextTest {
 			assertEquals(expectedResources,
 					IResourceUndoContextPolicy.DEFAULT.getContextResources(null, listener.notifications));
 		} catch (ClassCastException e) {
-			Assert.fail("Should not get CCE in the resource undo-context policy");
+			Assertions.fail("Should not get CCE in the resource undo-context policy");
 		}
 	}
 
@@ -263,8 +263,8 @@ public class ResourceUndoContextTest {
 	// Fixture methods
 	//
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeEach
+	public void setUp() {
 
 		TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE
 				.createEditingDomain(new DefaultOperationHistory());
@@ -288,8 +288,8 @@ public class ResourceUndoContextTest {
 		packageBuilder = new TestPackageBuilder();
 	}
 
-	@After
-	public void tearDown() throws Exception {
+	@AfterEach
+	public void tearDown() {
 
 		packageBuilder.dispose();
 
@@ -311,7 +311,7 @@ public class ResourceUndoContextTest {
 	 */
 	protected void fail(Exception e) {
 		e.printStackTrace();
-		Assert.fail("Should not have thrown: " + e.getLocalizedMessage());
+		Assertions.fail("Should not have thrown: " + e.getLocalizedMessage());
 	}
 
 	private static class Listener extends EContentAdapter {

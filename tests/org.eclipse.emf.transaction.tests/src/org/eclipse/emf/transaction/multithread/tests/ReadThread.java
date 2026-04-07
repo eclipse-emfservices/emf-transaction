@@ -16,7 +16,7 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 /**
  * Thread for a simple read operation
- * 
+ *
  * @author mgoyal
  */
 class ReadThread extends SimpleOperationThread {
@@ -28,14 +28,14 @@ class ReadThread extends SimpleOperationThread {
 	public ReadThread(TransactionalEditingDomain domain, Object waitObject, Object notifyObject) {
 		super(domain, waitObject, notifyObject);
 	}
-	
+
 	/**
-	 * Default constructor 
+	 * Default constructor
 	 */
 	public ReadThread(TransactionalEditingDomain domain) {
 		this(domain, null, null);
 	}
-	
+
 	/**
 	 * @see java.lang.Runnable#run()
 	 */
@@ -58,6 +58,7 @@ class ReadThread extends SimpleOperationThread {
 			}
 
 			getDomain().runExclusive(new Runnable() {
+				@Override
 				public void run() {
 					startTime = System.currentTimeMillis();
 					try {

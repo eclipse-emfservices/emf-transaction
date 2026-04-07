@@ -32,20 +32,20 @@ public class LibraryDefaultNameTrigger extends TriggerListener {
 							NotificationFilter.createEventTypeFilter(
 									Notification.ADD)));
 	}
-	
+
 	@Override
 	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 		Command result = null;
-		
+
 		Library newLibrary = (Library) notification.getNewValue();
 		if ((newLibrary.getName() == null) || (newLibrary.getName().length() == 0)) {
 			result= new SetCommand(
 					domain,
 					newLibrary,
 					EXTLibraryPackage.eINSTANCE.getLibrary_Name(),
-					"New Library"); //$NON-NLS-1$
+					"New Library"); 
 		}
-		
+
 		return result;
 	}
 }

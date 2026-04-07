@@ -29,9 +29,9 @@ class WriteThread extends SimpleOperationThread {
 	public WriteThread(TransactionalEditingDomain domain, Object waitObject, Object notifyObject) {
 		super(domain, waitObject, notifyObject);
 	}
-	
+
 	/**
-	 * Constructor 
+	 * Constructor
 	 */
 	public WriteThread(TransactionalEditingDomain domain) {
 		this(domain, null, null);
@@ -60,6 +60,7 @@ class WriteThread extends SimpleOperationThread {
 
 		try {
 			getCommandStack().execute(new TestCommand() {
+					@Override
 					public void execute() {
 						startTime = System.currentTimeMillis();
 						try {

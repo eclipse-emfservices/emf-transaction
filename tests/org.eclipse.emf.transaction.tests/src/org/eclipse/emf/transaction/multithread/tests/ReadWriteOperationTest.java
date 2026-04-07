@@ -12,14 +12,14 @@
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Testcase for testing read and write operation scheduling scenarios
- * 
+ *
  * @author mgoyal
  */
 public class ReadWriteOperationTest extends AbstractMultithreadTest {
@@ -27,7 +27,8 @@ public class ReadWriteOperationTest extends AbstractMultithreadTest {
 	/**
 	 * Tests scheduling of complex Read write scenarios.
 	 */
-	@Test public void testComplexSimultaneousReadsWrites() {
+	@Test
+	public void testComplexSimultaneousReadsWrites() {
 		Object notifier = new Object();
 		NestedReadInWriteThread readInWriteThread1 = new NestedReadInWriteThread(getDomain(), null, notifier);
 		NestedReadInWriteThread readInWriteThread2 = new NestedReadInWriteThread(getDomain(), null, notifier);
@@ -56,8 +57,9 @@ public class ReadWriteOperationTest extends AbstractMultithreadTest {
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!readInWriteThread1.isAlive() && !readInWriteThread2.isAlive())
+			if (!readInWriteThread1.isAlive() && !readInWriteThread2.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(readInWriteThread1.isFailed());
@@ -73,7 +75,8 @@ public class ReadWriteOperationTest extends AbstractMultithreadTest {
 	/**
 	 * Tests scheduling of simultaneous read and write operation
 	 */
-	@Test public void testSimultaneousReadsWrites() {
+	@Test
+	public void testSimultaneousReadsWrites() {
 		Object notifier = new Object();
 		WriteThread writeThread1 = new WriteThread(getDomain(), null, notifier);
 		WriteThread writeThread2 = new WriteThread(getDomain(), null, notifier);
@@ -123,8 +126,9 @@ public class ReadWriteOperationTest extends AbstractMultithreadTest {
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!writeThread1.isAlive() && !writeThread2.isAlive() && !readThread1.isAlive() && !readThread2.isAlive())
+			if (!writeThread1.isAlive() && !writeThread2.isAlive() && !readThread1.isAlive() && !readThread2.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(readThread1.isFailed());
@@ -152,7 +156,8 @@ public class ReadWriteOperationTest extends AbstractMultithreadTest {
 	/**
 	 * Tests Scheduling of Nested Read in Write Operation
 	 */
-	@Test public void testNestedReadInWrite() {
+	@Test
+	public void testNestedReadInWrite() {
 		NestedReadInWriteThread readInWriteThd = new NestedReadInWriteThread(getDomain());
 		readInWriteThd.start();
 
@@ -163,8 +168,9 @@ public class ReadWriteOperationTest extends AbstractMultithreadTest {
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!readInWriteThd.isAlive())
+			if (!readInWriteThd.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(readInWriteThd.isInnerFailed());
@@ -180,7 +186,8 @@ public class ReadWriteOperationTest extends AbstractMultithreadTest {
 	/**
 	 * Tests scheduling of long running read with write operation.
 	 */
-	@Test public void testLongRunningReadWithWrites() {
+	@Test
+	public void testLongRunningReadWithWrites() {
 		Object notifier = new Object();
 		LongRunningReadThread longReadThread = new LongRunningReadThread(getDomain(), null, notifier);
 		ReadThread readThd1 = new ReadThread(getDomain(), null, notifier);
@@ -241,8 +248,9 @@ public class ReadWriteOperationTest extends AbstractMultithreadTest {
 				// ignore this exception
 			}
 			if (!longReadThread.isAlive() && !readThd1.isAlive() && !readThd2.isAlive() && !readThd3.isAlive()
-					&& !writeThd1.isAlive())
+					&& !writeThd1.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(longReadThread.isFailed());
@@ -282,10 +290,9 @@ public class ReadWriteOperationTest extends AbstractMultithreadTest {
 		assertTrue(!Constants.occurIntersect(longReadThread, readThd1));
 		assertTrue(!Constants.occurIntersect(longReadThread, readThd2));
 		assertTrue(Constants.occurredAfter(readThd1, readThd2) || Constants.occurredBefore(readThd1, readThd2));
-		assertTrue("Read yielded to a write", //$NON-NLS-1$
-				(Constants.occurredBefore(longReadThread, writeThd1)
-						|| Constants.occurredAfter(longReadThread, writeThd1))
-						&& !Constants.occurredDuring(longReadThread, writeThd1));
+		assertTrue((Constants.occurredBefore(longReadThread, writeThd1)
+				|| Constants.occurredAfter(longReadThread, writeThd1))
+				&& !Constants.occurredDuring(longReadThread, writeThd1), "Read yielded to a write");
 		assertTrue(!Constants.occurIntersect(longReadThread, readThd3));
 	}
 
@@ -312,6 +319,7 @@ public class ReadWriteOperationTest extends AbstractMultithreadTest {
 		class Interrupter implements Runnable {
 			private volatile boolean dead;
 
+			@Override
 			public void run() {
 				while (!dead) {
 					uiThread.interrupt();
@@ -328,7 +336,6 @@ public class ReadWriteOperationTest extends AbstractMultithreadTest {
 				dead = true;
 			}
 		}
-		;
 
 		Interrupter interrupter = new Interrupter();
 		Thread interrupterThread = new Thread(interrupter);

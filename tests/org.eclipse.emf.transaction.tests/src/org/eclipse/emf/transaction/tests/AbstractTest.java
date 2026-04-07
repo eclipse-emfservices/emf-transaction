@@ -11,9 +11,8 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +39,6 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.examples.extlibrary.AudioVisualItem;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Periodical;
@@ -53,76 +51,72 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.validation.model.IConstraintStatus;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.osgi.framework.Bundle;
 
 /**
  * Abstract test framework for the transaction unit tests.
- * 
+ *
  * @author Christian W. Damus (cdamus)
  */
 public class AbstractTest {
-	
+
 	public static final boolean DEBUGGING = TestsPlugin.instance.isDebugging();
-	
-	static final Bundle EmfTransactionTestsBundle =	TestsPlugin.instance.getBundle();
+
+	static final Bundle EmfTransactionTestsBundle = TestsPlugin.instance.getBundle();
 
 	protected IProject project;
 	protected IFile file;
 	protected TransactionalEditingDomain domain;
 	protected Resource testResource;
 	protected Library root;
-	
-	protected static final String PROJECT_NAME = "emftxtests"; 
-	protected static final String RESOURCE_NAME = "/" + PROJECT_NAME + "/testres.extlibrary";  
 
-	private final List<InternalTransaction> transactionStack =
-		new java.util.ArrayList<InternalTransaction>();
-    
-    private List<Runnable> tearDownActions;
-	
+	protected static final String PROJECT_NAME = "emftxtests";
+	protected static final String RESOURCE_NAME = "/" + PROJECT_NAME + "/testres.extlibrary";
+
+	private final List<InternalTransaction> transactionStack = new java.util.ArrayList<>();
+
+	private List<Runnable> tearDownActions;
+
 	//
 	// Test configuration methods
 	//
-	
-	@Before
-	public void setUp()
-		throws Exception {
-		
-		trace("===> Begin : " + this.getClass().getName()); 
-		
+
+	@BeforeEach
+	public void setUp() throws Exception {
+
+		trace("===> Begin : " + this.getClass().getName());
+
 		doSetUp();
 	}
-	
-	protected void doSetUp()
-		throws Exception {
-		
+
+	protected void doSetUp() throws Exception {
+
 		project = ResourcesPlugin.getWorkspace().getRoot().getProject(PROJECT_NAME);
 		if (!project.exists()) {
 			project.create(null);
 		}
-		
+
 		project.open(null);
 		file = project.getParent().getFile(new Path(RESOURCE_NAME));
-		
+
 		ResourceSet rset = createResourceSet();
-	
+
 		try {
 			Resource originalRes = rset.getResource(
-				URI.createURI(EmfTransactionTestsBundle.getEntry(
-					"/test_models/test_model.extlibrary").toString()), 
+					URI.createURI(EmfTransactionTestsBundle.getEntry("/test_models/test_model.extlibrary").toString()),
 					true);
 			originalRes.setURI(URI.createPlatformResourceURI(RESOURCE_NAME, true));
 			originalRes.save(Collections.EMPTY_MAP);
 			testResource = originalRes;
-			root = (Library) find("root"); 
+			root = (Library) find("root");
 		} catch (IOException e) {
-			Assert.fail("Failed to load test model: " + e.getLocalizedMessage()); 
-			
+			Assertions.fail("Failed to load test model: " + e.getLocalizedMessage());
+
 		}
-		
+
 		domain = createEditingDomain(rset);
 	}
 
@@ -130,55 +124,53 @@ public class AbstractTest {
 	protected TransactionalEditingDomain createEditingDomain(ResourceSet rset) {
 		return TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain(rset);
 	}
-	
+
 	/** May be overridden by subclasses to create non-default resource set. */
 	protected ResourceSet createResourceSet() {
 		return new ResourceSetImpl();
 	}
 
-    /**
-     * Adds an action to perform some clean-up following completion of the test.
-     * The test framework guarantees that it will at least attempt to execute
-     * this action.
-     * 
-     * @param action the tear-down action to run
-     */
-    protected final void addTearDownAction(Runnable action) {
-        if (tearDownActions == null) {
-            tearDownActions = new java.util.ArrayList<Runnable>();
-        }
-        
-        tearDownActions.add(action);
-    }
-    
-	@After
-	public final void tearDown()
-		throws Exception {
-		
+	/**
+	 * Adds an action to perform some clean-up following completion of the test. The
+	 * test framework guarantees that it will at least attempt to execute this
+	 * action.
+	 *
+	 * @param action the tear-down action to run
+	 */
+	protected final void addTearDownAction(Runnable action) {
+		if (tearDownActions == null) {
+			tearDownActions = new java.util.ArrayList<>();
+		}
+
+		tearDownActions.add(action);
+	}
+
+	@AfterEach
+	public final void tearDown() throws Exception {
+
 		try {
 			doTearDown();
 		} finally {
-            processTearDownActions();
-            trace("===> End   : " + this.getClass().getName()); 
+			processTearDownActions();
+			trace("===> End   : " + this.getClass().getName());
 		}
 	}
-    
-    private void processTearDownActions() {
-        if (tearDownActions != null) {
-            for (Runnable action : tearDownActions) {
-                try {
-                    action.run();
-                } catch (Exception e) {
-                    System.err.println("Exception in tear-down action:"); 
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
 
-	protected void doTearDown()
-		throws Exception {
-		
+	private void processTearDownActions() {
+		if (tearDownActions != null) {
+			for (Runnable action : tearDownActions) {
+				try {
+					action.run();
+				} catch (Exception e) {
+					System.err.println("Exception in tear-down action:");
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	protected void doTearDown() throws Exception {
+
 		while (!transactionStack.isEmpty()) {
 			// unwind the current transaction stack
 			if (getActiveTransaction().isActive()) {
@@ -192,27 +184,27 @@ public class AbstractTest {
 				transactionStack.remove(transactionStack.size() - 1);
 			}
 		}
-		
+
 		root = null;
 		if (testResource != null) {
 			unloadAndRemove(testResource);
 			testResource = null;
 		}
-		
+
 		project = ResourcesPlugin.getWorkspace().getRoot().getProject(PROJECT_NAME);
-		
+
 		delete(project);
-		
+
 		project = null;
 		file = null;
 		domain = null;
 	}
-	
+
 	protected void delete(java.io.File file) {
 		if (!file.exists()) {
 			return;
 		}
-		
+
 		try {
 			IFileStore store = EFS.getLocalFileSystem().fromLocalFile(file);
 			IFileInfo info = store.fetchInfo();
@@ -221,15 +213,15 @@ public class AbstractTest {
 			info.setAttribute(EFS.ATTRIBUTE_ARCHIVE, false);
 			store.putInfo(info, EFS.SET_ATTRIBUTES, null);
 		} catch (Exception e) {
-			Assert.fail("Failed to clean up test file: " + e.getLocalizedMessage()); 
+			Assertions.fail("Failed to clean up test file: " + e.getLocalizedMessage());
 		}
 	}
-	
+
 	protected void delete(IFile file) {
 		if (!file.exists()) {
 			return;
 		}
-		
+
 		try {
 			if (file.isReadOnly()) {
 				// on Mac, it can become read-only in certain tests
@@ -241,193 +233,192 @@ public class AbstractTest {
 			}
 			file.delete(true, null);
 		} catch (Exception e) {
-			Assert.fail("Failed to clean up test file: " + e.getLocalizedMessage()); 
+			Assertions.fail("Failed to clean up test file: " + e.getLocalizedMessage());
 		}
 	}
-	
+
 	protected void delete(IProject project) {
 		if (!project.exists()) {
 			return;
 		}
-		
+
 		try {
 			project.refreshLocal(IResource.DEPTH_INFINITE, null);
-			
+
 			project.accept(new IResourceVisitor() {
-				public boolean visit(IResource res)
-						throws CoreException {
+				@Override
+				public boolean visit(IResource res) throws CoreException {
 					if (res.getType() == IResource.FILE) {
 						delete((IFile) res);
 					}
-					
+
 					return true;
-				}});
-			
+				}
+			});
+
 			project.delete(true, true, null);
-	} catch (Exception e) {
-		Assert.fail("Failed to clean up test project: " + e.getLocalizedMessage()); 
+		} catch (Exception e) {
+			Assertions.fail("Failed to clean up test project: " + e.getLocalizedMessage());
 		}
 	}
 
 	//
 	// Other framework methods
 	//
-	
+
 	public static void trace(String message) {
 		if (DEBUGGING) {
 			System.out.println(message);
 			System.out.flush();
 		}
 	}
-	
+
 	protected Resource createTestResource(String name) {
 		Resource result = null;
-		
+
 		try {
-			InputStream input =
-				EmfTransactionTestsBundle.getEntry("/test_models/" + name).openStream(); 
-			
-			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(
-				new Path(PROJECT_NAME + '/' + name));
+			InputStream input = EmfTransactionTestsBundle.getEntry("/test_models/" + name).openStream();
+
+			IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(new Path(PROJECT_NAME + '/' + name));
 			file.create(input, true, null);
-			
-			result = domain.createResource(
-				URI.createPlatformResourceURI(file.getFullPath().toString(), true).toString());
+
+			result = domain
+					.createResource(URI.createPlatformResourceURI(file.getFullPath().toString(), true).toString());
 		} catch (Exception e) {
 			e.printStackTrace();
-			Assert.fail("Exception creating test resource: " + e.getLocalizedMessage()); 
+			Assertions.fail("Exception creating test resource: " + e.getLocalizedMessage());
 		}
-		
+
 		return result;
 	}
-	
+
 	protected void unloadAndRemove(Resource res) {
 		if (res.isLoaded()) {
 			res.unload();
 		}
-		
+
 		if (res.getResourceSet() != null) {
 			res.getResourceSet().getResources().remove(res);
 		}
 	}
-	
+
 	/**
 	 * Records a failure due to an exception that should not have been thrown.
-	 * 
+	 *
 	 * @param e the exception
 	 */
 	protected void fail(Exception e) {
 		e.printStackTrace();
-		Assert.fail("Should not have thrown: " + e.getLocalizedMessage()); 
+		Assertions.fail("Should not have thrown: " + e.getLocalizedMessage());
 	}
-	
+
 	/**
 	 * Asserts that we can find an object having the specified name.
-	 * 
+	 *
 	 * @param name the name to seek
-	 * 
+	 *
 	 * @see #find(String)
 	 */
 	protected void assertFound(String name) {
-		assertNotNull("Did not find " + name, find(testResource, name)); 
+		assertNotNull(find(testResource, name), "Did not find " + name);
 	}
-	
+
 	/**
-	 * Asserts that we can find an object having the specified name, relative
-	 * to the specified starting object.
-	 * 
+	 * Asserts that we can find an object having the specified name, relative to the
+	 * specified starting object.
+	 *
 	 * @param start the object from which to start looking (to which the
-	 *     <code>name</code> is relative).  This can be a resource or an
-	 *     element
-	 * @param name the name to seek
-	 * 
+	 *              <code>name</code> is relative). This can be a resource or an
+	 *              element
+	 * @param name  the name to seek
+	 *
 	 * @see #find(Object, String)
 	 */
 	protected void assertFound(Object start, String name) {
-		assertNotNull("Did not find " + name, find(testResource, name)); 
+		assertNotNull(find(testResource, name), "Did not find " + name); // FIXME: use start instead of testResource
 	}
-	
+
 	/**
 	 * Asserts that we cannot find an object having the specified name.
-	 * 
+	 *
 	 * @param name the name to (not) seek
-	 * 
+	 *
 	 * @see #find(String)
 	 */
 	protected void assertNotFound(String name) {
-		assertNull("Found " + name, find(testResource, name)); 
+		assertNull(find(testResource, name), "Found " + name);
 	}
-	
+
 	/**
-	 * Asserts that we cannot find an object having the specified name, relative
-	 * to the specified starting object.
-	 * 
+	 * Asserts that we cannot find an object having the specified name, relative to
+	 * the specified starting object.
+	 *
 	 * @param start the object from which to start looking (to which the
-	 *     <code>name</code> is relative).  This can be a resource or an
-	 *     element
-	 * @param name the name to (not) seek
-	 * 
+	 *              <code>name</code> is relative). This can be a resource or an
+	 *              element
+	 * @param name  the name to (not) seek
+	 *
 	 * @see #find(Object, String)
 	 */
 	protected void assertNotFound(Object start, String name) {
-		assertNull("Found " + name, find(testResource, name)); 
+		assertNull(find(testResource, name), "Found " + name);
 	}
-	
+
 	/**
 	 * Finds the object in the test model having the specified qualified name.
-	 * 
+	 *
 	 * @param qname a slash-delimited qualified name
 	 * @return the matching object, or <code>null</code> if not found
 	 */
 	protected EObject find(String qname) {
 		return find(testResource, qname);
 	}
-	
+
 	/**
 	 * Finds the object in the test model having the specified qualified name,
 	 * starting from some object.
-	 * 
+	 *
 	 * @param object the starting object (resource or element)
-	 * @param qname a slash-delimited qualified name, relative to the
-	 *     provided <code>object</code>
+	 * @param qname  a slash-delimited qualified name, relative to the provided
+	 *               <code>object</code>
 	 * @return the matching object, or <code>null</code> if not found
 	 */
 	protected EObject find(Object start, String qname) {
 		EObject result = null;
 		Object current = start;
-		
+
 		String[] names = tokenize(qname);
-		
+
 		for (int i = 0; (current != null) && (i < names.length); i++) {
 			String name = names[i];
 			result = null;
-			
+
 			for (EObject child : getContents(current)) {
 				if (name.equals(getName(child))) {
 					result = child;
 					break;
 				}
 			}
-			
+
 			current = result;
 		}
-		
+
 		return result;
 	}
 
 	/**
 	 * Gets the name of a library object.
-	 * 
+	 *
 	 * @param object the object
 	 * @return its name
 	 */
 	protected String getName(EObject object) {
 		return GetName.INSTANCE.doSwitch(object);
 	}
-	
+
 	/**
 	 * Gets the contents of an object.
-	 * 
+	 *
 	 * @param object an object, which may be a resource or an element
 	 * @return its immediate contents (children)
 	 */
@@ -440,17 +431,17 @@ public class AbstractTest {
 			return Collections.emptyList();
 		}
 	}
-	
+
 	/**
 	 * Tokenizes a qualified name on the slashes.
-	 * 
+	 *
 	 * @param qname a qualified name
 	 * @return the parts between the slashes
 	 */
 	private String[] tokenize(String qname) {
-		return qname.split("/"); 
+		return qname.split("/");
 	}
-	
+
 	/**
 	 * Switch to compute the names of library objects.
 	 *
@@ -458,14 +449,9 @@ public class AbstractTest {
 	 */
 	private static final class GetName extends EXTLibrarySwitch<String> {
 		static final GetName INSTANCE = new GetName();
-		
+
 		private GetName() {
 			super();
-		}
-		
-		@SuppressWarnings("unused")
-		public Object caseAudoVisualItem(AudioVisualItem object) {
-			return object.getTitle();
 		}
 
 		@Override
@@ -482,7 +468,7 @@ public class AbstractTest {
 		public String casePeriodical(Periodical object) {
 			return object.getTitle();
 		}
-		
+
 		@Override
 		public String caseWriter(Writer object) {
 			return object.getName();
@@ -492,7 +478,7 @@ public class AbstractTest {
 		public String casePerson(Person object) {
 			if (object.getFirstName() == null) {
 				if (object.getLastName() == null) {
-					return ""; 
+					return "";
 				} else {
 					return object.getLastName();
 				}
@@ -501,8 +487,7 @@ public class AbstractTest {
 			} else {
 				StringBuffer result = new StringBuffer();
 
-				result.append(object.getFirstName()).append(' ').append(
-					object.getLastName());
+				result.append(object.getFirstName()).append(' ').append(object.getLastName());
 
 				return result.toString();
 			}
@@ -510,169 +495,163 @@ public class AbstractTest {
 
 		@Override
 		public String defaultCase(EObject object) {
-			return ""; 
+			return "";
 		}
 	}
-	
+
 	/**
 	 * Gets the current domain's command stack.
-	 * 
+	 *
 	 * @return the command stack
 	 */
 	protected TransactionalCommandStack getCommandStack() {
 		return (TransactionalCommandStack) domain.getCommandStack();
 	}
-	
+
 	/**
 	 * Opens a read-write transaction without options.
 	 */
 	protected void startWriting() {
 		try {
-			transactionStack.add(
-					((InternalTransactionalEditingDomain) domain).startTransaction(false, null));
+			transactionStack.add(((InternalTransactionalEditingDomain) domain).startTransaction(false, null));
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
 	 * Opens a read-write transaction with one option.
-	 * 
+	 *
 	 * @param option the option
 	 */
 	protected void startWriting(String option) {
 		startWriting(makeOptions(option));
 	}
-	
+
 	/**
 	 * Opens a read-write transaction with the specified options.
-	 * 
+	 *
 	 * @param options the options
 	 */
 	protected void startWriting(Map<?, ?> options) {
 		try {
-			transactionStack.add(
-					((InternalTransactionalEditingDomain) domain).startTransaction(false, options));
+			transactionStack.add(((InternalTransactionalEditingDomain) domain).startTransaction(false, options));
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
 	 * Opens a read-only transaction without any options.
 	 */
 	protected void startReading() {
 		try {
-			transactionStack.add(
-					((InternalTransactionalEditingDomain) domain).startTransaction(true, null));
+			transactionStack.add(((InternalTransactionalEditingDomain) domain).startTransaction(true, null));
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
 	 * Opens a read-only transaction with one option.
-	 * 
+	 *
 	 * @param option the option
 	 */
 	protected void startReading(String option) {
 		startReading(makeOptions(option));
 	}
-	
+
 	/**
 	 * Opens a read-only transaction with the specified options.
-	 * 
+	 *
 	 * @param options the options
 	 */
 	protected void startReading(Map<?, ?> options) {
 		try {
-			transactionStack.add(
-					((InternalTransactionalEditingDomain) domain).startTransaction(true, options));
+			transactionStack.add(((InternalTransactionalEditingDomain) domain).startTransaction(true, options));
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
 	 * Commits the most recently-opened transaction.
 	 */
 	protected Transaction commit() {
 		Transaction result = null;
-		
+
 		try {
 			result = transactionStack.remove(transactionStack.size() - 1);
 			result.commit();
 		} catch (Exception e) {
 			fail(e);
 		}
-		
+
 		return result;
 	}
-	
+
 	/**
 	 * Rolls back the most recently-opened transaction.
 	 */
 	protected Transaction rollback() {
 		Transaction result = null;
-		
+
 		try {
 			result = transactionStack.remove(transactionStack.size() - 1);
 			result.rollback();
 		} catch (Exception e) {
 			fail(e);
 		}
-		
+
 		return result;
 	}
-	
+
 	/**
 	 * Obtains the most recently-opened transaction (the "active" transaction).
-	 * 
+	 *
 	 * @return the current transaction, or <code>null</code> if none is active
 	 */
 	protected InternalTransaction getActiveTransaction() {
-		return transactionStack.isEmpty()
-			? null
-			: (InternalTransaction) transactionStack.get(transactionStack.size() - 1);
+		return transactionStack.isEmpty() ? null
+				: (InternalTransaction) transactionStack.get(transactionStack.size() - 1);
 	}
-	
+
 	/**
 	 * Makes a map from one option.
-	 * 
+	 *
 	 * @param option the option to enable
-	 * 
+	 *
 	 * @return the map
 	 */
 	protected Map<Object, Object> makeOptions(String option) {
 		return Collections.<Object, Object>singletonMap(option, Boolean.TRUE);
 	}
-	
+
 	/**
-	 * Gets the validation statuses having the specified severity within
-	 * the specified status object.
-	 * 
-	 * @param status a status (often a multi-status)
+	 * Gets the validation statuses having the specified severity within the
+	 * specified status object.
+	 *
+	 * @param status   a status (often a multi-status)
 	 * @param severity the severity of status to look for
-	 * 
+	 *
 	 * @return the matching statuses, or an empty collection if none found
 	 */
 	protected Collection<IStatus> findValidationStatuses(IStatus status, int severity) {
 		Set<IStatus> result;
-		
+
 		if (status.isMultiStatus()) {
-			result = new java.util.HashSet<IStatus>();
+			result = new java.util.HashSet<>();
 			IStatus[] children = status.getChildren();
-			
+
 			for (IStatus element : children) {
 				result.addAll(findValidationStatuses(element, severity));
 			}
-		} else if ((status instanceof IConstraintStatus)
-				&& (status.matches(severity))) {
+		} else if ((status instanceof IConstraintStatus) && (status.matches(severity))) {
 			result = Collections.singleton(status);
 		} else {
 			result = Collections.emptySet();
 		}
-		
+
 		return result;
 	}
 
@@ -686,15 +665,10 @@ public class AbstractTest {
 
 	protected void runGC() {
 		System.gc();
-		
+
 		idle(2000);
-		
+
 		System.gc();
 	}
-	
-	public void test_DoNothing() {
-		// see Bugzilla 493963
-		String why = "Maven wants to find a test to run in this abstract class";
-		assertTrue(why.contains("Maven"));
-	}
+
 }

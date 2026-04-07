@@ -11,10 +11,10 @@
  */
 package org.eclipse.emf.transaction.util.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Iterator;
 
@@ -30,7 +30,7 @@ import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.transaction.TransactionChangeDescription;
 import org.eclipse.emf.transaction.tests.AbstractTest;
 import org.eclipse.emf.transaction.util.CompositeChangeDescription;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the {@link CompositeChangeDescription} class.
@@ -287,10 +287,12 @@ public class CompositeChangeDescriptionTest extends AbstractTest {
 	 */
 	private static class NonApplicableChange extends ChangeDescriptionImpl implements TransactionChangeDescription {
 
+		@Override
 		public boolean canApply() {
 			return false;
 		}
 
+		@Override
 		public boolean isEmpty() {
 			return false;
 		}

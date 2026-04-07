@@ -11,10 +11,10 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -35,8 +35,8 @@ import org.eclipse.emf.ecore.util.InternalEList;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionChangeRecorder;
 import org.eclipse.emf.transaction.util.TransactionUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the <code>TransactionChangeRecorder</code> class, specifically.
@@ -207,7 +207,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 			eclass.setName("NewName");
 		} catch (Exception e) {
 			e.printStackTrace();
-			Assert.fail("Should not have asserted the transaction protocol: " + e.getLocalizedMessage());
+			Assertions.fail("Should not have asserted the transaction protocol: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -239,7 +239,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 			eclass.setName("NewName");
 		} catch (Exception e) {
 			e.printStackTrace();
-			Assert.fail("Should not have asserted the transaction protocol: " + e.getLocalizedMessage());
+			Assertions.fail("Should not have asserted the transaction protocol: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -271,7 +271,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 			eclass.setName("NewName");
 		} catch (Exception e) {
 			e.printStackTrace();
-			Assert.fail("Should not have asserted the transaction protocol: " + e.getLocalizedMessage());
+			Assertions.fail("Should not have asserted the transaction protocol: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -302,7 +302,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 			// set the nested resource free
 			TransactionUtil.disconnectFromEditingDomain(nestedResource1);
 
-			Assert.fail("Should have thrown IllegalArgumentException");
+			Assertions.fail("Should have thrown IllegalArgumentException");
 		} catch (IllegalArgumentException e) {
 			// pass
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -312,7 +312,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 			// modify the nested element
 			nested.setName("NewName");
 
-			Assert.fail("Should have thrown IllegalStateException");
+			Assertions.fail("Should have thrown IllegalStateException");
 		} catch (IllegalStateException e) {
 			// pass
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -348,7 +348,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 			eclass.setName("NewName");
 		} catch (Exception e) {
 			e.printStackTrace();
-			Assert.fail("Should not have asserted the transaction protocol: " + e.getLocalizedMessage());
+			Assertions.fail("Should not have asserted the transaction protocol: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -377,7 +377,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 			// set the nested element free
 			TransactionUtil.disconnectFromEditingDomain(nested);
 
-			Assert.fail("Should have thrown IllegalArgumentException");
+			Assertions.fail("Should have thrown IllegalArgumentException");
 		} catch (IllegalArgumentException e) {
 			// pass
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -387,7 +387,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 			// modify the nested element
 			nested.setName("NewName");
 
-			Assert.fail("Should have thrown IllegalStateException");
+			Assertions.fail("Should have thrown IllegalStateException");
 		} catch (IllegalStateException e) {
 			// pass
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -423,7 +423,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 		try {
 			TransactionUtil.disconnectFromEditingDomain(rootResource);
 
-			Assert.fail("Should have thrown IllegalArgumentException");
+			Assertions.fail("Should have thrown IllegalArgumentException");
 		} catch (IllegalArgumentException e) {
 			// pass
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -440,7 +440,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 			eclass.setName("NewName");
 		} catch (Exception e) {
 			e.printStackTrace();
-			Assert.fail("Should not have asserted the transaction protocol: " + e.getLocalizedMessage());
+			Assertions.fail("Should not have asserted the transaction protocol: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -466,13 +466,13 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 		// unload the resource
 		Resource res = eclass.eResource();
 		res.unload();
-		assertTrue("Resource not reloaded", res.isLoaded());
+		assertTrue(res.isLoaded(), "Resource not reloaded");
 
 		try {
 			// should be allowed to modify this resource by unloading it again
 			res.unload();
 		} catch (IllegalStateException e) {
-			Assert.fail("Should not have thrown: " + e.getLocalizedMessage());
+			Assertions.fail("Should not have thrown: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -521,7 +521,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 
 			commit();
 		} catch (IOException e) {
-			Assert.fail("Failed to create test model: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to create test model: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -549,7 +549,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 		EPackage result = (EPackage) find(rootResource, qname);
 
 		if (require) {
-			assertNotNull("Did not find package " + qname, result);
+			assertNotNull(result, "Did not find package " + qname);
 		}
 
 		return result;
@@ -559,7 +559,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 		EClass result = (EClass) find(rootResource, qname);
 
 		if (require) {
-			assertNotNull("Did not find class " + qname, result);
+			assertNotNull(result, "Did not find class " + qname);
 		}
 
 		return result;
@@ -567,7 +567,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 
 	/**
 	 * Gets the name of an Ecore object.
-	 * 
+	 *
 	 * @param object the object
 	 * @return its name
 	 */
@@ -585,7 +585,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 			rootResource.load(Collections.EMPTY_MAP);
 		} catch (IOException e) {
 			e.printStackTrace();
-			Assert.fail("Failed to load root resource: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to load root resource: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -599,7 +599,7 @@ public class TransactionChangeRecorderTest extends AbstractTest {
 			}
 		}
 
-		assertNotNull("Did not find change recorder", result);
+		assertNotNull(result, "Did not find change recorder");
 
 		return result;
 	}

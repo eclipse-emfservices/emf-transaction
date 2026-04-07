@@ -11,10 +11,10 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -32,8 +32,8 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 import org.eclipse.emf.transaction.util.TransactionUtil;
 import org.eclipse.emf.transaction.util.ValidateEditSupport;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests validate-edit support.
@@ -53,6 +53,7 @@ public class ValidateEditTest extends AbstractTest {
 			return true;
 		}
 
+		@Override
 		public void execute() {
 			try {
 				book.setTitle(newTitle);
@@ -69,6 +70,7 @@ public class ValidateEditTest extends AbstractTest {
 			return true;
 		}
 
+		@Override
 		public void execute() {
 			try {
 				book.setTitle(null);
@@ -103,7 +105,7 @@ public class ValidateEditTest extends AbstractTest {
 		try {
 			getCommandStack().execute(setTitle, null);
 
-			Assert.fail("Should have rolled back");
+			Assertions.fail("Should have rolled back");
 		} catch (RollbackException e) {
 			// success
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -134,7 +136,7 @@ public class ValidateEditTest extends AbstractTest {
 		try {
 			getCommandStack().execute(setTitle, null);
 
-			Assert.fail("Should have rolled back");
+			Assertions.fail("Should have rolled back");
 		} catch (RollbackException e) {
 			// success
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -142,7 +144,7 @@ public class ValidateEditTest extends AbstractTest {
 			fail(e);
 		}
 
-		assertTrue("Custom validation not invoked", token[0]);
+		assertTrue(token[0], "Custom validation not invoked");
 		assertTitleNotChanged();
 		assertResourceNotDirty();
 	}
@@ -156,7 +158,7 @@ public class ValidateEditTest extends AbstractTest {
 		try {
 			getCommandStack().execute(clearTitle, null);
 
-			Assert.fail("Should have rolled back");
+			Assertions.fail("Should have rolled back");
 		} catch (RollbackException e) {
 			// success
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -176,7 +178,7 @@ public class ValidateEditTest extends AbstractTest {
 		try {
 			getCommandStack().execute(clearTitle, null);
 
-			Assert.fail("Should have rolled back");
+			Assertions.fail("Should have rolled back");
 		} catch (RollbackException e) {
 			// success
 			System.out.println("Got expected exception: " + e.getLocalizedMessage());
@@ -248,10 +250,10 @@ public class ValidateEditTest extends AbstractTest {
 	}
 
 	void assertResourceDirty() {
-		assertTrue("Resource not dirty", testResource.isModified());
+		assertTrue(testResource.isModified(), "Resource not dirty");
 	}
 
 	void assertResourceNotDirty() {
-		assertFalse("Resource is dirty", testResource.isModified());
+		assertFalse(testResource.isModified(), "Resource is dirty");
 	}
 }

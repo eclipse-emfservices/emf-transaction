@@ -11,8 +11,8 @@
  */
 package org.eclipse.emf.workspace.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Collections;
 import java.util.Set;
@@ -30,7 +30,7 @@ import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.workspace.ResourceUndoContext;
 import org.eclipse.emf.workspace.tests.fixtures.TestOperation;
 import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 /**
@@ -48,11 +48,11 @@ public class UndoContextTest extends AbstractTest {
 	public void test_localChanges() {
 		startReading();
 		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book"); 
 		assertNotNull(book);
 		
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final String newTitle = "New Title"; 
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); 
 		assertNotNull(newAuthor);
 		
 		commit();
@@ -96,10 +96,10 @@ public class UndoContextTest extends AbstractTest {
 		// add this other resource to my resource set
 		domain.getResourceSet().getResources().add(res2);
 		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book"); 
 		assertNotNull(book);
 		
-		final String newTitle = "New Title"; //$NON-NLS-1$
+		final String newTitle = "New Title"; 
 		
 		commit();
 		

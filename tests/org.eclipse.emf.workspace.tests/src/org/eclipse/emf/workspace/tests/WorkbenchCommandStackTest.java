@@ -13,13 +13,13 @@
  */
 package org.eclipse.emf.workspace.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.EventObject;
@@ -69,8 +69,8 @@ import org.eclipse.emf.workspace.tests.fixtures.LibraryDefaultNameTrigger;
 import org.eclipse.emf.workspace.tests.fixtures.LogCapture;
 import org.eclipse.emf.workspace.tests.fixtures.NullCommand;
 import org.eclipse.emf.workspace.tests.fixtures.SelfOpeningEMFCompositeOperation;
-import org.junit.Assert;
-
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the {@link WorkbenchCommandStack} class.
@@ -87,90 +87,90 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 	@Test
 	public void test_execute() {
 		Command cmd = new NullCommand();
-		
+
 		getCommandStack().execute(cmd);
-		
+
 		IUndoableOperation[] operations = history.getUndoHistory(defaultContext);
-		
+
 		assertNotNull(operations);
 		assertEquals(1, operations.length);
-		
+
 		IUndoableOperation operation = operations[0];
-		
+
 		assertTrue(operation instanceof EMFCommandOperation);
 		assertSame(cmd, ((EMFCommandOperation) operation).getCommand());
 	}
-	
+
 	/**
 	 * Tests undo/redo support.
 	 */
 	@Test
 	public void test_undo_redo() {
 		Command cmd = new NullCommand();
-		
+
 		getCommandStack().execute(cmd);
-		
+
 		Command undo = getCommandStack().getUndoCommand();
-		
+
 		assertSame(cmd, undo);
-		
+
 		Command redo = getCommandStack().getRedoCommand();
-		
+
 		assertNull(redo);
-		
+
 		getCommandStack().undo();
-		
+
 		undo = getCommandStack().getUndoCommand();
-		
+
 		assertNull(undo);
-		
+
 		redo = getCommandStack().getRedoCommand();
-		
+
 		assertSame(cmd, redo);
-		
+
 		getCommandStack().redo();
-		
+
 		assertSame(cmd, getCommandStack().getUndoCommand());
 	}
-	
+
 	/**
 	 * Tests most-recent-command support.
 	 */
 	@Test
 	public void test_mostRecentCommand() {
 		Command cmd = new NullCommand();
-		
+
 		// execute some other command
 		getCommandStack().execute(new NullCommand());
-		
+
 		getCommandStack().execute(cmd);
-		
+
 		assertSame(cmd, getCommandStack().getMostRecentCommand());
-		
+
 		// execute some other command
 		getCommandStack().execute(new NullCommand());
-		
+
 		assertNotSame(cmd, getCommandStack().getMostRecentCommand());
-		
+
 		getCommandStack().undo();
-		
+
 		assertNotSame(cmd, getCommandStack().getMostRecentCommand());
-		
+
 		getCommandStack().undo();
-		
+
 		assertSame(cmd, getCommandStack().getMostRecentCommand());
-		
+
 		getCommandStack().undo();
-		
+
 		getCommandStack().redo();
-		
+
 		assertNotSame(cmd, getCommandStack().getMostRecentCommand());
-		
+
 		getCommandStack().redo();
-		
+
 		assertSame(cmd, getCommandStack().getMostRecentCommand());
 	}
-	
+
 	/**
 	 * Tests flush support.
 	 */
@@ -178,644 +178,635 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 	public void test_flush() {
 		getCommandStack().execute(new NullCommand());
 		getCommandStack().execute(new NullCommand());
-		
+
 		IUndoableOperation[] operations = history.getUndoHistory(defaultContext);
-		
+
 		assertNotNull(operations);
 		assertEquals(2, operations.length);
-		
+
 		getCommandStack().flush();
-		
+
 		operations = history.getUndoHistory(defaultContext);
-		
+
 		assertNotNull(operations);
 		assertEquals(0, operations.length);
 	}
-	
+
 	@Test
 	public void test_flushingOnResourceUnload() {
-		Command cmd = new SetCommand(
-				domain,
-				root,
-				EXTLibraryPackage.eINSTANCE.getLibrary_Name(),
-				"foo"); //$NON-NLS-1$
-		
+		Command cmd = new SetCommand(domain, root, EXTLibraryPackage.eINSTANCE.getLibrary_Name(), "foo");
+
 		getCommandStack().execute(cmd);
-		
+
 		IUndoContext resctx = new ResourceUndoContext(domain, testResource);
 		IUndoableOperation[] operations = history.getUndoHistory(resctx);
-		
+
 		assertNotNull(operations);
 		assertEquals(1, operations.length);
-		
+
 		IUndoableOperation operation = operations[0];
-		
+
 		IUndoContext[] contexts = operation.getContexts();
-		
+
 		assertEquals(2, contexts.length);
-		
+
 		assertTrue((resctx.matches(contexts[0]) && defaultContext.matches(contexts[1]))
 				|| (resctx.matches(contexts[1]) && defaultContext.matches(contexts[0])));
-		
+
 		// unload the resource (no transaction required)
 		testResource.unload();
 
 		// resource context was flushed
 		operations = history.getUndoHistory(resctx);
-		
+
 		assertNotNull(operations);
 		assertEquals(0, operations.length);
 	}
-	
+
 	@Test
 	public void testUndoContextPropagationFromTriggerListeners() {
 		final TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
 		final IUndoContext undoContext = new UndoContext();
-		
+
 		domain.addResourceSetListener(new ResourceSetListenerImpl() {
 			@Override
 			public boolean isPrecommitOnly() {
 				return true;
 			}
-			
+
 			@Override
-			public Command transactionAboutToCommit(ResourceSetChangeEvent event)
-				throws RollbackException {
-				
-				IUndoableOperation op = new AbstractOperation("") { //$NON-NLS-1$
+			public Command transactionAboutToCommit(ResourceSetChangeEvent event) throws RollbackException {
+
+				IUndoableOperation op = new AbstractOperation("") {
 					@Override
-					public IStatus execute(IProgressMonitor monitor, IAdaptable info)
-						throws ExecutionException {
+					public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 						return Status.OK_STATUS;
 					}
-	
+
 					@Override
-					public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-						throws ExecutionException {
+					public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 						return Status.OK_STATUS;
 					}
-	
+
 					@Override
-					public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-						throws ExecutionException {
+					public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 						return Status.OK_STATUS;
 					}
 				};
-				
+
 				op.addContext(undoContext);
-				
+
 				return new EMFOperationCommand(domain, op);
 			}
 		});
-		
-		final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml")); //$NON-NLS-1$
+
+		final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml"));
 		IUndoContext resCtx = new ResourceUndoContext(domain, r);
-        
-		AbstractEMFOperation op = new AbstractEMFOperation(domain, "") { //$NON-NLS-1$
+
+		AbstractEMFOperation op = new AbstractEMFOperation(domain, "") {
 			@Override
-			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info)
-				throws ExecutionException {
-				
+			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+
 				r.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
-				
+
 				return Status.OK_STATUS;
 			}
 		};
-		
+
 		assertTrue(op.getContexts().length == 0);
-		
+
 		// Try executing the operation manually
 		try {
 			op.execute(new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			e.printStackTrace();
-			Assert.fail();
+			Assertions.fail();
 		}
-		
+
 		assertNotNull(op.getContexts());
-        List<IUndoContext> opContexts = Arrays.asList(op.getContexts());
+		List<IUndoContext> opContexts = Arrays.asList(op.getContexts());
 		assertTrue(opContexts.contains(resCtx));
-        assertTrue(opContexts.contains(undoContext));
-		
+		assertTrue(opContexts.contains(undoContext));
+
 		op.removeContext(undoContext);
-        op.removeContext(resCtx);
-		
+		op.removeContext(resCtx);
+
 		try {
 			OperationHistoryFactory.getOperationHistory().execute(op, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			e.printStackTrace();
-			Assert.fail();
+			Assertions.fail();
 		}
-		
-        assertNotNull(op.getContexts());
-        opContexts = Arrays.asList(op.getContexts());
-        assertTrue(opContexts.contains(resCtx));
-        assertTrue(opContexts.contains(undoContext));
-        
-        op.removeContext(undoContext);
-        op.removeContext(resCtx);
+
+		assertNotNull(op.getContexts());
+		opContexts = Arrays.asList(op.getContexts());
+		assertTrue(opContexts.contains(resCtx));
+		assertTrue(opContexts.contains(undoContext));
+
+		op.removeContext(undoContext);
+		op.removeContext(resCtx);
 	}
-	
+
 	@Test
 	public void testSaveIsDoneAPIs() {
 		TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
-		final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml")); //$NON-NLS-1$
-		
+		final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml"));
+
 		Command op = new RecordingCommand(domain) {
 
 			@Override
 			protected void doExecute() {
 				r.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
-				
+
 			}
 		};
-		
-		BasicCommandStack stack = (BasicCommandStack)domain.getCommandStack();
-		
+
+		BasicCommandStack stack = (BasicCommandStack) domain.getCommandStack();
+
 		// Force the operation history to clear itself of our operations.
-		OperationHistoryFactory.getOperationHistory().setLimit(
-			((WorkspaceCommandStackImpl)stack).getDefaultUndoContext(), 0);
-		OperationHistoryFactory.getOperationHistory().setLimit(
-			((WorkspaceCommandStackImpl)stack).getDefaultUndoContext(), 20);
-		
+		OperationHistoryFactory.getOperationHistory()
+				.setLimit(((WorkspaceCommandStackImpl) stack).getDefaultUndoContext(), 0);
+		OperationHistoryFactory.getOperationHistory()
+				.setLimit(((WorkspaceCommandStackImpl) stack).getDefaultUndoContext(), 20);
+
 		stack.saveIsDone();
-		
+
 		assertFalse(stack.isSaveNeeded());
-		
+
 		stack.execute(op);
-		
+
 		assertTrue(stack.isSaveNeeded());
-		
+
 		stack.undo();
-		
+
 		assertFalse(stack.isSaveNeeded());
-		
+
 		stack.redo();
-		
+
 		assertTrue(stack.isSaveNeeded());
-		
+
 		stack.saveIsDone();
-		
+
 		assertFalse(stack.isSaveNeeded());
-		
+
 		stack.execute(op);
-		
+
 		assertTrue(stack.isSaveNeeded());
 	}
-    
- 	@Test
-   public void test_isSaveNeeded_214325() {
-        TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
-        final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml")); //$NON-NLS-1$
-        
-        Command op = new RecordingCommand(domain) {
 
-            @Override
-            protected void doExecute() {
-                r.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
-                
-            }
-        };
-        
-        BasicCommandStack stack = (BasicCommandStack)domain.getCommandStack();
-        
-        // Force the operation history to clear itself of our operations.
-        OperationHistoryFactory.getOperationHistory().setLimit(
-            ((WorkspaceCommandStackImpl)stack).getDefaultUndoContext(), 0);
-        OperationHistoryFactory.getOperationHistory().setLimit(
-            ((WorkspaceCommandStackImpl)stack).getDefaultUndoContext(), 20);
-        
-        assertFalse(stack.isSaveNeeded());
-        
-        stack.execute(op);
-        
-        assertTrue(stack.isSaveNeeded());
-        
-        stack.saveIsDone();
-        
-        assertFalse(stack.isSaveNeeded());
-        
-        stack.undo();
-        
-        assertTrue(stack.isSaveNeeded());
-    }
-	
-    /**
-     * Test that run-time exceptions in a trigger command cause rollback of
-     * the whole transaction.
-     */
 	@Test
-   public void test_triggerRollback_146853() {
-        final RuntimeException error = new RuntimeException();
-        
-        ResourceSetListener testListener = new TriggerListener() {
-        	@Override
+	public void test_isSaveNeeded_214325() {
+		TransactionalEditingDomain domain = WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain();
+		final Resource r = domain.getResourceSet().createResource(URI.createURI("file://foo.xml"));
+
+		Command op = new RecordingCommand(domain) {
+
+			@Override
+			protected void doExecute() {
+				r.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
+
+			}
+		};
+
+		BasicCommandStack stack = (BasicCommandStack) domain.getCommandStack();
+
+		// Force the operation history to clear itself of our operations.
+		OperationHistoryFactory.getOperationHistory()
+				.setLimit(((WorkspaceCommandStackImpl) stack).getDefaultUndoContext(), 0);
+		OperationHistoryFactory.getOperationHistory()
+				.setLimit(((WorkspaceCommandStackImpl) stack).getDefaultUndoContext(), 20);
+
+		assertFalse(stack.isSaveNeeded());
+
+		stack.execute(op);
+
+		assertTrue(stack.isSaveNeeded());
+
+		stack.saveIsDone();
+
+		assertFalse(stack.isSaveNeeded());
+
+		stack.undo();
+
+		assertTrue(stack.isSaveNeeded());
+	}
+
+	/**
+	 * Test that run-time exceptions in a trigger command cause rollback of the
+	 * whole transaction.
+	 */
+	@Test
+	public void test_triggerRollback_146853() {
+		final RuntimeException error = new RuntimeException();
+
+		ResourceSetListener testListener = new TriggerListener() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
-        		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
-        			@Override
+				return new RecordingCommand(domain, "Error") {
+					@Override
 					protected void doExecute() {
-        				throw error;
-        			}};
-        	}};
-        
-        LogCapture logCapture = new LogCapture(
-        		getCommandStack(), EMFWorkspacePlugin.getPlugin().getBundle());
-            
-        try {
-            domain.addResourceSetListener(testListener);
-            
-            domain.getCommandStack().execute(new RecordingCommand(domain) {
-                @Override
+						throw error;
+					}
+				};
+			}
+		};
+
+		LogCapture logCapture = new LogCapture(getCommandStack(), EMFWorkspacePlugin.getPlugin().getBundle());
+
+		try {
+			domain.addResourceSetListener(testListener);
+
+			domain.getCommandStack().execute(new RecordingCommand(domain) {
+				@Override
 				protected void doExecute() {
-                    root.getWriters().clear();
-                    root.getStock().clear();
-                    root.getBranches().clear();
-                }});
-            
-            // verify that the exception was duly logged
-            logCapture.assertLogged(error);
-            
-            // verify that rollback occurred
-            assertFalse(root.getWriters().isEmpty());
-            assertFalse(root.getStock().isEmpty());
-            assertFalse(root.getBranches().isEmpty());
-        } finally {
-            logCapture.stop();
-            domain.removeResourceSetListener(testListener);
-        }
-    }
-	
-    /**
-     * Test that OperationCanceledException in a trigger command causes
-     * rollback of the whole transaction, without any log message (because it
-     * is a normal condition).
-     */
+					root.getWriters().clear();
+					root.getStock().clear();
+					root.getBranches().clear();
+				}
+			});
+
+			// verify that the exception was duly logged
+			logCapture.assertLogged(error);
+
+			// verify that rollback occurred
+			assertFalse(root.getWriters().isEmpty());
+			assertFalse(root.getStock().isEmpty());
+			assertFalse(root.getBranches().isEmpty());
+		} finally {
+			logCapture.stop();
+			domain.removeResourceSetListener(testListener);
+		}
+	}
+
+	/**
+	 * Test that OperationCanceledException in a trigger command causes rollback of
+	 * the whole transaction, without any log message (because it is a normal
+	 * condition).
+	 */
 	@Test
-    public void test_triggerRollback_cancel_146853() {
-        final RuntimeException error = new OperationCanceledException();
-        
-        ResourceSetListener testListener = new TriggerListener() {
-        	@Override
+	public void test_triggerRollback_cancel_146853() {
+		final RuntimeException error = new OperationCanceledException();
+
+		ResourceSetListener testListener = new TriggerListener() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
-        		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
-        			@Override
+				return new RecordingCommand(domain, "Error") {
+					@Override
 					protected void doExecute() {
-        				throw error;
-        			}};
-        	}};
-        
-        LogCapture logCapture = new LogCapture(
-        		getCommandStack(), EMFWorkspacePlugin.getPlugin().getBundle());
-            
-        try {
-            domain.addResourceSetListener(testListener);
-            
-            domain.getCommandStack().execute(new RecordingCommand(domain) {
-                @Override
+						throw error;
+					}
+				};
+			}
+		};
+
+		LogCapture logCapture = new LogCapture(getCommandStack(), EMFWorkspacePlugin.getPlugin().getBundle());
+
+		try {
+			domain.addResourceSetListener(testListener);
+
+			domain.getCommandStack().execute(new RecordingCommand(domain) {
+				@Override
 				protected void doExecute() {
-                    root.getWriters().clear();
-                    root.getStock().clear();
-                    root.getBranches().clear();
-                }});
-            
-            // verify that the exception was *not* logged
-            IStatus log = logCapture.getLastLog();
-            assertNull(log);
-            
-            // verify that rollback occurred
-            assertFalse(root.getWriters().isEmpty());
-            assertFalse(root.getStock().isEmpty());
-            assertFalse(root.getBranches().isEmpty());
-        } finally {
-            logCapture.stop();
-            domain.removeResourceSetListener(testListener);
-        }
-    }
-	
-    /**
-     * Test that run-time exceptions in a trigger command cause rollback of
-     * the whole transaction when executing an AbstractEMFOperation.
-     */
+					root.getWriters().clear();
+					root.getStock().clear();
+					root.getBranches().clear();
+				}
+			});
+
+			// verify that the exception was *not* logged
+			IStatus log = logCapture.getLastLog();
+			assertNull(log);
+
+			// verify that rollback occurred
+			assertFalse(root.getWriters().isEmpty());
+			assertFalse(root.getStock().isEmpty());
+			assertFalse(root.getBranches().isEmpty());
+		} finally {
+			logCapture.stop();
+			domain.removeResourceSetListener(testListener);
+		}
+	}
+
+	/**
+	 * Test that run-time exceptions in a trigger command cause rollback of the
+	 * whole transaction when executing an AbstractEMFOperation.
+	 */
 	@Test
-    public void test_triggerRollback_operation_146853() {
-        final RuntimeException error = new RuntimeException();
-        
-        ResourceSetListener testListener = new TriggerListener() {
-        	@Override
+	public void test_triggerRollback_operation_146853() {
+		final RuntimeException error = new RuntimeException();
+
+		ResourceSetListener testListener = new TriggerListener() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
-        		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
-        			@Override
+				return new RecordingCommand(domain, "Error") {
+					@Override
 					protected void doExecute() {
-        				throw error;
-        			}};
-        	}};
-        
-        try {
-            domain.addResourceSetListener(testListener);
-            
-            try {
-	            IStatus status = new AbstractEMFOperation(domain, "test") { //$NON-NLS-1$
-	                @Override
+						throw error;
+					}
+				};
+			}
+		};
+
+		try {
+			domain.addResourceSetListener(testListener);
+
+			try {
+				IStatus status = new AbstractEMFOperation(domain, "test") {
+					@Override
 					protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
-	                    root.getWriters().clear();
-	                    root.getStock().clear();
-	                    root.getBranches().clear();
-	                    
-	                    return Status.OK_STATUS;
-	                }}.execute(null, null);
-	            
-	            assertEquals(IStatus.ERROR, status.getSeverity());
-            } catch (ExecutionException e) {
-            	Assert.fail("Execution failed: " + e.getLocalizedMessage()); //$NON-NLS-1$
-            }
-            
-            // verify that rollback occurred
-            assertFalse(root.getWriters().isEmpty());
-            assertFalse(root.getStock().isEmpty());
-            assertFalse(root.getBranches().isEmpty());
-        } finally {
-            domain.removeResourceSetListener(testListener);
-        }
-    }
-	
-    /**
-     * Test that OperationCanceledException in a trigger command causes
-     * rollback of the whole transaction, without any log message (because it
-     * is a normal condition) when executing an AbstractEMFOperation.
-     */
+						root.getWriters().clear();
+						root.getStock().clear();
+						root.getBranches().clear();
+
+						return Status.OK_STATUS;
+					}
+				}.execute(null, null);
+
+				assertEquals(IStatus.ERROR, status.getSeverity());
+			} catch (ExecutionException e) {
+				Assertions.fail("Execution failed: " + e.getLocalizedMessage());
+			}
+
+			// verify that rollback occurred
+			assertFalse(root.getWriters().isEmpty());
+			assertFalse(root.getStock().isEmpty());
+			assertFalse(root.getBranches().isEmpty());
+		} finally {
+			domain.removeResourceSetListener(testListener);
+		}
+	}
+
+	/**
+	 * Test that OperationCanceledException in a trigger command causes rollback of
+	 * the whole transaction, without any log message (because it is a normal
+	 * condition) when executing an AbstractEMFOperation.
+	 */
 	@Test
-    public void test_triggerRollback_operation_cancel_146853() {
-        final RuntimeException error = new OperationCanceledException();
-        
-        ResourceSetListener testListener = new TriggerListener() {
-        	@Override
+	public void test_triggerRollback_operation_cancel_146853() {
+		final RuntimeException error = new OperationCanceledException();
+
+		ResourceSetListener testListener = new TriggerListener() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
-        		return new RecordingCommand(domain, "Error") { //$NON-NLS-1$
-        			@Override
+				return new RecordingCommand(domain, "Error") {
+					@Override
 					protected void doExecute() {
-        				throw error;
-        			}};
-        	}};
-        
-        try {
-            domain.addResourceSetListener(testListener);
-            
-            try {
-	            IStatus status = new AbstractEMFOperation(domain, "test") { //$NON-NLS-1$
-	                @Override
+						throw error;
+					}
+				};
+			}
+		};
+
+		try {
+			domain.addResourceSetListener(testListener);
+
+			try {
+				IStatus status = new AbstractEMFOperation(domain, "test") {
+					@Override
 					protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
-	                    root.getWriters().clear();
-	                    root.getStock().clear();
-	                    root.getBranches().clear();
-	                    
-	                    return Status.OK_STATUS;
-	                }}.execute(null, null);
-	            
-	            assertEquals(IStatus.CANCEL, status.getSeverity());
-            } catch (ExecutionException e) {
-            	Assert.fail("Execution failed: " + e.getLocalizedMessage()); //$NON-NLS-1$
-            }
-            
-            // verify that rollback occurred
-            assertFalse(root.getWriters().isEmpty());
-            assertFalse(root.getStock().isEmpty());
-            assertFalse(root.getBranches().isEmpty());
-        } finally {
-            domain.removeResourceSetListener(testListener);
-        }
-    }
-    
-    /**
-     * Tests that the {@link RecordingCommand} can be used as a trigger command,
-     * that in this case it is able correctly to capture its changes for
-     * undo/redo.
-     */
+						root.getWriters().clear();
+						root.getStock().clear();
+						root.getBranches().clear();
+
+						return Status.OK_STATUS;
+					}
+				}.execute(null, null);
+
+				assertEquals(IStatus.CANCEL, status.getSeverity());
+			} catch (ExecutionException e) {
+				Assertions.fail("Execution failed: " + e.getLocalizedMessage());
+			}
+
+			// verify that rollback occurred
+			assertFalse(root.getWriters().isEmpty());
+			assertFalse(root.getStock().isEmpty());
+			assertFalse(root.getBranches().isEmpty());
+		} finally {
+			domain.removeResourceSetListener(testListener);
+		}
+	}
+
+	/**
+	 * Tests that the {@link RecordingCommand} can be used as a trigger command,
+	 * that in this case it is able correctly to capture its changes for undo/redo.
+	 */
 	@Test
-    public void test_recordingCommandsAsTriggers_bug157103() {
-        // one trigger sets default library names
-        domain.addResourceSetListener(new LibraryDefaultNameTrigger() {
-            @Override
+	public void test_recordingCommandsAsTriggers_bug157103() {
+		// one trigger sets default library names
+		domain.addResourceSetListener(new LibraryDefaultNameTrigger() {
+			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
-                Command result = null;
-                
-                final Library newLibrary = (Library) notification.getNewValue();
-                if ((newLibrary.getName() == null) || (newLibrary.getName().length() == 0)) {
-                    result = new RecordingCommand(domain) {
-                        @Override
+				Command result = null;
+
+				final Library newLibrary = (Library) notification.getNewValue();
+				if ((newLibrary.getName() == null) || (newLibrary.getName().length() == 0)) {
+					result = new RecordingCommand(domain) {
+						@Override
 						protected void doExecute() {
-                            newLibrary.setName("New Library"); //$NON-NLS-1$
-                        }};
-                }
-                
-                return result;
-            }});
-        
-        final Library[] newLibrary = new Library[1];
-        
-        IUndoContext ctx = new UndoContext();
-        IUndoableOperation operation = new AbstractEMFOperation(domain, "Test") { //$NON-NLS-1$
-            @Override
+							newLibrary.setName("New Library");
+						}
+					};
+				}
+
+				return result;
+			}
+		});
+
+		final Library[] newLibrary = new Library[1];
+
+		IUndoContext ctx = new UndoContext();
+		IUndoableOperation operation = new AbstractEMFOperation(domain, "Test") {
+			@Override
 			protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
-                newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
-                root.getBranches().add(newLibrary[0]);
-                
-                assertNull(newLibrary[0].getName());
-                
-                return Status.OK_STATUS;
-            }};
-        operation.addContext(ctx);
-        
-        try {
-            // add a new library.  Our trigger will set a default name
-            history.execute(operation, null, null);
-        } catch (ExecutionException e) {
-        	Assert.fail("Failed to execute test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
-        }
-        
-        startReading();
-        
-        assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
-        
-        commit();
-        
-        try {
-            history.undo(ctx, null, null);
-        } catch (ExecutionException e) {
-        	Assert.fail("Failed to undo test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
-        }
-        
-        assertFalse(root.getBranches().contains(newLibrary[0]));
-        assertNull(newLibrary[0].eResource());
-        assertNull(newLibrary[0].getName());
-        
-        try {
-            history.redo(ctx, null, null);
-        } catch (ExecutionException e) {
-        	Assert.fail("Failed to redo test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
-        }
-        
-        assertTrue(root.getBranches().contains(newLibrary[0]));
-        assertEquals("New Library", newLibrary[0].getName()); //$NON-NLS-1$
-    }
-    
-    /**
-     * Tests that, when a command execution is rolled back, the command stack
-     * listeners are notified again that the stack is changed, so that they
-     * will correctly update themselves if necessary.
-     */
+				newLibrary[0] = EXTLibraryFactory.eINSTANCE.createLibrary();
+				root.getBranches().add(newLibrary[0]);
+
+				assertNull(newLibrary[0].getName());
+
+				return Status.OK_STATUS;
+			}
+		};
+		operation.addContext(ctx);
+
+		try {
+			// add a new library. Our trigger will set a default name
+			history.execute(operation, null, null);
+		} catch (ExecutionException e) {
+			Assertions.fail("Failed to execute test operation: " + e.getLocalizedMessage());
+		}
+
+		startReading();
+
+		assertEquals("New Library", newLibrary[0].getName());
+
+		commit();
+
+		try {
+			history.undo(ctx, null, null);
+		} catch (ExecutionException e) {
+			Assertions.fail("Failed to undo test operation: " + e.getLocalizedMessage());
+		}
+
+		assertFalse(root.getBranches().contains(newLibrary[0]));
+		assertNull(newLibrary[0].eResource());
+		assertNull(newLibrary[0].getName());
+
+		try {
+			history.redo(ctx, null, null);
+		} catch (ExecutionException e) {
+			Assertions.fail("Failed to redo test operation: " + e.getLocalizedMessage());
+		}
+
+		assertTrue(root.getBranches().contains(newLibrary[0]));
+		assertEquals("New Library", newLibrary[0].getName());
+	}
+
+	/**
+	 * Tests that, when a command execution is rolled back, the command stack
+	 * listeners are notified again that the stack is changed, so that they will
+	 * correctly update themselves if necessary.
+	 */
 	@Test
-   public void test_rollbackNotifiesCommandStackListeners_175725() {
-        class TestCSL implements CommandStackListener {
-            int invocationCount = 0;
-            public void commandStackChanged(EventObject event) {
-                invocationCount++;
-            }
-        }
-        
-        TestCSL listener = new TestCSL();
-        CommandStack stack = domain.getCommandStack();
-        stack.addCommandStackListener(listener);
-        
-        final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
-        assertNotNull(book);
-        Command command = SetCommand.create(
-            domain, book, EXTLibraryPackage.Literals.BOOK__TITLE, null);
-        
-        try {
-            validationEnabled = true;
-            stack.execute(command);
-        } catch (Exception e) {
-            fail(e);
-        } finally {
-            validationEnabled = false;
-            stack.removeCommandStackListener(listener);
-        }
-        
-        assertEquals("Command-stack listener invoked wrong number of times", //$NON-NLS-1$
-            1, listener.invocationCount);
-        assertFalse("Should not have an undo command", stack.canUndo()); //$NON-NLS-1$
-    }
-	
+	public void test_rollbackNotifiesCommandStackListeners_175725() {
+		class TestCSL implements CommandStackListener {
+			int invocationCount = 0;
+
+			@Override
+			public void commandStackChanged(EventObject event) {
+				invocationCount++;
+			}
+		}
+
+		TestCSL listener = new TestCSL();
+		CommandStack stack = domain.getCommandStack();
+		stack.addCommandStackListener(listener);
+
+		final Book book = (Book) find("root/Root Book");
+		assertNotNull(book);
+		Command command = SetCommand.create(domain, book, EXTLibraryPackage.Literals.BOOK__TITLE, null);
+
+		try {
+			validationEnabled = true;
+			stack.execute(command);
+		} catch (Exception e) {
+			fail(e);
+		} finally {
+			validationEnabled = false;
+			stack.removeCommandStackListener(listener);
+		}
+
+		assertEquals(1, listener.invocationCount, "Command-stack listener invoked wrong number of times");
+		assertFalse(stack.canUndo(), "Should not have an undo command");
+	}
+
 	@Test
-    public void test_undoRedoNotifyListeners_173839() {
-        class TestCSL implements CommandStackListener {
-            int invocationCount = 0;
-            public void commandStackChanged(EventObject event) {
-                invocationCount++;
-            }
-        }
-        
-        TestCSL listener = new TestCSL();
-        CommandStack stack = domain.getCommandStack();
-        stack.addCommandStackListener(listener);
-        
-        final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
-        assertNotNull(book);
-        Command command = SetCommand.create(
-            domain, book, EXTLibraryPackage.Literals.BOOK__TITLE, "New Title"); //$NON-NLS-1$
-        
-        Command undoCmd = null;
-        Command redoCmd = null;
-        
-        try {
-            stack.execute(command);
-            
-            listener.invocationCount = 0;  // clear state
-            
-            stack.undo();
-            redoCmd = stack.getRedoCommand();
+	public void test_undoRedoNotifyListeners_173839() {
+		class TestCSL implements CommandStackListener {
+			int invocationCount = 0;
 
-            stack.redo();
-            undoCmd = stack.getUndoCommand();
-        } catch (Exception e) {
-            fail(e);
-        } finally {
-            stack.removeCommandStackListener(listener);
-        }
-        
-        assertEquals("Command-stack listener invoked wrong number of times", //$NON-NLS-1$
-            2, listener.invocationCount);
-        assertSame(command, undoCmd);
-        assertSame(command, redoCmd);
-    }
-    
-    /**
-     * Tests that we do not lose track of affected resources when executing
-     * operations within open composites (nested operation execution).
-     */
+			@Override
+			public void commandStackChanged(EventObject event) {
+				invocationCount++;
+			}
+		}
+
+		TestCSL listener = new TestCSL();
+		CommandStack stack = domain.getCommandStack();
+		stack.addCommandStackListener(listener);
+
+		final Book book = (Book) find("root/Root Book");
+		assertNotNull(book);
+		Command command = SetCommand.create(domain, book, EXTLibraryPackage.Literals.BOOK__TITLE, "New Title");
+
+		Command undoCmd = null;
+		Command redoCmd = null;
+
+		try {
+			stack.execute(command);
+
+			listener.invocationCount = 0; // clear state
+
+			stack.undo();
+			redoCmd = stack.getRedoCommand();
+
+			stack.redo();
+			undoCmd = stack.getUndoCommand();
+		} catch (Exception e) {
+			fail(e);
+		} finally {
+			stack.removeCommandStackListener(listener);
+		}
+
+		assertEquals(2, listener.invocationCount, "Command-stack listener invoked wrong number of times");
+		assertSame(command, undoCmd);
+		assertSame(command, redoCmd);
+	}
+
+	/**
+	 * Tests that we do not lose track of affected resources when executing
+	 * operations within open composites (nested operation execution).
+	 */
 	@Test
-    public void test_nestedExecutionInOpenComposite_203352() {
-        SelfOpeningEMFCompositeOperation operation = new SelfOpeningEMFCompositeOperation(
-            domain) {
+	public void test_nestedExecutionInOpenComposite_203352() {
+		SelfOpeningEMFCompositeOperation operation = new SelfOpeningEMFCompositeOperation(domain) {
 
-            @Override
-			protected IStatus doExecute(IOperationHistory history,
-                    IProgressMonitor monitor, IAdaptable info)
-                throws ExecutionException {
+			@Override
+			protected IStatus doExecute(IOperationHistory history, IProgressMonitor monitor, IAdaptable info)
+					throws ExecutionException {
 
-                return history.execute(
-                    new AbstractEMFOperation(domain, "Test") { //$NON-NLS-1$
+				return history.execute(new AbstractEMFOperation(domain, "Test") {
 
-                        @Override
-						protected IStatus doExecute(IProgressMonitor monitor,
-                                IAdaptable info) {
-                            root.getBranches().add(
-                                EXTLibraryFactory.eINSTANCE.createLibrary());
+					@Override
+					protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) {
+						root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 
-                            return Status.OK_STATUS;
-                        }
-                    }, monitor, info);
-            }
-        };
+						return Status.OK_STATUS;
+					}
+				}, monitor, info);
+			}
+		};
 
-        try {
-            history.execute(operation, null, null);
-        } catch (ExecutionException e) {
-        	Assert.fail("Failed to execute test operation: " + e.getLocalizedMessage()); //$NON-NLS-1$
-        }
+		try {
+			history.execute(operation, null, null);
+		} catch (ExecutionException e) {
+			Assertions.fail("Failed to execute test operation: " + e.getLocalizedMessage());
+		}
 
-        IUndoContext expected = new ResourceUndoContext(domain, testResource);
-        assertTrue(operation.hasContext(expected));
-    }
-	
-    /**
-     * Tests that whatever operation is currently executing while changes occur
-     * in some resource, is tagged with an undo context for that resource.
-     */
+		IUndoContext expected = new ResourceUndoContext(domain, testResource);
+		assertTrue(operation.hasContext(expected));
+	}
+
+	/**
+	 * Tests that whatever operation is currently executing while changes occur in
+	 * some resource, is tagged with an undo context for that resource.
+	 */
 	@Test
 	public void test_nestedExecutionInAbstractOperation_244654() {
-		AbstractOperation operation = new AbstractOperation("Test") { //$NON-NLS-1$
+		AbstractOperation operation = new AbstractOperation("Test") {
 
-			private AbstractEMFOperation delegate = new AbstractEMFOperation(
-				domain, "Delegate") { //$NON-NLS-1$
+			private AbstractEMFOperation delegate = new AbstractEMFOperation(domain, "Delegate") {
 
 				@Override
-				protected IStatus doExecute(IProgressMonitor monitor,
-						IAdaptable info)
-						throws ExecutionException {
+				protected IStatus doExecute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 
-					root.getBranches().add(
-						EXTLibraryFactory.eINSTANCE.createLibrary());
+					root.getBranches().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 
 					return Status.OK_STATUS;
 				}
 			};
 
 			@Override
-			public IStatus execute(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
+			public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 				return delegate.execute(monitor, info);
 			}
 
 			@Override
-			public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
+			public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 				return delegate.redo(monitor, info);
 			}
 
 			@Override
-			public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
+			public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 				return delegate.undo(monitor, info);
 			}
 		};
@@ -825,32 +816,31 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 		try {
 			history.execute(operation, null, null);
 		} catch (ExecutionException e) {
-			Assert.fail("Unexpected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assertions.fail("Unexpected exception: " + e.getLocalizedMessage());
 		}
 
 		IUndoContext expected = new ResourceUndoContext(domain, testResource);
-		assertTrue(
-			"Operation missing expected context", operation.hasContext(expected)); //$NON-NLS-1$
+		assertTrue(operation.hasContext(expected), "Operation missing expected context");
 	}
-    
+
 	//
 	// Fixture methods
 	//
-	
+
 	@Override
 	protected void doSetUp() throws Exception {
 		super.doSetUp();
-		
+
 		defaultContext = ((IWorkspaceCommandStack) getCommandStack()).getDefaultUndoContext();
 	}
-	
+
 	@Override
 	protected void doTearDown() throws Exception {
 		defaultContext = null;
-		
+
 		super.doTearDown();
 	}
-	
+
 	ResourceUndoContext getResourceUndoContext(IUndoableOperation operation) {
 		ResourceUndoContext result = null;
 		IUndoContext[] contexts = operation.getContexts();
@@ -859,7 +849,7 @@ public class WorkbenchCommandStackTest extends AbstractTest {
 				result = (ResourceUndoContext) contexts[i];
 			}
 		}
-		
+
 		return result;
 	}
 }

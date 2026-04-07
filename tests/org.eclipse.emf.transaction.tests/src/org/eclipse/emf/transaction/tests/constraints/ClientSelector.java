@@ -22,6 +22,7 @@ import org.eclipse.emf.validation.model.IClientSelector;
 public class ClientSelector
 	implements IClientSelector {
 
+	@Override
 	public boolean selects(Object object) {
 		return ValidationRollbackTest.validationEnabled;
 	}

@@ -11,12 +11,12 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
@@ -24,8 +24,8 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.transaction.RunnableWithResult;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the sharing of transactions between cooperating threads using
@@ -137,6 +137,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 
 		Runnable nestingRunnable = new Runnable() {
 
+			@Override
 			public void run() {
 				thread2.syncExec(domain.createPrivilegedRunnable(write));
 			}
@@ -173,7 +174,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 		thread.syncExec(privileged);
 
 		Exception e = thread.getException();
-		assertNotNull("Should have thrown IllegalStateException", e);
+		assertNotNull(e, "Should have thrown IllegalStateException");
 		System.out.println("Got expected exception: " + e.getLocalizedMessage());
 	}
 
@@ -193,7 +194,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 		thread.syncExec(privileged);
 
 		Exception e = thread.getException();
-		assertNotNull("Should have thrown IllegalStateException", e);
+		assertNotNull(e, "Should have thrown IllegalStateException");
 		System.out.println("Got expected exception: " + e.getLocalizedMessage());
 
 		commit();
@@ -215,6 +216,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 		startReading();
 
 		privileged = domain.createPrivilegedRunnable(new Runnable() {
+			@Override
 			public void run() {
 				// throw the run-time exception
 				throw e;
@@ -239,12 +241,13 @@ public class PrivilegedRunnableTest extends AbstractTest {
 		startReading();
 
 		Thread otherThread = new Thread(new Runnable() {
+			@Override
 			public void run() {
 				synchronized (handshake) {
 					try {
 						handshake.wait();
 					} catch (InterruptedException e) {
-						Assert.fail("Interrupted");
+						Assertions.fail("Interrupted");
 					}
 
 					handshake.notifyAll();
@@ -252,16 +255,17 @@ public class PrivilegedRunnableTest extends AbstractTest {
 
 				try {
 					domain.runExclusive(new Runnable() {
+						@Override
 						public void run() {
 							try {
 								Thread.sleep(1000);
 							} catch (InterruptedException e) {
-								Assert.fail("Interrupted");
+								Assertions.fail("Interrupted");
 							}
 						}
 					});
 				} catch (InterruptedException e) {
-					Assert.fail("Interrupted");
+					Assertions.fail("Interrupted");
 				} catch (IllegalArgumentException e) {
 					// this is the symptom of the bug
 					shouldNotBeThrown[0] = e;
@@ -274,6 +278,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 		Thread.sleep(500);
 
 		Runnable privileged = domain.createPrivilegedRunnable(new Runnable() {
+			@Override
 			public void run() {
 				synchronized (handshake) {
 					handshake.notifyAll();
@@ -283,7 +288,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 
 						Thread.sleep(500);
 					} catch (InterruptedException e) {
-						Assert.fail("Interrupted");
+						Assertions.fail("Interrupted");
 					}
 				}
 			}
@@ -353,7 +358,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 				try {
 					wait();
 				} catch (InterruptedException e) {
-					Assert.fail("Interrupted while waiting for runnable");
+					Assertions.fail("Interrupted while waiting for runnable");
 				}
 			}
 		}
@@ -401,6 +406,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 	class TestRead implements Runnable {
 		boolean wasExecuted = false;
 
+		@Override
 		public void run() {
 			root.getBooks();
 			wasExecuted = true;
@@ -410,6 +416,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 	class TestReadWithResult extends RunnableWithResult.Impl<List<Book>> {
 		boolean wasExecuted = false;
 
+		@Override
 		public void run() {
 			setResult(root.getBooks());
 			setStatus(TEST_STATUS);
@@ -420,6 +427,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 	class TestWrite implements Runnable {
 		boolean wasExecuted = false;
 
+		@Override
 		public void run() {
 			root.getBooks().clear();
 			wasExecuted = true;
@@ -429,6 +437,7 @@ public class PrivilegedRunnableTest extends AbstractTest {
 	class TestWriteWithResult extends RunnableWithResult.Impl<List<Book>> {
 		boolean wasExecuted = false;
 
+		@Override
 		public void run() {
 			root.getBooks().clear();
 			setResult(root.getBooks());

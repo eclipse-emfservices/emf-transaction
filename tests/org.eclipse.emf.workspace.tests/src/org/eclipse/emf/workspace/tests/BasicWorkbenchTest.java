@@ -11,9 +11,9 @@
  */
 package org.eclipse.emf.workspace.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Collections;
 import java.util.List;
@@ -33,28 +33,28 @@ import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.workspace.tests.fixtures.TestListener;
-import org.junit.Assert;
-import org.junit.Test;
-
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Basic tests of the workbench editing domain, including compatibility with the
- * base {@link TransactionalEditingDomain} API and basic operation history integration.
+ * base {@link TransactionalEditingDomain} API and basic operation history
+ * integration.
  *
  * @author Christian W. Damus (cdamus)
  */
 public class BasicWorkbenchTest extends AbstractTest {
 
 	/**
-	 * Tests that read transactions are not actually enforced for EList initialization,
-	 * etc.
+	 * Tests that read transactions are not actually enforced for EList
+	 * initialization, etc.
 	 */
 	@Test
 	public void test_read() {
 		try {
 			// should be able to read with running exclusive, as we cannot
-			//   actually enforce the protocol
-			assertNotNull(find("root/Root Book")); //$NON-NLS-1$
+			// actually enforce the protocol
+			assertNotNull(find("root/Root Book"));
 		} catch (Exception e) {
 			fail(e);
 		}
@@ -63,117 +63,119 @@ public class BasicWorkbenchTest extends AbstractTest {
 	/**
 	 * Tests that we can read in a read-only transaction.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_read_readOnlyTransaction() {
 		// should be able to read in a read-only transaction
 		startReading();
-		
-		assertNotNull(find("root/Root Book")); //$NON-NLS-1$
-		
+
+		assertNotNull(find("root/Root Book"));
+
 		commit();
 	}
 
 	/**
 	 * Tests that we can read in a read-write transaction.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_read_readWriteTransaction() {
 		// should be able to read in a read/write transaction
 		startWriting();
-		
-		assertNotNull(find("root/Root Book")); //$NON-NLS-1$
-		
+
+		assertNotNull(find("root/Root Book"));
+
 		commit();
 	}
 
 	/**
 	 * Tests that we can read in a <code>runExclusive()</code> runnable.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_read_exclusive() {
 		try {
 			// should be able to read exclusively
 			final Book book[] = new Book[1];
-			
+
 			domain.runExclusive(new Runnable() {
+				@Override
 				public void run() {
-					book[0] = (Book) find("root/Root Book"); //$NON-NLS-1$
-				}});
-			
+					book[0] = (Book) find("root/Root Book");
+				}
+			});
+
 			assertNotNull(book[0]);
 		} catch (InterruptedException e) {
-			Assert.fail("Should not be interrupted"); //$NON-NLS-1$
+			Assertions.fail("Should not be interrupted");
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
 	 * Tests that we cannot write without a write transaction.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_write() {
 		startReading();
-		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+
+		final Book book = (Book) find("root/Root Book");
 
 		commit();
-		
+
 		try {
 			// try to modify it
-			book.setTitle("New Title"); //$NON-NLS-1$
-			
+			book.setTitle("New Title");
+
 			// should have thrown
-			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assertions.fail("Should have thrown IllegalStateException");
 		} catch (IllegalStateException e) {
 			// success
-			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			trace("Got expected exception: " + e.getLocalizedMessage());
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
 	 * Tests that we cannot write in a read-only transaction.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_write_readOnlytransaction() {
 		try {
 			startReading();
-			
-			Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
-			
+
+			Book book = (Book) find("root/Root Book");
+
 			// try to modify it in a read/write transaction
-			book.setTitle("New Title"); //$NON-NLS-1$
-			
+			book.setTitle("New Title");
+
 			// should have thrown
-			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assertions.fail("Should have thrown IllegalStateException");
 		} catch (IllegalStateException e) {
 			// success
-			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			trace("Got expected exception: " + e.getLocalizedMessage());
 		} catch (Exception e) {
 			fail(e);
 		} finally {
 			rollback();
 		}
 	}
-	
+
 	/**
 	 * Tests that we can write in a read-write transaction.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_write_readWritetransaction() {
 		try {
 			startWriting();
-			
-			Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
-			
+
+			Book book = (Book) find("root/Root Book");
+
 			// try to modify it in a read/write transaction
-			book.setTitle("New Title"); //$NON-NLS-1$
-			
+			book.setTitle("New Title");
+
 			commit();
-			
-			assertEquals("New Title", book.getTitle()); //$NON-NLS-1$
+
+			assertEquals("New Title", book.getTitle());
 		} catch (Exception e) {
 			fail(e);
 		} finally {
@@ -182,27 +184,28 @@ public class BasicWorkbenchTest extends AbstractTest {
 			}
 		}
 	}
-	
+
 	/**
 	 * Tests that we cannot write from a different thread than the thread that
 	 * currently has a write transaction open.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_write_wrongThread() {
 		final Object monitor = new Object();
-		
+
 		Thread t = new Thread(new Runnable() {
-		
+
+			@Override
 			public void run() {
 				Transaction xa = null;
-				
+
 				try {
 					synchronized (monitor) {
 						xa = ((InternalTransactionalEditingDomain) domain).startTransaction(true, null);
-						
+
 						// wake up the main thread
 						monitor.notifyAll();
-						
+
 						// wait for the main thread to continue
 						monitor.wait();
 					}
@@ -213,26 +216,27 @@ public class BasicWorkbenchTest extends AbstractTest {
 						xa.rollback();
 					}
 				}
-			}});
-		
+			}
+		});
+
 		try {
 			synchronized (monitor) {
 				t.start();
-				
+
 				// wait for the thread to start its transaction
 				monitor.wait();
 			}
-			
-			Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
-			
+
+			Book book = (Book) find("root/Root Book");
+
 			// try to modify it in a read/write transaction
-			book.setTitle("New Title"); //$NON-NLS-1$
-			
+			book.setTitle("New Title");
+
 			// should have thrown
-			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assertions.fail("Should have thrown IllegalStateException");
 		} catch (IllegalStateException e) {
 			// success
-			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			trace("Got expected exception: " + e.getLocalizedMessage());
 		} catch (Exception e) {
 			fail(e);
 		} finally {
@@ -242,32 +246,28 @@ public class BasicWorkbenchTest extends AbstractTest {
 			}
 		}
 	}
-	
+
 	/**
 	 * Tests that we can use the command stack to execute a writing command.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_write_command() {
 		startReading();
-		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+
+		final Book book = (Book) find("root/Root Book");
 
 		commit();
-		
+
 		try {
 			// try to modify it using a command
-			
-			Command cmd = new SetCommand(
-				domain,
-				book,
-				EXTLibraryPackage.eINSTANCE.getBook_Title(),
-				"New Title"); //$NON-NLS-1$
+
+			Command cmd = new SetCommand(domain, book, EXTLibraryPackage.eINSTANCE.getBook_Title(), "New Title");
 			((TransactionalCommandStack) domain.getCommandStack()).execute(cmd, null);
-			
+
 			startReading();
-			
-			assertEquals("New Title", book.getTitle()); //$NON-NLS-1$
-			
+
+			assertEquals("New Title", book.getTitle());
+
 			commit();
 		} catch (Exception e) {
 			fail(e);
@@ -278,36 +278,35 @@ public class BasicWorkbenchTest extends AbstractTest {
 	 * Tests that we can load and unload resources (having contents) without a write
 	 * transaction.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_loadUnloadDuringRead() throws Exception {
 		// create a new domain that hasn't yet loaded the test resource
 		doTearDown();
 		ResourceSet rset = new ResourceSetImpl();
 		domain = createEditingDomain(rset);
-		
+
 		TestListener listener = new TestListener();
 		domain.addResourceSetListener(listener);
-		
+
 		startReading();
-		
+
 		Resource res = rset.createResource(
-				URI.createURI(EmfWorkbenchTestsBundle.getEntry(
-					"/test_models/test_model.extlibrary").toString())); //$NON-NLS-1$
+				URI.createURI(EmfWorkbenchTestsBundle.getEntry("/test_models/test_model.extlibrary").toString()));
 
 		res.load(Collections.EMPTY_MAP);
-		
+
 		commit();
-		
+
 		// check that we got the expected events
 		assertNotNull(listener.postcommit);
 		List<Notification> notifications = listener.postcommit.getNotifications();
 		assertFalse(notifications.isEmpty());
-		
+
 		// look for an event indicating resource was loaded and one indicating
-		// that a root was added.  The root added event should come first!
+		// that a root was added. The root added event should come first!
 		Notification rootAdded = null;
 		Notification resLoaded = null;
-		
+
 		for (Notification next : notifications) {
 			if (next.getNotifier() == res) {
 				if (next.getFeatureID(null) == Resource.RESOURCE__IS_LOADED) {
@@ -322,28 +321,28 @@ public class BasicWorkbenchTest extends AbstractTest {
 				}
 			}
 		}
-		
+
 		assertNotNull(rootAdded);
 		assertNotNull(resLoaded);
-		
-		listener.reset();  // clear stored events
-		
+
+		listener.reset(); // clear stored events
+
 		startReading();
-		
+
 		res.unload();
-		
+
 		commit();
-		
+
 		// check that we got the expected events
 		assertNotNull(listener.postcommit);
 		notifications = listener.postcommit.getNotifications();
 		assertFalse(notifications.isEmpty());
-		
+
 		// look for an event indicating resource was unloaded and one indicating
-		// that a root was removed.  The root removed event should come first!
+		// that a root was removed. The root removed event should come first!
 		Notification rootRemoved = null;
 		Notification resUnloaded = null;
-		
+
 		for (Notification next : notifications) {
 			if (next.getNotifier() == res) {
 				if (next.getFeatureID(null) == Resource.RESOURCE__IS_LOADED) {
@@ -358,43 +357,43 @@ public class BasicWorkbenchTest extends AbstractTest {
 				}
 			}
 		}
-		
+
 		assertNotNull(rootRemoved);
 		assertNotNull(resUnloaded);
 	}
-	
+
 	/**
 	 * Tests that changes to the contents of a loaded resource may not be performed
 	 * in a read transaction.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_resourceContentsChanges_read() {
 		try {
 			startReading();
-			
+
 			testResource.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
-			
+
 			// should have thrown
-			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assertions.fail("Should have thrown IllegalStateException");
 		} catch (IllegalStateException e) {
 			// success
-			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			trace("Got expected exception: " + e.getLocalizedMessage());
 		} catch (Exception e) {
 			fail(e);
 		} finally {
 			rollback();
 		}
 	}
-	
+
 	/**
-	 * Tests that changes to the contents of a loaded resource may be performed
-	 * in a write transaction.
+	 * Tests that changes to the contents of a loaded resource may be performed in a
+	 * write transaction.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_resourceContentsChanges_write() {
 		try {
 			startWriting();
-			
+
 			testResource.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 		} catch (Exception e) {
 			fail(e);
@@ -402,45 +401,45 @@ public class BasicWorkbenchTest extends AbstractTest {
 			rollback();
 		}
 	}
-	
+
 	/**
-	 * Tests that we cannot add a root to a newly created resource in a read transaction.
+	 * Tests that we cannot add a root to a newly created resource in a read
+	 * transaction.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_newResourceContentsChanges_read() {
 		try {
 			startReading();
-			
-			Resource res = domain.getResourceSet().createResource(
-					URI.createFileURI("/tmp/foo.extlibrary")); //$NON-NLS-1$
+
+			Resource res = domain.getResourceSet().createResource(URI.createFileURI("/tmp/foo.extlibrary"));
 			assertFalse(res.isLoaded());
-			
+
 			res.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
-			
+
 			// should have thrown
-			Assert.fail("Should have thrown IllegalStateException"); //$NON-NLS-1$
+			Assertions.fail("Should have thrown IllegalStateException");
 		} catch (IllegalStateException e) {
 			// success
-			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			trace("Got expected exception: " + e.getLocalizedMessage());
 		} catch (Exception e) {
 			fail(e);
 		} finally {
 			rollback();
 		}
 	}
-	
+
 	/**
-	 * Tests that we can add a root to a newly created resource in a write transaction.
+	 * Tests that we can add a root to a newly created resource in a write
+	 * transaction.
 	 */
-	@org.junit.Test
+	@Test
 	public void test_newResourceContentsChanges_write() {
 		try {
 			startWriting();
-			
-			Resource res = domain.getResourceSet().createResource(
-					URI.createFileURI("/tmp/foo.extlibrary")); //$NON-NLS-1$
+
+			Resource res = domain.getResourceSet().createResource(URI.createFileURI("/tmp/foo.extlibrary"));
 			assertFalse(res.isLoaded());
-			
+
 			res.getContents().add(EXTLibraryFactory.eINSTANCE.createLibrary());
 		} catch (Exception e) {
 			fail(e);

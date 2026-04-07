@@ -11,13 +11,14 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -29,10 +30,8 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.util.TransactionUtil;
-import org.junit.Assert;
-import org.junit.Test;
-
-import junit.framework.AssertionFailedError;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests some basic editing domain life-cycle API.
@@ -66,7 +65,7 @@ public class EditingDomainTest extends AbstractTest {
 
 // TODO: Why does this not work in the build but it does in the dev environment?
 //		runGC();
-//		
+//
 //		// verify that the domain was reclaimed
 //		assertSame(ref, q.poll());
 	}
@@ -80,6 +79,7 @@ public class EditingDomainTest extends AbstractTest {
 		final IProject proj = ws.getRoot().getProject("read_only_test");
 
 		addTearDownAction(new Runnable() {
+			@Override
 			public void run() {
 				delete(proj);
 			}
@@ -89,7 +89,7 @@ public class EditingDomainTest extends AbstractTest {
 			proj.create(null);
 			proj.open(null);
 		} catch (Exception e) {
-			Assert.fail("Failed to create project: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to create project: " + e.getLocalizedMessage());
 		}
 
 		IFile file = proj.getFile("testResource.xmi");
@@ -104,7 +104,7 @@ public class EditingDomainTest extends AbstractTest {
 		try {
 			file.create(new ByteArrayInputStream(new byte[0]), false, null);
 		} catch (Exception e) {
-			Assert.fail("Failed to create file: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to create file: " + e.getLocalizedMessage());
 		}
 
 		// a resource that does exist and is writable should be writable
@@ -119,7 +119,7 @@ public class EditingDomainTest extends AbstractTest {
 		try {
 			file.setResourceAttributes(attribs);
 		} catch (Exception e) {
-			Assert.fail("Failed to set file read-only: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to set file read-only: " + e.getLocalizedMessage());
 		}
 
 		// a resource that does exist and is not writable should be read-only
@@ -138,35 +138,27 @@ public class EditingDomainTest extends AbstractTest {
 
 		try {
 			file = File.createTempFile("testReadOnly", ".xmi");
-		} catch (Exception e) {
-			Assert.fail("Failed to create temporary file: " + e.getLocalizedMessage());
+			addTearDownAction(() -> delete(file));
 
-			// compiler doesn't know that fail() throws
-			throw new AssertionFailedError();
+			// a resource that doesn't exist should be writable
+			Resource res = domain.getResourceSet().createResource(URI.createFileURI(file.getAbsolutePath() + "2"));
+			assertFalse(domain.isReadOnly(res));
+
+			domain.getResourceSet().getResources().remove(res);
+
+			// a resource that does exist and is writable should be writable
+			res = domain.getResourceSet().createResource(URI.createFileURI(file.getAbsolutePath()));
+			assertFalse(domain.isReadOnly(res));
+
+			domain.getResourceSet().getResources().remove(res);
+
+			file.setReadOnly();
+
+			// a resource that does exist and is not writable should be read-only
+			res = domain.getResourceSet().createResource(URI.createFileURI(file.getAbsolutePath()));
+			assertTrue(domain.isReadOnly(res));
+		} catch (IOException e) {
+			Assertions.fail("Failed to create temporary file: " + e.getLocalizedMessage());
 		}
-
-		addTearDownAction(new Runnable() {
-			public void run() {
-				delete(file);
-			}
-		});
-
-		// a resource that doesn't exist should be writable
-		Resource res = domain.getResourceSet().createResource(URI.createFileURI(file.getAbsolutePath() + "2"));
-		assertFalse(domain.isReadOnly(res));
-
-		domain.getResourceSet().getResources().remove(res);
-
-		// a resource that does exist and is writable should be writable
-		res = domain.getResourceSet().createResource(URI.createFileURI(file.getAbsolutePath()));
-		assertFalse(domain.isReadOnly(res));
-
-		domain.getResourceSet().getResources().remove(res);
-
-		file.setReadOnly();
-
-		// a resource that does exist and is not writable should be read-only
-		res = domain.getResourceSet().createResource(URI.createFileURI(file.getAbsolutePath()));
-		assertTrue(domain.isReadOnly(res));
 	}
 }

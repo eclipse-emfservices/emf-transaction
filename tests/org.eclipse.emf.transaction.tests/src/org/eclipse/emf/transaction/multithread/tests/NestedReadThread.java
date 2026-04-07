@@ -15,7 +15,7 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 /**
  * Thread representing read operation nested in a read operation.
- * 
+ *
  * @author mgoyal
  */
 class NestedReadThread
@@ -23,7 +23,7 @@ class NestedReadThread
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param waitObject
 	 * @param notifyObject
 	 */
@@ -60,6 +60,7 @@ class NestedReadThread
 			}
 
 			getDomain().runExclusive(new Runnable() {
+				@Override
 				public void run() {
 					startTime = System.currentTimeMillis();
 					final boolean bReading = true;
@@ -70,6 +71,7 @@ class NestedReadThread
 					}
 					try {
 						getDomain().runExclusive(new Runnable() {
+							@Override
 							public void run() {
 								innerStartTime = System.currentTimeMillis();
 								try {
@@ -77,8 +79,9 @@ class NestedReadThread
 								} catch (InterruptedException e) {
 									// ignore this.
 								}
-								if (bReading && !isExecuted)
+								if (bReading && !isExecuted) {
 									isInnerExecuted = true;
+								}
 								innerEndTime = System.currentTimeMillis();
 							}
 						});
