@@ -11,8 +11,8 @@
  */
 package org.eclipse.emf.transaction.util.tests;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
@@ -22,7 +22,7 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryFactory;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.tests.AbstractTest;
 import org.eclipse.emf.transaction.util.TransactionUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the {@link TransactionUtil} class.
@@ -74,6 +74,7 @@ public class TransactionUtilTests extends AbstractTest {
 		assertSame(domain, TransactionUtil.getEditingDomain(domain));
 
 		IEditingDomainProvider edp = new IEditingDomainProvider() {
+			@Override
 			public EditingDomain getEditingDomain() {
 				return domain;
 			}

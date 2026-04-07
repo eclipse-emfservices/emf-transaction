@@ -11,12 +11,12 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
 import java.util.EventObject;
@@ -54,8 +54,8 @@ import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.transaction.tests.fixtures.LogCapture;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests transaction validation and rollback scenarios.
@@ -94,6 +94,7 @@ public class ValidationRollbackTest extends AbstractTest {
 
 			// check that the changes were rolled back
 			domain.runExclusive(new Runnable() {
+				@Override
 				public void run() {
 					assertSame(oldTitle, book.getTitle());
 					assertSame(oldAuthor, book.getAuthor());
@@ -151,6 +152,7 @@ public class ValidationRollbackTest extends AbstractTest {
 
 			// check that the outer transaction commit worked (values still ok)
 			domain.runExclusive(new Runnable() {
+				@Override
 				public void run() {
 					assertSame(oldTitle, book.getTitle());
 					assertSame(oldAuthor, book.getAuthor());
@@ -197,6 +199,7 @@ public class ValidationRollbackTest extends AbstractTest {
 
 			// check that the outer transaction rollback reverted the values
 			domain.runExclusive(new Runnable() {
+				@Override
 				public void run() {
 					assertSame(oldTitle, book.getTitle());
 					assertSame(oldAuthor, book.getAuthor());
@@ -225,7 +228,7 @@ public class ValidationRollbackTest extends AbstractTest {
 
 			xa.commit(); // this should throw RollbackException
 
-			Assert.fail("Should have thrown RollbackException");
+			Assertions.fail("Should have thrown RollbackException");
 		} catch (RollbackException e) {
 			// success
 			status = e.getStatus();
@@ -263,7 +266,7 @@ public class ValidationRollbackTest extends AbstractTest {
 
 			xa.commit(); // this should throw RollbackException
 
-			Assert.fail("Should have thrown RollbackException");
+			Assertions.fail("Should have thrown RollbackException");
 		} catch (RollbackException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage());
@@ -296,6 +299,7 @@ public class ValidationRollbackTest extends AbstractTest {
 
 			// check that the outer transaction's new value is committed
 			domain.runExclusive(new Runnable() {
+				@Override
 				public void run() {
 					assertSame(newTitle, book.getTitle());
 				}
@@ -321,7 +325,7 @@ public class ValidationRollbackTest extends AbstractTest {
 
 			xa.commit(); // this should throw RollbackException
 
-			Assert.fail("Should have thrown RollbackException");
+			Assertions.fail("Should have thrown RollbackException");
 		} catch (RollbackException e) {
 			// success
 			trace("Got expected exception: " + e.getLocalizedMessage());
@@ -354,7 +358,7 @@ public class ValidationRollbackTest extends AbstractTest {
 					((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 					((InternalTransactionalEditingDomain) domain).startTransaction(false, null);
 				} catch (Exception e) {
-					Assert.fail("Failed to start nested transaction: " + e.getLocalizedMessage());
+					Assertions.fail("Failed to start nested transaction: " + e.getLocalizedMessage());
 				}
 				throw new TestError("intentional error");
 			}
@@ -365,7 +369,7 @@ public class ValidationRollbackTest extends AbstractTest {
 		} catch (TestError error) {
 			// success case -- error was not masked by IllegalStateException
 		} catch (IllegalArgumentException e) {
-			Assert.fail("Rolled back out of order: " + e.getLocalizedMessage());
+			Assertions.fail("Rolled back out of order: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -396,7 +400,7 @@ public class ValidationRollbackTest extends AbstractTest {
 						root.getBranches().clear();
 					}
 				});
-				Assert.fail("Should have thrown Error");
+				Assertions.fail("Should have thrown Error");
 			} catch (Error e) {
 				assertSame(error, e);
 			}
@@ -405,15 +409,17 @@ public class ValidationRollbackTest extends AbstractTest {
 			class TestThread implements Runnable {
 				boolean ran = false;
 
+				@Override
 				public void run() {
 					// get the transaction lock
 					try {
 						domain.runExclusive(new Runnable() {
+							@Override
 							public void run() {
 								/* nothing to do */}
 						});
 					} catch (InterruptedException ex) {
-						Assert.fail("Interrupted");
+						Assertions.fail("Interrupted");
 					}
 
 					synchronized (this) {
@@ -433,10 +439,10 @@ public class ValidationRollbackTest extends AbstractTest {
 				try {
 					testThread.wait(2000);
 				} catch (InterruptedException ex) {
-					Assert.fail("Interrupted");
+					Assertions.fail("Interrupted");
 				}
 
-				assertTrue("Dangling transaction lock", testThread.ran);
+				assertTrue(testThread.ran, "Dangling transaction lock");
 			}
 		} finally {
 			domain.removeResourceSetListener(testListener);
@@ -549,6 +555,7 @@ public class ValidationRollbackTest extends AbstractTest {
 		class TestCSL implements CommandStackListener {
 			int invocationCount = 0;
 
+			@Override
 			public void commandStackChanged(EventObject event) {
 				invocationCount++;
 			}
@@ -570,8 +577,8 @@ public class ValidationRollbackTest extends AbstractTest {
 			stack.removeCommandStackListener(listener);
 		}
 
-		assertEquals("Command-stack listener invoked wrong number of times", 2, listener.invocationCount);
-		assertFalse("Should not have an undo command", stack.canUndo());
+		assertEquals(2, listener.invocationCount, "Command-stack listener invoked wrong number of times");
+		assertFalse(stack.canUndo(), "Should not have an undo command");
 	}
 
 	/**
@@ -592,7 +599,7 @@ public class ValidationRollbackTest extends AbstractTest {
 
 		try {
 			getCommandStack().execute(command, Collections.EMPTY_MAP);
-			Assert.fail("Should have rolled back");
+			Assertions.fail("Should have rolled back");
 		} catch (RollbackException e) {
 			// expected
 			System.out.println("Got expected rollback");
@@ -600,7 +607,7 @@ public class ValidationRollbackTest extends AbstractTest {
 			// check that rollback was effective
 			assertEquals("Root Book", book.getTitle());
 		} catch (InterruptedException e) {
-			Assert.fail("Interrupted");
+			Assertions.fail("Interrupted");
 		}
 	}
 
@@ -656,7 +663,7 @@ public class ValidationRollbackTest extends AbstractTest {
 			commit();
 
 			if (notifications != null) {
-				Assert.fail("Got " + notifications.size() + " post-commit notifications"); //$NON-NLS-2$
+				Assertions.fail("Got " + notifications.size() + " post-commit notifications"); //$NON-NLS-2$
 			}
 		} catch (Exception e) {
 			fail(e);
@@ -727,7 +734,7 @@ public class ValidationRollbackTest extends AbstractTest {
 			commit();
 
 			if (notifications != null) {
-				Assert.fail("Got " + notifications.size() + " post-commit notifications"); //$NON-NLS-2$
+				Assertions.fail("Got " + notifications.size() + " post-commit notifications"); //$NON-NLS-2$
 			}
 		} catch (Exception e) {
 			fail(e);
@@ -757,6 +764,7 @@ public class ValidationRollbackTest extends AbstractTest {
 		final Runnable run = new Runnable() {
 			Resource resource = null;
 
+			@Override
 			public void run() {
 				if (resource == null) {
 					resource = domain.getResourceSet().createResource(URI.createURI("http://localhost/foo.xmi"));
@@ -803,10 +811,12 @@ public class ValidationRollbackTest extends AbstractTest {
 							undoRedo();
 						}
 
+						@Override
 						public void redo() {
 							undoRedo();
 						}
 
+						@Override
 						public void execute() {
 							run.run();
 						}
@@ -870,7 +880,7 @@ public class ValidationRollbackTest extends AbstractTest {
 
 			xa.commit();
 
-			Assert.fail("Commit of root transaction should have failed.");
+			Assertions.fail("Commit of root transaction should have failed.");
 		} catch (RollbackException e) {
 			// roll-back is expected
 		} catch (Exception e) {
@@ -901,9 +911,9 @@ public class ValidationRollbackTest extends AbstractTest {
 
 			assertFalse(getCommandStack().canUndo());
 		} catch (RollbackException e) {
-			Assert.fail("Should not have rolled back: " + e.getLocalizedMessage());
+			Assertions.fail("Should not have rolled back: " + e.getLocalizedMessage());
 		} catch (InterruptedException e) {
-			Assert.fail("Interrupted");
+			Assertions.fail("Interrupted");
 		}
 	}
 

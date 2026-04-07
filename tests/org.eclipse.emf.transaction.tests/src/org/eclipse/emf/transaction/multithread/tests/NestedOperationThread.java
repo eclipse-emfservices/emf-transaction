@@ -15,7 +15,7 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 /**
  * Thread representing nested Operations.
- * 
+ *
  * @author mgoyal
  */
 class NestedOperationThread
@@ -35,7 +35,7 @@ class NestedOperationThread
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param waitObject
 	 * @param notifyObject
 	 */
@@ -45,7 +45,7 @@ class NestedOperationThread
 
 	/**
 	 * Returns the start time for the inner operation
-	 * 
+	 *
 	 * @return innerStartTime
 	 */
 	public long getInnerStartTime() {
@@ -54,7 +54,7 @@ class NestedOperationThread
 
 	/**
 	 * Returns the end time for the inner operation
-	 * 
+	 *
 	 * @return innerEndTime
 	 */
 	public long getInnerEndTime() {
@@ -63,7 +63,7 @@ class NestedOperationThread
 
 	/**
 	 * Returns true if the inner operation was successful
-	 * 
+	 *
 	 * @return isInnerExecuted
 	 */
 	public boolean isInnerExecuted() {
@@ -72,7 +72,7 @@ class NestedOperationThread
 
 	/**
 	 * Returns true if the inner operation failed.
-	 * 
+	 *
 	 * @return isInnerFailed
 	 */
 	public boolean isInnerFailed() {

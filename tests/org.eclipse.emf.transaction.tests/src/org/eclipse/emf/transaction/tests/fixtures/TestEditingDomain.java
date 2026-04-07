@@ -24,7 +24,7 @@ import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
  */
 public class TestEditingDomain extends TransactionalEditingDomainImpl {
 	public static int instanceCount = 0;
-	
+
 	public TestEditingDomain(AdapterFactory adapterFactory, ResourceSet resourceSet) {
 		super(adapterFactory, resourceSet);
 		instanceCount++;
@@ -42,9 +42,9 @@ public class TestEditingDomain extends TransactionalEditingDomainImpl {
 			TransactionalEditingDomain result = new TestEditingDomain(
 					new ComposedAdapterFactory(
 						ComposedAdapterFactory.Descriptor.Registry.INSTANCE));
-			
+
 			mapResourceSet(result);
-			
+
 			return result;
 		}
 
@@ -59,6 +59,6 @@ public class TestEditingDomain extends TransactionalEditingDomainImpl {
 			// not used by the extension point
 			return null;
 		}
-		
+
 	}
 }

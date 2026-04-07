@@ -12,13 +12,13 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
 
@@ -49,8 +49,8 @@ import org.eclipse.emf.transaction.tests.fixtures.ItemDefaultPublicationDateTrig
 import org.eclipse.emf.transaction.tests.fixtures.LibraryDefaultBookTrigger;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 import org.eclipse.emf.transaction.util.ConditionalRedoCommand;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests undo and redo of commands by the command stack.
@@ -376,6 +376,7 @@ public class UndoRedoTest extends AbstractTest {
 				count = 0;
 			}
 
+			@Override
 			public void execute() {
 				reset();
 			}
@@ -391,7 +392,7 @@ public class UndoRedoTest extends AbstractTest {
 			}
 		}
 
-		final Set<CountingCommand> countingCommands = new java.util.HashSet<CountingCommand>();
+		final Set<CountingCommand> countingCommands = new java.util.HashSet<>();
 
 		// add the trigger to create a default book in a new library, combined
 		// with a counting command
@@ -478,6 +479,7 @@ public class UndoRedoTest extends AbstractTest {
 	@Test
 	public void test_nonredoableCommand_138287() {
 		Command cmd = new TestCommand.Redoable() {
+			@Override
 			public void execute() {
 				// nothing to do
 			}
@@ -508,6 +510,7 @@ public class UndoRedoTest extends AbstractTest {
 			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new TestCommand.Redoable() {
+					@Override
 					public void execute() {
 						// nothing to do
 					}
@@ -550,6 +553,7 @@ public class UndoRedoTest extends AbstractTest {
 			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new TestCommand.Redoable() {
+					@Override
 					public void execute() {
 						// nothing to do
 					}
@@ -567,6 +571,7 @@ public class UndoRedoTest extends AbstractTest {
 			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new TestCommand.Redoable() {
+					@Override
 					public void execute() {
 						// nothing to do
 					}
@@ -607,6 +612,7 @@ public class UndoRedoTest extends AbstractTest {
 			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new TestCommand.Redoable() {
+					@Override
 					public void execute() {
 						// nothing to do
 					}
@@ -658,7 +664,7 @@ public class UndoRedoTest extends AbstractTest {
 		try {
 			TransactionImpl.DEFAULT_UNDO_REDO_OPTIONS.put(BOGUS_OPTION, Boolean.TRUE);
 
-			Assert.fail("Should not have been permitted to add the bogus option");
+			Assertions.fail("Should not have been permitted to add the bogus option");
 		} catch (RuntimeException e) {
 			// success
 			System.out.println("Got expected runtime exception: " + e.getLocalizedMessage());
@@ -718,15 +724,15 @@ public class UndoRedoTest extends AbstractTest {
 				}
 			});
 
-			assertEquals("Wrong number of copies on execute", newCopies, book[0].getCopies());
+			assertEquals(newCopies, book[0].getCopies(), "Wrong number of copies on execute");
 
 			getCommandStack().undo();
 
-			assertFalse("Wrong number of copies on undo", book[0].getCopies() == newCopies);
+			assertFalse(book[0].getCopies() == newCopies, "Wrong number of copies on undo");
 
 			getCommandStack().redo();
 
-			assertEquals("Wrong number of copies on redo", newCopies, book[0].getCopies());
+			assertEquals(newCopies, book[0].getCopies(), "Wrong number of copies on redo");
 		} finally {
 			domain.removeResourceSetListener(listener);
 		}
@@ -785,15 +791,15 @@ public class UndoRedoTest extends AbstractTest {
 			});
 			getCommandStack().execute(cc);
 
-			assertEquals("Wrong number of copies on execute", newCopies, book[0].getCopies());
+			assertEquals(newCopies, book[0].getCopies(), "Wrong number of copies on execute");
 
 			getCommandStack().undo();
 
-			assertFalse("Wrong number of copies on undo", book[0].getCopies() == newCopies);
+			assertFalse(book[0].getCopies() == newCopies, "Wrong number of copies on undo");
 
 			getCommandStack().redo();
 
-			assertEquals("Wrong number of copies on redo", newCopies, book[0].getCopies());
+			assertEquals(newCopies, book[0].getCopies(), "Wrong number of copies on redo");
 		} finally {
 			domain.removeResourceSetListener(listener);
 		}
@@ -832,22 +838,27 @@ public class UndoRedoTest extends AbstractTest {
 	public class UndoRedoResourceSetListener implements ResourceSetListener {
 		public int undoCount = 0;
 
+		@Override
 		public NotificationFilter getFilter() {
 			return null;
 		}
 
+		@Override
 		public boolean isAggregatePrecommitListener() {
 			return false;
 		}
 
+		@Override
 		public boolean isPostcommitOnly() {
 			return false;
 		}
 
+		@Override
 		public boolean isPrecommitOnly() {
 			return false;
 		}
 
+		@Override
 		public void resourceSetChanged(ResourceSetChangeEvent event) {
 			Transaction transaction = event.getTransaction();
 
@@ -857,6 +868,7 @@ public class UndoRedoTest extends AbstractTest {
 			}
 		}
 
+		@Override
 		public Command transactionAboutToCommit(ResourceSetChangeEvent event) throws RollbackException {
 			return null;
 		}

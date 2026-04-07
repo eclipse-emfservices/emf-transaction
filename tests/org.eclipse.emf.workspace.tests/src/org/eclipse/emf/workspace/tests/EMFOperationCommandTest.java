@@ -12,12 +12,12 @@
  */
 package org.eclipse.emf.workspace.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.AbstractOperation;
@@ -42,8 +42,8 @@ import org.eclipse.emf.workspace.tests.fixtures.ContextAdder;
 import org.eclipse.emf.workspace.tests.fixtures.ExternalDataOperation;
 import org.eclipse.emf.workspace.tests.fixtures.TestOperation;
 import org.eclipse.emf.workspace.tests.fixtures.TestUndoContext;
-import org.junit.Assert;
-
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the {@link EMFOperationCommand} class.
@@ -53,50 +53,44 @@ import org.junit.Assert;
 public class EMFOperationCommandTest extends AbstractTest {
 
 	/**
-	 * Tests execution, undo, and redo of operations wrapped within an
-	 * EMF command.
+	 * Tests execution, undo, and redo of operations wrapped within an EMF command.
 	 */
+	@Test
 	public void test_execute_undo_redo() {
 		startReading();
-		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 		final String oldTitle = book.getTitle();
-		
-		final String[] externalData = new String[] {"external"}; //$NON-NLS-1$
+
+		final String[] externalData = new String[] { "external" };
 		final String oldExternalData = externalData[0];
-		final String newExternalData = "newValue"; //$NON-NLS-1$
-		
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		
+		final String newExternalData = "newValue";
+
+		final String newTitle = "New Title";
+
 		commit();
-		
+
 		IUndoContext ctx = new TestUndoContext();
-		
-		Command cmd = new SetCommand(
-				domain,
-				book,
-				EXTLibraryPackage.eINSTANCE.getBook_Title(),
-				newTitle);
-		IUndoableOperation oper = new ExternalDataOperation(
-				externalData,
-				newExternalData);
-		
+
+		Command cmd = new SetCommand(domain, book, EXTLibraryPackage.eINSTANCE.getBook_Title(), newTitle);
+		IUndoableOperation oper = new ExternalDataOperation(externalData, newExternalData);
+
 		cmd = cmd.chain(new EMFOperationCommand(domain, oper));
-		
+
 		try {
 			history.addOperationHistoryListener(new ContextAdder(ctx));
 			getCommandStack().execute(cmd, null);
 		} catch (Exception e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were applied
 		assertSame(newTitle, book.getTitle());
 		assertEquals(newExternalData, externalData[0]);
-		
+
 		commit();
 
 		try {
@@ -105,92 +99,87 @@ public class EMFOperationCommandTest extends AbstractTest {
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were undone
 		assertSame(oldTitle, book.getTitle());
 		assertEquals(oldExternalData, externalData[0]);
-		
+
 		commit();
-		
+
 		try {
 			assertTrue(history.canRedo(ctx));
 			history.redo(ctx, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were redone
 		assertSame(newTitle, book.getTitle());
 		assertEquals(newExternalData, externalData[0]);
-		
+
 		commit();
 	}
-	
+
 	/**
 	 * Tests execution, undo, and redo of operations wrapped in commands as
 	 * pre-commit triggers.
 	 */
+	@Test
 	public void test_execute_undo_redo_trigger() {
 		startReading();
-		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 		final String oldTitle = book.getTitle();
-		
-		final String[] externalData = new String[] {"external"}; //$NON-NLS-1$
+
+		final String[] externalData = new String[] { "external" };
 		final String oldExternalData = externalData[0];
-		final String newExternalData = "newValue"; //$NON-NLS-1$
-		
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		
+		final String newExternalData = "newValue";
+
+		final String newTitle = "New Title";
+
 		commit();
-		
+
 		IUndoContext ctx = new TestUndoContext();
-		
-		Command cmd = new SetCommand(
-				domain,
-				book,
-				EXTLibraryPackage.eINSTANCE.getBook_Title(),
-				newTitle);
-		
+
+		Command cmd = new SetCommand(domain, book, EXTLibraryPackage.eINSTANCE.getBook_Title(), newTitle);
+
 		domain.addResourceSetListener(new TriggerListener() {
-		
+
 			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				Command result = null;
-				
-				if ((notification.getNotifier() == book)
-						&& newTitle.equals(notification.getNewValue())) {
-					
-					trace("Adding external data trigger command"); //$NON-NLS-1$
-					
-					IUndoableOperation oper = new ExternalDataOperation(
-							externalData,
-							newExternalData);
-					
+
+				if ((notification.getNotifier() == book) && newTitle.equals(notification.getNewValue())) {
+
+					trace("Adding external data trigger command");
+
+					IUndoableOperation oper = new ExternalDataOperation(externalData, newExternalData);
+
 					result = new EMFOperationCommand(domain, oper);
 				}
-				
+
 				return result;
-			}});
-		
+			}
+		});
+
 		try {
 			history.addOperationHistoryListener(new ContextAdder(ctx));
 			getCommandStack().execute(cmd, null);
 		} catch (Exception e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were applied
 		assertSame(newTitle, book.getTitle());
 		assertEquals(newExternalData, externalData[0]);
-		
+
 		commit();
 
 		try {
@@ -199,161 +188,157 @@ public class EMFOperationCommandTest extends AbstractTest {
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were undone
 		assertSame(oldTitle, book.getTitle());
 		assertEquals(oldExternalData, externalData[0]);
-		
+
 		commit();
-		
+
 		try {
 			assertTrue(history.canRedo(ctx));
 			history.redo(ctx, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were redone
 		assertSame(newTitle, book.getTitle());
 		assertEquals(newExternalData, externalData[0]);
-		
+
 		commit();
 	}
-	
+
 	/**
-	 * Tests rollback of operations wrapped in commands as pre-commit triggers
-	 * when the transactions that include the triggers roll back.
+	 * Tests rollback of operations wrapped in commands as pre-commit triggers when
+	 * the transactions that include the triggers roll back.
 	 */
+	@Test
 	public void test_rollback_trigger() {
 		startReading();
-		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 		final String oldTitle = book.getTitle();
-		
-		final String[] externalData = new String[] {"external"}; //$NON-NLS-1$
+
+		final String[] externalData = new String[] { "external" };
 		final String oldExternalData = externalData[0];
-		final String newExternalData = "newValue"; //$NON-NLS-1$
-		
+		final String newExternalData = "newValue";
+
 		commit();
-		
+
 		IUndoContext ctx = new TestUndoContext();
-		
-		Command cmd = new SetCommand(
-				domain,
-				book,
-				EXTLibraryPackage.eINSTANCE.getBook_Title(),
-				null); // books must have titles
-		
+
+		Command cmd = new SetCommand(domain, book, EXTLibraryPackage.eINSTANCE.getBook_Title(), null); // books must
+																										// have titles
+
 		domain.addResourceSetListener(new TriggerListener() {
-		
+
 			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				Command result = null;
-				
-				if ((notification.getNotifier() == book)
-						&& (notification.getNewValue() == null)) {
-					
-					trace("Adding external data trigger command"); //$NON-NLS-1$
-					
-					IUndoableOperation oper = new ExternalDataOperation(
-							externalData,
-							newExternalData);
-					
+
+				if ((notification.getNotifier() == book) && (notification.getNewValue() == null)) {
+
+					trace("Adding external data trigger command");
+
+					IUndoableOperation oper = new ExternalDataOperation(externalData, newExternalData);
+
 					result = new EMFOperationCommand(domain, oper);
 				}
-				
+
 				return result;
-			}});
-		
+			}
+		});
+
 		try {
 			history.addOperationHistoryListener(new ContextAdder(ctx));
 			getCommandStack().execute(cmd, null);
-			
-			Assert.fail("Should have thrown RollbackException"); //$NON-NLS-1$
+
+			Assertions.fail("Should have thrown RollbackException");
 		} catch (RollbackException e) {
 			// success
-			trace("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			trace("Got expected exception: " + e.getLocalizedMessage());
 		} catch (Exception e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were not applied
 		assertSame(oldTitle, book.getTitle());
 		assertEquals(oldExternalData, externalData[0]);
-		
+
 		commit();
 	}
-	
+
 	/**
 	 * Tests execution, undo, and redo of operations wrapped in commands as
-	 * pre-commit triggers in a {@link RecordingCommand} context (where
-	 * undo/redo of triggers is different from other commands).
+	 * pre-commit triggers in a {@link RecordingCommand} context (where undo/redo of
+	 * triggers is different from other commands).
 	 */
+	@Test
 	public void test_execute_undo_redo_trigger_recordingCommand() {
 		startReading();
-		
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 		final String oldTitle = book.getTitle();
-		
-		final String[] externalData = new String[] {"external"}; //$NON-NLS-1$
+
+		final String[] externalData = new String[] { "external" };
 		final String oldExternalData = externalData[0];
-		final String newExternalData = "newValue"; //$NON-NLS-1$
-		
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		
+		final String newExternalData = "newValue";
+
+		final String newTitle = "New Title";
+
 		commit();
-		
+
 		IUndoContext ctx = new TestUndoContext();
-		
-		Command cmd = new RecordingCommand(domain, "Testing") { //$NON-NLS-1$
-		
+
+		Command cmd = new RecordingCommand(domain, "Testing") {
+
 			@Override
 			protected void doExecute() {
 				book.setTitle(newTitle);
-			}};
-		
+			}
+		};
+
 		domain.addResourceSetListener(new TriggerListener() {
-		
+
 			@Override
 			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				Command result = null;
-				
-				if ((notification.getNotifier() == book)
-						&& newTitle.equals(notification.getNewValue())) {
-					
-					trace("Adding external data trigger command"); //$NON-NLS-1$
-					
-					IUndoableOperation oper = new ExternalDataOperation(
-							externalData,
-							newExternalData);
-					
+
+				if ((notification.getNotifier() == book) && newTitle.equals(notification.getNewValue())) {
+
+					trace("Adding external data trigger command");
+
+					IUndoableOperation oper = new ExternalDataOperation(externalData, newExternalData);
+
 					result = new EMFOperationCommand(domain, oper);
 				}
-				
+
 				return result;
-			}});
-		
+			}
+		});
+
 		try {
 			history.addOperationHistoryListener(new ContextAdder(ctx));
 			getCommandStack().execute(cmd, null);
 		} catch (Exception e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were applied
 		assertSame(newTitle, book.getTitle());
 		assertEquals(newExternalData, externalData[0]);
-		
+
 		commit();
 
 		try {
@@ -362,60 +347,63 @@ public class EMFOperationCommandTest extends AbstractTest {
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were undone
 		assertSame(oldTitle, book.getTitle());
 		assertEquals(oldExternalData, externalData[0]);
-		
+
 		commit();
-		
+
 		try {
 			assertTrue(history.canRedo(ctx));
 			history.redo(ctx, new NullProgressMonitor(), null);
 		} catch (ExecutionException e) {
 			fail(e);
 		}
-		
+
 		startReading();
-		
+
 		// verify that the changes were redone
 		assertSame(newTitle, book.getTitle());
 		assertEquals(newExternalData, externalData[0]);
-		
+
 		commit();
 	}
-	
+
 	/**
 	 * Tests that the EMFOperationCommand tests its wrapped operation for
 	 * redoability.
 	 */
+	@Test
 	public void test_nonredoableOperation_138287() {
 		IUndoableOperation operation = new TestOperation(domain) {
 			@Override
 			protected void doExecute() {
 				// nothing to do
 			}
-			
+
 			@Override
 			public boolean canRedo() {
 				return false;
-			}};
-		
+			}
+		};
+
 		getCommandStack().execute(new EMFOperationCommand(domain, operation));
-		
+
 		assertTrue(getCommandStack().canUndo());
-		
+
 		getCommandStack().undo();
-		
+
 		assertFalse(getCommandStack().canRedo());
 	}
 
 	/**
-	 * Tests that the EMFOperationCommand tests its wrapped operation for
-	 * multiple disposability.
+	 * Tests that the EMFOperationCommand tests its wrapped operation for multiple
+	 * disposability.
 	 */
+	@Test
 	public void test_multipleDisposableOperation_209491() {
 
 		IUndoableOperation operation = new TestOperation(domain) {
@@ -427,7 +415,8 @@ public class EMFOperationCommandTest extends AbstractTest {
 			@Override
 			public boolean canRedo() {
 				return false;
-			}};
+			}
+		};
 
 		EMFOperationCommand operationCommand = new EMFOperationCommand(domain, operation);
 		getCommandStack().execute(operationCommand);
@@ -436,11 +425,11 @@ public class EMFOperationCommandTest extends AbstractTest {
 
 		Exception exception;
 		try {
-			// Confirm that the operation has been nulled by testing that this throws a null pointer exception.
+			// Confirm that the operation has been nulled by testing that this throws a null
+			// pointer exception.
 			operationCommand.canExecute();
 			exception = null;
-		}
-		catch (NullPointerException nullPointerException) {
+		} catch (NullPointerException nullPointerException) {
 			exception = nullPointerException;
 		}
 		assertNotNull(exception);
@@ -449,291 +438,288 @@ public class EMFOperationCommandTest extends AbstractTest {
 			// This should not throw a null pointer exception.
 			operationCommand.dispose();
 			exception = null;
-		}
-		catch (NullPointerException nullPointerException) {
+		} catch (NullPointerException nullPointerException) {
 			exception = nullPointerException;
 		}
 		assertNull(exception);
 	}
-	
+
 	/**
-	 * Tests that failure of an EMFOperationCommand used as a trigger will
-	 * roll back a transaction.
+	 * Tests that failure of an EMFOperationCommand used as a trigger will roll back
+	 * a transaction.
 	 */
+	@Test
 	public void test_operationTriggerFails_234868() {
 		final TestOperation trigger = new TestOperation(domain) {
-		
+
 			@Override
-			protected void doExecute()
-					throws ExecutionException {
-				
-				throw new ExecutionException("I should fail"); //$NON-NLS-1$
-			}};
-		
+			protected void doExecute() throws ExecutionException {
+
+				throw new ExecutionException("I should fail");
+			}
+		};
+
 		TriggerListener listener = new TriggerListener() {
-		
+
 			@Override
-			protected Command trigger(TransactionalEditingDomain domain,
-					Notification notification) {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new EMFOperationCommand(domain, trigger);
-			}};
-		
+			}
+		};
+
 		try {
 			domain.addResourceSetListener(listener);
-			
+
 			startWriting();
-			Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+			Book book = (Book) find("root/Root Book");
 			book.setCopies(book.getCopies() + 30);
-			commitWithRollback();  // should roll back due to trigger
-			
-			Assert.fail("Should have rolled back."); //$NON-NLS-1$
+			commitWithRollback(); // should roll back due to trigger
+
+			Assertions.fail("Should have rolled back.");
 		} catch (RollbackException rbe) {
 			// success
-			System.out.println("Got expected exception: " + rbe.getLocalizedMessage()); //$NON-NLS-1$
+			System.out.println("Got expected exception: " + rbe.getLocalizedMessage());
 		} finally {
 			domain.removeResourceSetListener(listener);
 		}
 	}
-	
+
 	/**
-	 * Tests that execution of an EMFOperationCommand used as a trigger will
-	 * roll back a transaction when the operation status is an ERROR.
+	 * Tests that execution of an EMFOperationCommand used as a trigger will roll
+	 * back a transaction when the operation status is an ERROR.
 	 */
+	@Test
 	public void test_operationTriggerErrorStatus_234868() {
 		final TestOperation trigger = new TestOperation(domain) {
-		
+
 			@Override
 			protected void doExecute() {
-				
-				setStatus(new Status(IStatus.ERROR,
-					"org.eclipse.emf.workspace.tests", "I should fail")); //$NON-NLS-1$ //$NON-NLS-2$
-			}};
-		
+
+				setStatus(new Status(IStatus.ERROR, "org.eclipse.emf.workspace.tests", "I should fail")); //$NON-NLS-2$
+			}
+		};
+
 		TriggerListener listener = new TriggerListener() {
-		
+
 			@Override
-			protected Command trigger(TransactionalEditingDomain domain,
-					Notification notification) {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new EMFOperationCommand(domain, trigger);
-			}};
-		
+			}
+		};
+
 		try {
 			domain.addResourceSetListener(listener);
-			
+
 			startWriting();
-			Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+			Book book = (Book) find("root/Root Book");
 			book.setCopies(book.getCopies() + 30);
-			commitWithRollback();  // should roll back due to trigger
-			
-			Assert.fail("Should have rolled back."); //$NON-NLS-1$
+			commitWithRollback(); // should roll back due to trigger
+
+			Assertions.fail("Should have rolled back.");
 		} catch (RollbackException rbe) {
 			// success
-			System.out.println("Got expected exception: " + rbe.getLocalizedMessage()); //$NON-NLS-1$
+			System.out.println("Got expected exception: " + rbe.getLocalizedMessage());
 		} finally {
 			domain.removeResourceSetListener(listener);
 		}
 	}
-	
+
 	/**
-	 * Tests that execution of a non-EMF operation used as a trigger will
-	 * roll back a transaction when the operation status is a ERROR.
+	 * Tests that execution of a non-EMF operation used as a trigger will roll back
+	 * a transaction when the operation status is a ERROR.
 	 */
+	@Test
 	public void test_operationTriggerErrorStatus_nonEMF_234868() {
-		final IUndoableOperation trigger = new AbstractOperation("Non-EMF Changes") { //$NON-NLS-1$
-		
+		final IUndoableOperation trigger = new AbstractOperation("Non-EMF Changes") {
+
 			@Override
-			public IStatus execute(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
-				return new Status(IStatus.ERROR,
-					"org.eclipse.emf.workspace.tests", "I should fail"); //$NON-NLS-1$ //$NON-NLS-2$
+			public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+				return new Status(IStatus.ERROR, "org.eclipse.emf.workspace.tests", "I should fail"); //$NON-NLS-2$
 			}
-			
+
 			@Override
-			public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
+			public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 				return Status.OK_STATUS;
 			}
-			
+
 			@Override
-			public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
+			public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 				return Status.OK_STATUS;
-			}};
-		
+			}
+		};
+
 		TriggerListener listener = new TriggerListener() {
-		
+
 			@Override
-			protected Command trigger(TransactionalEditingDomain domain,
-					Notification notification) {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new EMFOperationCommand(domain, trigger);
-			}};
-		
+			}
+		};
+
 		try {
 			domain.addResourceSetListener(listener);
-			
+
 			startWriting();
-			Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+			Book book = (Book) find("root/Root Book");
 			book.setCopies(book.getCopies() + 30);
-			commitWithRollback();  // should roll back due to trigger
-			
-			Assert.fail("Should have rolled back."); //$NON-NLS-1$
+			commitWithRollback(); // should roll back due to trigger
+
+			Assertions.fail("Should have rolled back.");
 		} catch (RollbackException rbe) {
 			// success
-			System.out.println("Got expected exception: " + rbe.getLocalizedMessage()); //$NON-NLS-1$
+			System.out.println("Got expected exception: " + rbe.getLocalizedMessage());
 		} finally {
 			domain.removeResourceSetListener(listener);
 		}
 	}
-	
+
 	/**
-	 * Tests that undo of a non-EMF operation used as a trigger will
-	 * roll back a transaction when the operation status is a ERROR.
+	 * Tests that undo of a non-EMF operation used as a trigger will roll back a
+	 * transaction when the operation status is a ERROR.
 	 */
+	@Test
 	public void test_operationTriggerErrorStatus_nonEMF_undo_234868() {
-		final IUndoableOperation trigger = new AbstractOperation("Non-EMF Changes") { //$NON-NLS-1$
-		
+		final IUndoableOperation trigger = new AbstractOperation("Non-EMF Changes") {
+
 			@Override
-			public IStatus execute(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
+			public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 				return Status.OK_STATUS;
 			}
-			
+
 			@Override
-			public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
-				return new Status(IStatus.ERROR,
-					"org.eclipse.emf.workspace.tests", "I should fail"); //$NON-NLS-1$ //$NON-NLS-2$
+			public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+				return new Status(IStatus.ERROR, "org.eclipse.emf.workspace.tests", "I should fail"); //$NON-NLS-2$
 			}
-			
+
 			@Override
-			public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
+			public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 				return Status.OK_STATUS;
-			}};
-		
+			}
+		};
+
 		TriggerListener listener = new TriggerListener() {
-		
+
 			@Override
-			protected Command trigger(TransactionalEditingDomain domain,
-					Notification notification) {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new EMFOperationCommand(domain, trigger);
-			}};
-		
+			}
+		};
+
 		try {
 			domain.addResourceSetListener(listener);
-			
+
 			IUndoableOperation op = new TestOperation(domain) {
+				@Override
 				protected void doExecute() throws ExecutionException {
-					Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+					Book book = (Book) find("root/Root Book");
 					book.setCopies(book.getCopies() + 30);
-				}};
-			
+				}
+			};
+
 			try {
 				op.execute(null, null);
 			} catch (ExecutionException e) {
-				Assert.fail("Should not fail to execute: " + e.getLocalizedMessage()); //$NON-NLS-1$
+				Assertions.fail("Should not fail to execute: " + e.getLocalizedMessage());
 			}
-			
+
 			try {
 				op.undo(null, null);
-				Assert.fail("Should have failed to undo."); //$NON-NLS-1$
+				Assertions.fail("Should have failed to undo.");
 			} catch (ExecutionException e) {
 				// success
-				System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+				System.out.println("Got expected exception: " + e.getLocalizedMessage());
 			}
 		} finally {
 			domain.removeResourceSetListener(listener);
 		}
 	}
-	
+
 	/**
-	 * Tests that redo of a non-EMF operation used as a trigger will
-	 * roll back a transaction when the operation status is a ERROR.
+	 * Tests that redo of a non-EMF operation used as a trigger will roll back a
+	 * transaction when the operation status is a ERROR.
 	 */
+	@Test
 	public void test_operationTriggerErrorStatus_nonEMF_redo_234868() {
-		final IUndoableOperation trigger = new AbstractOperation("Non-EMF Changes") { //$NON-NLS-1$
-		
+		final IUndoableOperation trigger = new AbstractOperation("Non-EMF Changes") {
+
 			@Override
-			public IStatus execute(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
+			public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 				return Status.OK_STATUS;
 			}
-			
+
 			@Override
-			public IStatus undo(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
+			public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
 				return Status.OK_STATUS;
 			}
-			
+
 			@Override
-			public IStatus redo(IProgressMonitor monitor, IAdaptable info)
-					throws ExecutionException {
-				return new Status(IStatus.ERROR,
-					"org.eclipse.emf.workspace.tests", "I should fail"); //$NON-NLS-1$ //$NON-NLS-2$
-			}};
-		
+			public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+				return new Status(IStatus.ERROR, "org.eclipse.emf.workspace.tests", "I should fail"); //$NON-NLS-2$
+			}
+		};
+
 		TriggerListener listener = new TriggerListener() {
-		
+
 			@Override
-			protected Command trigger(TransactionalEditingDomain domain,
-					Notification notification) {
+			protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 				return new EMFOperationCommand(domain, trigger);
-			}};
-		
+			}
+		};
+
 		try {
 			domain.addResourceSetListener(listener);
-			
+
 			IUndoableOperation op = new TestOperation(domain) {
+				@Override
 				protected void doExecute() throws ExecutionException {
-					Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+					Book book = (Book) find("root/Root Book");
 					book.setCopies(book.getCopies() + 30);
-				}};
-			
+				}
+			};
+
 			try {
 				op.execute(null, null);
 			} catch (ExecutionException e) {
-				Assert.fail("Should not fail to execute: " + e.getLocalizedMessage()); //$NON-NLS-1$
+				Assertions.fail("Should not fail to execute: " + e.getLocalizedMessage());
 			}
-			
+
 			try {
 				op.undo(null, null);
 			} catch (ExecutionException e) {
-				Assert.fail("Should not fail to undo: " + e.getLocalizedMessage()); //$NON-NLS-1$
+				Assertions.fail("Should not fail to undo: " + e.getLocalizedMessage());
 			}
-			
+
 			try {
 				op.redo(null, null);
-				Assert.fail("Should have failed to redo."); //$NON-NLS-1$
+				Assertions.fail("Should have failed to redo.");
 			} catch (ExecutionException e) {
 				// success
-				System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
+				System.out.println("Got expected exception: " + e.getLocalizedMessage());
 			}
 		} finally {
 			domain.removeResourceSetListener(listener);
 		}
 	}
-	
+
 	//
 	// Test fixtures
 	//
-	
+
 	@Override
-	protected void doSetUp()
-		throws Exception {
-		
+	protected void doSetUp() throws Exception {
+
 		super.doSetUp();
-		
+
 		// enable validation
 		validationEnabled = true;
 	}
-	
+
 	@Override
-	protected void doTearDown()
-		throws Exception {
-		
+	protected void doTearDown() throws Exception {
+
 		// disable validation
 		validationEnabled = false;
-		
+
 		super.doTearDown();
 	}
 }

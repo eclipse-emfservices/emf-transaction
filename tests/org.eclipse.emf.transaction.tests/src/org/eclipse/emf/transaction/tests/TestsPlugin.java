@@ -21,18 +21,18 @@ import org.osgi.framework.BundleContext;
  */
 public class TestsPlugin extends Plugin {
 	public static TestsPlugin instance;
-	
+
 	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
-		
+
 		instance = this;
 	}
-	
+
 	@Override
 	public void stop(BundleContext context) throws Exception {
 		instance = null;
-		
+
 		super.stop(context);
 	}
 }

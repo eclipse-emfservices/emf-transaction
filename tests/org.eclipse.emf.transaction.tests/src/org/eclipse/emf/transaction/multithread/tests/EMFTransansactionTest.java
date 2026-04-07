@@ -11,6 +11,8 @@
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.io.File;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
@@ -37,17 +39,15 @@ import org.eclipse.emf.transaction.RecordingCommand;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.internal.EMFTransactionPlugin;
 import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * This class contains a test case for EMF transaction.
- * 
+ *
  * @author mchauvin
  */
-public class EMFTransansactionTest extends TestCase {
+public class EMFTransansactionTest {
 
 	private TransactionalEditingDomain editingDomain;
 
@@ -57,14 +57,10 @@ public class EMFTransansactionTest extends TestCase {
 
 	private AtomicBoolean errorDetected = new AtomicBoolean();
 
-	public static Test suite() {
-		return new TestSuite(EMFTransansactionTest.class, "Concurrent Transaction Tests"); //$NON-NLS-1$
-	}
-
-	@Override
-	protected void setUp() throws Exception {
-		super.setUp();
+	@BeforeEach
+	public void setUp() throws Exception {
 		exceptionHandler = new UncaughtExceptionHandler() {
+			@Override
 			public void uncaughtException(Thread t, Throwable e) {
 				errorDetected.set(true);
 			}
@@ -74,9 +70,10 @@ public class EMFTransansactionTest extends TestCase {
 	/**
 	 * Due to threads synchronization complexity, this test may succeed. It should
 	 * be run several times (at least 4) to be sure than the bug is not present.
-	 * 
+	 *
 	 * @throws Exception
 	 */
+	@Test
 	public void testSynchronizationBug() throws Exception {
 		/* create a resource set */
 		final ResourceSet rset = new ResourceSetImpl();
@@ -88,7 +85,7 @@ public class EMFTransansactionTest extends TestCase {
 		final EClass eClass = EcoreFactory.eINSTANCE.createEClass();
 		ePackage.getEClassifiers().add(eClass);
 		final EReference eReference = EcoreFactory.eINSTANCE.createEReference();
-		eClass.getEReferences().add(eReference);
+		eClass.getEStructuralFeatures().add(eReference);
 
 		/* create resource and and add it initialized model */
 		final URI fileUri = URI.createFileURI(new File("test.ecore").getAbsolutePath());
@@ -105,7 +102,7 @@ public class EMFTransansactionTest extends TestCase {
 		final EClass eClass2 = EcoreFactory.eINSTANCE.createEClass();
 		ePackage2.getEClassifiers().add(eClass2);
 		final EReference eReference2 = EcoreFactory.eINSTANCE.createEReference();
-		eClass2.getEReferences().add(eReference2);
+		eClass2.getEStructuralFeatures().add(eReference2);
 
 		/* create resource and and add it initialized model */
 		final URI file2Uri = URI.createFileURI(new File("test2.ecore").getAbsolutePath());
@@ -135,7 +132,7 @@ public class EMFTransansactionTest extends TestCase {
 
 		EMFTransactionPlugin.getPlugin().getLog().addLogListener(listener);
 
-		final Collection<Thread> threads = new ArrayList<Thread>();
+		final Collection<Thread> threads = new ArrayList<>();
 		/* Launch a unload and a resolution */
 		for (int i = 0; i < 100; i++) {
 			threads.add(launchNotificationInANewThread(eReference, eReference2));

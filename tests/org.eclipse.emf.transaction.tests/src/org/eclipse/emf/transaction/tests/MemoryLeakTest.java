@@ -11,10 +11,10 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -44,8 +44,8 @@ import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.TriggerListener;
 import org.eclipse.emf.transaction.util.CompositeChangeDescription;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests to check for memory leaks.
@@ -59,12 +59,12 @@ public class MemoryLeakTest extends AbstractTest {
 	 */
 	@Test
 	public void test_unloadResource() {
-		ReferenceQueue<EObject> q = new ReferenceQueue<EObject>();
-		Reference<EObject> ref = new WeakReference<EObject>(root, q);
+		ReferenceQueue<EObject> q = new ReferenceQueue<>();
+		Reference<EObject> ref = new WeakReference<>(root, q);
 
 		// make some change, causing a transaction to record a change description
 		startWriting();
-		root.setName("foo"); //$NON-NLS-1$
+		root.setName("foo");
 		commit();
 
 		startReading();
@@ -88,12 +88,12 @@ public class MemoryLeakTest extends AbstractTest {
 	 */
 	@Test
 	public void test_reclaimEditingDomain() {
-		ReferenceQueue<TransactionalEditingDomain> q = new ReferenceQueue<TransactionalEditingDomain>();
-		Reference<TransactionalEditingDomain> ref = new WeakReference<TransactionalEditingDomain>(domain, q);
+		ReferenceQueue<TransactionalEditingDomain> q = new ReferenceQueue<>();
+		Reference<TransactionalEditingDomain> ref = new WeakReference<>(domain, q);
 
 		// make some change, causing a transaction to record a change description
 		startWriting();
-		root.setName("foo"); //$NON-NLS-1$
+		root.setName("foo");
 		commit();
 
 		domain = null; // forget the domain
@@ -125,7 +125,7 @@ public class MemoryLeakTest extends AbstractTest {
 		final String oldName = root.getName();
 
 		// make a change in the root-level transaction
-		root.setName("foo"); //$NON-NLS-1$
+		root.setName("foo");
 
 		// now, create 1000 nested transactions, each doing a change, *but* unrecorded
 		Map<Object, Object> options = Collections.<Object, Object>singletonMap(Transaction.OPTION_UNPROTECTED,
@@ -134,18 +134,18 @@ public class MemoryLeakTest extends AbstractTest {
 		for (int i = 0; i < 1000; i++) {
 			startWriting(options);
 
-			root.setName("foo" + i); //$NON-NLS-1$
+			root.setName("foo" + i);
 
 			commit();
 
 			// make another change in the root-level transaction
-			root.setName("foo" + (i + 1000)); //$NON-NLS-1$
+			root.setName("foo" + (i + 1000));
 		}
 
 		// report the used heap
 		long currentUsedHeap = usedHeap();
-		System.out.println("Additional heap used by the transaction: " //$NON-NLS-1$
-				+ ((currentUsedHeap - initialUsedHeap) / 1024L) + " kB"); //$NON-NLS-1$
+		System.out.println(
+				"Additional heap used by the transaction: " + ((currentUsedHeap - initialUsedHeap) / 1024L) + " kB");
 
 		Transaction tx = commit();
 		CompositeChangeDescription change = (CompositeChangeDescription) tx.getChangeDescription();
@@ -190,7 +190,7 @@ public class MemoryLeakTest extends AbstractTest {
 		// and a transaction-sniffer to the domain
 		TransactionSniffer sniffer = new TransactionSniffer(domain);
 
-		EObject level1 = find(root, "level1"); //$NON-NLS-1$
+		EObject level1 = find(root, "level1");
 
 		assertTrue(level1.eAdapters().contains(xrefAdapter));
 
@@ -249,11 +249,11 @@ public class MemoryLeakTest extends AbstractTest {
 		// and a transaction-sniffer to the domain
 		TransactionSniffer sniffer = new TransactionSniffer(domain);
 
-		final EObject level1 = find(root, "level1"); //$NON-NLS-1$
+		final EObject level1 = find(root, "level1");
 
 		assertTrue(level1.eAdapters().contains(xrefAdapter));
 
-		Command cmd = new RecordingCommand(domain, "Remove Branch") { //$NON-NLS-1$
+		Command cmd = new RecordingCommand(domain, "Remove Branch") {
 			@Override
 			protected void doExecute() {
 				root.getBranches().remove(level1);
@@ -301,7 +301,7 @@ public class MemoryLeakTest extends AbstractTest {
 		// and a transaction-sniffer to the domain
 		TransactionSniffer sniffer = new TransactionSniffer(domain);
 
-		EObject level1 = find(root, "level1"); //$NON-NLS-1$
+		EObject level1 = find(root, "level1");
 
 		assertTrue(level1.eAdapters().contains(xrefAdapter));
 
@@ -336,7 +336,7 @@ public class MemoryLeakTest extends AbstractTest {
 		});
 
 		Command cmd = domain.createCommand(SetCommand.class,
-				new CommandParameter(root, EXTLibraryPackage.Literals.LIBRARY__NAME, "newname")); //$NON-NLS-1$
+				new CommandParameter(root, EXTLibraryPackage.Literals.LIBRARY__NAME, "newname"));
 
 		getCommandStack().execute(cmd);
 
@@ -376,11 +376,11 @@ public class MemoryLeakTest extends AbstractTest {
 		// and a transaction-sniffer to the domain
 		TransactionSniffer sniffer = new TransactionSniffer(domain);
 
-		final EObject level1 = find(root, "level1"); //$NON-NLS-1$
+		final EObject level1 = find(root, "level1");
 
 		assertTrue(level1.eAdapters().contains(xrefAdapter));
 
-		final Command trigger = new RecordingCommand(domain, "Remove Branch") { //$NON-NLS-1$
+		final Command trigger = new RecordingCommand(domain, "Remove Branch") {
 			@Override
 			protected void doExecute() {
 				root.getBranches().remove(level1);
@@ -400,7 +400,7 @@ public class MemoryLeakTest extends AbstractTest {
 		});
 
 		Command cmd = domain.createCommand(SetCommand.class,
-				new CommandParameter(root, EXTLibraryPackage.Literals.LIBRARY__NAME, "newname")); //$NON-NLS-1$
+				new CommandParameter(root, EXTLibraryPackage.Literals.LIBRARY__NAME, "newname"));
 
 		getCommandStack().execute(cmd);
 
@@ -434,7 +434,7 @@ public class MemoryLeakTest extends AbstractTest {
 
 		long result = rt.totalMemory() - rt.freeMemory();
 
-		System.out.println("Used Heap: " + (result / 1024L) + " kB"); //$NON-NLS-1$ //$NON-NLS-2$
+		System.out.println("Used Heap: " + (result / 1024L) + " kB");
 
 		return result;
 	}
@@ -444,13 +444,13 @@ public class MemoryLeakTest extends AbstractTest {
 		List<ChangeDescription> result = null;
 
 		try {
-			Field children = compositeChange.getClass().getDeclaredField("changes"); //$NON-NLS-1$
+			Field children = compositeChange.getClass().getDeclaredField("changes");
 			children.setAccessible(true);
 
 			result = (List<ChangeDescription>) children.get(compositeChange);
 		} catch (Exception e) {
 			e.printStackTrace();
-			Assert.fail(e.getLocalizedMessage());
+			Assertions.fail(e.getLocalizedMessage());
 		}
 
 		return result;
@@ -458,7 +458,7 @@ public class MemoryLeakTest extends AbstractTest {
 
 	private static class TransactionSniffer extends ResourceSetListenerImpl {
 		private final TransactionalEditingDomain domain;
-		private final List<ChangeDescription> changes = new BasicEList.FastCompare<ChangeDescription>();
+		private final List<ChangeDescription> changes = new BasicEList.FastCompare<>();
 
 		TransactionSniffer(TransactionalEditingDomain domain) {
 			this.domain = domain;
@@ -485,7 +485,7 @@ public class MemoryLeakTest extends AbstractTest {
 
 			for (Iterator<EObject> iter = EcoreUtil.getAllContents(changes); iter.hasNext();) {
 				EObject next = iter.next();
-				assertEquals("Adapters not cleared.", 0, next.eAdapters().size()); //$NON-NLS-1$
+				assertEquals(0, next.eAdapters().size(), "Adapters not cleared.");
 			}
 		}
 	}

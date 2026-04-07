@@ -11,10 +11,10 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.examples.extlibrary.Book;
@@ -22,7 +22,7 @@ import org.eclipse.emf.examples.extlibrary.EXTLibraryPackage;
 import org.eclipse.emf.examples.extlibrary.Writer;
 import org.eclipse.emf.transaction.NotificationFilter;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests notification filtering.

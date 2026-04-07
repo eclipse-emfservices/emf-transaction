@@ -5,21 +5,21 @@
  * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *   Innovations Softwaretechnologie - Initial API and implementation
  *   Zeligsoft - Bug 248717 (ensure that a failure does not hang the suite)
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.edit.provider.ReflectiveItemProviderAdapterFactory;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests that transactions do not dead-lock when the Eclipse Job Manager is
@@ -31,7 +31,7 @@ public class JobManagerSuspensionDeadlockTest {
 	@Test
 	public void testDeadlock()
 			throws Exception {
-		
+
 		final TransactionalEditingDomain domain = new TransactionalEditingDomainImpl(
 			new ReflectiveItemProviderAdapterFactory());
 
@@ -52,6 +52,7 @@ public class JobManagerSuspensionDeadlockTest {
 					System.out.println("Thread-1: Invoke runExclusive");
 					domain.runExclusive(new Runnable() {
 
+						@Override
 						public void run() {
 							System.out
 								.println("Thread-1: Do something Do something in exclusive mode");
@@ -75,6 +76,7 @@ public class JobManagerSuspensionDeadlockTest {
 					System.out.println("Thread-2: Invoke runExclusive");
 					domain.runExclusive(new Runnable() {
 
+						@Override
 						public void run() {
 							// Notify thread 1
 							synchronized (lock) {
@@ -102,22 +104,22 @@ public class JobManagerSuspensionDeadlockTest {
 			// org.eclipse.ui.internal.ide.applicationIDEWorkbenchAdvisor.preStartup()
 			// until workbench startup
 			Job.getJobManager().suspend();
-	
+
 			// Start Thread-1 and make sure that it is alive
 			t1.start();
 			t1.join(250);
-	
+
 			// Thread-1 should be alive now...
 			assertTrue(t1.isAlive());
-	
+
 			t2.start();
 			t2.join(5000L);
-	
+
 			// Thread-2 should have finished now
 			assertFalse(t2.isAlive());
-	
+
 			t1.join(5000L);
-	
+
 			// Thread-1 should have finished now
 			assertFalse(t1.isAlive());
 		} finally {

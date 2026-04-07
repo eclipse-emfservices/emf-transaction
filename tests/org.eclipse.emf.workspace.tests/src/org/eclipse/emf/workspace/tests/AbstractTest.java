@@ -11,9 +11,9 @@
  *   Zeligsoft - Bug 234868
  */
 package org.eclipse.emf.workspace.tests;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +40,6 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.examples.extlibrary.AudioVisualItem;
 import org.eclipse.emf.examples.extlibrary.Book;
 import org.eclipse.emf.examples.extlibrary.Library;
 import org.eclipse.emf.examples.extlibrary.Periodical;
@@ -54,9 +53,9 @@ import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.validation.model.IConstraintStatus;
 import org.eclipse.emf.workspace.WorkspaceEditingDomainFactory;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.osgi.framework.Bundle;
 
 /**
@@ -95,7 +94,7 @@ public class AbstractTest {
 	// Test configuration methods
 	//
 
-	@Before
+	@BeforeEach
 	public final void setUp() throws Exception {
 		trace("===> Begin : " + this.getClass().getName());
 		doSetUp();
@@ -124,7 +123,7 @@ public class AbstractTest {
 			testResource = originalRes;
 			root = (Library) find("root");
 		} catch (IOException e) {
-			Assert.fail("Failed to load test model: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to load test model: " + e.getLocalizedMessage());
 		}
 
 		domain = createEditingDomain(rset);
@@ -137,7 +136,7 @@ public class AbstractTest {
 		return WorkspaceEditingDomainFactory.INSTANCE.createEditingDomain(rset, history);
 	}
 
-	@After
+	@AfterEach
 	public final void tearDown() throws Exception {
 		try {
 			doTearDown();
@@ -193,7 +192,7 @@ public class AbstractTest {
 			info.setAttribute(EFS.ATTRIBUTE_ARCHIVE, false);
 			store.putInfo(info, EFS.SET_ATTRIBUTES, null);
 		} catch (Exception e) {
-			Assert.fail("Failed to clean up test file: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to clean up test file: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -213,7 +212,7 @@ public class AbstractTest {
 			}
 			file.delete(true, null);
 		} catch (Exception e) {
-			Assert.fail("Failed to clean up test file: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to clean up test file: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -238,7 +237,7 @@ public class AbstractTest {
 
 			project.delete(true, true, null);
 		} catch (Exception e) {
-			Assert.fail("Failed to clean up test project: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to clean up test project: " + e.getLocalizedMessage());
 		}
 	}
 
@@ -266,7 +265,7 @@ public class AbstractTest {
 					.createResource(URI.createPlatformResourceURI(file.getFullPath().toString(), true).toString());
 		} catch (Exception e) {
 			e.printStackTrace();
-			Assert.fail("Exception creating test resource: " + e.getLocalizedMessage());
+			Assertions.fail("Exception creating test resource: " + e.getLocalizedMessage());
 		}
 
 		return result;
@@ -296,7 +295,7 @@ public class AbstractTest {
 			result.load(Collections.EMPTY_MAP);
 		} catch (Exception e) {
 			e.printStackTrace();
-			Assert.fail("Exception creating test resource: " + e.getLocalizedMessage());
+			Assertions.fail("Exception creating test resource: " + e.getLocalizedMessage());
 		}
 
 		return result;
@@ -309,7 +308,7 @@ public class AbstractTest {
 	 */
 	protected void fail(Exception e) {
 		e.printStackTrace();
-		Assert.fail("Should not have thrown: " + e.getLocalizedMessage());
+		Assertions.fail("Should not have thrown: " + e.getLocalizedMessage());
 	}
 
 	/**
@@ -320,7 +319,7 @@ public class AbstractTest {
 	 * @see #find(String)
 	 */
 	protected void assertFound(String name) {
-		assertNotNull("Did not find " + name, find(testResource, name));
+		assertNotNull(find(testResource, name), "Did not find " + name);
 	}
 
 	/**
@@ -335,7 +334,7 @@ public class AbstractTest {
 	 * @see #find(Object, String)
 	 */
 	protected void assertFound(Object start, String name) {
-		assertNotNull("Did not find " + name, find(testResource, name));
+		assertNotNull(find(testResource, name), "Did not find " + name); // FIXME: use start!
 	}
 
 	/**
@@ -346,7 +345,7 @@ public class AbstractTest {
 	 * @see #find(String)
 	 */
 	protected void assertNotFound(String name) {
-		assertNull("Found " + name, find(testResource, name));
+		assertNull(find(testResource, name), "Found " + name);
 	}
 
 	/**
@@ -361,7 +360,7 @@ public class AbstractTest {
 	 * @see #find(Object, String)
 	 */
 	protected void assertNotFound(Object start, String name) {
-		assertNull("Found " + name, find(testResource, name));
+		assertNull(find(testResource, name), "Found " + name); // FIXME: use start!
 	}
 
 	/**
@@ -452,11 +451,6 @@ public class AbstractTest {
 
 		private GetName() {
 			super();
-		}
-
-		@SuppressWarnings("unused")
-		public Object caseAudoVisualItem(AudioVisualItem object) {
-			return object.getTitle();
 		}
 
 		@Override
@@ -696,11 +690,5 @@ public class AbstractTest {
 		}
 
 		return result;
-	}
-
-	public void test_DoNothing() {
-		// see Bugzilla 493963
-		String why = "Maven wants to find a test to run in this abstract class";
-		assertTrue(why.contains("Maven"));
 	}
 }

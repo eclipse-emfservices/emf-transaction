@@ -11,6 +11,8 @@
  */
 package org.eclipse.emf.workspace.tests.fixtures;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import java.util.List;
 
 import org.eclipse.core.runtime.ILogListener;
@@ -21,7 +23,6 @@ import org.eclipse.emf.transaction.ExceptionHandler;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.TransactionalCommandStack;
 import org.eclipse.emf.workspace.tests.TestsPlugin;
-import org.junit.Assert;
 import org.osgi.framework.Bundle;
 
 /**
@@ -128,9 +129,9 @@ public class LogCapture {
 	 */
 	public void assertLogged(Throwable throwable) {
 		IStatus log = getLastLog();
-		Assert.assertNotNull(log);
+		assertNotNull(log);
 		log = findStatus(log, throwable);
-		Assert.assertNotNull(log);
+		assertNotNull(log);
 	}
 
 	private void record(IStatus log) {

@@ -12,10 +12,10 @@
  */
 package org.eclipse.emf.workspace.util.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -42,8 +42,8 @@ import org.eclipse.emf.validation.marker.MarkerUtil;
 import org.eclipse.emf.workspace.internal.EMFWorkspacePlugin;
 import org.eclipse.emf.workspace.tests.AbstractTest;
 import org.eclipse.emf.workspace.util.WorkspaceSynchronizer;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the {@link WorkspaceSynchronizer} class.
@@ -52,19 +52,20 @@ import org.junit.Test;
  */
 @SuppressWarnings("nls")
 public class WorkspaceSynchronizerTest extends AbstractTest {
-	
+
 	private WorkspaceSynchronizer synch;
 	private TestDelegate delegate;
+
 	/**
 	 * Tests the static getFile() utility method.
 	 */
 	@Test
 	public void test_getFile() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
-		
+
 		assertNotNull(file);
 		assertTrue(file.exists());
-		
+
 		URI uri = testResource.getURI();
 		assertEquals(file.getName(), uri.segment(uri.segmentCount() - 1));
 	}
@@ -77,7 +78,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		Resource archiveResource = new ResourceImpl();
 		archiveResource.setURI(URI.createURI("archive:platform:/resource" + RESOURCE_NAME + "!/foo"));
 		IFile file = WorkspaceSynchronizer.getUnderlyingFile(archiveResource);
-		
+
 		assertNotNull(file);
 		assertTrue(file.exists());
 		assertEquals(file, this.file);
@@ -85,7 +86,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		archiveResource = new ResourceImpl();
 		archiveResource.setURI(URI.createURI("archive:platform:/resource" + RESOURCE_NAME + "!/foo.zip!/goo"));
 		file = WorkspaceSynchronizer.getUnderlyingFile(archiveResource);
-		
+
 		assertNotNull(file);
 		assertTrue(file.exists());
 		assertEquals(file, this.file);
@@ -93,55 +94,53 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		archiveResource = new ResourceImpl();
 		archiveResource.setURI(URI.createURI("archive:archive:platform:/resource" + RESOURCE_NAME + "!/foo.zip!/goo"));
 		file = WorkspaceSynchronizer.getUnderlyingFile(archiveResource);
-		
+
 		assertNotNull(file);
 		assertTrue(file.exists());
 		assertEquals(file, this.file);
 	}
-	
+
 	/**
 	 * Tests the getFile() with file: URI.
 	 */
 	@Test
 	public void test_getFile_fileURI_156772() {
 		String path = ResourcesPlugin.getWorkspace().getRoot().getLocation().append(RESOURCE_NAME).toString();
-		
+
 		testResource.setURI(URI.createFileURI(path));
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
-		
+
 		assertNotNull(file);
 		assertTrue(file.exists());
-		
+
 		URI uri = testResource.getURI();
 		assertEquals(file.getName(), uri.segment(uri.segmentCount() - 1));
 	}
-	
+
 	/**
 	 * Tests the getFile() with URI that can be normalized to a platform URI.
 	 */
 	@Test
 	public void test_getFile_normalization_156772() {
-		testResource.getResourceSet().getURIConverter().getURIMap().put(
-				URI.createURI("pathmap://FOO"), //$NON-NLS-1$
+		testResource.getResourceSet().getURIConverter().getURIMap().put(URI.createURI("pathmap://FOO"),
 				testResource.getURI().trimSegments(1));
-				
+
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
-		
+
 		assertNotNull(file);
 		assertTrue(file.exists());
-		
+
 		URI uri = testResource.getURI();
 		assertEquals(file.getName(), uri.segment(uri.segmentCount() - 1));
 	}
-	
+
 	/**
-	 * Tests that resource deletion is correctly reported to the delegate to
-	 * handle.
+	 * Tests that resource deletion is correctly reported to the delegate to handle.
 	 */
 	@Test
 	public void test_deletion() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
-		
+
 		try {
 			synchronized (delegate) {
 				file.delete(true, null);
@@ -150,20 +149,19 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		} catch (Exception e) {
 			fail(e);
 		}
-		
+
 		assertTrue(delegate.deletedResources.contains(testResource));
 		assertFalse(delegate.changedResources.contains(testResource));
 		assertFalse(delegate.movedResources.containsKey(testResource));
 	}
-	
+
 	/**
-	 * Tests that resource change is correctly reported to the delegate to
-	 * handle.
+	 * Tests that resource change is correctly reported to the delegate to handle.
 	 */
 	@Test
 	public void test_change() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
-		
+
 		try {
 			synchronized (delegate) {
 				file.touch(null);
@@ -172,22 +170,21 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		} catch (Exception e) {
 			fail(e);
 		}
-		
+
 		assertTrue(delegate.changedResources.contains(testResource));
 		assertFalse(delegate.deletedResources.contains(testResource));
 		assertFalse(delegate.movedResources.containsKey(testResource));
 	}
-	
+
 	/**
-	 * Tests that resource move is correctly reported to the delegate to
-	 * handle (this is actually a rename scenario).
+	 * Tests that resource move is correctly reported to the delegate to handle
+	 * (this is actually a rename scenario).
 	 */
 	@Test
 	public void test_move() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
-		IPath newPath = file.getFullPath().removeLastSegments(1).append(
-				"moveDestination.extlibrary"); //$NON-NLS-1$
-		
+		IPath newPath = file.getFullPath().removeLastSegments(1).append("moveDestination.extlibrary");
+
 		try {
 			synchronized (delegate) {
 				file.move(newPath, true, null);
@@ -196,109 +193,104 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		} catch (Exception e) {
 			fail(e);
 		}
-		
+
 		assertFalse(delegate.changedResources.contains(testResource));
 		assertFalse(delegate.deletedResources.contains(testResource));
 		assertTrue(delegate.movedResources.containsKey(testResource));
-		assertEquals(
-				URI.createPlatformResourceURI(newPath.toString(), true),
+		assertEquals(URI.createPlatformResourceURI(newPath.toString(), true),
 				delegate.movedResources.get(testResource));
 	}
-	
+
 	/**
-	 * Tests that multiple changes in the same editing domain are reported
-	 * correctly to the delegate.
+	 * Tests that multiple changes in the same editing domain are reported correctly
+	 * to the delegate.
 	 */
 	@Test
 	public void test_multipleChanges() {
 		final IFile file = WorkspaceSynchronizer.getFile(testResource);
 		final IFile[] copies = new IFile[2];
-		
-		final IPath copy1 = file.getFullPath().removeLastSegments(1).append(
-				"copy1.extlibrary"); //$NON-NLS-1$
-		final IPath copy2 = file.getFullPath().removeLastSegments(1).append(
-				"copy2.extlibrary"); //$NON-NLS-1$
-		final IPath newPath = file.getFullPath().removeLastSegments(1).append(
-				"moveDestination.extlibrary"); //$NON-NLS-1$
-		
-		Job job = new WorkspaceJob("Modify Workspace") { //$NON-NLS-1$
+
+		final IPath copy1 = file.getFullPath().removeLastSegments(1).append("copy1.extlibrary");
+		final IPath copy2 = file.getFullPath().removeLastSegments(1).append("copy2.extlibrary");
+		final IPath newPath = file.getFullPath().removeLastSegments(1).append("moveDestination.extlibrary");
+
+		Job job = new WorkspaceJob("Modify Workspace") {
 			@Override
-			public IStatus runInWorkspace(IProgressMonitor monitor)
-					throws CoreException {
+			public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
 				// make two copies
 				file.copy(copy1, true, null);
 				file.copy(copy2, true, null);
-				
+
 				// store the files
 				copies[0] = file.getWorkspace().getRoot().getFile(copy1);
 				copies[1] = file.getWorkspace().getRoot().getFile(copy2);
-				
+
 				return Status.OK_STATUS;
-			}};
+			}
+		};
 		job.schedule();
-		
+
 		try {
 			job.join();
 		} catch (InterruptedException e) {
 			fail(e);
 		}
-		
+
 		// load the copies
-		Resource testResource2 = domain.getResourceSet().getResource(
-				URI.createPlatformResourceURI(copy1.toString(), true), true);
-		Resource testResource3 = domain.getResourceSet().getResource(
-				URI.createPlatformResourceURI(copy2.toString(), true), true);
-		
+		Resource testResource2 = domain.getResourceSet()
+				.getResource(URI.createPlatformResourceURI(copy1.toString(), true), true);
+		Resource testResource3 = domain.getResourceSet()
+				.getResource(URI.createPlatformResourceURI(copy2.toString(), true), true);
+
 		assertNotNull(testResource2);
 		assertTrue(testResource2.isLoaded());
 		assertNotNull(testResource3);
 		assertTrue(testResource3.isLoaded());
-		
+
 		try {
 			// make the workspace changes in a single job so that all deltas
-			//    are fired in one batch
-			job = new WorkspaceJob("Modify Workspace") { //$NON-NLS-1$
+			// are fired in one batch
+			job = new WorkspaceJob("Modify Workspace") {
 				@Override
-				public IStatus runInWorkspace(IProgressMonitor monitor)
-						throws CoreException {
+				public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {
 					// delete one file
 					file.delete(true, null);
-					
+
 					// change another's contents
 					copies[0].touch(null);
-					
+
 					// and move a third
 					copies[1].move(newPath, true, null);
-					
+
 					return Status.OK_STATUS;
-				}};
+				}
+			};
 			job.schedule();
 			job.join();
 		} catch (Exception e) {
 			fail(e);
 		}
-		
+
 		waitForWorkspaceChanges();
-		
+
 		assertTrue(delegate.deletedResources.contains(testResource));
 		assertTrue(delegate.changedResources.contains(testResource2));
 		assertTrue(delegate.movedResources.containsKey(testResource3));
-		assertEquals(
-				URI.createPlatformResourceURI(newPath.toString(), true),
+		assertEquals(URI.createPlatformResourceURI(newPath.toString(), true),
 				delegate.movedResources.get(testResource3));
 	}
-	
+
 	/**
 	 * Tests the default response to resource deletion.
 	 */
 	@Test
 	public void test_defaultDeleteBehaviour() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
-		
+
 		delegate.defaultBehaviour = true;
-		
+
 		assertTrue(testResource.isLoaded());
-		
+
 		try {
 			synchronized (delegate) {
 				file.delete(true, null);
@@ -309,22 +301,22 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		}
 
 		waitForWorkspaceChanges();
-		
+
 		assertFalse(testResource.isLoaded());
 	}
-	
+
 	/**
-	 * Tests the default response to resource change.  Note that the default
-	 * test resource URI does not require any URI-encoding.
+	 * Tests the default response to resource change. Note that the default test
+	 * resource URI does not require any URI-encoding.
 	 */
 	@Test
 	public void test_defaultChangeBehaviour() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
-		
+
 		delegate.defaultBehaviour = true;
-		
+
 		assertTrue(testResource.isLoaded());
-		
+
 		try {
 			synchronized (delegate) {
 				file.touch(null);
@@ -335,26 +327,25 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		}
 
 		waitForWorkspaceChanges();
-		
+
 		// check that the resource is loaded but has different contents than
-		//    it had before
+		// it had before
 		assertTrue(testResource.isLoaded());
 		assertFalse(testResource.getContents().contains(root));
 	}
-	
+
 	/**
 	 * Tests the default response to a resource move.
 	 */
 	@Test
 	public void test_defaultMoveBehaviour() {
 		IFile file = WorkspaceSynchronizer.getFile(testResource);
-		IPath newPath = file.getFullPath().removeLastSegments(1).append(
-				"moveDestination.extlibrary"); //$NON-NLS-1$
-		
+		IPath newPath = file.getFullPath().removeLastSegments(1).append("moveDestination.extlibrary");
+
 		delegate.defaultBehaviour = true;
-		
+
 		assertTrue(testResource.isLoaded());
-		
+
 		try {
 			synchronized (delegate) {
 				file.move(newPath, true, null);
@@ -365,311 +356,306 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 		}
 
 		waitForWorkspaceChanges();
-		
+
 		assertFalse(testResource.isLoaded());
 	}
-	
+
 	/**
 	 * Checks that URIs are decoded when constructing file paths.
 	 */
 	@Test
 	public void test_getFileWithEncodedURI_128315() {
-		final String filePath = "/My Project/some dir/file.foo"; //$NON-NLS-1$
-		final String encoded = "platform:/resource/My%20Project/some%20dir/file.foo"; //$NON-NLS-1$
-		
+		final String filePath = "/My Project/some dir/file.foo";
+		final String encoded = "platform:/resource/My%20Project/some%20dir/file.foo";
+
 		URI uri = URI.createPlatformResourceURI(filePath, true);
-		
+
 		// URI does encodes itself
 		assertEquals(encoded, uri.toString());
-		
+
 		Resource res = new ResourceImpl(uri);
-		
+
 		IFile file = WorkspaceSynchronizer.getFile(res);
-		
+
 		assertEquals(filePath, file.getFullPath().toString());
 	}
-	
+
 	/**
-	 * Tests synchronization of an in-memory <code>Resource</code> with a change
-	 * in the workspace <code>IResource</code> when the <code>Resource</code>'s
-	 * URI is not encoded but should have been.
+	 * Tests synchronization of an in-memory <code>Resource</code> with a change in
+	 * the workspace <code>IResource</code> when the <code>Resource</code>'s URI is
+	 * not encoded but should have been.
 	 */
 	@Test
 	public void test_synchResourceWithUnencodedURI_197291() {
-	    // don't encode the URI
-	    Resource res = createTestResource(TEST_RESOURCE_NAME,
-            "name with spaces.extlibrary", false); //$NON-NLS-1$
-	    root = (Library) res.getContents().get(0);
-	    
-        IFile file = WorkspaceSynchronizer.getFile(res);
-        
-        delegate.defaultBehaviour = true;
-        
-        assertTrue(testResource.isLoaded());
-        
-        try {
-            synchronized (delegate) {
-                file.touch(null);
-                delegate.wait(100000L);
-            }
-        } catch (Exception e) {
-            fail(e);
-        }
+		// don't encode the URI
+		Resource res = createTestResource(TEST_RESOURCE_NAME, "name with spaces.extlibrary", false);
+		root = (Library) res.getContents().get(0);
 
-        waitForWorkspaceChanges();
-        
-        // check that the resource is loaded but has different contents than
-        //    it had before
-        assertTrue(res.isLoaded());
-        assertFalse(res.getContents().contains(root));
+		IFile file = WorkspaceSynchronizer.getFile(res);
+
+		delegate.defaultBehaviour = true;
+
+		assertTrue(testResource.isLoaded());
+
+		try {
+			synchronized (delegate) {
+				file.touch(null);
+				delegate.wait(100000L);
+			}
+		} catch (Exception e) {
+			fail(e);
+		}
+
+		waitForWorkspaceChanges();
+
+		// check that the resource is loaded but has different contents than
+		// it had before
+		assertTrue(res.isLoaded());
+		assertFalse(res.getContents().contains(root));
 	}
-    
-    /**
-     * Tests synchronization of an in-memory <code>Resource</code> with a change
-     * in the workspace <code>IResource</code> when the <code>Resource</code>'s
-     * URI is encoded (and needed to be).
-     */
-	@Test
-    public void test_synchResourceWithEncodedURI_197291() {
-        // *do* encode the URI
-        Resource res = createTestResource(TEST_RESOURCE_NAME,
-            "name with spaces.extlibrary", true); //$NON-NLS-1$
-        root = (Library) res.getContents().get(0);
-        
-        IFile file = WorkspaceSynchronizer.getFile(res);
-        
-        delegate.defaultBehaviour = true;
-        
-        assertTrue(testResource.isLoaded());
-        
-        try {
-            synchronized (delegate) {
-                file.touch(null);
-                delegate.wait(10000L);
-            }
-        } catch (Exception e) {
-            fail(e);
-        }
 
-        waitForWorkspaceChanges();
-        
-        // check that the resource is loaded but has different contents than
-        //    it had before
-        assertTrue(res.isLoaded());
-        assertFalse(res.getContents().contains(root));
-    }
-    
-    /**
-     * Tests synchronization of an in-memory <code>Resource</code> with a change
-     * in the workspace <code>IResource</code> when the <code>Resource</code>'s
-     * URI is not encoded but should have been.
-     */
+	/**
+	 * Tests synchronization of an in-memory <code>Resource</code> with a change in
+	 * the workspace <code>IResource</code> when the <code>Resource</code>'s URI is
+	 * encoded (and needed to be).
+	 */
 	@Test
-    public void test_synchMovedResourceWithUnencodedURI_197291() {
-        // don't encode the URI
-        Resource res = createTestResource(TEST_RESOURCE_NAME,
-            "name with spaces.extlibrary", false); //$NON-NLS-1$
-        root = (Library) res.getContents().get(0);
-        
-        IFile file = WorkspaceSynchronizer.getFile(res);
-        
-        IPath path = file.getFullPath().removeLastSegments(1).append(
-            "new name.extlibrary"); //$NON-NLS-1$
-        Resource newRes = domain.createResource(
-            URI.createPlatformResourceURI(path.toString(), false).toString());
-        
-        delegate.defaultBehaviour = true;
-        
-        assertTrue(testResource.isLoaded());
-        
-        try {
-            synchronized (delegate) {
-                file.move(path, true, null);
-                delegate.wait(100000L);
-            }
-        } catch (Exception e) {
-            fail(e);
-        }
+	public void test_synchResourceWithEncodedURI_197291() {
+		// *do* encode the URI
+		Resource res = createTestResource(TEST_RESOURCE_NAME, "name with spaces.extlibrary", true);
+		root = (Library) res.getContents().get(0);
 
-        waitForWorkspaceChanges();
-        
-        assertFalse(delegate.changedResources.contains(res));
-        assertFalse(delegate.deletedResources.contains(res));
-        assertTrue(delegate.movedResources.containsKey(res));
-        assertEquals(newRes.getURI(), delegate.movedResources.get(res));
-    }
-    
-    /**
-     * Tests synchronization of an in-memory <code>Resource</code> with a change
-     * in the workspace <code>IResource</code> when the <code>Resource</code>'s
-     * URI is encoded (and needed to be).
-     */
-	@Test
-    public void test_synchMoveResourceWithEncodedURI_197291() {
-        // do encode the URI
-        Resource res = createTestResource(TEST_RESOURCE_NAME,
-            "name with spaces.extlibrary", false); //$NON-NLS-1$
-        root = (Library) res.getContents().get(0);
-        
-        IFile file = WorkspaceSynchronizer.getFile(res);
-        
-        IPath path = file.getFullPath().removeLastSegments(1).append(
-            "new name.extlibrary"); //$NON-NLS-1$
-        Resource newRes = domain.createResource(
-            URI.createPlatformResourceURI(path.toString(), true).toString());
-        
-        delegate.defaultBehaviour = true;
-        
-        assertTrue(testResource.isLoaded());
-        
-        try {
-            synchronized (delegate) {
-                file.move(path, true, null);
-                delegate.wait(100000L);
-            }
-        } catch (Exception e) {
-            fail(e);
-        }
+		IFile file = WorkspaceSynchronizer.getFile(res);
 
-        waitForWorkspaceChanges();
-        
-        assertFalse(delegate.changedResources.contains(res));
-        assertFalse(delegate.deletedResources.contains(res));
-        assertTrue(delegate.movedResources.containsKey(res));
-        assertEquals(newRes.getURI(), delegate.movedResources.get(res));
-    }
-    
-    /**
-     * Tests the response to resource deletion when the deleted resource also
-     * had markers.
-     */
-	@Test
-    public void test_resourceDeletedThatHadMarkers_207306() {
-        IFile file = WorkspaceSynchronizer.getFile(testResource);
-        
-        try {
-            IMarker marker = file.createMarker(MarkerUtil.VALIDATION_MARKER_TYPE);
-            marker.setAttribute(MarkerUtil.RULE_ATTRIBUTE, "foo"); //$NON-NLS-1$
-        } catch (CoreException e) {
-            fail(e);
-        }
-        
-        delegate.defaultBehaviour = true;
-        
-        assertTrue(testResource.isLoaded());
-        
-        try {
-            synchronized (delegate) {
-                file.delete(true, null);
-                delegate.wait(20000);
-            }
-        } catch (Exception e) {
-            fail(e);
-        }
+		delegate.defaultBehaviour = true;
 
-        waitForWorkspaceChanges();
-        
-        assertFalse(testResource.isLoaded());
-    }
-    
+		assertTrue(testResource.isLoaded());
+
+		try {
+			synchronized (delegate) {
+				file.touch(null);
+				delegate.wait(10000L);
+			}
+		} catch (Exception e) {
+			fail(e);
+		}
+
+		waitForWorkspaceChanges();
+
+		// check that the resource is loaded but has different contents than
+		// it had before
+		assertTrue(res.isLoaded());
+		assertFalse(res.getContents().contains(root));
+	}
+
+	/**
+	 * Tests synchronization of an in-memory <code>Resource</code> with a change in
+	 * the workspace <code>IResource</code> when the <code>Resource</code>'s URI is
+	 * not encoded but should have been.
+	 */
 	@Test
-    public void test_deleteProjectAndDisposeSynchronizer_233004() {
-    	final IStatus[] logged = new IStatus[1];
-    	
-    	ILogListener log = new ILogListener() {
-		
+	public void test_synchMovedResourceWithUnencodedURI_197291() {
+		// don't encode the URI
+		Resource res = createTestResource(TEST_RESOURCE_NAME, "name with spaces.extlibrary", false);
+		root = (Library) res.getContents().get(0);
+
+		IFile file = WorkspaceSynchronizer.getFile(res);
+
+		IPath path = file.getFullPath().removeLastSegments(1).append("new name.extlibrary");
+		Resource newRes = domain.createResource(URI.createPlatformResourceURI(path.toString(), false).toString());
+
+		delegate.defaultBehaviour = true;
+
+		assertTrue(testResource.isLoaded());
+
+		try {
+			synchronized (delegate) {
+				file.move(path, true, null);
+				delegate.wait(100000L);
+			}
+		} catch (Exception e) {
+			fail(e);
+		}
+
+		waitForWorkspaceChanges();
+
+		assertFalse(delegate.changedResources.contains(res));
+		assertFalse(delegate.deletedResources.contains(res));
+		assertTrue(delegate.movedResources.containsKey(res));
+		assertEquals(newRes.getURI(), delegate.movedResources.get(res));
+	}
+
+	/**
+	 * Tests synchronization of an in-memory <code>Resource</code> with a change in
+	 * the workspace <code>IResource</code> when the <code>Resource</code>'s URI is
+	 * encoded (and needed to be).
+	 */
+	@Test
+	public void test_synchMoveResourceWithEncodedURI_197291() {
+		// do encode the URI
+		Resource res = createTestResource(TEST_RESOURCE_NAME, "name with spaces.extlibrary", false);
+		root = (Library) res.getContents().get(0);
+
+		IFile file = WorkspaceSynchronizer.getFile(res);
+
+		IPath path = file.getFullPath().removeLastSegments(1).append("new name.extlibrary");
+		Resource newRes = domain.createResource(URI.createPlatformResourceURI(path.toString(), true).toString());
+
+		delegate.defaultBehaviour = true;
+
+		assertTrue(testResource.isLoaded());
+
+		try {
+			synchronized (delegate) {
+				file.move(path, true, null);
+				delegate.wait(100000L);
+			}
+		} catch (Exception e) {
+			fail(e);
+		}
+
+		waitForWorkspaceChanges();
+
+		assertFalse(delegate.changedResources.contains(res));
+		assertFalse(delegate.deletedResources.contains(res));
+		assertTrue(delegate.movedResources.containsKey(res));
+		assertEquals(newRes.getURI(), delegate.movedResources.get(res));
+	}
+
+	/**
+	 * Tests the response to resource deletion when the deleted resource also had
+	 * markers.
+	 */
+	@Test
+	public void test_resourceDeletedThatHadMarkers_207306() {
+		IFile file = WorkspaceSynchronizer.getFile(testResource);
+
+		try {
+			IMarker marker = file.createMarker(MarkerUtil.VALIDATION_MARKER_TYPE);
+			marker.setAttribute(MarkerUtil.RULE_ATTRIBUTE, "foo");
+		} catch (CoreException e) {
+			fail(e);
+		}
+
+		delegate.defaultBehaviour = true;
+
+		assertTrue(testResource.isLoaded());
+
+		try {
+			synchronized (delegate) {
+				file.delete(true, null);
+				delegate.wait(20000);
+			}
+		} catch (Exception e) {
+			fail(e);
+		}
+
+		waitForWorkspaceChanges();
+
+		assertFalse(testResource.isLoaded());
+	}
+
+	@Test
+	public void test_deleteProjectAndDisposeSynchronizer_233004() {
+		final IStatus[] logged = new IStatus[1];
+
+		ILogListener log = new ILogListener() {
+
+			@Override
 			public void logging(IStatus status, String plugin) {
 				logged[0] = status;
-			}};
-		
-    	IResourceChangeListener listener = new IResourceChangeListener() {
-    		private boolean disposedSynch;
-    		
+			}
+		};
+
+		IResourceChangeListener listener = new IResourceChangeListener() {
+			private boolean disposedSynch;
+
+			@Override
 			public void resourceChanged(IResourceChangeEvent event) {
-				if ((event.getType() == IResourceChangeEvent.POST_CHANGE)
-						&& !disposedSynch) {
+				if ((event.getType() == IResourceChangeEvent.POST_CHANGE) && !disposedSynch) {
 					disposedSynch = true;
 					synch.dispose();
 				}
-			}};
-		
+			}
+		};
+
 		try {
 			ResourcesPlugin.getWorkspace().addResourceChangeListener(listener);
 			EMFWorkspacePlugin.getPlugin().getLog().addLogListener(log);
-			
+
 			ResourcesPlugin.getWorkspace().run(new IWorkspaceRunnable() {
-			
-				public void run(IProgressMonitor monitor)
-						throws CoreException {
+
+				@Override
+				public void run(IProgressMonitor monitor) throws CoreException {
 					project.delete(true, null);
-				}}, null);
-			
+				}
+			}, null);
+
 			// give the synch-job a chance to run
 			Thread.sleep(1000);
-			
+
 			if (logged[0] != null) {
-				Assert.fail("Should not have logged: " + logged[0].getException());
+				Assertions.fail("Should not have logged: " + logged[0].getException());
 			}
 		} catch (CoreException e) {
-			Assert.fail("Failed to delete project: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to delete project: " + e.getLocalizedMessage());
 		} catch (InterruptedException e) {
-			Assert.fail("Test interrupted in sleep");
+			Assertions.fail("Test interrupted in sleep");
 		} finally {
 			EMFWorkspacePlugin.getPlugin().getLog().removeLogListener(log);
 			ResourcesPlugin.getWorkspace().removeResourceChangeListener(listener);
 		}
-    }
-	
+	}
+
 	//
 	// Fixture methods
 	//
-	
+
 	@Override
-	protected void doSetUp()
-		throws Exception {
-		
+	protected void doSetUp() throws Exception {
+
 		super.doSetUp();
-		
+
 		delegate = new TestDelegate();
 		synch = new WorkspaceSynchronizer(domain, delegate);
 	}
-	
+
 	@Override
-	protected void doTearDown()
-		throws Exception {
-		
+	protected void doTearDown() throws Exception {
+
 		synch.dispose();
 		synch = null;
 		delegate = null;
-		
+
 		super.doTearDown();
 	}
-	
+
 	/**
-	 * Waits for any pending workspace changes to finish by scheduling a job
-	 * on the workspace root and waiting for it to finish.
+	 * Waits for any pending workspace changes to finish by scheduling a job on the
+	 * workspace root and waiting for it to finish.
 	 */
 	void waitForWorkspaceChanges() {
 		final Object lock = new Object();
-		
-		Job job = new Job("Wait Job") { //$NON-NLS-1$
+
+		Job job = new Job("Wait Job") {
 			{
 				setRule(ResourcesPlugin.getWorkspace().getRoot());
 				setSystem(true);
 			}
-			
+
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				synchronized (lock) {
 					lock.notify();
 				}
-				
+
 				return Status.OK_STATUS;
-			}};
-			
+			}
+		};
+
 		synchronized (lock) {
 			job.schedule();
-			
+
 			try {
 				lock.wait();
 			} catch (InterruptedException e) {
@@ -677,7 +663,7 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 			}
 		}
 	}
-	
+
 	/**
 	 * Delegate implementation for testing, basically tracking the call-backs
 	 * received from the workspace synchronizer.
@@ -685,36 +671,40 @@ public class WorkspaceSynchronizerTest extends AbstractTest {
 	 * @author Christian W. Damus (cdamus)
 	 */
 	static class TestDelegate implements WorkspaceSynchronizer.Delegate {
-		final List<Resource> deletedResources = new java.util.ArrayList<Resource>();
-		final Map<Resource, URI> movedResources = new java.util.LinkedHashMap<Resource, URI>();
-		final List<Resource> changedResources = new java.util.ArrayList<Resource>();
-		
+		final List<Resource> deletedResources = new java.util.ArrayList<>();
+		final Map<Resource, URI> movedResources = new java.util.LinkedHashMap<>();
+		final List<Resource> changedResources = new java.util.ArrayList<>();
+
 		boolean defaultBehaviour = false;
-		
+
+		@Override
 		public synchronized boolean handleResourceDeleted(Resource resource) {
 			deletedResources.add(resource);
-			
+
 			notify();
-			
+
 			return !defaultBehaviour;
 		}
 
+		@Override
 		public synchronized boolean handleResourceMoved(Resource resource, URI newURI) {
 			movedResources.put(resource, newURI);
-			
+
 			notify();
-			
+
 			return !defaultBehaviour;
 		}
 
+		@Override
 		public synchronized boolean handleResourceChanged(Resource resource) {
 			changedResources.add(resource);
-			
+
 			notify();
-			
+
 			return !defaultBehaviour;
 		}
-		
+
+		@Override
 		public void dispose() {
 			deletedResources.clear();
 			movedResources.clear();

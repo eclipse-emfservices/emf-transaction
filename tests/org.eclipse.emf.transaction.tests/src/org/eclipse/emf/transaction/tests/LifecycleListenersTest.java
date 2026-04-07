@@ -5,17 +5,17 @@
  * which is available at https://www.eclipse.org/legal/epl-2.0/
  *
  * SPDX-License-Identifier: EPL-2.0
- * 
+ *
  * Contributors:
  *   Zeligsoft - Initial API and implementation
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,11 +25,11 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.TransactionalEditingDomainEvent;
 import org.eclipse.emf.transaction.TransactionalEditingDomainListener;
 import org.eclipse.emf.transaction.util.TransactionUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the dispatching of life-cycle events to listeners.
- * 
+ *
  * @author Christian W. Damus (cdamus)
  */
 public class LifecycleListenersTest extends AbstractTest {
@@ -61,7 +61,7 @@ public class LifecycleListenersTest extends AbstractTest {
 				// the original root transaction is closed after post-commit
 				TransactionalEditingDomainEvent.TRANSACTION_CLOSED);
 
-		assertEquals("Wrong event sequence", expected, listener.eventTypesReceived);
+		assertEquals(expected, listener.eventTypesReceived, "Wrong event sequence");
 	}
 
 	/**
@@ -91,7 +91,7 @@ public class LifecycleListenersTest extends AbstractTest {
 				// transaction for post-commit
 				TransactionalEditingDomainEvent.TRANSACTION_CLOSED);
 
-		assertEquals("Wrong event sequence", expected, listener.eventTypesReceived);
+		assertEquals(expected, listener.eventTypesReceived, "Wrong event sequence");
 	}
 
 	//
@@ -116,37 +116,43 @@ public class LifecycleListenersTest extends AbstractTest {
 
 	private class LifecycleListener implements TransactionalEditingDomainListener {
 
-		List<Integer> eventTypesReceived = new java.util.ArrayList<Integer>();
+		List<Integer> eventTypesReceived = new java.util.ArrayList<>();
 
+		@Override
 		public void editingDomainDisposing(TransactionalEditingDomainEvent event) {
 			assertNull(event.getTransaction());
 			eventTypesReceived.add(event.getEventType());
 		}
 
+		@Override
 		public void transactionClosed(TransactionalEditingDomainEvent event) {
 			assertNotNull(event.getTransaction());
 			assertFalse(event.getTransaction().isActive());
 			eventTypesReceived.add(event.getEventType());
 		}
 
+		@Override
 		public void transactionClosing(TransactionalEditingDomainEvent event) {
 			assertNotNull(event.getTransaction());
 			assertTrue(event.getTransaction().isActive());
 			eventTypesReceived.add(event.getEventType());
 		}
 
+		@Override
 		public void transactionInterrupted(TransactionalEditingDomainEvent event) {
 			assertNotNull(event.getTransaction());
 			assertFalse(event.getTransaction().isActive());
 			eventTypesReceived.add(event.getEventType());
 		}
 
+		@Override
 		public void transactionStarted(TransactionalEditingDomainEvent event) {
 			assertNotNull(event.getTransaction());
 			assertTrue(event.getTransaction().isActive());
 			eventTypesReceived.add(event.getEventType());
 		}
 
+		@Override
 		public void transactionStarting(TransactionalEditingDomainEvent event) {
 			assertNotNull(event.getTransaction());
 			assertFalse(event.getTransaction().isActive());

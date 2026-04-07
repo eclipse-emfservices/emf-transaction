@@ -16,7 +16,7 @@ import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
 
 /**
  * Thread representing Read Operation nested in Write Operation.
- * 
+ *
  * @author mgoyal
  */
 class NestedReadInWriteThread
@@ -24,7 +24,7 @@ class NestedReadInWriteThread
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param waitObject
 	 * @param notifyObject
 	 */
@@ -63,11 +63,13 @@ class NestedReadInWriteThread
 		try {
 			getCommandStack().execute(new TestCommand() {
 
+				@Override
 				public void execute() {
 					startTime = System.currentTimeMillis();
 					final boolean bWriting = true;
 					try {
 						getDomain().runExclusive(new Runnable() {
+							@Override
 							public void run() {
 								innerStartTime = System
 									.currentTimeMillis();
@@ -76,8 +78,9 @@ class NestedReadInWriteThread
 								} catch (InterruptedException e) {
 									// ignore this.
 								}
-								if (bWriting && !isExecuted)
+								if (bWriting && !isExecuted) {
 									isInnerExecuted = true;
+								}
 								innerEndTime = System
 									.currentTimeMillis();
 							}

@@ -13,12 +13,12 @@ package org.eclipse.emf.transaction.multithread.tests;
 
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.AbstractTest;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 /**
  * Abstract JUnit test suite for the <em>EMF-TX API</em> multi-threading tests.
- * 
+ *
  * @author Christian W. Damus (cdamus)
  */
 public class AbstractMultithreadTest {
@@ -33,13 +33,13 @@ public class AbstractMultithreadTest {
 		return domain;
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		AbstractTest.trace("===> Begin : " + this.getClass().getName());
 		domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 		domain = null;
 		AbstractTest.trace("===> End   : " + this.getClass().getName());

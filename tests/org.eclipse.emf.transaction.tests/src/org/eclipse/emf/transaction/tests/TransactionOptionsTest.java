@@ -11,12 +11,12 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -39,8 +39,8 @@ import org.eclipse.emf.transaction.impl.InternalTransaction;
 import org.eclipse.emf.transaction.impl.TransactionImpl;
 import org.eclipse.emf.transaction.tests.fixtures.TestListener;
 import org.eclipse.emf.transaction.util.TransactionUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the effect of transaction options.
@@ -60,11 +60,11 @@ public class TransactionOptionsTest extends AbstractTest {
 
 		startWriting(Transaction.OPTION_NO_NOTIFICATIONS);
 
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final String newTitle = "New Title";
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
 
 		book.setTitle(newTitle);
@@ -86,11 +86,11 @@ public class TransactionOptionsTest extends AbstractTest {
 
 		startWriting(Transaction.OPTION_NO_TRIGGERS);
 
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final String newTitle = "New Title";
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
 
 		book.setTitle(newTitle);
@@ -112,7 +112,7 @@ public class TransactionOptionsTest extends AbstractTest {
 
 			startWriting(Transaction.OPTION_NO_VALIDATION);
 
-			final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+			final Book book = (Book) find("root/Root Book");
 			assertNotNull(book);
 
 			book.setTitle(null);
@@ -141,11 +141,11 @@ public class TransactionOptionsTest extends AbstractTest {
 
 		final Transaction tx = getActiveTransaction();
 
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final String newTitle = "New Title";
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
 
 		book.setTitle(newTitle);
@@ -165,11 +165,11 @@ public class TransactionOptionsTest extends AbstractTest {
 		Command cmd = new RecordingCommand(domain) {
 			@Override
 			protected void doExecute() {
-				final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+				final Book book = (Book) find("root/Root Book");
 				assertNotNull(book);
 
-				final String newTitle = "New Title"; //$NON-NLS-1$
-				final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+				final String newTitle = "New Title";
+				final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 				assertNotNull(newAuthor);
 
 				book.setTitle(newTitle);
@@ -190,9 +190,9 @@ public class TransactionOptionsTest extends AbstractTest {
 		startReading();
 
 		// still find these changes
-		Book book = (Book) find("root/New Title"); //$NON-NLS-1$
+		Book book = (Book) find("root/New Title");
 		assertNotNull(book.getTitle());
-		assertSame(find("root/level1/Level1 Writer"), book.getAuthor()); //$NON-NLS-1$
+		assertSame(find("root/level1/Level1 Writer"), book.getAuthor());
 
 		commit();
 	}
@@ -205,10 +205,10 @@ public class TransactionOptionsTest extends AbstractTest {
 	public void test_noUndo_regularCommand() {
 		startReading();
 
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 
-		final String newTitle = "New Title"; //$NON-NLS-1$
+		final String newTitle = "New Title";
 
 		Command cmd = new SetCommand(domain, book, EXTLibraryPackage.eINSTANCE.getBook_Title(), newTitle);
 
@@ -234,11 +234,11 @@ public class TransactionOptionsTest extends AbstractTest {
 
 		startReading();
 
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final String newTitle = "New Title";
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
 
 		// start an unprotected write transaction
@@ -279,11 +279,11 @@ public class TransactionOptionsTest extends AbstractTest {
 		// nested silent transaction
 		startWriting(Transaction.OPTION_NO_NOTIFICATIONS);
 
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final String newTitle = "New Title";
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
 
 		book.setTitle(newTitle);
@@ -310,11 +310,11 @@ public class TransactionOptionsTest extends AbstractTest {
 		// nested silent transaction
 		startWriting(Transaction.OPTION_NO_VALIDATION);
 
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 
 		final String newTitle = null;
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
 
 		book.setTitle(newTitle);
@@ -341,10 +341,10 @@ public class TransactionOptionsTest extends AbstractTest {
 		// nested silent transaction
 		startWriting(Transaction.OPTION_NO_VALIDATION);
 
-		final Book book1 = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book1 = (Book) find("root/Root Book");
 		assertNotNull(book1);
 
-		final Book book2 = (Book) find("root/level1/Level1 Book"); //$NON-NLS-1$
+		final Book book2 = (Book) find("root/level1/Level1 Book");
 		assertNotNull(book2);
 
 		final String newTitle = null;
@@ -358,7 +358,7 @@ public class TransactionOptionsTest extends AbstractTest {
 		try {
 			tx.commit();
 
-			Assert.fail("Should have rolled back because of outer transaction validation"); //$NON-NLS-1$
+			Assertions.fail("Should have rolled back because of outer transaction validation");
 		} catch (RollbackException e) {
 			// expected exception
 			Collection<IStatus> errors = findValidationStatuses(e.getStatus(), IStatus.ERROR);
@@ -370,7 +370,7 @@ public class TransactionOptionsTest extends AbstractTest {
 
 	@Test
 	public void test_transactionOptionInheritance_135569() {
-		Map<Object, Object> options = new java.util.HashMap<Object, Object>();
+		Map<Object, Object> options = new java.util.HashMap<>();
 		Map<?, ?> active;
 
 		// test the inheritance of empty options
@@ -390,19 +390,19 @@ public class TransactionOptionsTest extends AbstractTest {
 		// test the inheritance of non-empty options
 		options.put(Transaction.OPTION_NO_UNDO, Boolean.TRUE);
 		Object marker = new Object();
-		options.put("my own option", marker); //$NON-NLS-1$
+		options.put("my own option", marker);
 
 		startWriting(options);
 		active = getActiveTransaction().getOptions();
 
 		assertSame(Boolean.TRUE, active.get(Transaction.OPTION_NO_UNDO));
-		assertSame(marker, active.get("my own option")); //$NON-NLS-1$
+		assertSame(marker, active.get("my own option"));
 
 		startWriting();
 		active = getActiveTransaction().getOptions();
 
 		assertSame(Boolean.TRUE, active.get(Transaction.OPTION_NO_UNDO));
-		assertSame(marker, active.get("my own option")); //$NON-NLS-1$
+		assertSame(marker, active.get("my own option"));
 
 		commit();
 		commit();
@@ -411,25 +411,25 @@ public class TransactionOptionsTest extends AbstractTest {
 
 		options.put(Transaction.OPTION_NO_UNDO, Boolean.TRUE);
 		marker = new Object();
-		options.put("my own option", marker); //$NON-NLS-1$
+		options.put("my own option", marker);
 
 		startWriting(options);
 
 		options.put(Transaction.OPTION_NO_UNDO, Boolean.FALSE);
 		Object marker2 = new Object();
-		options.put("my own option", marker2); //$NON-NLS-1$
+		options.put("my own option", marker2);
 
 		// active options should be copied, not affected by changes to 'options'
 		active = getActiveTransaction().getOptions();
 
 		assertSame(Boolean.TRUE, active.get(Transaction.OPTION_NO_UNDO));
-		assertSame(marker, active.get("my own option")); //$NON-NLS-1$
+		assertSame(marker, active.get("my own option"));
 
 		startWriting(options);
 		active = getActiveTransaction().getOptions();
 
 		assertSame(Boolean.FALSE, active.get(Transaction.OPTION_NO_UNDO));
-		assertSame(marker2, active.get("my own option")); //$NON-NLS-1$
+		assertSame(marker2, active.get("my own option"));
 
 		commit();
 		commit();
@@ -445,11 +445,11 @@ public class TransactionOptionsTest extends AbstractTest {
 		startWriting();
 		InternalTransaction tx = getActiveTransaction();
 
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final String newTitle = "New Title";
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
 
 		book.setTitle(newTitle);
@@ -470,18 +470,18 @@ public class TransactionOptionsTest extends AbstractTest {
 	 */
 	@Test
 	public void test_noNotificationsInSilentUnprotected_152335() {
-		Map<Object, Object> options = new java.util.HashMap<Object, Object>();
+		Map<Object, Object> options = new java.util.HashMap<>();
 		options.put(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE);
 		options.put(Transaction.OPTION_UNPROTECTED, Boolean.TRUE);
 
 		startWriting(options);
 		InternalTransaction tx = getActiveTransaction();
 
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 
-		final String newTitle = "New Title"; //$NON-NLS-1$
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final String newTitle = "New Title";
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
 
 		book.setTitle(newTitle);
@@ -508,13 +508,13 @@ public class TransactionOptionsTest extends AbstractTest {
 
 		startWriting();
 
-		final Book book = (Book) find("root/Root Book"); //$NON-NLS-1$
+		final Book book = (Book) find("root/Root Book");
 		assertNotNull(book);
 
-		final String newTitle = "New Title"; //$NON-NLS-1$
+		final String newTitle = "New Title";
 		book.setTitle(newTitle);
 
-		Map<Object, Object> options = new java.util.HashMap<Object, Object>();
+		Map<Object, Object> options = new java.util.HashMap<>();
 		options.put(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE);
 		options.put(Transaction.OPTION_UNPROTECTED, Boolean.TRUE);
 
@@ -524,7 +524,7 @@ public class TransactionOptionsTest extends AbstractTest {
 		// this transaction thinks it is normal, but it isn't
 		startWriting();
 
-		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer"); //$NON-NLS-1$
+		final Writer newAuthor = (Writer) find("root/level1/Level1 Writer");
 		assertNotNull(newAuthor);
 
 		newAuthor.getBooks().add(book);
@@ -550,9 +550,10 @@ public class TransactionOptionsTest extends AbstractTest {
 	@Test
 	public void test_optionsInheritedAtActivationTime_() {
 		final Object sync = new Object();
-		final String bogusOption = "**bogus**option**"; //$NON-NLS-1$
+		final String bogusOption = "**bogus**option**";
 
 		Runnable run = new Runnable() {
+			@Override
 			public void run() {
 				synchronized (sync) {
 					startWriting(bogusOption);
@@ -562,7 +563,7 @@ public class TransactionOptionsTest extends AbstractTest {
 					try {
 						sync.wait();
 					} catch (Exception e) {
-						Assert.fail("Wait failed in thread"); //$NON-NLS-1$
+						Assertions.fail("Wait failed in thread");
 					}
 
 					commit();
@@ -570,7 +571,7 @@ public class TransactionOptionsTest extends AbstractTest {
 					try {
 						sync.notifyAll();
 					} catch (Exception e) {
-						Assert.fail("Wait failed in thread"); //$NON-NLS-1$
+						Assertions.fail("Wait failed in thread");
 					}
 
 				}
@@ -585,7 +586,7 @@ public class TransactionOptionsTest extends AbstractTest {
 			try {
 				sync.wait();
 			} catch (Exception e) {
-				Assert.fail("Wait failed on main"); //$NON-NLS-1$
+				Assertions.fail("Wait failed on main");
 			}
 		}
 
@@ -600,7 +601,7 @@ public class TransactionOptionsTest extends AbstractTest {
 			try {
 				sync.wait();
 			} catch (Exception e) {
-				Assert.fail("Wait failed on main"); //$NON-NLS-1$
+				Assertions.fail("Wait failed on main");
 			}
 		}
 	}
@@ -622,7 +623,7 @@ public class TransactionOptionsTest extends AbstractTest {
 		getCommandStack().execute(new AddCommand(domain, root, EXTLibraryPackage.Literals.LIBRARY__WRITERS,
 				EXTLibraryFactory.eINSTANCE.createWriter()));
 
-		assertNull("Shouldn't have received notifications", l.postcommit); //$NON-NLS-1$
+		assertNull(l.postcommit, "Shouldn't have received notifications");
 	}
 
 	//

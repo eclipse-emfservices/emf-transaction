@@ -12,10 +12,10 @@
  */
 package org.eclipse.emf.transaction.util.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.CountDownLatch;
@@ -32,10 +32,10 @@ import org.eclipse.emf.transaction.tests.AbstractTest;
 import org.eclipse.emf.transaction.tests.fixtures.JobListener;
 import org.eclipse.emf.transaction.util.Lock;
 import org.eclipse.ui.PlatformUI;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests the {@link Lock} class.
@@ -43,11 +43,11 @@ import org.junit.Test;
  * @author Christian W. Damus (cdamus)
  */
 public class LockTest {
-	
+
 	private Lock lock;
 	private Object monitor;
 	private volatile boolean interrupted;
-	
+
 	/**
 	 * Tests that the depth of an unacquired lock is zero.
 	 */
@@ -56,7 +56,7 @@ public class LockTest {
 		assertNull(lock.getOwner());
 		assertEquals(0, lock.getDepth());
 	}
-	
+
 	/**
 	 * Tests that a thread can acquire and release the lock.
 	 */
@@ -71,223 +71,231 @@ public class LockTest {
 			fail(e);
 		}
 	}
-	
+
 	/**
-	 * Tests that a thread attempting to acquire will wait for a thread
-	 * that owns the lock to release it.
+	 * Tests that a thread attempting to acquire will wait for a thread that owns
+	 * the lock to release it.
 	 */
 	@Test
 	public void test_waitForAcquire() {
 		Thread t = new Thread(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					synchronized (monitor) {
 						lock.acquire(false);
-						
+
 						// wake up the main thread so that it will try to acquire
 						monitor.notifyAll();
 					}
-					
+
 					Thread.sleep(1000);
 				} catch (Exception e) {
-					Assert.fail();
+					Assertions.fail();
 				} finally {
 					if (lock != null) {
 						lock.release();
 					}
 				}
-			}});
-		
+			}
+		});
+
 		try {
 			long start = System.currentTimeMillis();
-			
+
 			synchronized (monitor) {
 				t.start();
-				
+
 				// wait for the other thread to acquire the lock
 				monitor.wait();
 			}
-			
+
 			// now attempt to acquire the lock while the other thread sleeps
 			lock.acquire(false);
-			
-			// check that we did actually wait for the lock  :-)
+
+			// check that we did actually wait for the lock :-)
 			assertTrue(System.currentTimeMillis() - start >= 1000);
-			
+
 			lock.release();
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
 	 * Tests the timeout capability of acquiring.
 	 */
 	@Test
 	public void test_waitForAcquire_timeout() {
 		Thread t = new Thread(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					synchronized (monitor) {
 						lock.acquire(false);
-						
+
 						// wake up the main thread so that it will try to acquire
 						monitor.notifyAll();
 					}
-					
+
 					Thread.sleep(5000);
 				} catch (Exception e) {
-					Assert.fail();
+					Assertions.fail();
 				} finally {
 					if (lock != null) {
 						// will be cleared already by tearDown()
 						lock.release();
 					}
 				}
-			}});
+			}
+		});
 		t.setDaemon(true);
-		
+
 		try {
 			synchronized (monitor) {
 				t.start();
-				
+
 				// wait for the other thread to acquire the lock
 				monitor.wait();
 			}
-			
-			// now attempt to acquire the lock with a timeout.  Should give up
+
+			// now attempt to acquire the lock with a timeout. Should give up
 			assertFalse(lock.acquire(1000, false));
-			
+
 			// we did not get it
 			assertEquals(0, lock.getDepth());
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
-	 * Tests that when the UI thread attempts to acquire, liveness is maintained
-	 * as the UI thread continues to process sync runnables.
+	 * Tests that when the UI thread attempts to acquire, liveness is maintained as
+	 * the UI thread continues to process sync runnables.
 	 */
 	@Test
 	public void test_uiSafeWaitForAcquire() {
 		if (!PlatformUI.isWorkbenchRunning()) {
 			// can only execute this test case in a workbench
-			AbstractTest.trace("*** Test skipped because not running in a workbench ***"); //$NON-NLS-1$
+			AbstractTest.trace("*** Test skipped because not running in a workbench ***");
 			return;
 		}
-		
-		final int longInterval = PlatformUI.getWorkbench().getProgressService()
-				.getLongOperationTime();
-		
+
+		final int longInterval = PlatformUI.getWorkbench().getProgressService().getLongOperationTime();
+
 		final boolean syncRunnableFinished[] = new boolean[1];
-		
+
 		Thread t = new Thread(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					synchronized (monitor) {
 						lock.acquire(false);
-						
+
 						// wake up the main thread so that it will try to acquire
 						monitor.notifyAll();
 					}
-					
+
 					Thread.sleep(longInterval);
-					
+
 					PlatformUI.getWorkbench().getDisplay().syncExec(new Runnable() {
+						@Override
 						public void run() {
 							syncRunnableFinished[0] = true;
-						}});
-					
+						}
+					});
+
 					Thread.sleep(longInterval);
 				} catch (Exception e) {
-					Assert.fail();
+					Assertions.fail();
 				} finally {
 					if (lock != null) {
 						lock.release();
 					}
 				}
-			}});
-		
+			}
+		});
+
 		try {
 			long start = System.currentTimeMillis();
-			
+
 			synchronized (monitor) {
 				t.start();
-				
+
 				// wait for the other thread to acquire the lock
 				monitor.wait();
 			}
-			
+
 			// now attempt to acquire the lock while the other thread sleeps
 			lock.uiSafeAcquire(false);
-			
-			// check that we did actually wait for the lock  :-)
+
+			// check that we did actually wait for the lock :-)
 			assertTrue(System.currentTimeMillis() - start >= longInterval);
-			
+
 			// check that the UI processed the synchronous Runnable
 			assertTrue(syncRunnableFinished[0]);
-			
+
 			lock.release();
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
-	 * Tests that a non-exclusive thread can yield to another non-exclusive
-	 * thread.
+	 * Tests that a non-exclusive thread can yield to another non-exclusive thread.
 	 */
 	@Test
 	public void test_yield() {
 		final boolean token[] = new boolean[1];
-		
+
 		Thread t = new Thread(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					synchronized (monitor) {
 						// wake up the main thread so that it will try to acquire
 						monitor.notifyAll();
 					}
-					
+
 					lock.acquire(false);
-					
-					synchronized(monitor) {
+
+					synchronized (monitor) {
 						token[0] = true;
 						monitor.notify();
 					}
 				} catch (Exception e) {
-					Assert.fail();
+					Assertions.fail();
 				} finally {
 					if (lock != null) {
 						lock.release();
 					}
 				}
-			}});
-		
+			}
+		});
+
 		try {
 			lock.acquire(false);
-			
+
 			synchronized (monitor) {
 				t.start();
-				
+
 				// wait for the other thread to acquire the lock
 				monitor.wait();
 			}
-			
+
 			Thread.sleep(500);
-			
+
 			// now yield to the other thread
 			assertTrue(lock.yield());
-			
+
 			synchronized (monitor) {
 				lock.release();
-				
+
 				// wait for the other thread to set the token
 				monitor.wait();
 				assertTrue(token[0]);
 			}
-			
+
 			// now attempt to re-acquire the lock
 			lock.acquire(false);
 			lock.release();
@@ -295,56 +303,58 @@ public class LockTest {
 			fail(e);
 		}
 	}
-	
+
 	/**
 	 * Tests that a non-exclusive thread cannot yield to an exclusive thread.
 	 */
 	@Test
 	public void test_yieldExclusion() {
 		final boolean token[] = new boolean[1];
-		
+
 		Thread t = new Thread(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					synchronized (monitor) {
 						// wake up the main thread so that it will try to acquire
 						monitor.notifyAll();
 					}
-					
-					lock.acquire(true);  // exclusive
-					
-					synchronized(monitor) {
+
+					lock.acquire(true); // exclusive
+
+					synchronized (monitor) {
 						token[0] = true;
 						monitor.notify();
 					}
 				} catch (Exception e) {
-					Assert.fail();
+					Assertions.fail();
 				} finally {
 					if (lock != null) {
 						lock.release();
 					}
 				}
-			}});
-		
+			}
+		});
+
 		try {
 			lock.acquire(false);
-			
+
 			synchronized (monitor) {
 				t.start();
-				
+
 				// wait for the other thread to acquire the lock
 				monitor.wait();
 			}
-			
+
 			Thread.sleep(500);
-			
+
 			// now attempt to yield to the other thread
 			assertFalse(lock.yield());
-			
+
 			synchronized (monitor) {
 				lock.release();
-				
-				// now, we're done.  The other thread can proceed
+
+				// now, we're done. The other thread can proceed
 				monitor.wait();
 				assertTrue(token[0]);
 			}
@@ -352,7 +362,7 @@ public class LockTest {
 			fail(e);
 		}
 	}
-	
+
 	/**
 	 * Tests that a thread cannot yield when no other threads are waiting.
 	 */
@@ -360,96 +370,98 @@ public class LockTest {
 	public void test_yield_noneWaiting() {
 		try {
 			lock.acquire(false);
-			
+
 			assertFalse(lock.yield());
-			
+
 			lock.release();
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
-	 * Tests for correct propagation of thread interrupt from the acquire()
-	 * method.
+	 * Tests for correct propagation of thread interrupt from the acquire() method.
 	 */
 	@Test
 	public void test_interrupt_acquire() {
 		Thread t = new Thread(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					synchronized (monitor) {
 						// wake up the main thread so that it will try to acquire
 						monitor.notifyAll();
 					}
-					
+
 					lock.acquire(false);
 				} catch (InterruptedException e) {
 					// pass
 					interrupted = true;
 				} catch (Exception e) {
-					Assert.fail();
+					Assertions.fail();
 				}
-			}});
-		
+			}
+		});
+
 		try {
 			lock.acquire(false);
-			
+
 			synchronized (monitor) {
 				t.start();
-				
+
 				// wait for the other thread to acquire the lock
 				monitor.wait();
 			}
-			
+
 			Thread.sleep(500);
-			
+
 			// now interrupt the other thread
 			t.interrupt();
-			
+
 			Thread.sleep(500);
-			
+
 			lock.release();
-			
+
 			assertTrue(interrupted);
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
-	 * Tests for correct propagation of thread interrupt from the acquire()
-	 * method when the thread is already interrupted upon entering it.
+	 * Tests for correct propagation of thread interrupt from the acquire() method
+	 * when the thread is already interrupted upon entering it.
 	 */
 	@Test
 	public void test_interrupt_acquire_alreadyInterrupted() {
 		try {
 			Thread.currentThread().interrupt();
 			lock.acquire(false);
-			
-			Assert.fail("Should have thrown InterruptedException"); //$NON-NLS-1$
+
+			Assertions.fail("Should have thrown InterruptedException");
 		} catch (InterruptedException e) {
 			// pass
-			AbstractTest.trace("Got the expected InterruptedException"); //$NON-NLS-1$
+			AbstractTest.trace("Got the expected InterruptedException");
 		} catch (Exception e) {
 			fail(e);
 		}
 	}
-	
+
 	/**
-	 * Tests for correct propagation of thread interrupt when the AcquireJob
-	 * of a uiSafeAcquire() call is interrupted.
+	 * Tests for correct propagation of thread interrupt when the AcquireJob of a
+	 * uiSafeAcquire() call is interrupted.
 	 */
 	@Test
 	public void test_interrupt_uiSafeAcquire_jobInterrupted() {
 		Thread t = new Thread(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					synchronized (monitor) {
 						// wake up the main thread
 						monitor.notifyAll();
 					}
-					
+
 					lock.uiSafeAcquire(false);
 				} catch (InterruptedException e) {
 					// pass
@@ -457,41 +469,42 @@ public class LockTest {
 				} catch (Exception e) {
 					fail(e);
 				}
-			}});
-		
+			}
+		});
+
 		JobListener jl = new JobListener();
-		
+
 		try {
 			lock.acquire(false);
-			
+
 			Job.getJobManager().addJobChangeListener(jl);
-			
+
 			synchronized (monitor) {
 				t.start();
-				
+
 				// wait for the other thread
 				monitor.wait();
 			}
-			
+
 			Job acquireJob = jl.waitUntilRunning();
-			
+
 			// wait a moment for the job to actually find a worker thread
-			//    (J2SE 5.0 on Mac is very fast)
+			// (J2SE 5.0 on Mac is very fast)
 			Thread.sleep(500);
-			
+
 			// now interrupt the acquire Job
 			acquireJob.getThread().interrupt();
-			
+
 			// be sure to sleep again, so that the job has time to detect its
-			//    interruption before we release the lock
+			// interruption before we release the lock
 			Thread.sleep(500);
-			
+
 			lock.release();
-			
+
 			jl.waitUntilDone();
-			
+
 			t.join();
-			
+
 			assertTrue(interrupted);
 		} catch (Exception e) {
 			fail(e);
@@ -499,59 +512,61 @@ public class LockTest {
 			Job.getJobManager().removeJobChangeListener(jl);
 		}
 	}
-	
+
 	/**
-	 * Tests for correct propagation of thread interrupt when the acquire job
-	 * of a uiSafeAcquire() is cancelled.
+	 * Tests for correct propagation of thread interrupt when the acquire job of a
+	 * uiSafeAcquire() is cancelled.
 	 */
 	@Test
 	public void test_interrupt_uiSafeAcquire_jobCancelled() {
 		Thread t = new Thread(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					synchronized (monitor) {
 						// wake up the main thread
 						monitor.notifyAll();
 					}
-					
+
 					lock.uiSafeAcquire(false);
 				} catch (InterruptedException e) {
 					// pass
 					interrupted = true;
 				} catch (Exception e) {
-					Assert.fail();
+					Assertions.fail();
 				}
-			}});
-		
+			}
+		});
+
 		JobListener jl = new JobListener();
-		
+
 		try {
 			lock.acquire(false);
-			
+
 			Job.getJobManager().addJobChangeListener(jl);
-			
+
 			synchronized (monitor) {
 				t.start();
-				
+
 				// wait for the other thread
 				monitor.wait();
 			}
-			
+
 			// wait until the acquire job is running so that we will know that
-			//     the other thread is blocked
+			// the other thread is blocked
 			Job acquireJob = jl.waitUntilRunning();
-			
+
 			Thread.sleep(500);
-			
+
 			// now cancel the job via the progress monitor
 			acquireJob.cancel();
-			
+
 			jl.waitUntilDone();
-			
+
 			lock.release();
-			
+
 			t.join();
-			
+
 			assertTrue(interrupted);
 		} catch (Exception e) {
 			fail(e);
@@ -559,7 +574,7 @@ public class LockTest {
 			Job.getJobManager().removeJobChangeListener(jl);
 		}
 	}
-	
+
 	/**
 	 * Tests that when the UI thread attempts to acquire, liveness is maintained
 	 * even if the UI thread is running an implicit job.
@@ -568,81 +583,86 @@ public class LockTest {
 	public void test_uiSafeWaitForAcquire_implicitJob_bug162141() {
 		if (!PlatformUI.isWorkbenchRunning()) {
 			// can only execute this test case in a workbench
-			AbstractTest.trace("*** Test skipped because not running in a workbench ***"); //$NON-NLS-1$
+			AbstractTest.trace("*** Test skipped because not running in a workbench ***");
 			return;
 		}
 
 		// an identity rule
 		ISchedulingRule rule = new ISchedulingRule() {
+			@Override
 			public boolean isConflicting(ISchedulingRule rule) {
 				return rule == this;
 			}
-		
+
+			@Override
 			public boolean contains(ISchedulingRule rule) {
 				return rule == this;
-			}};
-		
-		final TransactionalEditingDomain domain =
-			TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
-		
+			}
+		};
+
+		final TransactionalEditingDomain domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+
 		lock = getLock(domain);
-		
-		final int longInterval = PlatformUI.getWorkbench().getProgressService()
-				.getLongOperationTime();
-		
+
+		final int longInterval = PlatformUI.getWorkbench().getProgressService().getLongOperationTime();
+
 		final boolean syncRunnableFinished[] = new boolean[1];
-		
+
 		Thread t = new Thread(new Runnable() {
-		
+
+			@Override
 			public void run() {
 				try {
 					synchronized (monitor) {
 						lock.acquire(false);
-						
+
 						// wake up the main thread so that it will try to acquire
 						monitor.notifyAll();
 					}
-					
+
 					Thread.sleep(longInterval);
-					
+
 					PlatformUI.getWorkbench().getDisplay().syncExec(new Runnable() {
+						@Override
 						public void run() {
 							syncRunnableFinished[0] = true;
-						}});
-					
+						}
+					});
+
 					Thread.sleep(longInterval);
 				} catch (Exception e) {
-					Assert.fail();
+					Assertions.fail();
 				} finally {
 					if (lock != null) {
 						lock.release();
 					}
 				}
-			}});
-		
+			}
+		});
+
 		try {
 			long start = System.currentTimeMillis();
-			
+
 			synchronized (monitor) {
 				t.start();
-				
+
 				// wait for the other thread to acquire the lock
 				monitor.wait();
 			}
-			
+
 			// start an implicit job on our fake rule
 			Job.getJobManager().beginRule(rule, null);
-			
+
 			try {
 				// now attempt to acquire the lock while the other thread sleeps
 				lock.uiSafeAcquire(false);
-				
-				// check that we did actually wait for the lock  :-)
+
+				// check that we did actually wait for the lock :-)
 				assertTrue(System.currentTimeMillis() - start >= longInterval);
-				
+
 				// check that the UI processed the synchronous Runnable
 				assertTrue(syncRunnableFinished[0]);
-				
+
 				lock.release();
 			} finally {
 				Job.getJobManager().endRule(rule);
@@ -653,43 +673,44 @@ public class LockTest {
 			domain.dispose();
 		}
 	}
-	
+
 	@Test
 	public void test_uiSafeWaitForAcquire_explicitJob_beginRule_262175() {
-		final TransactionalEditingDomain domain =
-			TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
-		
-		final CountDownLatch	latch = new CountDownLatch(1);
-		
+		final TransactionalEditingDomain domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+
+		final CountDownLatch latch = new CountDownLatch(1);
+
 		lock = getLock(domain);
-		
-		final boolean[]	status = {false};
-		
-		Job	job	=	new Job("TestJob") { //$NON-NLS-1$
-			
+
+		final boolean[] status = { false };
+
+		Job job = new Job("TestJob") {
+
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 
 				// test rule
 				ISchedulingRule rule = new ISchedulingRule() {
 
+					@Override
 					public boolean contains(ISchedulingRule rule) {
 						return rule == this;
 					}
 
+					@Override
 					public boolean isConflicting(ISchedulingRule rule) {
 						return rule == this;
 					}
 				};
-				
+
 				// simulates ownership of a rule
 				Job.getJobManager().beginRule(rule, new NullProgressMonitor());
-				
+
 				try {
 					latch.countDown();
 					lock.uiSafeAcquire(false);
-					
-					synchronized(status) {
+
+					synchronized (status) {
 						status[0] = true;
 					}
 				} catch (InterruptedException e) {
@@ -698,182 +719,179 @@ public class LockTest {
 					lock.release();
 					Job.getJobManager().endRule(rule);
 				}
-				
+
 				return Status.OK_STATUS;
 			}
 		};
-		
+
 		try {
 			lock.acquire(true);
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-		
+
 		try {
-		
+
 			job.schedule();
-			
+
 			latch.await();
-			
+
 			Thread.sleep(1000); // make sure the Job entered the wait for this.lock
-			
+
 			lock.release();
-		
+
 			try {
 				job.join();
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}
-		
+
 		} catch (InterruptedException e) {
 			fail(e);
 		} finally {
-			synchronized(status) {
-				assertTrue("Job did not acquire a rule", status[0]); //$NON-NLS-1$
+			synchronized (status) {
+				assertTrue(status[0], "Job did not acquire a rule");
 			}
 		}
 	}
-    
-    /**
-     * Tests that when IJobManager::beginRule() method fails, we don't end up
-     * with an AcquireJob getting and transfering the lock after we've already
-     * given up.
-     */
+
+	/**
+	 * Tests that when IJobManager::beginRule() method fails, we don't end up with
+	 * an AcquireJob getting and transfering the lock after we've already given up.
+	 */
 	@Test
-    public void test_uiSafeWaitForAcquire_beginRuleThrows_bug205857() {
-        final ISchedulingRule rule = ResourcesPlugin.getWorkspace().getRoot();
-        
-        final TransactionalEditingDomain domain =
-            TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
-        
-        lock = getLock(domain);
-        
-        Thread t = new Thread(new Runnable() {
-        
-            public void run() {
-                try {
-                    synchronized (monitor) {
-                        // wake up the main thread to give us a sched rule
-                        monitor.notifyAll();
-                    }
-                    
-                    lock.uiSafeAcquire(false);
-                    Assert.fail("Should have thrown InterruptedException"); //$NON-NLS-1$
-                } catch (InterruptedException e) {
-                    // success
-                    System.out.println("Got expected exception: " + e.getLocalizedMessage()); //$NON-NLS-1$
-                } catch (Exception e) {
-                    // success
-                    fail(e);
-                } finally {
-                    // we were given this rule, so we must end it
-                    Job.getJobManager().endRule(rule);
-                }
-            }});
-        
-        try {
-            Job.getJobManager().beginRule(rule, null);
-            lock.acquire(false);
-            
-            synchronized (monitor) {
-                t.start();
-                
-                // wait for the other thread to start
-                monitor.wait();
-            }
-            
-            // sleep just a bit to let the other thread start waiting for
-            // the lock on its initial 250-millis hard wait
-            Thread.sleep(50L);
-            
-            // hand over the scheduling rule before the other thread starts
-            // the AcquireJob-based wait
-            Job.getJobManager().transferRule(rule, t);
-            
-            // now, wait long enough for the other thread to start its
-            // AcquireJob-based-wait and then release the lock
-            Thread.sleep(250L);
-            lock.release();
-            
-            // now, wait for the other thread to finish
-            t.join();
-            
-            // sleep a bit
-            Thread.sleep(250L);
-            
-            Thread owner = lock.getOwner();
-            if (owner != null) {
-            	Assert.fail("Lock still owned by thread " + owner.getName()); //$NON-NLS-1$
-            }
-        } catch (Exception e) {
-            fail(e);
-        } finally {
-            domain.dispose();
-        }
-    }
-	
-	
+	public void test_uiSafeWaitForAcquire_beginRuleThrows_bug205857() {
+		final ISchedulingRule rule = ResourcesPlugin.getWorkspace().getRoot();
+
+		final TransactionalEditingDomain domain = TransactionalEditingDomain.Factory.INSTANCE.createEditingDomain();
+
+		lock = getLock(domain);
+
+		Thread t = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				try {
+					synchronized (monitor) {
+						// wake up the main thread to give us a sched rule
+						monitor.notifyAll();
+					}
+
+					lock.uiSafeAcquire(false);
+					Assertions.fail("Should have thrown InterruptedException");
+				} catch (InterruptedException e) {
+					// success
+					System.out.println("Got expected exception: " + e.getLocalizedMessage());
+				} catch (Exception e) {
+					// success
+					fail(e);
+				} finally {
+					// we were given this rule, so we must end it
+					Job.getJobManager().endRule(rule);
+				}
+			}
+		});
+
+		try {
+			Job.getJobManager().beginRule(rule, null);
+			lock.acquire(false);
+
+			synchronized (monitor) {
+				t.start();
+
+				// wait for the other thread to start
+				monitor.wait();
+			}
+
+			// sleep just a bit to let the other thread start waiting for
+			// the lock on its initial 250-millis hard wait
+			Thread.sleep(50L);
+
+			// hand over the scheduling rule before the other thread starts
+			// the AcquireJob-based wait
+			Job.getJobManager().transferRule(rule, t);
+
+			// now, wait long enough for the other thread to start its
+			// AcquireJob-based-wait and then release the lock
+			Thread.sleep(250L);
+			lock.release();
+
+			// now, wait for the other thread to finish
+			t.join();
+
+			// sleep a bit
+			Thread.sleep(250L);
+
+			Thread owner = lock.getOwner();
+			if (owner != null) {
+				Assertions.fail("Lock still owned by thread " + owner.getName());
+			}
+		} catch (Exception e) {
+			fail(e);
+		} finally {
+			domain.dispose();
+		}
+	}
+
 	//
 	// Fixture methods
 	//
-	
-	@Before
-	public void setUp()
-		throws Exception {
-		
-		AbstractTest.trace("===> Begin : " + this.getClass().getName()); //$NON-NLS-1$
-		
+
+	@BeforeEach
+	public void setUp() throws Exception {
+
+		AbstractTest.trace("===> Begin : " + this.getClass().getName());
+
 		lock = new Lock();
 		monitor = new Object();
 	}
-	
-	@After
-	public void tearDown()
-		throws Exception {
-		
+
+	@AfterEach
+	public void tearDown() throws Exception {
+
 		lock = null;
 		monitor = null;
 		interrupted = false;
-		
-		AbstractTest.trace("===> End   : " + this.getClass().getName()); //$NON-NLS-1$
+
+		AbstractTest.trace("===> End   : " + this.getClass().getName());
 	}
-	
+
 	/**
 	 * Records a failure due to an exception that should not have been thrown.
-	 * 
+	 *
 	 * @param e the exception
 	 */
 	protected void fail(Exception e) {
 		e.printStackTrace();
-		Assert.fail("Should not have thrown: " + e.getLocalizedMessage()); //$NON-NLS-1$
+		Assertions.fail("Should not have thrown: " + e.getLocalizedMessage());
 	}
-	
+
 	/**
 	 * A reflective hack to get the transaction lock of an editing domain.
-	 * 
+	 *
 	 * @param domain the editing domain
-	 * 
+	 *
 	 * @return its transaction lock
 	 */
 	private Lock getLock(TransactionalEditingDomain domain) {
 		Lock result = null;
 		Field field = null;
-		
+
 		try {
 			Class<?> clazz = domain.getClass();
-			
-			field = clazz.getDeclaredField("transactionLock"); //$NON-NLS-1$
+
+			field = clazz.getDeclaredField("transactionLock");
 			field.setAccessible(true);
-			
+
 			result = (Lock) field.get(domain);
 		} catch (Exception e) {
-			Assert.fail("Could not access transactionLock field: " + e.getLocalizedMessage()); //$NON-NLS-1$
+			Assertions.fail("Could not access transactionLock field: " + e.getLocalizedMessage());
 		} finally {
 			if (field != null) {
 				field.setAccessible(false);
 			}
 		}
-		
+
 		return result;
 	}
 }

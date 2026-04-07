@@ -11,8 +11,8 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -36,8 +36,8 @@ import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.impl.InternalTransactionalEditingDomain;
 import org.eclipse.emf.transaction.tests.fixtures.TestCommand;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * Regression tests for performance problems (time and memory).
@@ -103,6 +103,7 @@ public class PerformanceTest extends AbstractTest {
 						precommitEvents[0]++;
 
 						result.append(new TestCommand() {
+							@Override
 							public void execute() {
 								/* nothing to do */}
 						});
@@ -126,7 +127,7 @@ public class PerformanceTest extends AbstractTest {
 
 		domain.addResourceSetListener(listener);
 
-		Map<Object, Object> options = new java.util.HashMap<Object, Object>();
+		Map<Object, Object> options = new java.util.HashMap<>();
 //		options.put(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE);
 //		options.put(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
 //		options.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
@@ -162,7 +163,7 @@ public class PerformanceTest extends AbstractTest {
 			System.out.println("Number of post-commit events: " + postcommitEvents[0]);
 		} catch (IOException e) {
 			e.printStackTrace();
-			Assert.fail("Failed to load test resource: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to load test resource: " + e.getLocalizedMessage());
 		} finally {
 			domain.removeResourceSetListener(listener);
 		}
@@ -255,12 +256,12 @@ public class PerformanceTest extends AbstractTest {
 			System.out.println("Number of post-commit notifications sent: " + receivedPostcommitNotifications[0]);
 			System.out.println("Number of validation notifications sent: " + receivedValidationNotifications[0]);
 
-			assertEquals("Wrong number of pre-commit notifications", expectedPrecommitNotifications[0],
-					receivedPrecommitNotifications[0]);
-			assertEquals("Wrong number of post-commit notifications", expectedPostcommitNotifications[0],
-					receivedPostcommitNotifications[0]);
-			assertEquals("Wrong number of validation notifications", expectedValidationNotifications[0],
-					receivedValidationNotifications[0]);
+			assertEquals(expectedPrecommitNotifications[0], receivedPrecommitNotifications[0],
+					"Wrong number of pre-commit notifications");
+			assertEquals(expectedPostcommitNotifications[0], receivedPostcommitNotifications[0],
+					"Wrong number of post-commit notifications");
+			assertEquals(expectedValidationNotifications[0], receivedValidationNotifications[0],
+					"Wrong number of validation notifications");
 		} finally {
 			domain.removeResourceSetListener(validationCollector);
 			domain.removeResourceSetListener(prePostCommitCollector);
@@ -278,7 +279,7 @@ public class PerformanceTest extends AbstractTest {
 		System.out.println("Performance test: " + this.getClass().getName());
 		System.out.println("===============================");
 
-		timings = new java.util.ArrayList<Long>();
+		timings = new java.util.ArrayList<>();
 	}
 
 	@Override
@@ -336,7 +337,7 @@ public class PerformanceTest extends AbstractTest {
 			testResource.save(Collections.EMPTY_MAP);
 		} catch (IOException e) {
 			e.printStackTrace();
-			Assert.fail("Failed to save test resource: " + e.getLocalizedMessage());
+			Assertions.fail("Failed to save test resource: " + e.getLocalizedMessage());
 		}
 
 		testResource.unload();
@@ -444,9 +445,9 @@ public class PerformanceTest extends AbstractTest {
 	static {
 		allNotifications = Collections.emptyMap();
 		noTriggers = Collections.<Object, Object>singletonMap(Transaction.OPTION_NO_TRIGGERS, Boolean.TRUE);
-		validationOnly = new java.util.HashMap<Object, Object>(noTriggers);
+		validationOnly = new java.util.HashMap<>(noTriggers);
 		validationOnly.put(Transaction.OPTION_NO_NOTIFICATIONS, Boolean.TRUE);
-		noNotifications = new java.util.HashMap<Object, Object>(validationOnly);
+		noNotifications = new java.util.HashMap<>(validationOnly);
 		noNotifications.put(Transaction.OPTION_NO_VALIDATION, Boolean.TRUE);
 	}
 

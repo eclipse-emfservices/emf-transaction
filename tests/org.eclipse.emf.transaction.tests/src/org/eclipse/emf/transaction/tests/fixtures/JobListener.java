@@ -24,17 +24,17 @@ import org.eclipse.core.runtime.jobs.Job;
 public class JobListener implements IJobChangeListener {
 	private final Object runningMonitor = new Object();
 	private boolean notifiedRunning;
-	
+
 	private final Object doneMonitor = new Object();
 	private boolean notifiedDone;
-	
+
 	private Job acquireJob = null;
-	
+
 	/**
 	 * Blocks the current thread until the AcquireJob starts running.
-	 * 
+	 *
 	 * @return the AcquireJob
-	 * 
+	 *
 	 * @throws InterruptedException if the current thread is interrupted
 	 */
 	public Job waitUntilRunning() throws InterruptedException {
@@ -43,15 +43,15 @@ public class JobListener implements IJobChangeListener {
 				runningMonitor.wait();
 			}
 		}
-		
+
 		return acquireJob;
 	}
-	
+
 	/**
 	 * Blocks the current thread until the AcquireJob finishes.
-	 * 
+	 *
 	 * @return the AcquireJob
-	 * 
+	 *
 	 * @throws InterruptedException if the current thread is interrupted
 	 */
 	public Job waitUntilDone() throws InterruptedException {
@@ -60,11 +60,12 @@ public class JobListener implements IJobChangeListener {
 				doneMonitor.wait();
 			}
 		}
-		
+
 		return acquireJob;
 	}
 
 	// Documentation copied from the inherited specification
+	@Override
 	public void running(IJobChangeEvent event) {
 		if (event.getJob() == acquireJob) {
 			synchronized (runningMonitor) {
@@ -75,6 +76,7 @@ public class JobListener implements IJobChangeListener {
 	}
 
 	// Documentation copied from the inherited specification
+	@Override
 	public void done(IJobChangeEvent event) {
 		if (event.getJob() == acquireJob) {
 			synchronized (doneMonitor) {
@@ -85,27 +87,31 @@ public class JobListener implements IJobChangeListener {
 	}
 
 	// Documentation copied from the inherited specification
+	@Override
 	public void scheduled(IJobChangeEvent event) {
 		Job job = event.getJob();
-		
+
 		if (acquireJob == null) {
-			if (job.getClass().getName().endsWith("AcquireJob")) { //$NON-NLS-1$
+			if (job.getClass().getName().endsWith("AcquireJob")) { 
 				acquireJob = job;
 			}
 		}
 	}
 
 	// Documentation copied from the inherited specification
+	@Override
 	public void sleeping(IJobChangeEvent event) {
 		// not interesting
 	}
-	
+
 	// Documentation copied from the inherited specification
+	@Override
 	public void aboutToRun(IJobChangeEvent event) {
 		// not interesting
 	}
 
 	// Documentation copied from the inherited specification
+	@Override
 	public void awake(IJobChangeEvent event) {
 		// not interesting
 	}

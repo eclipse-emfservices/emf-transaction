@@ -17,7 +17,7 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 
 /**
  * Thread representing a simple model operation.
- * 
+ *
  * @author mgoyal
  */
 class SimpleOperationThread
@@ -48,7 +48,7 @@ class SimpleOperationThread
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param waitObject
 	 *            Object to wait on
 	 * @param notifyObject
@@ -62,7 +62,7 @@ class SimpleOperationThread
 
 	/**
 	 * Returns the start time of this operation
-	 * 
+	 *
 	 * @return startTime
 	 */
 	public long getStartTime() {
@@ -71,7 +71,7 @@ class SimpleOperationThread
 
 	/**
 	 * Returns the end time of this operation.
-	 * 
+	 *
 	 * @return endTime
 	 */
 	public long getEndTime() {
@@ -80,7 +80,7 @@ class SimpleOperationThread
 
 	/**
 	 * Returns true if the execution succeeded
-	 * 
+	 *
 	 * @return isExecuted
 	 */
 	public boolean isExecuted() {
@@ -89,7 +89,7 @@ class SimpleOperationThread
 
 	/**
 	 * Returns true if the execution failed.
-	 * 
+	 *
 	 * @return isFailed
 	 */
 	public synchronized boolean isFailed() {
@@ -98,7 +98,7 @@ class SimpleOperationThread
 
 	/**
 	 * Queries whether the thread failed due to an exception in the given class.
-	 * 
+	 *
 	 * @param className
 	 *            a class name
 	 * @return {@code true} if execution failed in some method of the named class;

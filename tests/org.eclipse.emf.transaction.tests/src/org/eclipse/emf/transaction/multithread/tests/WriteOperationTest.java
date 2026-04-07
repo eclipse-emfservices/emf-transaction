@@ -11,23 +11,24 @@
  */
 package org.eclipse.emf.transaction.multithread.tests;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Testcase for testing scheduling of Write Operation scenarios
- * 
+ *
  * @author mgoyal
- * 
+ *
  */
 public class WriteOperationTest extends AbstractMultithreadTest {
 
 	/**
 	 * Tests scheduling of simple write operation.
 	 */
-	@Test public void testWriteOperation() {
+	@Test
+	public void testWriteOperation() {
 		WriteThread writeThread1 = new WriteThread(getDomain());
 
 		writeThread1.start();
@@ -38,8 +39,9 @@ public class WriteOperationTest extends AbstractMultithreadTest {
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!writeThread1.isAlive())
+			if (!writeThread1.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(writeThread1.isFailed());
@@ -49,7 +51,8 @@ public class WriteOperationTest extends AbstractMultithreadTest {
 	/**
 	 * Tests scheduling of two simultaneous write operations.
 	 */
-	@Test public void testSimultaneousWrites() {
+	@Test
+	public void testSimultaneousWrites() {
 		Object notifier = new Object();
 		WriteThread writeThread1 = new WriteThread(getDomain(), null, notifier);
 		WriteThread writeThread2 = new WriteThread(getDomain(), null, notifier);
@@ -78,8 +81,9 @@ public class WriteOperationTest extends AbstractMultithreadTest {
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!writeThread1.isAlive() && !writeThread2.isAlive())
+			if (!writeThread1.isAlive() && !writeThread2.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(writeThread1.isFailed());
@@ -104,8 +108,9 @@ public class WriteOperationTest extends AbstractMultithreadTest {
 			} catch (InterruptedException e) {
 				// ignore this exception
 			}
-			if (!writeThread1.isAlive())
+			if (!writeThread1.isAlive()) {
 				done = true;
+			}
 		}
 
 		assertFalse(writeThread1.isInnerFailed());

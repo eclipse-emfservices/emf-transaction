@@ -32,11 +32,11 @@ public class ItemDefaultPublicationDateTrigger extends TriggerListener {
 							NotificationFilter.createEventTypeFilter(
 									Notification.ADD)));
 	}
-	
+
 	@Override
 	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 		Command result = null;
-		
+
 		Item newItem = (Item) notification.getNewValue();
 		if (newItem.getPublicationDate() == null) {
 			result= new SetCommand(
@@ -45,7 +45,7 @@ public class ItemDefaultPublicationDateTrigger extends TriggerListener {
 					EXTLibraryPackage.eINSTANCE.getItem_PublicationDate(),
 					new java.util.Date());
 		}
-		
+
 		return result;
 	}
 }

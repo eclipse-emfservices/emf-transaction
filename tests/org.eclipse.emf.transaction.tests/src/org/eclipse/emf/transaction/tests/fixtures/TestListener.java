@@ -30,16 +30,16 @@ import org.eclipse.emf.transaction.RollbackException;
 public class TestListener extends ResourceSetListenerImpl {
 	/** The last pre-commit event received. */
 	public ResourceSetChangeEvent precommit;
-	
+
 	/** The copied list of precommit notifications from the precommit event. */
 	public List<Notification> precommitNotifications;
-	
+
 	/** The last post-commit event received. */
 	public ResourceSetChangeEvent postcommit;
-	
+
 	/** The copied list of postcommit notifications from the postcommit event.*/
 	public List<Notification> postcommitNotifications;
-	
+
 	public TestListener() {
 		super(NotificationFilter.ANY);
 	}
@@ -47,23 +47,23 @@ public class TestListener extends ResourceSetListenerImpl {
 	public TestListener(NotificationFilter filter) {
 		super(filter);
 	}
-	
+
 	@Override
 	public Command transactionAboutToCommit(ResourceSetChangeEvent event)
 		throws RollbackException {
-		
+
 		precommit = event;
-		precommitNotifications = new ArrayList<Notification>(event.getNotifications());
-		
+		precommitNotifications = new ArrayList<>(event.getNotifications());
+
 		return null;
 	}
-	
+
 	@Override
 	public void resourceSetChanged(ResourceSetChangeEvent event) {
 		postcommit = event;
-		postcommitNotifications = new ArrayList<Notification>(event.getNotifications());
+		postcommitNotifications = new ArrayList<>(event.getNotifications());
 	}
-	
+
 	/**
 	 * Clears the stored events.
 	 */

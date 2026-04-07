@@ -34,21 +34,21 @@ public class LibraryDefaultBookTrigger extends TriggerListener {
 							NotificationFilter.createEventTypeFilter(
 									Notification.ADD)));
 	}
-	
+
 	@Override
 	protected Command trigger(TransactionalEditingDomain domain, Notification notification) {
 		Command result = null;
-		
+
 		Library newLibrary = (Library) notification.getNewValue();
 		if ((newLibrary.getBooks().isEmpty())) {
 			Book newBook = EXTLibraryFactory.eINSTANCE.createBook();
-			newBook.setTitle("New Book"); //$NON-NLS-1$
+			newBook.setTitle("New Book"); 
 			result = new AddCommand(
 					domain,
 					newLibrary.getBooks(),
 					newBook);
 		}
-		
+
 		return result;
 	}
 }

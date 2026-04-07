@@ -12,7 +12,7 @@
  */
 package org.eclipse.emf.transaction.tests;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.util.Collections;
@@ -43,13 +43,13 @@ import org.eclipse.emf.transaction.ResourceSetChangeEvent;
 import org.eclipse.emf.transaction.ResourceSetListenerImpl;
 import org.eclipse.emf.transaction.RollbackException;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * A test case for https://bugs.eclipse.org/bugs/show_bug.cgi?id=460206
- * 
+ *
  * @author <a href="mailto:esteban.dugueperoux@obeo.fr">Esteban Dugueperoux</a>
  */
 public class ChangeDescriptionTest {
@@ -62,7 +62,7 @@ public class ChangeDescriptionTest {
 
 	private EPackage rootEPackage1;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		resourceSet = new ResourceSetImpl();
 		Resource.Factory.Registry.INSTANCE.getExtensionToFactoryMap().put("ecore", new EcoreResourceFactoryImpl());
@@ -73,7 +73,7 @@ public class ChangeDescriptionTest {
 		resource.getContents().add(rootEPackage1);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		rootEPackage1 = null;
 		resource = null;

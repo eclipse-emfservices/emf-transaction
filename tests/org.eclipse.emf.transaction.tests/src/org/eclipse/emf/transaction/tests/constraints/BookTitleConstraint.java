@@ -28,16 +28,16 @@ public class BookTitleConstraint
 	@Override
 	public IStatus validate(IValidationContext ctx) {
 		EMFEventType eType = ctx.getEventType();
-		
+
 		if (eType != EMFEventType.NULL) {
 			Object newValue = ctx.getFeatureNewValue();
-			
+
 			if (newValue == null
 				|| ((String)newValue).length() == 0) {
 				return ctx.createFailureStatus();
 			}
 		}
-		
+
 		return ctx.createSuccessStatus();
 	}
 }
