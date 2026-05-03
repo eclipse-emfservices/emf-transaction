@@ -335,7 +335,7 @@ public class AbstractTest {
 	 * @see #find(Object, String)
 	 */
 	protected void assertFound(Object start, String name) {
-		assertNotNull(find(testResource, name), "Did not find " + name); // FIXME: use start instead of testResource
+		assertNotNull(find(start, name), "Did not find " + name);
 	}
 
 	/**
