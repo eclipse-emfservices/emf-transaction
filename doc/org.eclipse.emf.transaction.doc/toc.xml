@@ -33,18 +33,4 @@
 		<anchor id="other-examples"/>
 	</topic>
 	<anchor id="examples-after" />
-	
-	<anchor id="reference-before" />
-	<topic label="Reference">
-		<link toc="topics_Reference.xml"/>
-		<anchor id="other-reference"/>
-		<anchor id="reference-ext-pt-before" />
-		<topic label="Extension Points Reference">
-			<topic label="org.eclipse.emf.transaction.editingDomains" href="references/extension-points/org_eclipse_emf_transaction_editingDomains.html" />
-			<topic label="org.eclipse.emf.transaction.listeners" href="references/extension-points/org_eclipse_emf_transaction_listeners.html" />
-			<anchor id="other-ext-pts"/>
-		</topic>
-		<anchor id="reference-ext-pt-after" />
-	</topic>	
-	<anchor id="reference-after" />
 </toc>
