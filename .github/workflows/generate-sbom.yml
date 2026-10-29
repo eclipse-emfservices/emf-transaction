@@ -17,17 +17,17 @@ jobs:
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: 'temurin'
-          java-version: 21
+          java-version: 25
           cache: 'maven'
       - name: Build
         id: build
         run: |
-          ./mvnw -B -ntp clean package -Psbom
+          ./mvnw -B -ntp -DskipTests -Psbom clean package
           VERSION=$(./mvnw -q help:evaluate -Dexpression=project.version -DforceStdout 2> /dev/null | sed -e 's/-SNAPSHOT//')
           echo "PROJECT_VERSION=$VERSION" >> $GITHUB_OUTPUT
           mv releng/org.eclipse.emf.transaction.repository/target/bom.json bom.json
       - name: Upload sbom
-        uses: eclipse-csi/workflows/upload-sbom@20e3c63807b2bd61b7f1a9f438e5ce588c054efc # main
+        uses: eclipse-csi/workflows/upload-sbom@3d34535001cf5d48ba1e763e9b2a6fa79013d4d5 # main
         with:
           sbom-file: bom.json
           product-name: 'EMF Transaction'
